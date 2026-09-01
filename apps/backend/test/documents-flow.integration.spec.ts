@@ -224,7 +224,7 @@ const setupFlowOrg = async (db: Database) => {
   // Accounting operations are gated on the org's accountingEnabled flag.
   await db
     .update(schema.organizations)
-    .set({ accountingEnabled: true })
+    .set({ accountingEnabled: true, address: 'Teststraße 1', city: 'Berlin', zipCode: '10115' })
     .where(eq(schema.organizations.id, organization.id));
 
   // The real seeded permission: resolvers check it by key (e.g. viewing a
@@ -1081,6 +1081,49 @@ describe('documents flow — admin + volunteer', () => {
               ],
               enabled: true,
             },
+            ...(kind === DocumentKind.INVOICE
+              ? [
+                  {
+                    id: 'jahresdeckel',
+                    kind: 'text' as const,
+                    title: 'Jahresdeckel',
+                    lines: [
+                      {
+                        id: 'jahresdeckel-note',
+                        text: '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {contractPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten. Rechnungsnr. {documentNumber}',
+                        fields: [
+                          {
+                            id: 'jahresdeckel-volunteer-first',
+                            value: { kind: 'bound', source: 'volunteer_first_name' },
+                          },
+                          {
+                            id: 'jahresdeckel-volunteer-last',
+                            value: { kind: 'bound', source: 'volunteer_last_name' },
+                          },
+                          {
+                            id: 'jahresdeckel-period',
+                            value: { kind: 'bound', source: 'contract_period' },
+                          },
+                          {
+                            id: 'jahresdeckel-received',
+                            value: { kind: 'bound', source: 'already_received_amount' },
+                          },
+                          {
+                            id: 'jahresdeckel-limit',
+                            value: { kind: 'bound', source: 'yearly_limit_amount' },
+                          },
+                          {
+                            id: 'jahresdeckel-number',
+                            value: { kind: 'bound', source: 'document_number' },
+                          },
+                        ],
+                        enabled: true,
+                      },
+                    ],
+                    enabled: true,
+                  },
+                ]
+              : []),
           ],
           enabled: true,
         },
@@ -1352,6 +1395,16 @@ describe('documents flow — admin + volunteer', () => {
       // The invoice table lists the shift that produced the time entry.
       expect(glyphs).toContain('Stundennachweis');
       expect(glyphs).toContain('Unterschrift');
+      // The Jahresdeckel note shows the resolved generation-time values, not gaps.
+      expect(glyphs).toContain('Jahresdeckel');
+      expect(glyphs).toContain('im Zeitraum');
+      expect(glyphs).toContain('Rechnungsnr.');
+      // The period is formatted "01.07.2026 – 31.07.2026" — a rendered date range means
+      // contract_period was filled (empty would have produced an em-dash).
+      expect(glyphs).toMatch(/01\.07\.2026/);
+      // The yearly cap (3.000 €) and mock document number are present.
+      expect(glyphs).toContain('3.000');
+      expect(glyphs).toMatch(/\d{8}-001/);
     });
   });
 
@@ -1485,6 +1538,81 @@ describe('documents flow — admin + volunteer', () => {
         'contract',
       );
       expect(detail.contract.missingProfileFields).toEqual([]);
+    });
+
+    it('blocks creating a document until the org profile fields are filled, then allows it', async () => {
+      const orgGated = await setupFlowOrg(db);
+      const orgGatedHeader = { 'x-organization-unit-id': orgGated.organizationUnitId };
+      // The org is accounting-enabled but has no city/address yet.
+      await db
+        .update(schema.organizations)
+        .set({ address: null, city: null, zipCode: null })
+        .where(eq(schema.organizations.id, orgGated.organizationId));
+      const body = {
+        header: {
+          orgIdentityLine: {
+            text: '{orgName} {orgAddress} {orgCity}',
+            fields: [
+              { id: 'org-name', value: { kind: 'bound', source: 'org_name' } },
+              { id: 'org-address', value: { kind: 'bound', source: 'org_address' } },
+              { id: 'org-city', value: { kind: 'bound', source: 'org_city' } },
+            ],
+            enabled: true,
+          },
+        },
+        blocks: [],
+        footer: { closingLine: { id: 'closing', text: 'Vielen Dank', fields: [], enabled: true } },
+      };
+      await db
+        .update(schema.documentTemplates)
+        .set({ body })
+        .where(eq(schema.documentTemplates.organizationId, orgGated.organizationId));
+
+      setAuthMockUserId(orgGated.adminId);
+      const refused = await graphqlRequest<{
+        createContract: { id: string };
+      }>(app, {
+        query: CREATE_CONTRACT,
+        variables: {
+          input: {
+            organizationUnitId: orgGated.organizationUnitId,
+            reimbursementTypeId: orgGated.reimbursementTypeId,
+            volunteerId: orgGated.volunteerId,
+            periodStart: '2026-01-01T00:00:00.000Z',
+            periodEnd: '2027-01-01T00:00:00.000Z',
+          },
+        },
+        headers: orgGatedHeader,
+      });
+      // The org has no city/address → creating is refused (org_city, org_address).
+      expect(refused.errors?.[0]?.message ?? '').toMatch(/organization is missing/i);
+      expect(refused.data?.createContract).toBeUndefined();
+
+      // Completing the org profile unblocks creation.
+      await db
+        .update(schema.organizations)
+        .set({ address: 'Teststraße 1', city: 'Berlin', zipCode: '10115' })
+        .where(eq(schema.organizations.id, orgGated.organizationId));
+
+      setAuthMockUserId(orgGated.adminId);
+      const created = await graphqlRequestRequiringData<{
+        createContract: { id: string; contractStatus: string };
+      }>(app, {
+        query: CREATE_CONTRACT,
+        variables: {
+          input: {
+            organizationUnitId: orgGated.organizationUnitId,
+            reimbursementTypeId: orgGated.reimbursementTypeId,
+            volunteerId: orgGated.volunteerId,
+            periodStart: '2026-01-01T00:00:00.000Z',
+            periodEnd: '2027-01-01T00:00:00.000Z',
+          },
+        },
+        headers: orgGatedHeader,
+      }, 'createContract');
+      expect(created.createContract.contractStatus).toBe(
+        ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
+      );
     });
   });
 });

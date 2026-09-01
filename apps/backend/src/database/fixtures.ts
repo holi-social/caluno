@@ -1,5 +1,5 @@
 import { hashPassword } from 'better-auth/crypto';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import {
@@ -365,6 +365,9 @@ const ensurePlaygroundOrganization = async (
         slug: ORG_SLUG,
         contactEmail: 'testing@caluno.org',
         description: 'Local development playground organization',
+        address: 'Hauptstraße 1',
+        city: 'Berlin',
+        zipCode: '10115',
       })
       .returning();
 
@@ -2084,6 +2087,26 @@ async function seedFixtures() {
     .set({ accountingEnabled: true })
     .returning({ id: schema.organizations.id });
   console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
+
+  // Backfill missing org postal fields so accounting documents have an org
+  // address/city/zip to render (a document with "—" in the footer is a hard
+  // dead-end the org can't fix without an edit form). Only fills gaps.
+  for (const enabledOrg of enabledOrgs) {
+    const org = await db.query.organizations.findFirst({
+      where: { id: enabledOrg.id },
+    });
+    if (!org) continue;
+    const patch: Partial<typeof schema.organizations.$inferInsert> = {};
+    if (!org.address) patch.address = 'Hauptstraße 1';
+    if (!org.city) patch.city = 'Berlin';
+    if (!org.zipCode) patch.zipCode = '10115';
+    if (Object.keys(patch).length > 0) {
+      await db
+        .update(schema.organizations)
+        .set(patch)
+        .where(eq(schema.organizations.id, enabledOrg.id));
+    }
+  }
 
   // Give every accounting-enabled org default contract + invoice templates so
   // documents can be created out of the box on a fresh provision.
