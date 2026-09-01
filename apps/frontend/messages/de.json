@@ -1876,6 +1876,7 @@
         "sendErrorToast": "Die Vereinbarung konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Profildaten konnten nicht geladen werden",
         "loadError": "Die Profildaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "noTemplateCta": "Vertragsvorlage erstellen",
         "hoursUnitMonth": "Monat",
         "hoursUnitWeek": "Woche",
         "hoursUnitHint": "pro {unit}",
@@ -1896,6 +1897,7 @@
         "sendErrorToast": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Stundennachweisdaten konnten nicht geladen werden",
         "loadError": "Die Stundennachweisdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "noTemplateCta": "Stundennachweis-Vorlage erstellen",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {

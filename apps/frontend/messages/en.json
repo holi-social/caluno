@@ -1876,6 +1876,7 @@
         "sendErrorToast": "Couldn't send the contract to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load profile data",
         "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "noTemplateCta": "Create a contract template",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -1896,6 +1897,7 @@
         "sendErrorToast": "Couldn't send the invoice to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load invoice data",
         "loadError": "{name}'s invoice data couldn't be loaded. Please close this and try again.",
+        "noTemplateCta": "Create an invoice template",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
