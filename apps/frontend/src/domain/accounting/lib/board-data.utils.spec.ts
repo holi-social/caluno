@@ -288,7 +288,7 @@ describe('monthsInRange', () => {
 });
 
 describe('buildBoardVolunteers', () => {
-  it('synthesizes contract-generate when no contract exists', () => {
+  it('returns no documents for a volunteer with no contract or invoice', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [
         {
@@ -309,10 +309,10 @@ describe('buildBoardVolunteers', () => {
       locale: 'de',
     });
     expect(volunteers).toHaveLength(1);
-    expect(volunteers[0]?.documents[0]?.status).toBe('contract-generate');
+    expect(volunteers[0]?.documents).toEqual([]);
   });
 
-  it('synthesizes timesheet-generate for active contract with no invoice', () => {
+  it('maps the active contract and skips timesheet placeholders when there is no invoice', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [
         {
@@ -340,7 +340,7 @@ describe('buildBoardVolunteers', () => {
     });
     const docs = volunteers[0]?.documents ?? [];
     expect(docs.some((d) => d.status === 'contract-active')).toBe(true);
-    expect(docs.some((d) => d.status === 'timesheet-generate')).toBe(true);
+    expect(docs.some((d) => d.status === 'timesheet-generate')).toBe(false);
   });
 
   it('maps existing invoices and skips generate for that month', () => {
