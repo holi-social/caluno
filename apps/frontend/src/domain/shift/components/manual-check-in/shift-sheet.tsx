@@ -49,6 +49,11 @@ export function ShiftSheet({
     ? instancesOnDate(instances, selectedDate)
     : [];
 
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleDayInstances = dayInstances.filter((instance) =>
+    instance.title.toLowerCase().includes(normalizedSearch),
+  );
+
   const { data: matchingShifts } = useCheckInShifts(orgUnitId, search);
 
   // Shifts matching the typed name that do not run on the selected date.
@@ -57,17 +62,24 @@ export function ShiftSheet({
     (shift) => !dayShiftIds.has(shift.id),
   );
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      setSearch('');
+    }
+    onOpenChange(next);
+  };
+
   return (
     <CheckInSheet
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title={t('shiftSheetTitle')}
       footer={
         <Button
           type="button"
           size="lg"
           className="w-full"
-          onClick={() => onOpenChange(false)}
+          onClick={() => handleOpenChange(false)}
         >
           {t('saveSelection')}
         </Button>
@@ -84,47 +96,41 @@ export function ShiftSheet({
           placeholder={t('shiftSearchPlaceholder')}
         />
         <CommandList className="max-h-none flex-1">
-          {dayInstances.length === 0 && otherDayShifts.length === 0 && (
+          {visibleDayInstances.length === 0 && otherDayShifts.length === 0 && (
             <CommandEmpty>{t('noShiftsFound')}</CommandEmpty>
           )}
 
-          {dayInstances
-            .filter((instance) =>
-              instance.title
-                .toLowerCase()
-                .includes(search.trim().toLowerCase()),
-            )
-            .map((instance) => {
-              const isSelected = instance.id === selectedShiftInstanceId;
+          {visibleDayInstances.map((instance) => {
+            const isSelected = instance.id === selectedShiftInstanceId;
 
-              return (
-                <CommandItem
-                  key={instance.id}
-                  value={instance.id}
-                  onSelect={() => {
-                    onSelectInstance(instance);
-                    onOpenChange(false);
-                  }}
-                  className={cn(
-                    'cursor-pointer justify-between',
-                    isSelected && 'bg-accent text-accent-foreground',
-                  )}
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold">
-                      {instance.title}
-                    </span>
-                    <span className="block text-muted-foreground">
-                      {formatTimeRange(
-                        instance.actualStartsAt,
-                        instance.actualEndsAt,
-                      )}
-                    </span>
+            return (
+              <CommandItem
+                key={instance.id}
+                value={instance.id}
+                onSelect={() => {
+                  onSelectInstance(instance);
+                  handleOpenChange(false);
+                }}
+                className={cn(
+                  'cursor-pointer justify-between',
+                  isSelected && 'bg-accent text-accent-foreground',
+                )}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">
+                    {instance.title}
                   </span>
-                  {isSelected && <Check className="size-4 shrink-0" />}
-                </CommandItem>
-              );
-            })}
+                  <span className="block text-muted-foreground">
+                    {formatTimeRange(
+                      instance.actualStartsAt,
+                      instance.actualEndsAt,
+                    )}
+                  </span>
+                </span>
+                {isSelected && <Check className="size-4 shrink-0" />}
+              </CommandItem>
+            );
+          })}
 
           {otherDayShifts.length > 0 && (
             <>
@@ -137,7 +143,7 @@ export function ShiftSheet({
                   value={shift.id}
                   onSelect={() => {
                     onSelectShift(shift.id);
-                    onOpenChange(false);
+                    handleOpenChange(false);
                   }}
                   className="cursor-pointer"
                 >
