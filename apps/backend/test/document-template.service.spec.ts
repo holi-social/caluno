@@ -308,9 +308,8 @@ describe('DocumentTemplateService', () => {
       const untouched = await db.query.contracts.findFirst({
         where: { id: contract.id },
       });
-      expect(
-        (untouched?.resolvedBody as { header: { title: string } }).header.title,
-      ).toBe('v1');
+      const header = untouched?.resolvedBody.header as { title: string };
+      expect(header.title).toBe('v1');
     });
   });
 
