@@ -3,6 +3,11 @@ import { inArray } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import {
+  DocumentKind,
+  ReimbursementTypeKey,
+  SigneeType,
+} from '../accounting/enums';
+import {
   DEFAULT_MEMBER_ROLE_NAME,
   DEFAULT_OWNER_ROLE_NAME,
   MEMBER_DEFAULT_PERMISSIONS,
@@ -1086,6 +1091,172 @@ const ensureCodeOfConductForm = async (
   return form;
 };
 
+/**
+ * Seeds default contract + invoice document templates for the Playground org
+ * (both Pauschale reimbursement types) with the standard volunteer →
+ * permission-holder signee chain. Runs on every `db:fixtures` (bootstrap and
+ * staging), so a freshly provisioned org never hits "No contract template
+ * configured for reimbursement type …" — the coordinator can create documents
+ * out of the box and customize the templates in the builder afterwards.
+ *
+ * The body is a minimal but renderable contract/invoice template. Existing
+ * templates are left untouched so an org's hand-built templates win.
+ */
+const ensureAccountingDocumentTemplates = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+): Promise<void> => {
+  const accountingManagePermission = await db.query.permissions.findFirst({
+    where: { key: PERMISSIONS.ACCOUNTING_MANAGE },
+  });
+
+  const reimbursementTypes = await db.query.reimbursementTypes.findMany();
+
+  const contractBody = {
+    header: {
+      titleLines: ['Zusatzvereinbarung zur', 'Aufwandsentschädigung'],
+      orgIdentityLine: {
+        id: 'header-org-identity',
+        text: '{orgName} {orgAddress}',
+        fields: [
+          { id: 'header-org-name', value: { kind: 'bound', source: 'org_name' } },
+          {
+            id: 'header-org-address',
+            value: { kind: 'bound', source: 'org_address' },
+          },
+        ],
+        enabled: true,
+      },
+    },
+    blocks: [
+      {
+        id: 'payout',
+        kind: 'text',
+        title: 'Auszahlung',
+        lines: [
+          {
+            id: 'iban-line',
+            text: 'IBAN: {volunteerIban}',
+            fields: [
+              {
+                id: 'iban-field',
+                value: { kind: 'bound', source: 'volunteer_iban' },
+              },
+            ],
+            enabled: true,
+          },
+          {
+            id: 'bic-line',
+            text: 'BIC: {volunteerBic}',
+            fields: [
+              {
+                id: 'bic-field',
+                value: { kind: 'bound', source: 'volunteer_bic' },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+        enabled: true,
+      },
+    ],
+    footer: {
+      closingLine: {
+        id: 'closing',
+        text: 'Vielen Dank',
+        fields: [],
+        enabled: true,
+      },
+    },
+  };
+
+  const invoiceBody = {
+    header: {
+      titleLines: ['Stundennachweis'],
+      orgIdentityLine: {
+        id: 'header-org-identity',
+        text: '{orgName} {orgAddress}',
+        fields: [
+          { id: 'header-org-name', value: { kind: 'bound', source: 'org_name' } },
+          {
+            id: 'header-org-address',
+            value: { kind: 'bound', source: 'org_address' },
+          },
+        ],
+        enabled: true,
+      },
+    },
+    blocks: [],
+    footer: {
+      closingLine: {
+        id: 'closing',
+        text: 'Vielen Dank',
+        fields: [],
+        enabled: true,
+      },
+    },
+  };
+
+  const signees = (permissionId: string | undefined) => [
+    { order: 0, signeeType: SigneeType.VOLUNTEER, requiredPermissionId: null },
+    ...(permissionId
+      ? [
+          {
+            order: 1,
+            signeeType: SigneeType.PERMISSION_HOLDER,
+            requiredPermissionId: permissionId,
+          },
+        ]
+      : []),
+  ];
+
+  for (const type of reimbursementTypes) {
+    for (const kind of [DocumentKind.CONTRACT, DocumentKind.INVOICE]) {
+      // A template exists already (org-default for this type+kind) — leave it.
+      const existing = await db.query.documentTemplates.findFirst({
+        where: {
+          organizationId,
+          organizationUnitId: { isNull: true },
+          reimbursementTypeId: type.id,
+          kind,
+          isDeleted: false,
+        },
+      });
+      if (existing) continue;
+
+      const [template] = await db
+        .insert(schema.documentTemplates)
+        .values({
+          organizationId,
+          organizationUnitId: null,
+          reimbursementTypeId: type.id,
+          kind,
+          body:
+            kind === DocumentKind.CONTRACT ? contractBody : invoiceBody,
+          isDeleted: false,
+        })
+        .returning();
+
+      if (!template) {
+        throw new Error(
+          `Failed to create ${kind} template for reimbursement type ${type.key}`,
+        );
+      }
+
+      await db.insert(schema.templateSignees).values(
+        signees(accountingManagePermission?.id).map((signee) => ({
+          documentTemplateId: template.id,
+          order: signee.order,
+          signeeType: signee.signeeType,
+          requiredPermissionId: signee.requiredPermissionId,
+        })),
+      );
+    }
+  }
+};
+
 async function seedFixtures() {
   const pool = new Pool({
     host: process.env.DB_HOST,
@@ -1421,6 +1592,13 @@ async function seedFixtures() {
     org.rootUnitId,
     admin.id,
     SHOWCASE_OPEN_SHIFT_ID,
+  );
+
+  await ensureAccountingDocumentTemplates(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
   );
 
   const showcaseFullInviteIds = [
