@@ -1739,6 +1739,7 @@
         "contractSigning": "Vereinbarungen gegenzeichnen",
         "timesheetGenerate": "Stundennachweise erstellen",
         "timesheetSigning": "Stundennachweise gegenzeichnen",
+        "needsTimesheet": "Stundennachweis fällig",
         "readyToGo": "Bereit zur Abgabe"
       },
       "toolbar": {
