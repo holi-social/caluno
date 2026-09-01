@@ -613,6 +613,10 @@
     "form": {
       "addressLabel": "Adresse",
       "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "z. B. Berlin",
+      "zipCodeLabel": "Postleitzahl",
+      "zipCodePlaceholder": "z. B. 10115",
       "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Beschreibe diese Organisationseinheit...",
       "emailLabel": "E-Mail",
