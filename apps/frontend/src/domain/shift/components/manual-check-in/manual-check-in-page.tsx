@@ -9,11 +9,13 @@ import { useMemo, useState } from 'react';
 import { UserCard } from '@/components/user-card';
 import { useRouter } from '@/i18n/navigation';
 import {
+  applyDate,
   applyOrgUnit,
   type CheckInSelection,
   pickInitialInstance,
   toCheckInInstance,
 } from '../../check-in-selection';
+import { DateSheet } from './date-sheet';
 import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
 
@@ -94,7 +96,7 @@ export function ManualCheckInPage({
           orgUnits={orgUnits}
           instances={instances}
           onOpenOrgUnit={() => setOpenSheet('orgUnit')}
-          onOpenDate={() => {}}
+          onOpenDate={() => setOpenSheet('date')}
           onOpenShift={() => {}}
         />
 
@@ -107,6 +109,21 @@ export function ManualCheckInPage({
           selectedOrgUnitId={selection.orgUnitId}
           onSelect={(orgUnitId) =>
             setSelection((current) => applyOrgUnit(current, orgUnitId))
+          }
+        />
+
+        <DateSheet
+          open={openSheet === 'date'}
+          onOpenChange={(open) => setOpenSheet(open ? 'date' : null)}
+          instances={instances}
+          selectedDate={selection.date}
+          selectedShiftId={selection.shiftId}
+          month={visibleMonth}
+          onMonthChange={setVisibleMonth}
+          onSelect={(date) =>
+            setSelection((current) =>
+              applyDate(current, date, instances, new Date()),
+            )
           }
         />
       </CardContent>
