@@ -1,6 +1,6 @@
 'use client';
 
-import { parseTemplateBody } from '@repo/data';
+import { DataError, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { formatEuro } from '@/lib/formatting/formats';
 import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
 import { centsToEuros } from '../lib/money';
@@ -125,6 +126,7 @@ export function InvoiceCreationModal({
   );
 
   const org = useCurrentOrg();
+  const router = useRouter();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -227,6 +229,15 @@ export function InvoiceCreationModal({
     invoiceTemplateQuery.error ??
     contractTemplateQuery.error ??
     eligibleQuery.error;
+
+  // The most common blocker: the org has the reimbursement type but no
+  // invoice template yet (org-default or unit-override). Offer a direct CTA
+  // to the template builder instead of a dead end.
+  const noInvoiceTemplate =
+    invoiceTemplateQuery.error instanceof DataError &&
+    invoiceTemplateQuery.error.options?.code === 'NOT_FOUND';
+  const createTemplateCta = () =>
+    router.push(`/admin/${orgUId}/accounting/settings/templates`);
 
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
@@ -401,6 +412,8 @@ export function InvoiceCreationModal({
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
       errorMessage={loadError instanceof Error ? loadError.message : undefined}
+      errorCtaLabel={noInvoiceTemplate ? t('noTemplateCta') : undefined}
+      errorCtaAction={noInvoiceTemplate ? createTemplateCta : undefined}
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

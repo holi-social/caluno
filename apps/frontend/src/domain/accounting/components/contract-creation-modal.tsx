@@ -1,6 +1,6 @@
 'use client';
 
-import { parseTemplateBody } from '@repo/data';
+import { DataError, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -14,6 +14,7 @@ import { Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from '@/i18n/navigation';
 import { contractPeriodForLifespan } from '../lib/creation-modal.utils';
 import {
   apiDocumentKindFor,
@@ -74,6 +75,7 @@ export function ContractCreationModal({
 
   const orgUId = useOrgUId();
   const org = useCurrentOrg();
+  const router = useRouter();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -140,6 +142,15 @@ export function ContractCreationModal({
     ratesQuery.error ??
     profileQuery.error ??
     templateQuery.error;
+
+  // The most common blocker: the org has the reimbursement type but no
+  // contract template yet (org-default or unit-override). Offer a direct CTA
+  // to the template builder instead of a dead end.
+  const noContractTemplate =
+    templateQuery.error instanceof DataError &&
+    templateQuery.error.options?.code === 'NOT_FOUND';
+  const createTemplateCta = () =>
+    router.push(`/admin/${orgUId}/accounting/settings/templates`);
 
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
@@ -254,6 +265,8 @@ export function ContractCreationModal({
       errorTitle={t('loadErrorTitle')}
       errorDescription={t('loadError', { name: volunteerName })}
       errorMessage={loadError instanceof Error ? loadError.message : undefined}
+      errorCtaLabel={noContractTemplate ? t('noTemplateCta') : undefined}
+      errorCtaAction={noContractTemplate ? createTemplateCta : undefined}
       fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
