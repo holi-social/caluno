@@ -2377,6 +2377,27 @@ export class ShiftService {
     });
   }
 
+  /**
+   * Shifts in the org unit whose title matches `search`. Used by the check-in
+   * shift picker, which searches shift names rather than instances — so this
+   * takes no date range.
+   */
+  async findShiftsByTitle(
+    organizationUnitId: string,
+    search: string | null,
+    limit = 20,
+  ): Promise<ShiftEntity[]> {
+    return this.db.query.shifts.findMany({
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(search ? { title: { ilike: `%${search}%` } } : {}),
+      },
+      orderBy: { title: 'asc' },
+      limit,
+    });
+  }
+
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
   }
