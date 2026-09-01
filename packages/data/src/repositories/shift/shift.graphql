@@ -497,7 +497,10 @@ mutation CheckOut($shiftInstanceId: ID!) {
   }
 }
 
-query GetCheckInShiftInstances($startsAfter: DateTime!, $endsBefore: DateTime!) {
+query GetCheckInShiftInstances(
+  $startsAfter: DateTime!
+  $endsBefore: DateTime!
+) {
   checkInShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
     id
     actualStartsAt
