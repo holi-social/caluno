@@ -1990,6 +1990,11 @@
         "saveButton": "Save template",
         "saveSuccessToast": "Template saved",
         "saveErrorToast": "The template could not be saved. Please try again.",
+        "orgProfile": {
+          "blockedMessage": "Your organization info is missing details this template needs. Complete the organization info before saving.",
+          "blockedCta": "Complete organization info",
+          "blockedAskSomeone": "Ask someone who can manage the organization to complete the organization info."
+        },
         "previewScrollRegionLabel": "Document preview, scrollable",
         "preview": {
           "disclaimerBadge": "Preview",

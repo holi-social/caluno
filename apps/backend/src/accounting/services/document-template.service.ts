@@ -22,6 +22,7 @@ import type {
   DocumentTemplateEntity,
 } from '../schemas/document-template.schema';
 import type { TemplateSigneeEntity } from '../schemas/template-signee.schema';
+import { DocumentProfileRequirementService } from './document-profile-requirement.service';
 
 @Injectable()
 export class DocumentTemplateService {
@@ -29,6 +30,7 @@ export class DocumentTemplateService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly postHogService: PostHogService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
   ) {}
 
   async findDocumentTemplates(
@@ -71,6 +73,10 @@ export class DocumentTemplateService {
       if (!unit) {
         throw new NotFoundGraphQLError('Organization unit not found');
       }
+      // The unit must already carry the org-profile fields the template's
+      // bound org sources render — otherwise the PDF comes out with "—" gaps
+      // the org can't fix inline after the fact.
+      await this.assertOrgProfileComplete(input.organizationUnitId, input.body);
     }
 
     const existing = await this.db.query.documentTemplates.findFirst({
@@ -137,9 +143,21 @@ export class DocumentTemplateService {
     input: UpdateDocumentTemplateInput,
     editedByUserId: string,
   ): Promise<DocumentTemplateEntity> {
-    await this.findDocumentTemplate(organizationId, templateId);
+    const existingTemplate = await this.findDocumentTemplate(
+      organizationId,
+      templateId,
+    );
     if (input.signees) {
       this.assertValidSignees(input.signees);
+    }
+
+    // Org-data can be removed after a template is created, so re-check the
+    // unit the template is scoped to before overwriting its body.
+    if (input.body !== undefined && existingTemplate.organizationUnitId) {
+      await this.assertOrgProfileComplete(
+        existingTemplate.organizationUnitId,
+        input.body,
+      );
     }
 
     const template = await this.db.transaction(async (tx) => {
@@ -269,6 +287,25 @@ export class DocumentTemplateService {
       );
     }
     return [...signees].sort((a, b) => a.order - b.order);
+  }
+
+  private async assertOrgProfileComplete(
+    organizationUnitId: string | null,
+    body: unknown,
+  ): Promise<void> {
+    if (!organizationUnitId) return;
+    const missing =
+      await this.documentProfileRequirementService.missingOrgProfileSources(
+        organizationUnitId,
+        body,
+      );
+    if (missing.length > 0) {
+      throw new BadRequestGraphQLError(
+        'Your organization is missing details required for this template: ' +
+          missing.join(', ') +
+          '. Please complete your organization profile before saving this template.',
+      );
+    }
   }
 
   private assertValidSignees(signees: CreateTemplateSigneeInput[]): void {
