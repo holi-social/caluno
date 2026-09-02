@@ -5,6 +5,7 @@ describe('resolveCheckInReadiness', () => {
   it('returns notMember when not a member and no open request', () => {
     expect(
       resolveCheckInReadiness({
+        hasOpenTimeEntry: false,
         isMember: false,
         openMembershipRequestId: null,
         isParticipating: false,
@@ -15,6 +16,7 @@ describe('resolveCheckInReadiness', () => {
   it('returns pendingMembership when not a member but a request is open', () => {
     expect(
       resolveCheckInReadiness({
+        hasOpenTimeEntry: false,
         isMember: false,
         openMembershipRequestId: 'req-1',
         isParticipating: false,
@@ -25,6 +27,7 @@ describe('resolveCheckInReadiness', () => {
   it('returns notInShift for a member who is not participating', () => {
     expect(
       resolveCheckInReadiness({
+        hasOpenTimeEntry: false,
         isMember: true,
         openMembershipRequestId: null,
         isParticipating: false,
@@ -39,6 +42,7 @@ describe('resolveCheckInReadiness', () => {
     // layer too, per the spec's testing section.
     expect(
       resolveCheckInReadiness({
+        hasOpenTimeEntry: false,
         isMember: true,
         openMembershipRequestId: null,
         isParticipating: false,
@@ -49,6 +53,7 @@ describe('resolveCheckInReadiness', () => {
   it('returns ready for a member who is participating', () => {
     expect(
       resolveCheckInReadiness({
+        hasOpenTimeEntry: false,
         isMember: true,
         openMembershipRequestId: null,
         isParticipating: true,
@@ -59,10 +64,33 @@ describe('resolveCheckInReadiness', () => {
   it('prioritizes membership over participation when both are missing', () => {
     expect(
       resolveCheckInReadiness({
+        hasOpenTimeEntry: false,
         isMember: false,
         openMembershipRequestId: null,
         isParticipating: false,
       }),
     ).toBe('notMember');
+  });
+
+  it('returns alreadyCheckedIn when the volunteer has an open entry, even if otherwise ready', () => {
+    expect(
+      resolveCheckInReadiness({
+        hasOpenTimeEntry: true,
+        isMember: true,
+        openMembershipRequestId: null,
+        isParticipating: true,
+      }),
+    ).toBe('alreadyCheckedIn');
+  });
+
+  it('prioritizes alreadyCheckedIn over membership blockers', () => {
+    expect(
+      resolveCheckInReadiness({
+        hasOpenTimeEntry: true,
+        isMember: false,
+        openMembershipRequestId: null,
+        isParticipating: false,
+      }),
+    ).toBe('alreadyCheckedIn');
   });
 });

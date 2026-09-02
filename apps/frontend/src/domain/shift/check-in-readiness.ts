@@ -1,17 +1,20 @@
 /**
- * Maps the three readiness facts from `checkInReadiness` to one state, in
- * priority order, per the spec's readiness gate table: membership blocks
- * before participation, and a pending request is distinguished from no
- * request at all.
+ * Maps the four readiness facts from `checkInReadiness` to one state, in
+ * priority order: an open time entry for the selected instance wins over
+ * everything (the check-in already happened), then membership blocks before
+ * participation, and a pending request is distinguished from no request at
+ * all.
  */
 
 export type CheckInReadinessState =
+  | 'alreadyCheckedIn'
   | 'notMember'
   | 'pendingMembership'
   | 'notInShift'
   | 'ready';
 
 export type CheckInReadinessFacts = {
+  hasOpenTimeEntry: boolean;
   isMember: boolean;
   openMembershipRequestId: string | null;
   isParticipating: boolean;
@@ -20,6 +23,9 @@ export type CheckInReadinessFacts = {
 export function resolveCheckInReadiness(
   facts: CheckInReadinessFacts,
 ): CheckInReadinessState {
+  if (facts.hasOpenTimeEntry) {
+    return 'alreadyCheckedIn';
+  }
   if (!facts.isMember) {
     return facts.openMembershipRequestId ? 'pendingMembership' : 'notMember';
   }
