@@ -171,7 +171,13 @@ describe('Time entry -> eligible timesheet flow', () => {
     ).toBe(true);
   });
 
-  it('leaves a type-less shift non-eligible', async () => {
+  it('leaves a type-less entry untyped, unpaid, and excluded from eligible timesheets', async () => {
+    // Snapshot eligibility before creating the type-less entry, so we can
+    // prove below that closing it doesn't change what's eligible — not just
+    // that the entry itself came out untyped.
+    const before =
+      await invoiceService.findVolunteersNeedingTimesheets(organizationUnitId);
+
     const shift = await shiftService.create(volunteerId, organizationUnitId, {
       title: 'Unpaid setup',
       startsAt: new Date(Date.now() - 3600_000),
@@ -208,5 +214,9 @@ describe('Time entry -> eligible timesheet flow', () => {
 
     expect(entry.reimbursementTypeId).toBeNull();
     expect(entry.isPaid).toBe(false);
+
+    const after =
+      await invoiceService.findVolunteersNeedingTimesheets(organizationUnitId);
+    expect(after).toEqual(before);
   });
 });
