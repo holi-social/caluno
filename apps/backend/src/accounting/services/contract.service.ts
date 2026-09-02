@@ -4,6 +4,7 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
@@ -26,6 +27,9 @@ import {
 import type { CreateContractInput } from '../inputs/create-contract.input';
 import type { ContractEntity } from '../schemas/contract.schema';
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
+import { DocumentNotificationService } from './document-notification.service';
+import { DocumentProfileRequirementService } from './document-profile-requirement.service';
+import { DocumentRenderingService } from './document-rendering.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 
@@ -36,6 +40,9 @@ export class ContractService {
     private readonly db: Database,
     private readonly documentTemplateService: DocumentTemplateService,
     private readonly documentSigningService: DocumentSigningService,
+    private readonly documentNotificationService: DocumentNotificationService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
+    private readonly documentRenderingService: DocumentRenderingService,
     private readonly postHogService: PostHogService,
   ) {}
 
@@ -47,6 +54,7 @@ export class ContractService {
         reimbursementType: true,
         signatures: true,
         statusChanges: true,
+        organizationUnit: true,
       },
     });
     if (!contract) {
@@ -125,6 +133,24 @@ export class ContractService {
         template.id,
       );
 
+    // The unit must have the profile fields its documents render (e.g. city /
+    // address) before one is created — otherwise the PDF comes out with gaps
+    // the org can't fix inline. The account manager is told to complete the
+    // unit's profile first.
+    const missingOrg =
+      await this.documentProfileRequirementService.missingOrgProfileSources(
+        organizationId,
+        input.organizationUnitId,
+        template.body,
+      );
+    if (missingOrg.length > 0) {
+      throw new BadRequestGraphQLError(
+        'Your organization is missing details required for this document: ' +
+          missingOrg.join(', ') +
+          '. Please complete your organization profile before creating documents.',
+      );
+    }
+
     const contract = await this.db.transaction(async (tx) => {
       const [created] = await tx
         .insert(schema.contracts)
@@ -132,6 +158,7 @@ export class ContractService {
           documentTemplateId: template.id,
           volunteerId: input.volunteerId,
           reimbursementTypeId: input.reimbursementTypeId,
+          organizationUnitId: input.organizationUnitId,
           contractStatus: this.nextContractStatus(orderedSignees[0].signeeType),
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,
@@ -167,6 +194,19 @@ export class ContractService {
       },
     });
 
+    // The volunteer only hears about the document when it needs their
+    // signature — generation itself is not news (accounting-volunteer-documents).
+    if (
+      contract.contractStatus === ContractStatus.AWAITING_VOLUNTEER_SIGNATURE
+    ) {
+      await this.documentNotificationService.notifyAwaitingVolunteerSignature({
+        organizationId,
+        volunteerUserId: contract.volunteerId,
+        documentId: contract.id,
+        documentKind: DocumentKind.CONTRACT,
+      });
+    }
+
     return contract;
   }
 
@@ -199,6 +239,24 @@ export class ContractService {
       pending.requiredPermissionId,
       this.documentSigningService.organizationIdOf(contract.documentTemplate),
     );
+
+    // The volunteer's own signature is the first step of the chain. Require
+    // the profile fields the template reads before they can sign, so the
+    // signed document never comes out with "—" gaps in place of them.
+    if (pending.signeeType === SigneeType.VOLUNTEER) {
+      const missing =
+        await this.documentProfileRequirementService.missingProfileSources(
+          contract.volunteerId,
+          contract.documentTemplate?.body,
+        );
+      if (missing.length > 0) {
+        throw new BadRequestGraphQLError(
+          'Your profile is missing details required for this document: ' +
+            missing.join(', ') +
+            '. Please complete your profile before signing.',
+        );
+      }
+    }
 
     const isFinal = pendingIndex === orderedSignatures.length - 1;
 
@@ -238,6 +296,13 @@ export class ContractService {
 
       return signed;
     });
+
+    // The document is complete — render its PDF so it can be downloaded.
+    // Failures are logged, never thrown: signing still succeeds.
+    if (isFinal) {
+      const full = await this.findContract(contractId);
+      await this.documentRenderingService.renderAndAttachPdf(full, userId);
+    }
 
     this.postHogService.capture({
       event: POSTHOG_EVENT.CONTRACT_SIGN,
@@ -317,6 +382,21 @@ export class ContractService {
         ),
       },
     });
+
+    // Only the org-side decline is news to the volunteer — they had signed
+    // and would otherwise never learn the document is dead. A decline by the
+    // volunteer themselves is their own doing, so no email.
+    if (updated.declinedAtSigneeType === SigneeType.PERMISSION_HOLDER) {
+      await this.documentNotificationService.notifyDeclinedByOrg({
+        organizationId: this.documentSigningService.organizationIdOf(
+          contract.documentTemplate,
+        ),
+        volunteerUserId: contract.volunteerId,
+        documentId: contractId,
+        documentKind: DocumentKind.CONTRACT,
+        reason,
+      });
+    }
 
     return updated;
   }

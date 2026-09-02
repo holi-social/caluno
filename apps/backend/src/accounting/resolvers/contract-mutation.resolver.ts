@@ -2,20 +2,18 @@ import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { CreateContractInput } from '../inputs/create-contract.input';
 import { ContractMapper } from '../mappers';
 import { Contract } from '../models/contract.model';
-import { ContractService } from '../services';
+import { AccountingOrgAccessService, ContractService } from '../services';
 
 @Resolver(() => Contract)
 export class ContractMutationResolver {
   constructor(
     private readonly contractService: ContractService,
     private readonly contractMapper: ContractMapper,
-    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
@@ -26,12 +24,9 @@ export class ContractMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Contract> {
     const organizationId =
-      await this.organizationUnitService.findOrganizationIdByUnitId(
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
         context.organizationUnitId,
       );
-    if (!organizationId) {
-      throw new NotFoundGraphQLError('Organization not found');
-    }
 
     const contract = await this.contractService.createContract(
       organizationId,

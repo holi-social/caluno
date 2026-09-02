@@ -2,20 +2,18 @@ import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { CreateInvoiceInput } from '../inputs/create-invoice.input';
 import { InvoiceMapper } from '../mappers';
 import { Invoice } from '../models/invoice.model';
-import { InvoiceService } from '../services';
+import { AccountingOrgAccessService, InvoiceService } from '../services';
 
 @Resolver(() => Invoice)
 export class InvoiceMutationResolver {
   constructor(
     private readonly invoiceService: InvoiceService,
     private readonly invoiceMapper: InvoiceMapper,
-    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
@@ -26,12 +24,9 @@ export class InvoiceMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Invoice> {
     const organizationId =
-      await this.organizationUnitService.findOrganizationIdByUnitId(
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
         context.organizationUnitId,
       );
-    if (!organizationId) {
-      throw new NotFoundGraphQLError('Organization not found');
-    }
 
     const invoice = await this.invoiceService.createInvoice(
       organizationId,

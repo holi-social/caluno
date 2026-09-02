@@ -56,6 +56,8 @@ function makeContract(
     declinedByUser: null,
     renewDate: null,
     downloadUrl: null,
+    missingProfileFields: [],
+    missingOrgProfileFields: [],
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: null,
     volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
@@ -89,6 +91,8 @@ function makeInvoice(
     declinedAtSigneeType: null,
     declinedByUser: null,
     downloadUrl: null,
+    missingProfileFields: [],
+    missingOrgProfileFields: [],
     createdAt: '2026-07-01T00:00:00.000Z',
     updatedAt: null,
     volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
@@ -98,6 +102,7 @@ function makeInvoice(
       kind: DocumentKind.Invoice,
       reimbursementType: ehrenamtType,
     },
+    invoiceTimeEntries: [],
     signatures: [],
     statusChanges: [],
     ...overrides,
@@ -283,31 +288,44 @@ describe('monthsInRange', () => {
 });
 
 describe('buildBoardVolunteers', () => {
-  it('synthesizes contract-generate when no contract exists', () => {
+  const noDocsVolunteer = {
+    volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+    usageByType: [
+      {
+        usedCents: 0,
+        limitCents: 84_000,
+        remainingCents: 84_000,
+        reimbursementType: ehrenamtType,
+      },
+    ],
+  };
+
+  it('returns no documents for a volunteer with no contract or invoice', () => {
     const volunteers = buildBoardVolunteers({
-      rosterUsage: [
-        {
-          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
-          usageByType: [
-            {
-              usedCents: 0,
-              limitCents: 84_000,
-              remainingCents: 84_000,
-              reimbursementType: ehrenamtType,
-            },
-          ],
-        },
-      ],
+      rosterUsage: [noDocsVolunteer],
       contracts: [],
       invoices: [],
       year: 2026,
       locale: 'de',
     });
     expect(volunteers).toHaveLength(1);
-    expect(volunteers[0]?.documents[0]?.status).toBe('contract-generate');
+    expect(volunteers[0]?.documents).toEqual([]);
+    expect(volunteers[0]?.needsTimesheet).toBe(false);
   });
 
-  it('synthesizes timesheet-generate for active contract with no invoice', () => {
+  it('flags a volunteer with eligible time entries as needing a timesheet', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      needsTimesheetVolunteers: new Set(['v-1']),
+    });
+    expect(volunteers[0]?.needsTimesheet).toBe(true);
+  });
+
+  it('maps the active contract and skips timesheet placeholders when there is no invoice', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [
         {
@@ -335,7 +353,7 @@ describe('buildBoardVolunteers', () => {
     });
     const docs = volunteers[0]?.documents ?? [];
     expect(docs.some((d) => d.status === 'contract-active')).toBe(true);
-    expect(docs.some((d) => d.status === 'timesheet-generate')).toBe(true);
+    expect(docs.some((d) => d.status === 'timesheet-generate')).toBe(false);
   });
 
   it('maps existing invoices and skips generate for that month', () => {

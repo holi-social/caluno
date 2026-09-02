@@ -25,12 +25,17 @@ export function useContracts(filter?: ContractFilterInput) {
   });
 }
 
-export function useMyContracts(filter?: ContractFilterInput) {
+export function useMyContracts(
+  filter?: ContractFilterInput,
+  organizationUnitId?: string,
+) {
   const sdk = useSdk();
   const repository = new AccountingRepository(sdk);
 
   return useQuery<ContractSummary[]>({
-    queryKey: ['accounting', 'my-contracts', filter],
+    // Keyed by organization unit: the same user's docs differ per org, and
+    // the volunteer side renders one membership at a time.
+    queryKey: ['accounting', 'my-contracts', filter, organizationUnitId],
     queryFn: () => repository.findMyContracts(filter),
     staleTime: 30 * 1000,
   });
@@ -51,6 +56,11 @@ export function useContract(id?: string) {
 function invalidateContractQueries(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ['accounting', 'contracts'] });
   queryClient.invalidateQueries({ queryKey: ['accounting', 'my-contracts'] });
+  // The cross-org "My documents" views derive from the same data.
+  queryClient.invalidateQueries({ queryKey: ['accounting', 'my-documents'] });
+  queryClient.invalidateQueries({
+    queryKey: ['accounting', 'my-document-summary'],
+  });
 }
 
 export function useCreateContract() {

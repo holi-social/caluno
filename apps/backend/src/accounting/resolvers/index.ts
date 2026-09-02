@@ -18,6 +18,7 @@ export * from './invoice-query.resolver';
 export * from './invoice-signature-field.resolver';
 export * from './invoice-status-change-field.resolver';
 export * from './invoice-time-entry-field.resolver';
+export * from './my-documents-query.resolver';
 export * from './reimbursement-mutation.resolver';
 export * from './reimbursement-query.resolver';
 export * from './reimbursement-rate-field.resolver';

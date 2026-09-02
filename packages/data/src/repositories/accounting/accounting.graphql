@@ -74,8 +74,14 @@ fragment ContractSummaryFields on Contract {
   declineReason
   declinedAt
   declinedAtSigneeType
+  declinedByUser {
+    id
+    name
+  }
   renewDate
   downloadUrl
+  missingProfileFields
+  missingOrgProfileFields
   createdAt
   updatedAt
   volunteer {
@@ -173,7 +179,13 @@ fragment InvoiceSummaryFields on Invoice {
   declineReason
   declinedAt
   declinedAtSigneeType
+  declinedByUser {
+    id
+    name
+  }
   downloadUrl
+  missingProfileFields
+  missingOrgProfileFields
   createdAt
   updatedAt
   volunteer {
@@ -188,6 +200,10 @@ fragment InvoiceSummaryFields on Invoice {
   documentTemplate {
     id
     kind
+  }
+  # Shift count for a timesheet card ("3 Shifts · 10 hours · 234 €").
+  invoiceTimeEntries {
+    id
   }
   signatures {
     id
@@ -254,6 +270,26 @@ query GetPendingInvoiceSignee($invoiceId: ID!) {
     userId
     permissionKey
     eligibleUserIds
+  }
+}
+
+query GetVolunteersNeedingTimesheets(
+  $periodStart: DateTime
+  $periodEnd: DateTime
+) {
+  volunteersNeedingTimesheets(
+    periodStart: $periodStart
+    periodEnd: $periodEnd
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    eligibleHours
   }
 }
 
@@ -479,5 +515,28 @@ mutation SetManualBaseline(
       id
       name
     }
+  }
+}
+
+query MyDocuments {
+  myDocuments {
+    membershipId
+    organizationUnitId
+    organizationUnitName
+    organizationName
+    logoUrl
+    contracts {
+      ...ContractSummaryFields
+    }
+    invoices {
+      ...InvoiceSummaryFields
+    }
+  }
+}
+
+query MyDocumentSummary {
+  myDocumentSummary {
+    total
+    pending
   }
 }

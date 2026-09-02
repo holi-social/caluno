@@ -45,6 +45,7 @@ import {
   ALWAYS_AVAILABLE_SOURCES,
   countIncompleteManualFields,
   type DataSourceKey,
+  missingOrgProfileSourcesForOrg,
   PROFILE_REQUIRED_SOURCES,
   type TemplateDocument,
 } from './builder-types';
@@ -53,6 +54,10 @@ import { TemplateListingPageError } from './listing-page';
 
 // Mock: profile-required sources this org hasn't collected yet.
 const MOCK_PROFILE_GAPS = new Set<DataSourceKey>(['volunteer_tax_id']);
+
+// The org-unit edit sheet's URL id — mirrors FORM_ID in
+// org-unit-create-edit-sheet.tsx, so the org-profile CTA opens it directly.
+const ORG_UNIT_EDIT_SHEET_ID = 'org-unit-create-edit-form';
 
 const ALL_DATA_SOURCES: DataSourceKey[] = [
   ...ALWAYS_AVAILABLE_SOURCES,
@@ -147,6 +152,7 @@ export function TemplateBuilder({
   // null until the source document is known: the stored template body for a
   // configured slot, the German legal-text preset for an unconfigured one.
   const [templateDoc, setTemplateDoc] = useState<TemplateDocument | null>(null);
+  const [orgProfileBlocked, setOrgProfileBlocked] = useState(false);
   const initialized = useRef(false);
   useEffect(() => {
     if (initialized.current) return;
@@ -181,6 +187,8 @@ export function TemplateBuilder({
     pauschale,
     orgName: org.name,
     orgAddress: org.address,
+    orgCity: org.city,
+    orgLegalRep: org.legalRep,
     hourlyRateCents: effectiveRate?.hourlyRateCents,
     yearlyLimitCents:
       effectiveRate?.reimbursementType.yearlyLimitCents ??
@@ -217,6 +225,11 @@ export function TemplateBuilder({
 
   async function handleSave() {
     if (!templateDoc) return;
+    if (missingOrgSources.length > 0) {
+      setOrgProfileBlocked(true);
+      return;
+    }
+    setOrgProfileBlocked(false);
     const body = serializeTemplateBody(templateDoc);
     const invoiceNumberFormat = templateDoc.invoiceNumberFormat ?? null;
     try {
@@ -255,7 +268,16 @@ export function TemplateBuilder({
       }
       toast.success(t('saveSuccessToast'));
       if (backHref) router.push(backHref);
-    } catch {
+    } catch (error) {
+      // Backstop if the up-front check somehow missed: the server gate also
+      // refuses to save a template whose org sources the unit can't fill.
+      if (
+        error instanceof Error &&
+        /organization is missing|organization profile/i.test(error.message)
+      ) {
+        setOrgProfileBlocked(true);
+        return;
+      }
       toast.error(t('saveErrorToast'));
     }
   }
@@ -313,6 +335,16 @@ export function TemplateBuilder({
   }
 
   const incompleteCount = countIncompleteManualFields(templateDoc);
+  // The org-profile fields the template's bound org sources need the creating
+  // unit to have. When any is missing, the Save button is blocked up front and
+  // the coordinator is pointed at the unit's edit sheet (or told to ask someone
+  // who can manage the org) instead of the request failing on the server.
+  const missingOrgSources = templateDoc
+    ? missingOrgProfileSourcesForOrg(templateDoc, org)
+    : [];
+  const canEditOrg =
+    permissionsQuery.data?.some((p) => p.key === PermissionKey.OrgEdit) ??
+    false;
   const saving = createTemplate.isPending || updateTemplate.isPending;
 
   return (
@@ -374,6 +406,26 @@ export function TemplateBuilder({
             } as Parameters<typeof t>[1])}
           </span>
         )}
+        {(missingOrgSources.length > 0 || orgProfileBlocked) && (
+          <div className="flex w-full items-center justify-between gap-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3">
+            <p className="text-sm text-foreground">
+              {t('orgProfile.blockedMessage')}
+            </p>
+            {canEditOrg ? (
+              <Button type="button" variant="outline" size="sm" asChild>
+                <Link
+                  href={`/admin/${orgUId}/settings/org-units?sheet=${ORG_UNIT_EDIT_SHEET_ID}&id=${orgUId}`}
+                >
+                  {t('orgProfile.blockedCta')}
+                </Link>
+              </Button>
+            ) : (
+              <span className="text-sm text-muted-foreground">
+                {t('orgProfile.blockedAskSomeone')}
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-2">
           {backHref && (
             <Button type="button" variant="outline" asChild>
@@ -383,7 +435,12 @@ export function TemplateBuilder({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={incompleteCount > 0 || saving}
+            disabled={
+              incompleteCount > 0 ||
+              missingOrgSources.length > 0 ||
+              orgProfileBlocked ||
+              saving
+            }
           >
             {t('saveButton')}
           </Button>
