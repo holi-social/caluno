@@ -13,6 +13,7 @@ import { PERMISSIONS } from '../src/auth/constants';
 import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
 import { ShiftInviteStatus } from '../src/shift/enums';
+import { TimeTrackingMutationResolver } from '../src/time-tracking/resolvers/time-tracking-mutation.resolver';
 import { TimeTrackingQueryResolver } from '../src/time-tracking/resolvers/time-tracking-query.resolver';
 import {
   createFormSubmission,
@@ -35,7 +36,10 @@ import {
   grantPermissionToRole,
 } from './factories/role.factory';
 import { applyBunAuthMocks, setAuthMockUserId } from './helpers/auth-mocks';
-import { graphqlRequestRequiringData } from './helpers/graphql-request';
+import {
+  graphqlRequest,
+  graphqlRequestRequiringData,
+} from './helpers/graphql-request';
 import { getGraphqlTestContext } from './helpers/graphql-test-context';
 
 applyBunAuthMocks(mock.module);
@@ -355,6 +359,104 @@ describe('checkInVolunteerRequiredForms query', () => {
   });
 });
 
+describe('checkInVolunteer mutation', () => {
+  const CHECK_IN_VOLUNTEER = `
+    mutation CheckInVolunteer($volunteerId: ID!, $shiftInstanceId: ID) {
+      checkInVolunteer(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
+        id
+      }
+    }
+  `;
+
+  let app: INestApplication;
+  let db: Database;
+  let callerUserId: string;
+  let unitId: string;
+  let instanceId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    callerUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `Submit ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Submit unit',
+    });
+    unitId = unit.id;
+
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+
+    const role = await createRole(db, { organizationId: org.organization.id });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const membership = await addMembership(db, callerUserId, unit.id);
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+
+    const shift = await createShift(db, { organizationUnitId: unit.id });
+    const instance = await createShiftInstance(db, shift.id);
+    instanceId = instance.id;
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(callerUserId);
+  });
+
+  it('creates an open time entry for a caller holding only check-in:manage', async () => {
+    const volunteer = await createUser(db);
+
+    const data = await graphqlRequestRequiringData<{
+      checkInVolunteer: { id: string };
+    }>(
+      app,
+      {
+        query: CHECK_IN_VOLUNTEER,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInVolunteer',
+    );
+
+    expect(data.checkInVolunteer.id).toBeTruthy();
+  });
+
+  it('rejects a second check-in while one is already open', async () => {
+    const volunteer = await createUser(db);
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: CHECK_IN_VOLUNTEER,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInVolunteer',
+    );
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_VOLUNTEER,
+      variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe('Already checked in');
+  });
+});
+
 describe('check-in readiness/submit mutation permissions', () => {
   it('gates checkInReadiness on check-in:manage', () => {
     expect(
@@ -370,6 +472,15 @@ describe('check-in readiness/submit mutation permissions', () => {
       Reflect.getMetadata(
         PERMISSIONS_KEY,
         TimeTrackingQueryResolver.prototype.checkInVolunteerRequiredForms,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
+
+  it('gates checkInVolunteer on check-in:manage', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        TimeTrackingMutationResolver.prototype.checkInVolunteer,
       ),
     ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
   });
