@@ -724,6 +724,109 @@ describe('ShiftService', () => {
       expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
     });
 
+    it('does not throw a spurious capacity error when re-inviting a declined member at capacity', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        maxVolunteers: 1,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const user = await createUser(db);
+      // A stale (non-active) invite must not occupy capacity against a
+      // single-member re-invite when maxVolunteers is 1.
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId,
+        userId: user.id,
+        status: ShiftInviteStatus.ADMIN_REJECTED,
+      });
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [user.id],
+        organizationUnitId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId, userId: user.id },
+      });
+      expect(invites).toHaveLength(1);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+    });
+
+    it('does not throw a spurious capacity error when re-inviting to all future instances after a decline', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        maxVolunteers: 1,
+        startsAt: new Date('2026-07-01T08:00:00.000Z'),
+        endsAt: new Date('2026-07-01T10:00:00.000Z'),
+        rrule: null,
+      });
+      const [anchorInstance] = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      expect(anchorInstance?.id).toBeDefined();
+
+      // A later instance of the same shift, so the invite-to-all-future path
+      // iterates a real future sibling.
+      const futureSibling = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date('2026-07-02T08:00:00.000Z'),
+        actualEndsAt: new Date('2026-07-02T10:00:00.000Z'),
+        occurrenceIndex: 1,
+      });
+
+      const user = await createUser(db);
+
+      const originalNotificationHandler =
+        // biome-ignore lint/complexity/useLiteralKeys: accessing private method for test stubbing
+        shiftService['loadAndEmitShiftInvitedNotification'];
+      // biome-ignore lint/complexity/useLiteralKeys: assigning private method for test stubbing
+      shiftService['loadAndEmitShiftInvitedNotification'] = async () => {};
+
+      try {
+        // A stale (non-active) invite on a future instance must not count
+        // against capacity when the member is re-invited to all future
+        // instances.
+        await db.insert(schema.shiftInstanceInvites).values({
+          instanceId: futureSibling.id,
+          userId: user.id,
+          status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+        });
+
+        await shiftService.updateMembersForShiftInstance(
+          anchorInstance.id,
+          [user.id],
+          organizationUnitId,
+          { inviteToAllInstances: true },
+        );
+      } finally {
+        // biome-ignore lint/complexity/useLiteralKeys: restoring private method after test stubbing
+        shiftService['loadAndEmitShiftInvitedNotification'] =
+          originalNotificationHandler;
+      }
+
+      const anchorInvite = await db.query.shiftInstanceInvites.findFirst({
+        where: {
+          instanceId: anchorInstance.id,
+          userId: user.id,
+        },
+      });
+      expect(anchorInvite?.status).toBe(ShiftInviteStatus.INVITED);
+
+      const resurrectedFuture = await db.query.shiftInstanceInvites.findFirst({
+        where: {
+          instanceId: futureSibling.id,
+          userId: user.id,
+        },
+      });
+      expect(resurrectedFuture?.status).toBe(ShiftInviteStatus.INVITED);
+    });
+
     it('returns pending invitees via findVolunteers when active statuses are requested', async () => {
       const shift = await createShift(db, {
         organizationUnitId,
