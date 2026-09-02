@@ -253,6 +253,22 @@
     "subject": "You've left {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceVolunteerLeft": {
+    "coverage": "{signedUp} of {minVolunteers} volunteers are now signed up.",
+    "coverageNoMin": "{signedUp} volunteers are now signed up.",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailVolunteer": "Volunteer",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you can manage shifts on {brandName}.",
+    "greeting": "Hi {firstName}, {volunteerName} left a shift you manage.",
+    "heading": "A volunteer left a shift",
+    "note": "You may need to find a replacement.",
+    "previewText": "{volunteerName} left {shiftTitle} at {organizationName}.",
+    "subject": "{volunteerName} left {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftSeriesLeft": {
     "bodyMessage": "You've cancelled your signups for the '{shiftTitle}' series starting {fromDate}.",
     "detailFrom": "From",
@@ -265,6 +281,21 @@
     "note": "A coordinator has been informed so they can fill the gaps.",
     "previewText": "You've cancelled your signups for {shiftTitle} at {organizationName} starting {fromDate}.",
     "subject": "You've left {shiftTitle}"
+  },
+  "shiftSeriesVolunteerLeft": {
+    "coverage": "{signedUp} of {minVolunteers} volunteers are now signed up.",
+    "coverageNoMin": "{signedUp} volunteers are now signed up.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage shifts on {brandName}.",
+    "greeting": "Hi {firstName}, {volunteerName} left a shift series you manage.",
+    "heading": "A volunteer left a shift series",
+    "note": "You may need to find replacements for the remaining occurrences.",
+    "previewText": "{volunteerName} left {shiftTitle} at {organizationName}.",
+    "subject": "{volunteerName} left {shiftTitle}"
   },
   "shiftDetailsChanged": {
     "field": {
