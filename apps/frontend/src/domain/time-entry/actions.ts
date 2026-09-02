@@ -9,6 +9,7 @@ import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import {
+  serverCheckInVolunteerSchema,
   serverCloseTimeEntrySchema,
   serverDeleteTimeEntrySchema,
   serverTimeEntrySchema,
@@ -72,4 +73,17 @@ export const deleteTimeEntry = actionClient
       orgUId: parsedInput.organizationUnitId,
     });
     return await data.timeEntry.delete(parsedInput.id);
+  });
+
+export const checkInVolunteer = actionClient
+  .inputSchema(serverCheckInVolunteerSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.timeEntry.checkInVolunteer(
+      parsedInput.volunteerId,
+      parsedInput.shiftInstanceId,
+    );
   });

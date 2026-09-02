@@ -82,3 +82,9 @@ export const serverDeleteTimeEntrySchema = deleteTimeEntrySchema({
   timeEntryIdRequired: 'Time Entry ID is required',
   organizationUnitRequired: 'Organization unit ID is required',
 });
+
+export const serverCheckInVolunteerSchema = z.object({
+  organizationUnitId: z.string().min(1, 'Organization Unit is required'),
+  volunteerId: z.string().min(1, 'Volunteer is required'),
+  shiftInstanceId: z.string().nullable(),
+});
