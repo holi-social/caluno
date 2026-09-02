@@ -4,6 +4,7 @@ export const NotificationEvent = {
   MEMBERSHIP_APPROVED: 'notification.membership.approved',
   MEMBERSHIP_LEFT: 'notification.membership.left',
   MEMBERSHIP_REMOVED: 'notification.membership.removed',
+  MEMBERSHIP_REJECTED: 'notification.membership.rejected',
   SHIFT_INSTANCE_JOINED: 'notification.shift-instance.joined',
   SHIFT_INSTANCE_INVITED: 'notification.shift-instance.invited',
   SHIFT_INSTANCE_CANCELLED: 'notification.shift-instance.cancelled',

@@ -95,6 +95,16 @@
     "previewText": "{requesterName} wants to join {organizationName}.",
     "subject": "New membership request for {organizationName}"
   },
+  "membershipRejected": {
+    "footerNote": "You're receiving this because your membership request for {organizationName} was rejected on {brandName}.",
+    "greetingAfter": "was not approved.",
+    "greetingBefore": "Hi {firstName}, your membership request for",
+    "heading": "Your membership request was rejected",
+    "outro": "You can contact the organization if you have questions about this decision.",
+    "previewText": "Your membership request for {organizationName} was rejected.",
+    "reasonLabel": "Reason:",
+    "subject": "Your membership request for {organizationName} was rejected"
+  },
   "organizationCreated": {
     "buttonLabel": "Open {organizationName}",
     "footerNote": "You're receiving this because you created an organization on {brandName}.",

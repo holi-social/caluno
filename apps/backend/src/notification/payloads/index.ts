@@ -2,6 +2,7 @@ export type { DocumentAwaitingSignaturePayload } from './document-awaiting-signa
 export type { DocumentDeclinedByOrgPayload } from './document-declined-by-org.payload';
 export type { MembershipApprovedPayload } from './membership-approved.payload';
 export type { MembershipLeftPayload } from './membership-left.payload';
+export type { MembershipRejectedPayload } from './membership-rejected.payload';
 export type { MembershipRemovedPayload } from './membership-removed.payload';
 export type { MembershipRequestedPayload } from './membership-requested.payload';
 export type { OrganizationCreatedPayload } from './organization-created.payload';

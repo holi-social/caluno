@@ -714,6 +714,15 @@ export class MembershipService {
           membership_request_id: request.id,
         },
       });
+
+      if (orgUnit) {
+        this.notificationService.notifyMembershipRejected({
+          organizationUnitId,
+          organizationName: orgUnit.name,
+          userId: request.userId,
+          rejectionReason: rejectionReason || null,
+        });
+      }
     }
 
     return request;

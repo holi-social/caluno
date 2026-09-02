@@ -2,6 +2,7 @@ export { documentAwaitingSignatureTemplate } from './document-awaiting-signature
 export { documentDeclinedByOrgTemplate } from './document-declined-by-org.template';
 export { membershipApprovedTemplate } from './membership-approved.template';
 export { membershipLeftTemplate } from './membership-left.template';
+export { membershipRejectedTemplate } from './membership-rejected.template';
 export { membershipRemovedTemplate } from './membership-removed.template';
 export { membershipRequestedTemplate } from './membership-requested.template';
 export { organizationCreatedTemplate } from './organization-created.template';
