@@ -151,3 +151,33 @@ export function isVolunteerJoinResolveSource(
     status === ShiftInviteStatus.VOLUNTEER_CANCELLED
   );
 }
+
+/**
+ * Whether a non-admin (self) actor may request `to` from current `from`.
+ * JOINED / WAITLIST_JOINED are only from volunteer join-resolve sources
+ * (accept / re-join); admin approval and waitlist promotion are admin-only.
+ */
+export function volunteerMayRequestInviteStatus(
+  from: InviteStatusValue,
+  to: InviteStatusValue,
+): boolean {
+  if (from === to) {
+    return true;
+  }
+
+  if (
+    to === ShiftInviteStatus.ADMIN_REJECTED ||
+    to === ShiftInviteStatus.ADMIN_INVITED
+  ) {
+    return false;
+  }
+
+  if (
+    to === ShiftInviteStatus.JOINED ||
+    to === ShiftInviteStatus.WAITLIST_JOINED
+  ) {
+    return isVolunteerJoinResolveSource(from);
+  }
+
+  return true;
+}

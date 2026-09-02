@@ -9,6 +9,7 @@ import * as schema from '../database/schema';
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
+  ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
@@ -32,6 +33,7 @@ import {
   PARTICIPATING_EVENT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
+  volunteerMayRequestInviteStatus,
 } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
@@ -909,6 +911,16 @@ export class EventService {
 
     // Idempotent no-op — matching status skips the shift cascade re-run.
     const isAdminActor = actorUserId !== userId;
+
+    if (
+      !isAdminActor &&
+      !volunteerMayRequestInviteStatus(invite.status, status)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to set this invite status',
+      );
+    }
+
     let targetStatus = status;
 
     if (

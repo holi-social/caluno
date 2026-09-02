@@ -7,6 +7,7 @@ import {
   PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
+  volunteerMayRequestInviteStatus,
 } from './invite-status';
 
 describe('invite-status', () => {
@@ -235,6 +236,68 @@ describe('invite-status', () => {
           EventInviteStatus.ADMIN_INVITED,
         ),
       ).toBe(false);
+    });
+  });
+
+  describe('volunteerMayRequestInviteStatus', () => {
+    it('allows accept/re-join targets from join-resolve sources', () => {
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.ADMIN_INVITED,
+          ShiftInviteStatus.JOINED,
+        ),
+      ).toBe(true);
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.VOLUNTEER_CANCELLED,
+          ShiftInviteStatus.WAITLIST_JOINED,
+        ),
+      ).toBe(true);
+    });
+
+    it('blocks self-approve and waitlist skip', () => {
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
+          ShiftInviteStatus.JOINED,
+        ),
+      ).toBe(false);
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.WAITLIST_JOINED,
+          ShiftInviteStatus.JOINED,
+        ),
+      ).toBe(false);
+    });
+
+    it('blocks admin-only targets', () => {
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.JOINED,
+          ShiftInviteStatus.ADMIN_REJECTED,
+        ),
+      ).toBe(false);
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.ADMIN_REJECTED,
+          ShiftInviteStatus.ADMIN_INVITED,
+        ),
+      ).toBe(false);
+    });
+
+    it('allows volunteer reject/cancel from pending states', () => {
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
+          ShiftInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(true);
+      expect(
+        volunteerMayRequestInviteStatus(
+          ShiftInviteStatus.WAITLIST_JOINED,
+          ShiftInviteStatus.VOLUNTEER_CANCELLED,
+        ),
+      ).toBe(true);
     });
   });
 });
