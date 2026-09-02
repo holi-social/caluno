@@ -15,7 +15,7 @@ type BlockerCardProps = {
 };
 
 /**
- * Shared shell for the three readiness blocker states (Figma "blocked"
+ * Shared shell for the readiness blocker states (Figma "blocked"
  * frame). Each caller supplies its own icon, copy, and action — the card
  * itself has no state.
  */
