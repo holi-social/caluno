@@ -250,6 +250,25 @@
     "previewText": "You've cancelled your signups for {shiftTitle} at {organizationName} starting {fromDate}.",
     "subject": "You've left {shiftTitle}"
   },
+  "shiftDetailsChanged": {
+    "field": {
+      "startsAt": "Start",
+      "endsAt": "End",
+      "location": "Location",
+      "instructions": "Instructions",
+      "title": "Title"
+    },
+    "footerNote": "You're receiving this because a shift you're signed up for on {brandName} has changed.",
+    "greeting": "Hi {firstName}, the shift '{shiftTitle}' at {organizationName} has changed.",
+    "heading": "Shift details changed",
+    "note": "You are still signed up for this shift — no need to accept again.",
+    "previewText": "Details for {shiftTitle} at {organizationName} have changed.",
+    "seriesGreeting": "Hi {firstName}, the shift series '{shiftTitle}' at {organizationName} has changed.",
+    "seriesHeading": "Shift series details changed",
+    "seriesRange": "This change applies to shifts from {fromDate} onward.",
+    "subject": "Details changed for {shiftTitle}",
+    "updated": "updated"
+  },
   "shiftInvited": {
     "buttonLabel": "View shift",
     "detailInstructions": "Instructions",

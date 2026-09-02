@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
+import { shiftDetailsChangedTemplate } from '../email/templates/shift-details-changed.template';
 import { shiftInstanceCancelledTemplate } from '../email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from '../email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from '../email/templates/shift-instance-joined.template';
@@ -288,6 +289,34 @@ export class ShiftListener {
             shiftLocation: payload.shiftLocation,
             recipientFirstName: recipient.firstName,
             fromDate: payload.fromDate,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_DETAILS_CHANGED)
+  async handleShiftDetailsChanged(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_DETAILS_CHANGED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_DETAILS_CHANGED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftDetailsChangedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftTitle: payload.shiftTitle,
+            recipientFirstName: recipient.firstName,
+            fromDate: payload.fromDate,
+            changes: payload.changes,
           },
           templateContext,
         );

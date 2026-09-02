@@ -11,6 +11,7 @@ export { membershipRemovedTemplate } from './membership-removed.template';
 export { membershipRequestedTemplate } from './membership-requested.template';
 export { organizationCreatedTemplate } from './organization-created.template';
 export { passwordResetTemplate } from './password-reset.template';
+export { shiftDetailsChangedTemplate } from './shift-details-changed.template';
 export { shiftInstanceCancelledTemplate } from './shift-instance-cancelled.template';
 export { shiftInstanceInvitedTemplate } from './shift-instance-invited.template';
 export { shiftInstanceJoinedTemplate } from './shift-instance-joined.template';

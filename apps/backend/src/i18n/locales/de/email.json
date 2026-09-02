@@ -250,6 +250,25 @@
     "previewText": "Du hast deine Anmeldungen für {shiftTitle} bei {organizationName} ab {fromDate} abgesagt.",
     "subject": "Du hast {shiftTitle} verlassen"
   },
+  "shiftDetailsChanged": {
+    "field": {
+      "startsAt": "Beginn",
+      "endsAt": "Ende",
+      "location": "Ort",
+      "instructions": "Beschreibung",
+      "title": "Titel"
+    },
+    "footerNote": "Du erhältst diese E-Mail, weil sich ein Einsatz, für den du angemeldet bist, auf {brandName} geändert hat.",
+    "greeting": "Hallo {firstName}, der Einsatz '{shiftTitle}' bei {organizationName} hat sich geändert.",
+    "heading": "Einsatzdetails geändert",
+    "note": "Du bist weiterhin für diesen Einsatz angemeldet – du musst nicht erneut zusagen.",
+    "previewText": "Die Details für {shiftTitle} bei {organizationName} haben sich geändert.",
+    "seriesGreeting": "Hallo {firstName}, die Einsatzserie '{shiftTitle}' bei {organizationName} hat sich geändert.",
+    "seriesHeading": "Details der Einsatzserie geändert",
+    "seriesRange": "Diese Änderung gilt für Einsätze ab {fromDate}.",
+    "subject": "Details geändert für {shiftTitle}",
+    "updated": "aktualisiert"
+  },
   "shiftInvited": {
     "buttonLabel": "Einsatz ansehen",
     "detailInstructions": "Beschreibung",
