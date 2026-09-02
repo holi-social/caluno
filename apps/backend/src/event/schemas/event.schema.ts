@@ -28,6 +28,9 @@ export const events = snakeCase.table(
       .notNull(),
     startsAt: timestamp('starts_at').notNull(),
     endsAt: timestamp('ends_at').notNull(),
+    joinRequiresApproval: boolean('join_requires_approval')
+      .notNull()
+      .default(false),
     isDeleted: boolean('is_deleted').notNull().default(false),
     ...timestampColumns,
   },
