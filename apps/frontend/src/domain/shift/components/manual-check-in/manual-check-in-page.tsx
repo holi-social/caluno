@@ -1,13 +1,22 @@
 'use client';
 
-import { useCheckInShiftInstances } from '@repo/data/react';
+import {
+  useCheckInInviteToOrganization,
+  useCheckInInviteToShiftInstance,
+  useCheckInReadiness,
+  useCheckInShiftInstances,
+} from '@repo/data/react';
 import { Button, Card, CardContent } from '@repo/ui';
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import { UserCard } from '@/components/user-card';
+import { checkInVolunteer } from '@/domain/time-entry/actions';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import { resolveCheckInReadiness } from '../../check-in-readiness';
 import {
   applyDate,
   applyOrgUnit,
@@ -17,6 +26,9 @@ import {
   pickInitialInstance,
   toCheckInInstance,
 } from '../../check-in-selection';
+import { setCheckInSuccessPayload } from '../../check-in-success-dialog';
+import { AcceptMembershipSheet } from './accept-membership-sheet';
+import { CheckInReadinessCard } from './check-in-readiness-card';
 import { DateSheet } from './date-sheet';
 import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
@@ -40,6 +52,7 @@ export function ManualCheckInPage({
 }: ManualCheckInPageProps) {
   const t = useTranslations('CheckIn');
   const router = useRouter();
+  const { formatTimeRange } = useFormatting();
 
   const [selection, setSelection] = useState<CheckInSelection>(() => ({
     orgUnitId: initialOrgUnitId,
@@ -50,7 +63,7 @@ export function ManualCheckInPage({
   }));
   const [didPreselect, setDidPreselect] = useState(false);
   const [openSheet, setOpenSheet] = useState<
-    'orgUnit' | 'date' | 'shift' | null
+    'orgUnit' | 'date' | 'shift' | 'acceptMembership' | null
   >(null);
 
   // The visible month drives the fetch; it also feeds the calendar dots and
@@ -76,6 +89,86 @@ export function ManualCheckInPage({
       setSelection((current) => ({ ...current, ...initial }));
     }
   }
+
+  // Readiness: enabled only once a shift instance is chosen. Every mutator
+  // in check-in-selection.ts writes shiftInstanceId and selectedInstance
+  // together, so they never disagree about which instance is current.
+  const { data: readiness } = useCheckInReadiness(
+    selection.orgUnitId,
+    volunteer.id,
+    selection.shiftInstanceId,
+  );
+  const readinessState = readiness
+    ? resolveCheckInReadiness({
+        ...readiness,
+        openMembershipRequestId: readiness.openMembershipRequestId ?? null,
+      })
+    : null;
+
+  // "Sent" is per (org unit) / (shift instance) — tracked as the id it was
+  // sent for, so switching to a different unit or instance re-arms the
+  // button instead of carrying a stale confirmation forward.
+  const [orgInviteSentFor, setOrgInviteSentFor] = useState<string | null>(null);
+  const [shiftInviteSentFor, setShiftInviteSentFor] = useState<string | null>(
+    null,
+  );
+  const inviteToOrgMutation = useCheckInInviteToOrganization(
+    selection.orgUnitId,
+  );
+  const inviteToShiftMutation = useCheckInInviteToShiftInstance(
+    selection.orgUnitId,
+  );
+
+  const handleInviteToOrg = async () => {
+    try {
+      await inviteToOrgMutation.mutateAsync(volunteer.id);
+      setOrgInviteSentFor(selection.orgUnitId);
+    } catch {
+      toast.error(t('notMemberButton'));
+    }
+  };
+
+  const handleInviteToShift = async () => {
+    if (!selection.shiftInstanceId) return;
+    try {
+      await inviteToShiftMutation.mutateAsync({
+        shiftInstanceId: selection.shiftInstanceId,
+        volunteerId: volunteer.id,
+      });
+      setShiftInviteSentFor(selection.shiftInstanceId);
+    } catch {
+      toast.error(t('notInShiftButton'));
+    }
+  };
+
+  const [isSubmitPending, startSubmitTransition] = useTransition();
+
+  const handleSubmit = () => {
+    startSubmitTransition(async () => {
+      const result = await checkInVolunteer({
+        organizationUnitId: selection.orgUnitId,
+        volunteerId: volunteer.id,
+        shiftInstanceId: selection.shiftInstanceId,
+      });
+
+      if (result?.serverError) {
+        toast.error(result.serverError);
+        return;
+      }
+
+      setCheckInSuccessPayload({
+        volunteerName: volunteer.name,
+        shiftTitle: selection.selectedInstance?.title ?? null,
+        timeRange: selection.selectedInstance
+          ? formatTimeRange(
+              selection.selectedInstance.actualStartsAt,
+              selection.selectedInstance.actualEndsAt,
+            )
+          : null,
+      });
+      router.push('/check-in');
+    });
+  };
 
   return (
     <Card>
@@ -107,6 +200,33 @@ export function ManualCheckInPage({
         />
 
         <UserCard user={volunteer} size="lg" />
+
+        {selection.shiftInstanceId && readinessState && (
+          <CheckInReadinessCard
+            state={readinessState}
+            onInviteToOrg={handleInviteToOrg}
+            onOpenAcceptMembership={() => setOpenSheet('acceptMembership')}
+            onInviteToShift={handleInviteToShift}
+            isInviteToOrgPending={inviteToOrgMutation.isPending}
+            isInviteToOrgSent={orgInviteSentFor === selection.orgUnitId}
+            isInviteToShiftPending={inviteToShiftMutation.isPending}
+            isInviteToShiftSent={
+              shiftInviteSentFor === selection.shiftInstanceId
+            }
+          />
+        )}
+
+        {readinessState === 'ready' && (
+          <Button
+            type="button"
+            size="lg"
+            className="w-full"
+            disabled={isSubmitPending}
+            onClick={handleSubmit}
+          >
+            {t('checkInButton')}
+          </Button>
+        )}
 
         <OrgUnitSheet
           open={openSheet === 'orgUnit'}
@@ -148,6 +268,17 @@ export function ManualCheckInPage({
               applyShift(current, shiftId, instances, new Date()),
             )
           }
+        />
+
+        <AcceptMembershipSheet
+          open={openSheet === 'acceptMembership'}
+          onOpenChange={(open) =>
+            setOpenSheet(open ? 'acceptMembership' : null)
+          }
+          organizationUnitId={selection.orgUnitId}
+          volunteerId={volunteer.id}
+          membershipRequestId={readiness?.openMembershipRequestId ?? null}
+          onAccepted={() => setOpenSheet(null)}
         />
       </CardContent>
     </Card>
