@@ -7,8 +7,8 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { idColumn, timestampColumns } from '../../database/database-columns';
 import { reimbursementTypes } from '../../accounting/schemas/reimbursement-type.schema';
+import { idColumn, timestampColumns } from '../../database/database-columns';
 import { shifts } from './shift.schema';
 
 export const shiftInstances = snakeCase.table(

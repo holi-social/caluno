@@ -8,10 +8,10 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { reimbursementTypes } from '../../accounting/schemas/reimbursement-type.schema';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
-import { reimbursementTypes } from '../../accounting/schemas/reimbursement-type.schema';
 import { events } from '../../event/schemas/event.schema';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { ShiftVisibility } from '../enums';

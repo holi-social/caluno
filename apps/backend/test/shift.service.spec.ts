@@ -264,7 +264,11 @@ describe('ShiftService', () => {
   });
 
   describe('update — reimbursement type override', () => {
-    it('sets an override reimbursement type on a single future instance', async () => {
+    it('syncs a new reimbursement type to the master for a non-recurring shift with only one instance', async () => {
+      // A non-recurring shift (rrule: null) always routes through
+      // `updateShiftInstanceSeries` (the instance IS the shift), which syncs
+      // `reimbursementTypeId` to the master row and leaves the instance's
+      // own override cleared, so it keeps falling back to the master.
       const shiftType = await createReimbursementType(db, {
         key: ReimbursementTypeKey.EHRENAMT,
       });
@@ -297,7 +301,13 @@ describe('ShiftService', () => {
         organizationUnitId,
       );
 
-      expect(updated.overrideReimbursementTypeId).toBe(overrideType.id);
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+
+      expect(updated.overrideReimbursementTypeId).toBeNull();
+      expect(refreshedShift?.reimbursementTypeId).toBe(overrideType.id);
     });
 
     it('rejects a reimbursement type change on a past instance', async () => {
@@ -434,6 +444,72 @@ describe('ShiftService', () => {
         .where(eq(schema.shiftInstances.id, pastInstanceWithOwnOverride.id));
 
       expect(refreshed?.overrideReimbursementTypeId).toBe(oldType.id);
+    });
+  });
+
+  describe('updateShiftInstanceSeries — reimbursement type sync', () => {
+    it('syncs the new type to the master, snapshots past instances, and leaves future instances falling back', async () => {
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: DAILY_RRULE,
+        reimbursementTypeId: oldType.id,
+      });
+
+      // createShift only expands instances from `startsAt` onward, so add an
+      // already-occurred instance by hand — this is the one that must get
+      // snapshotted onto the old type before the master row changes.
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: daysAgo(2, 8),
+        actualEndsAt: daysAgo(2, 10),
+      });
+
+      const [futureInstance] = await getInstances(shift.id).then((rows) =>
+        rows.filter((r) => r.id !== pastInstance.id),
+      );
+      if (!futureInstance) {
+        throw new Error('Expected createShift to expand a future instance');
+      }
+
+      await shiftService.updateShiftInstance(
+        futureInstance.id,
+        {
+          title: shift.title,
+          startsAt: futureInstance.actualStartsAt,
+          endsAt: futureInstance.actualEndsAt,
+          visibility: shift.visibility,
+          reimbursementTypeId: newType.id,
+        } as never,
+        organizationUnitId,
+        { applyToAllFuture: true },
+      );
+
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+      const [refreshedPast] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstance.id));
+      const [refreshedFuture] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, futureInstance.id));
+
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+      expect(refreshedPast?.overrideReimbursementTypeId).toBe(oldType.id);
+      expect(refreshedFuture?.overrideReimbursementTypeId).toBeNull();
     });
   });
 
