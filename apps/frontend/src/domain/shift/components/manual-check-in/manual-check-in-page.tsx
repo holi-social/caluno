@@ -124,7 +124,7 @@ export function ManualCheckInPage({
       await inviteToOrgMutation.mutateAsync(volunteer.id);
       setOrgInviteSentFor(selection.orgUnitId);
     } catch {
-      toast.error(t('notMemberButton'));
+      toast.error(t('notMemberError'));
     }
   };
 
@@ -137,7 +137,7 @@ export function ManualCheckInPage({
       });
       setShiftInviteSentFor(selection.shiftInstanceId);
     } catch {
-      toast.error(t('notInShiftButton'));
+      toast.error(t('notInShiftError'));
     }
   };
 

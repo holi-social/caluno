@@ -51,7 +51,9 @@ export function useCheckInApproveMembershipRequest(organizationUnitId: string) {
     mutationFn: (requestId: string) =>
       repository.checkInApprove(requestId, organizationUnitId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['check-in-readiness'] });
+      queryClient.invalidateQueries({
+        queryKey: ['check-in-readiness', organizationUnitId],
+      });
     },
   });
 }
