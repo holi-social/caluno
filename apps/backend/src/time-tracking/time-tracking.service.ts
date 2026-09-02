@@ -55,6 +55,19 @@ export class TimeTrackingService {
         input.shiftInstanceId,
         organizationUnitId,
       );
+
+      // Fail fast instead of relying on the DB unique-index guard below.
+      // Closed (historical) entries coexist with an open entry, so only
+      // check when the new entry would itself be open.
+      if (!input.endedAt) {
+        const alreadyCheckedIn = await this.shiftService.hasOpenTimeEntry(
+          input.shiftInstanceId,
+          input.volunteerId,
+        );
+        if (alreadyCheckedIn) {
+          throw new ConflictGraphQLError('Already checked in');
+        }
+      }
     }
 
     try {
