@@ -1364,7 +1364,9 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       'updateEventInviteStatus',
     );
 
-    expect(data.updateEventInviteStatus.status).toBe(EventInviteStatus.ADMIN_INVITED);
+    expect(data.updateEventInviteStatus.status).toBe(
+      EventInviteStatus.ADMIN_INVITED,
+    );
     expect(data.updateEventInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.eventInvites.findFirst({
