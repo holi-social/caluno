@@ -1471,6 +1471,7 @@ export class ShiftService {
         overrideInstructions: input.instructions ?? null,
         overrideMinVolunteers: input.minVolunteers ?? null,
         overrideMaxVolunteers: input.maxVolunteers ?? null,
+        overrideReimbursementTypeId: input.reimbursementTypeId ?? null,
         actualStartsAt: input.startsAt,
         actualEndsAt: input.endsAt,
         isException: true,
@@ -1644,6 +1645,7 @@ export class ShiftService {
           overrideInstructions: null,
           overrideMinVolunteers: null,
           overrideMaxVolunteers: null,
+          overrideReimbursementTypeId: input.reimbursementTypeId ?? null,
           isException: false,
         })
         .where(
@@ -1665,6 +1667,7 @@ export class ShiftService {
           overrideInstructions: null,
           overrideMinVolunteers: null,
           overrideMaxVolunteers: null,
+          overrideReimbursementTypeId: input.reimbursementTypeId ?? null,
           isException: false,
           actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
           actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
