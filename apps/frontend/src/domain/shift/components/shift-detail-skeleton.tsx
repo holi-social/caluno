@@ -1,4 +1,6 @@
-import { Skeleton } from '@repo/ui';
+import { Card, Skeleton } from '@repo/ui';
+
+const dayCells = [0, 1, 2, 3, 4, 5, 6];
 
 export function ShiftDetailSkeleton() {
   return (
@@ -16,5 +18,28 @@ export function ShiftDetailSkeleton() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function ShiftActionCardSkeleton() {
+  return (
+    <Card className="space-y-4 p-6">
+      <Skeleton className="h-9 w-44" />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-6 w-28" />
+        <div className="grid grid-cols-7 gap-1.5">
+          {dayCells.map((day) => (
+            <Skeleton key={day} className="h-[68px] rounded-xl" />
+          ))}
+        </div>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+      </div>
+      <Skeleton className="h-5 w-52" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="mx-auto h-4 w-36" />
+    </Card>
   );
 }
