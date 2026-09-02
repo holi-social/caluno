@@ -1326,6 +1326,27 @@ export class ShiftService {
     });
 
     // Emit notifications after successful commit
+    if (userIdsToRemove.length > 0) {
+      if (!options.inviteToAllInstances) {
+        for (const removedUserId of userIdsToRemove) {
+          void this.loadAndEmitShiftInstanceRemovedNotification(
+            currentShiftInstance.master,
+            currentShiftInstance,
+            removedUserId,
+          );
+        }
+      } else {
+        const fromDate = currentShiftInstance.actualStartsAt;
+        for (const removedUserId of userIdsToRemove) {
+          void this.loadAndEmitShiftSeriesRemovedNotification(
+            currentShiftInstance.master,
+            fromDate,
+            removedUserId,
+          );
+        }
+      }
+    }
+
     if (userIdsToAdd.length > 0) {
       if (!options.inviteToAllInstances) {
         const notifyUserIds = actorUserId
@@ -2489,6 +2510,69 @@ export class ShiftService {
     }
   }
 
+  private async loadAndEmitShiftInstanceRemovedNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceRemoved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance removed notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftSeriesRemovedNotification(
+    shift: ShiftEntity,
+    fromDate: Date,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftSeriesRemoved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        fromDate,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift series removed notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async loadAndEmitShiftInvitedNotification(
     shift: ShiftEntity,
     invitedUserIds?: string[] | null,
@@ -3088,6 +3172,14 @@ export class ShiftService {
       });
     }
 
+    if (status === ShiftInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {
+      void this.loadAndEmitShiftSeriesRemovedNotification(
+        shift,
+        new Date(),
+        userId,
+      );
+    }
+
     return updated;
   }
 
@@ -3243,6 +3335,14 @@ export class ShiftService {
 
     if (status === ShiftInviteStatus.ACCEPTED) {
       void this.notifyShiftInstanceJoined(userId, instance.master, instance);
+    }
+
+    if (status === ShiftInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {
+      void this.loadAndEmitShiftInstanceRemovedNotification(
+        instance.master,
+        instance,
+        userId,
+      );
     }
 
     const source = actorUserId === userId ? 'self' : 'admin';
