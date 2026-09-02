@@ -21,6 +21,19 @@
     "subject": "{eventTitle} has been cancelled",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventRemoved": {
+    "detailEvent": "Event",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because an admin removed you from an event on {brandName}.",
+    "greeting": "Hi {firstName}, you've been removed from an event.",
+    "heading": "You've been removed from an event",
+    "note": "This event is no longer on your schedule.",
+    "previewText": "You've been removed from {eventTitle} at {organizationName}.",
+    "subject": "You've been removed from {eventTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "eventInvited": {
     "buttonLabel": "View event",
     "detailEvent": "Event",

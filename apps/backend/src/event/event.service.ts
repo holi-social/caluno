@@ -920,6 +920,10 @@ export class EventService {
       void this.loadAndEmitEventInvitedNotification(event, [userId]);
     }
 
+    if (status === EventInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {
+      void this.loadAndEmitEventRemovedNotification(event, userId);
+    }
+
     const source = actorUserId === userId ? 'self' : 'admin';
     const organizationId = await this.resolveOrganizationId(
       event.organizationUnitId,
@@ -1174,6 +1178,37 @@ export class EventService {
     } catch (error) {
       this.logger.error(
         `Failed to emit event joined notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitEventRemovedNotification(
+    event: EventEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: event.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyEventRemoved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        eventId: event.id,
+        eventTitle: event.title,
+        eventLocation: event.location,
+        userId,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit event removed notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

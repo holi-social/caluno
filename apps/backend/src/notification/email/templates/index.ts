@@ -1,5 +1,9 @@
 export { documentAwaitingSignatureTemplate } from './document-awaiting-signature.template';
 export { documentDeclinedByOrgTemplate } from './document-declined-by-org.template';
+export { eventCancelledTemplate } from './event-cancelled.template';
+export { eventInvitedTemplate } from './event-invited.template';
+export { eventJoinedTemplate } from './event-joined.template';
+export { eventRemovedTemplate } from './event-removed.template';
 export { membershipApprovedTemplate } from './membership-approved.template';
 export { membershipLeftTemplate } from './membership-left.template';
 export { membershipRejectedTemplate } from './membership-rejected.template';

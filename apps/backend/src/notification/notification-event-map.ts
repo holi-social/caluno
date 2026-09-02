@@ -4,6 +4,7 @@ import type { DocumentDeclinedByOrgPayload } from './payloads/document-declined-
 import type { EventCancelledPayload } from './payloads/event-cancelled.payload';
 import type { EventInvitedPayload } from './payloads/event-invited.payload';
 import type { EventJoinedPayload } from './payloads/event-joined.payload';
+import type { EventRemovedPayload } from './payloads/event-removed.payload';
 import type { MembershipApprovedPayload } from './payloads/membership-approved.payload';
 import type { MembershipLeftPayload } from './payloads/membership-left.payload';
 import type { MembershipRejectedPayload } from './payloads/membership-rejected.payload';
@@ -35,6 +36,7 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
   [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;
   [NotificationEvent.EVENT_CANCELLED]: EventCancelledPayload;
+  [NotificationEvent.EVENT_REMOVED]: EventRemovedPayload;
   [NotificationEvent.DOCUMENT_AWAITING_SIGNATURE]: DocumentAwaitingSignaturePayload;
   [NotificationEvent.DOCUMENT_DECLINED_BY_ORG]: DocumentDeclinedByOrgPayload;
 }

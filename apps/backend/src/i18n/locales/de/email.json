@@ -21,6 +21,19 @@
     "subject": "{eventTitle} wurde abgesagt",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventRemoved": {
+    "detailEvent": "Event",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einem Event entfernt hat.",
+    "greeting": "Hallo {firstName}, du wurdest von einem Event entfernt.",
+    "heading": "Du wurdest von einem Event entfernt",
+    "note": "Dieses Event steht nicht mehr in deinem Zeitplan.",
+    "previewText": "Du wurdest von {eventTitle} bei {organizationName} entfernt.",
+    "subject": "Du wurdest von {eventTitle} entfernt",
+    "whenRange": "{date} · {timeRange}"
+  },
   "eventInvited": {
     "buttonLabel": "Event ansehen",
     "detailEvent": "Event",
