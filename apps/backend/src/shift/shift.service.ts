@@ -38,6 +38,7 @@ import {
   PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
+  volunteerMayRequestInviteStatus,
 } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
@@ -3020,6 +3021,15 @@ export class ShiftService {
       : true;
     const isAdminActor = actorUserId !== userId;
 
+    if (
+      !isAdminActor &&
+      !volunteerMayRequestInviteStatus(invite.status, status)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to set this invite status',
+      );
+    }
+
     let targetStatus = status;
 
     if (
@@ -3256,6 +3266,15 @@ export class ShiftService {
       instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
     const hasSeat = await this.hasAvailableSeat(instanceId, maxVolunteers);
     const isAdminActor = actorUserId !== userId;
+
+    if (
+      !isAdminActor &&
+      !volunteerMayRequestInviteStatus(invite.status, status)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to set this invite status',
+      );
+    }
 
     let targetStatus = status;
 
