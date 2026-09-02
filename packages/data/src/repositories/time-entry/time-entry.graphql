@@ -212,6 +212,7 @@ query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
     openMembershipRequestId
     shiftInviteStatus
     isParticipating
+    hasOpenTimeEntry
   }
 }
 
