@@ -1,13 +1,16 @@
 'use client';
 
-import { Building2, Clock, UserX } from 'lucide-react';
+import { Building2, Clock, LogOut, UserX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import type { CheckInReadinessState } from '../../check-in-readiness';
 import { BlockerCard } from './blocker-card';
 import { ReadyBanner } from './ready-banner';
 
 type CheckInReadinessCardProps = {
   state: CheckInReadinessState;
+  orgUnitId: string;
+  checkInId: string;
   onInviteToOrg: () => void;
   onOpenAcceptMembership: () => void;
   onInviteToShift: () => void;
@@ -19,6 +22,8 @@ type CheckInReadinessCardProps = {
 
 export function CheckInReadinessCard({
   state,
+  orgUnitId,
+  checkInId,
   onInviteToOrg,
   onOpenAcceptMembership,
   onInviteToShift,
@@ -28,9 +33,24 @@ export function CheckInReadinessCard({
   isInviteToShiftSent,
 }: CheckInReadinessCardProps) {
   const t = useTranslations('CheckIn');
+  const router = useRouter();
 
   if (state === 'ready') {
     return <ReadyBanner />;
+  }
+
+  if (state === 'alreadyCheckedIn') {
+    return (
+      <BlockerCard
+        icon={<LogOut className="size-5" />}
+        title={t('alreadyCheckedInTitle')}
+        description={t('alreadyCheckedInDescription')}
+        buttonLabel={t('alreadyCheckedInButton')}
+        onAction={() =>
+          router.push(`/admin/${orgUnitId}/check-in/${checkInId}/check-out`)
+        }
+      />
+    );
   }
 
   if (state === 'notMember') {
