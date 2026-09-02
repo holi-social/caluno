@@ -14,6 +14,7 @@ export const NotificationEvent = {
   SHIFT_SERIES_REMOVED: 'notification.shift.series-removed',
   SHIFT_INSTANCE_LEFT: 'notification.shift-instance.left',
   SHIFT_SERIES_LEFT: 'notification.shift.series-left',
+  SHIFT_DETAILS_CHANGED: 'notification.shift.details-changed',
   SHIFT_INVITED: 'notification.shift.invited',
   EVENT_INVITED: 'notification.event.invited',
   EVENT_JOINED: 'notification.event.joined',
