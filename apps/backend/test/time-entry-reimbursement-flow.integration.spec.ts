@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { eq } from 'drizzle-orm';
+import { AccountingOrgAccessService } from '../src/accounting/services/accounting-org-access.service';
 import { InvoiceService } from '../src/accounting/services/invoice.service';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
@@ -10,6 +11,7 @@ import * as schema from '../src/database/schema';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification';
 import { OrganizationService } from '../src/organization/organization.service';
+import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { PostHogService } from '../src/shared/observability/posthog.service';
 import { ShiftVisibility } from '../src/shift/enums';
 import { ShiftService } from '../src/shift/shift.service';
@@ -43,6 +45,17 @@ describe('Time entry -> eligible timesheet flow', () => {
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
+    const organizationUnitService = new OrganizationUnitService(
+      db,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    const accountingOrgAccessService = new AccountingOrgAccessService(
+      db,
+      organizationUnitService,
+    );
+
     shiftService = new ShiftService(
       db,
       {} as AuthService,
@@ -54,6 +67,7 @@ describe('Time entry -> eligible timesheet flow', () => {
       {} as never,
       {} as never,
       { capture: () => {} } as unknown as PostHogService,
+      accountingOrgAccessService,
     );
     timeTrackingService = new TimeTrackingService(
       db,
@@ -90,6 +104,11 @@ describe('Time entry -> eligible timesheet flow', () => {
       })
     ).id;
     volunteerId = (await createUser(db)).id;
+
+    await db
+      .update(schema.organizations)
+      .set({ accountingEnabled: true })
+      .where(eq(schema.organizations.id, organization.id));
 
     registerTestResourceCleanup(async () => {
       await moduleRef.close();

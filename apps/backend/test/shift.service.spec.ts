@@ -4,15 +4,18 @@ import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { ReimbursementTypeKey } from '../src/accounting/enums';
+import { AccountingOrgAccessService } from '../src/accounting/services/accounting-org-access.service';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
 import { ConflictGraphQLError } from '../src/graphql/errors/conflict.error';
+import { ForbiddenGraphQLError } from '../src/graphql/errors/forbidden.error';
 import { NotFoundGraphQLError } from '../src/graphql/errors/not-found.error';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
+import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
 import { POSTHOG_EVENT } from '../src/shared/observability/posthog.events';
 import { PostHogService } from '../src/shared/observability/posthog.service';
@@ -27,6 +30,10 @@ import {
   createUser,
 } from './factories';
 import { createReimbursementType } from './factories/accounting.factory';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -58,6 +65,17 @@ describe('ShiftService', () => {
 
     capture = mock(() => {});
 
+    const organizationUnitService = new OrganizationUnitService(
+      db,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    const accountingOrgAccessService = new AccountingOrgAccessService(
+      db,
+      organizationUnitService,
+    );
+
     shiftService = new ShiftService(
       db,
       {} as AuthService,
@@ -73,6 +91,7 @@ describe('ShiftService', () => {
       {} as never,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture } as unknown as PostHogService,
+      accountingOrgAccessService,
     );
 
     userId = (await createUser(db)).id;
@@ -106,6 +125,11 @@ describe('ShiftService', () => {
       .returning();
 
     organizationUnitId = rootUnit.id;
+
+    await db
+      .update(schema.organizations)
+      .set({ accountingEnabled: true })
+      .where(eq(schema.organizations.id, organization.id));
 
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
@@ -1944,6 +1968,67 @@ describe('ShiftService', () => {
     it('leaves the shift type-less when not provided', async () => {
       const shift = await shiftService.create(userId, organizationUnitId, {
         title: 'Setup crew',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBeNull();
+    });
+  });
+
+  describe('reimbursement type requires accountingEnabled', () => {
+    it('rejects creating a shift with a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      await expect(
+        shiftService.create(userId, disabledUnit.id, {
+          title: 'Disabled org shift',
+          startsAt: new Date(Date.now() + 100000),
+          endsAt: new Date(Date.now() + 200000),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+          reimbursementTypeId: reimbursementType.id,
+        } as never),
+      ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+
+    it('allows creating a shift with a reimbursement type on the enabled shared test org', async () => {
+      const reimbursementType = await createReimbursementType(db);
+
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Enabled org shift',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        reimbursementTypeId: reimbursementType.id,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBe(reimbursementType.id);
+    });
+
+    it('does not gate a shift creation that never sets a reimbursement type, even on a disabled org', async () => {
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting No-Type Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'No type, disabled org',
         startsAt: new Date(Date.now() + 100000),
         endsAt: new Date(Date.now() + 200000),
         visibility: ShiftVisibility.ALL_MEMBERS,

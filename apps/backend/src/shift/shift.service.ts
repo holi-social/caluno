@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, count, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
+import { AccountingOrgAccessService } from '../accounting/services/accounting-org-access.service';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -86,6 +87,7 @@ export class ShiftService {
     private readonly requiredFormService: RequiredFormService,
     private readonly formSubmissionService: FormSubmissionService,
     private readonly postHogService: PostHogService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
@@ -881,6 +883,12 @@ export class ShiftService {
       );
     }
 
+    if (shiftInput.reimbursementTypeId) {
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        organizationUnitId,
+      );
+    }
+
     const shift = await this.db.transaction(async (tx) => {
       const [shift] = await tx
         .insert(schema.shifts)
@@ -1384,6 +1392,12 @@ export class ShiftService {
     organizationUnitId: string,
     options: { applyToAllFuture?: boolean; actorUserId?: string } = {},
   ): Promise<ShiftInstanceEntity> {
+    if (input.reimbursementTypeId) {
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        organizationUnitId,
+      );
+    }
+
     const instance = await this.db.transaction(async (tx) => {
       const instance = await tx.query.shiftInstances.findFirst({
         where: { id: instanceId },
@@ -2164,6 +2178,12 @@ export class ShiftService {
       requiredFormIds,
       ...shiftInput
     } = input;
+
+    if (shiftInput.reimbursementTypeId) {
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        organizationUnitId,
+      );
+    }
 
     const shift = await this.db.transaction(async (tx) => {
       let shift = await tx.query.shifts.findFirst({
