@@ -101,6 +101,40 @@ describe('TimeTrackingService', () => {
     expect(entries).toHaveLength(1);
   });
 
+  it('getCheckInReadiness reports hasOpenTimeEntry for the instance', async () => {
+    const user = await createUser(db);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const before = await service.getCheckInReadiness(
+      user.id,
+      instanceId ?? '',
+      organizationUnitId,
+    );
+    expect(before.hasOpenTimeEntry).toBe(false);
+
+    await db.insert(schema.timeEntries).values({
+      shiftInstanceId: instanceId ?? '',
+      organizationUnitId,
+      volunteerId: user.id,
+      startedAt: new Date(),
+    });
+
+    const after = await service.getCheckInReadiness(
+      user.id,
+      instanceId ?? '',
+      organizationUnitId,
+    );
+    expect(after.hasOpenTimeEntry).toBe(true);
+  });
+
   it('addTimeEntry rejects duplicate open time entries at the database guard level', async () => {
     const user = await createUser(db);
 

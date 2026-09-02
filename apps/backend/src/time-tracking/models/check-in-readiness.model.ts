@@ -14,4 +14,7 @@ export class CheckInReadiness {
 
   @Field(() => Boolean)
   isParticipating!: boolean;
+
+  @Field(() => Boolean)
+  hasOpenTimeEntry!: boolean;
 }

@@ -24,6 +24,7 @@ type CheckInContext {
 }
 
 type CheckInReadiness {
+  hasOpenTimeEntry: Boolean!
   isMember: Boolean!
   isParticipating: Boolean!
   openMembershipRequestId: ID
