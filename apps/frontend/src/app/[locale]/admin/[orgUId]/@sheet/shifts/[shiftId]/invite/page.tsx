@@ -3,7 +3,7 @@ import { InviteShiftPageContent } from '@/domain/shift/components/invite-shift-p
 
 interface InviteShiftPageProps {
   params: Promise<{ orgUId: string; shiftId: string; locale: string }>;
-  searchParams: Promise<{ instanceId?: string }>;
+  searchParams: Promise<{ instanceId?: string; flow?: string }>;
 }
 
 export default async function InviteShiftPage({
@@ -11,7 +11,7 @@ export default async function InviteShiftPage({
   searchParams,
 }: InviteShiftPageProps) {
   const { orgUId, shiftId, locale } = await params;
-  const { instanceId } = await searchParams;
+  const { instanceId, flow } = await searchParams;
   if (!instanceId) {
     notFound();
   }
@@ -22,6 +22,7 @@ export default async function InviteShiftPage({
       shiftId={shiftId}
       instanceId={instanceId}
       locale={locale}
+      isCreationFlow={flow === 'create'}
     />
   );
 }

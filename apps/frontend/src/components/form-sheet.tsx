@@ -70,7 +70,7 @@ export const FormSheet = ({
   const t = useTranslations('Common');
 
   return (
-    <Sheet open={open} onOpenChange={() => onOpenChange(!open)} defaultOpen>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side={isMobile ? 'bottom' : 'right'}
         className={cn(

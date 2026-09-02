@@ -2,6 +2,7 @@ import type { RawPublicEvent } from '@repo/data';
 import { UsersIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { PublicListCard } from '@/components/public-list-card';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 
 type Shift = NonNullable<RawPublicEvent>['shifts'][number];
@@ -27,7 +28,7 @@ export function EventShiftCard({ shift }: EventShiftCardProps) {
 
   return (
     <PublicListCard
-      href={`/shifts/${shift.id}`}
+      href={shiftPublicPath(shift.id, firstInstance?.id)}
       eyebrow={
         firstInstance
           ? `${formatDate(new Date(firstInstance.actualStartsAt), {

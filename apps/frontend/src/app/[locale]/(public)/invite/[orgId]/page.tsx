@@ -45,9 +45,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   if (result.status === JoinStatus.Joined) {
     const cookieStore = await cookies();
     const pendingRedirect = cookieStore.get('pending_redirect')?.value;
-    redirect(
-      getSafeRedirect(pendingRedirect) ?? `/admin/${organizationUnitId}`,
-    );
+    redirect(getSafeRedirect(pendingRedirect, `/admin/${organizationUnitId}`));
   }
 
   if (result.status === JoinStatus.Pending) {
@@ -63,9 +61,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
       (f) => !f.submitted,
     );
     if (hasMissingForms) {
-      redirect(
-        `/join/${organizationUnitId}/forms?redirectTo=${encodeURIComponent(`/invite/${organizationUnitId}`)}`,
-      );
+      redirect(`/join/${organizationUnitId}/forms`);
     }
 
     return (

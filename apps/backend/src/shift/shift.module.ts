@@ -5,6 +5,7 @@ import { MembershipModule } from '../membership/membership.module';
 import { NotificationModule } from '../notification/notification.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { StorageModule } from '../storage/storage.module';
 import { UserModule } from '../user/user.module';
 import { ShiftMapper } from './mappers/shift.mapper';
@@ -18,8 +19,10 @@ import { ShiftInstanceLoader } from './resolvers/shift-instance.loader';
 import { ShiftInstanceFieldResolver } from './resolvers/shift-instance-field.resolver';
 import { ShiftInstanceInviteFieldResolver } from './resolvers/shift-instance-invite-field.resolver';
 import { ShiftInstanceInviteUsersLoader } from './resolvers/shift-instance-invite-users.loader';
+import { ShiftInstanceRequiredFormsLoader } from './resolvers/shift-instance-required-forms.loader';
 import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';
 import { ShiftQueryResolver } from './resolvers/shift-query.resolver';
+import { ShiftRequiredFormsLoader } from './resolvers/shift-required-forms.loader';
 import { ShiftService } from './shift.service';
 
 @Module({
@@ -32,6 +35,7 @@ import { ShiftService } from './shift.service';
     OrganizationModule,
     OrganizationUnitDataModule,
     StorageModule,
+    RequirementProfileModule,
   ],
   providers: [
     ShiftService,
@@ -48,6 +52,8 @@ import { ShiftService } from './shift.service';
     ShiftInstanceInviteUsersLoader,
     ShiftLoader,
     ShiftInstanceLoader,
+    ShiftRequiredFormsLoader,
+    ShiftInstanceRequiredFormsLoader,
   ],
   exports: [ShiftMapper, ShiftInstanceMapper, ShiftService],
 })

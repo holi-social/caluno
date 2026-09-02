@@ -25,7 +25,7 @@ export const getTestDatabaseName = (): string => {
     return cachedTestDatabaseName;
   }
 
-  const baseName = process.env.POSTGRES_DB ?? 'clippy';
+  const baseName = process.env.POSTGRES_DB ?? 'caluno';
   const normalizedBase = baseName.replace(/_test.*$/, '');
   cachedTestDatabaseName = `${normalizedBase}_test_${process.pid}_${Date.now().toString(36)}`;
   return cachedTestDatabaseName;
@@ -85,20 +85,24 @@ export const dropTestDatabase = async (testDbName: string): Promise<void> => {
 export const runMigrationsAndSeed = (testDbName: string): void => {
   const backendRoot = getBackendRoot();
 
-  const migrateResult = spawnSync('bun', ['run', 'db:migrate'], {
-    cwd: backendRoot,
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      DB_NAME: testDbName,
+  const migrateResult = spawnSync(
+    'node_modules/.bin/drizzle-kit',
+    ['migrate'],
+    {
+      cwd: backendRoot,
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        DB_NAME: testDbName,
+      },
     },
-  });
+  );
 
   if (migrateResult.status !== 0) {
     throw new Error('Failed to migrate test database.');
   }
 
-  const seedResult = spawnSync('bun', ['run', 'src/database/seed.ts'], {
+  const seedResult = spawnSync('bun', ['src/database/seed.ts'], {
     cwd: backendRoot,
     stdio: 'inherit',
     env: {

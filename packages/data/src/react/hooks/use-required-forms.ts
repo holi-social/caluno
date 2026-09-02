@@ -1,6 +1,6 @@
 'use client';
 
-import type { FieldType } from '@repo/data';
+import { type FieldType, RequiredFormTargetType } from '@repo/data';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrganizationRepository } from '../../repositories/organization/organization.repository';
 import { RequirementFormRepository } from '../../repositories/requirementForm/requirement-form.repository';
@@ -87,18 +87,31 @@ export function useSubmitRequiredForm() {
 
   return useMutation({
     mutationFn: ({
-      organizationUnitId,
+      targetType,
+      targetId,
       formId,
       values,
     }: {
-      organizationUnitId: string;
+      targetType: RequiredFormTargetType;
+      targetId: string;
       formId: string;
       values: Array<{ fieldId: string; blockId: string; value: string }>;
-    }) => repository.submitRequiredForm(organizationUnitId, formId, { values }),
-    onSuccess: (_, { organizationUnitId }) => {
-      queryClient.invalidateQueries({
-        queryKey: ['organization-unit', organizationUnitId],
-      });
+    }) =>
+      repository.submitRequiredForm(targetType, targetId, formId, { values }),
+    onSuccess: (_, { targetType, targetId }) => {
+      if (targetType === RequiredFormTargetType.OrganizationUnit) {
+        queryClient.invalidateQueries({
+          queryKey: ['organization-unit', targetId],
+        });
+      }
+      if (targetType === RequiredFormTargetType.Event) {
+        queryClient.invalidateQueries({
+          queryKey: ['publicEvent', targetId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['event', targetId],
+        });
+      }
     },
   });
 }

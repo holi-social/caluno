@@ -10,6 +10,7 @@ export type CreateEventOptions = {
   /** Defaults to a freshly created user when omitted. */
   createdById?: string;
   title?: string;
+  slug?: string;
   description?: string | null;
   location?: string | null;
   logoUrl?: string | null;
@@ -39,7 +40,7 @@ export const createEvent = async (
     .insert(schema.events)
     .values({
       title,
-      slug: slugify(title),
+      slug: options.slug ?? slugify(title),
       description: options.description ?? null,
       location: options.location ?? null,
       logoUrl: options.logoUrl ?? null,

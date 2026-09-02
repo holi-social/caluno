@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
@@ -32,6 +33,8 @@ export interface ShiftCardMyProps {
   };
   /** Show the inline time range. Off when an external time rail already shows it. */
   showTime?: boolean;
+  /** True when the user signed up but the org-unit membership request is still pending. */
+  isPending?: boolean;
 }
 
 const THREE_HOURS = 3 * 60 * 60 * 1000;
@@ -80,6 +83,7 @@ function useTimer(
 export function ShiftCardMy({
   shiftInstance,
   showTime = true,
+  isPending = false,
 }: ShiftCardMyProps) {
   const t = useTranslations('VolunteerHome');
   const { formatTimeRange } = useFormatting();
@@ -97,7 +101,8 @@ export function ShiftCardMy({
   return (
     <Card className="relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card p-0">
       <Link
-        href={`/shifts/${shiftInstance.master.id}`}
+        href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+        prefetch={false}
         aria-label={shiftInstance.master.title}
         className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
       />
@@ -124,6 +129,12 @@ export function ShiftCardMy({
               </span>
             )}
           </div>
+          {isPending && (
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock4Icon className="size-3.5 shrink-0" />
+              {t('pendingBadge')}
+            </p>
+          )}
           <h3 className="text-lg font-semibold text-foreground">
             {shiftInstance.master.title}
           </h3>
@@ -140,7 +151,7 @@ export function ShiftCardMy({
             asChild
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl bg-primary text-primary-foreground"
           >
-            <Link href="/qr-id">
+            <Link href="/check-in">
               <QrCodeIcon className="size-5" />
               <span>{t('checkIn')}</span>
             </Link>
@@ -152,7 +163,7 @@ export function ShiftCardMy({
             variant="outline"
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl"
           >
-            <Link href="/qr-id">
+            <Link href="/check-in">
               <DoorOpenIcon className="size-5" />
               <span>{t('checkOut')}</span>
             </Link>

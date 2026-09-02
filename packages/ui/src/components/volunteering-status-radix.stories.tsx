@@ -246,25 +246,25 @@ const invitePanelMembers = [
   {
     id: '1',
     name: 'Konstantin Zaituc',
-    email: 'member002@clippy.social',
+    email: 'testing+002@caluno.org',
     state: 'declined' as const,
   },
   {
     id: '2',
     name: 'Helena Thiomas',
-    email: 'member006@clippy.social',
+    email: 'testing+006@caluno.org',
     state: 'accepted' as const,
   },
   {
     id: '3',
     name: 'Frau Ylvi Grams',
-    email: 'member008@clippy.social',
+    email: 'testing+008@caluno.org',
     state: 'accepted' as const,
   },
   {
     id: '4',
     name: 'Noemi Umlauft',
-    email: 'member012@clippy.social',
+    email: 'testing+010@caluno.org',
     state: 'accepted' as const,
   },
 ];

@@ -1,0 +1,1 @@
+ALTER TABLE "organization_units" ADD COLUMN "legal_rep" text;

@@ -7,11 +7,12 @@ import {
   CircleSlash,
   Clock,
   Inbox,
-  LogIn,
   LogOut,
   type LucideIcon,
+  ScanQrCode,
   Timer,
   UserPlus,
+  UserRound,
   UserX,
   X,
 } from 'lucide-react';
@@ -247,7 +248,8 @@ export const volunteeringActionIcons: Partial<
   Accept: Check,
   Decline: X,
   Invite: UserPlus,
-  'Check in': LogIn,
+  View: UserRound,
+  'Check in': ScanQrCode,
   'Check out': LogOut,
   Uninvite: Ban,
 };

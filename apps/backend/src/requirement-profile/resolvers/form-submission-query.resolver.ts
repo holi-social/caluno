@@ -49,6 +49,18 @@ export class FormSubmissionQueryResolver {
     return this.formSubmissionMapper.toArray(items);
   }
 
+  @Query(() => FormSubmission, { nullable: true })
+  async myFormSubmission(
+    @Args('id', { type: () => ID }) id: string,
+    @Session() session: UserSession,
+  ): Promise<FormSubmission | null> {
+    const item = await this.formSubmissionService.findMySubmission(
+      session.user.id,
+      id,
+    );
+    return this.formSubmissionMapper.toModel(item);
+  }
+
   @Permissions(PERMISSIONS.VOLUNTEER_VIEW)
   @Query(() => [FormSubmission])
   async formSubmissionsForVolunteer(

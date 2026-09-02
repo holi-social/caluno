@@ -1,6 +1,6 @@
-# clippy-e2e
+# caluno-e2e
 
-End-to-end tests for Clippy, using [Playwright](https://playwright.dev) with a
+End-to-end tests for Caluno, using [Playwright](https://playwright.dev) with a
 Page Object Model. Runs against the deployed staging app.
 
 ## Structure

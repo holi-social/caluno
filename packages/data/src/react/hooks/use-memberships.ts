@@ -41,3 +41,30 @@ export function useUpdateMembershipRoles() {
     },
   });
 }
+
+export function useLeaveMembership() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRepository(sdk);
+
+  return useMutation({
+    mutationFn: (membershipId: string) => repository.leave(membershipId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+      queryClient.invalidateQueries({ queryKey: ['membershipRequests'] });
+    },
+  });
+}
+
+export function useRemoveMembership() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRepository(sdk);
+
+  return useMutation({
+    mutationFn: (membershipId: string) => repository.remove(membershipId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+    },
+  });
+}

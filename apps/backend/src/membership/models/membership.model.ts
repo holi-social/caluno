@@ -17,6 +17,9 @@ export class Membership {
 
   @Field(() => [Role])
   roles!: Role[];
+
+  @Field(() => Date)
+  createdAt!: Date;
 }
 
 export const MembershipPaginatedResponse =

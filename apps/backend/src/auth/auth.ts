@@ -1,9 +1,18 @@
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { type BetterAuthOptions, betterAuth } from 'better-auth';
+import { APIError, type BetterAuthOptions, betterAuth } from 'better-auth';
 import { emailOTP } from 'better-auth/plugins';
 import { Database } from '../database/database.module';
 import { resolveRequestLocale } from '../graphql/locale';
+import {
+  defaultPrivacyPolicyDirectory,
+  resolvePrivacyPolicyDocument,
+} from '../legal/privacy-policy-files';
 import { headersFromRequest } from './auth-headers';
+import {
+  applyPrivacyPolicyAcceptance,
+  PrivacyPolicyAcceptanceError,
+  privacyPolicyAcceptedFromBody,
+} from './privacy-policy';
 import {
   accounts,
   sessions,
@@ -31,24 +40,53 @@ export interface SendResetPasswordOptions {
   headers: Record<string, unknown>;
 }
 
+/**
+ * Shape accepted by Better Auth's top-level `logger` option. Matches the
+ * `Logger` type exported by @better-auth/core: a custom `log(level, message,
+ * ...args)` hook lets us route Better Auth's console output through pino so
+ * it lands on stdout as structured JSON instead of a bare `console.warn`.
+ */
+export interface BetterAuthLogger {
+  disabled?: boolean;
+  disableColors?: boolean;
+  level?: 'debug' | 'info' | 'warn' | 'error';
+  log?: (
+    level: 'debug' | 'info' | 'warn' | 'error',
+    message: string,
+    ...args: unknown[]
+  ) => void;
+}
+
 export interface AuthConfigOptions {
   database: Database | object;
   trustedOrigins: string[];
-  /** Root domain for cross-subdomain cookies (e.g. "clippy.holi.social"). Set when frontend and API use different subdomains. */
+  /** Root domain for cross-subdomain cookies (e.g. "caluno.org"). Set when frontend and API use different subdomains. */
   cookieDomain?: string;
+  /** Optional logger hooked into Better Auth so its output flows through pino (structured JSON). */
+  logger?: BetterAuthLogger;
   emailVerificationEnabled?: boolean;
   sendVerificationOTP: (options: SendVerificationOtpOptions) => Promise<void>;
   sendResetPassword: (options: SendResetPasswordOptions) => Promise<void>;
+  onSessionCreated?: (userId: string) => void;
+  onSessionDeleted?: (userId: string) => void;
+  onUserCreated?: (userId: string) => void;
+  privacyPolicyDirectory?: string;
 }
 
 export const createAuthConfig = ({
   database,
   trustedOrigins,
   cookieDomain,
+  logger,
   emailVerificationEnabled = true,
   sendVerificationOTP,
   sendResetPassword,
+  onSessionCreated,
+  onSessionDeleted,
+  onUserCreated,
+  privacyPolicyDirectory = defaultPrivacyPolicyDirectory(),
 }: AuthConfigOptions): BetterAuthOptions => ({
+  ...(logger && { logger }),
   database: drizzleAdapter(database, {
     schema: {
       users,
@@ -65,6 +103,16 @@ export const createAuthConfig = ({
         type: 'string',
         required: false,
       },
+      privacyPolicyVersion: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
+      privacyPolicyAcceptedAt: {
+        type: 'date',
+        required: false,
+        input: false,
+      },
     },
   },
   databaseHooks: {
@@ -73,12 +121,49 @@ export const createAuthConfig = ({
         before: async (user, ctx) => {
           const locale = resolveRequestLocale(headersFromRequest(ctx?.request));
 
-          return {
-            data: {
-              ...user,
-              locale,
-            },
-          };
+          try {
+            const { version } = resolvePrivacyPolicyDocument(
+              privacyPolicyDirectory,
+            );
+            return {
+              data: applyPrivacyPolicyAcceptance(
+                {
+                  ...user,
+                  locale,
+                  privacyPolicyAccepted: privacyPolicyAcceptedFromBody(
+                    ctx?.body,
+                  ),
+                },
+                version,
+              ),
+            };
+          } catch (error) {
+            if (error instanceof PrivacyPolicyAcceptanceError) {
+              throw new APIError('BAD_REQUEST', { message: error.message });
+            }
+            throw error;
+          }
+        },
+        after: async (user) => {
+          if (typeof user.id === 'string') {
+            onUserCreated?.(user.id);
+          }
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (session) => {
+          if (typeof session.userId === 'string') {
+            onSessionCreated?.(session.userId);
+          }
+        },
+      },
+      delete: {
+        after: async (session) => {
+          if (typeof session.userId === 'string') {
+            onSessionDeleted?.(session.userId);
+          }
         },
       },
     },

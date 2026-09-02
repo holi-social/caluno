@@ -1,4 +1,4 @@
-import type { Locale } from '@repo/data';
+import { type Locale, SUPPORTED_LOCALES } from '@repo/data';
 import Cookies from 'js-cookie';
 import { USER_LOCALE_COOKIE } from './locale-constants';
 
@@ -15,6 +15,23 @@ export function getLocaleCookie(): Locale | undefined {
 
 export function setLocaleCookie(locale: Locale): void {
   Cookies.set(USER_LOCALE_COOKIE, locale, COOKIE_OPTIONS);
+}
+
+/**
+ * Sets the locale preference cookie when the value is a supported locale.
+ * Returns the validated locale or `null` when the value is unsupported/missing.
+ */
+export function setLocaleCookieIfSupported(value: unknown): Locale | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  if (!SUPPORTED_LOCALES.includes(value as Locale)) {
+    return null;
+  }
+
+  setLocaleCookie(value as Locale);
+  return value as Locale;
 }
 
 export function deleteLocaleCookie(): void {

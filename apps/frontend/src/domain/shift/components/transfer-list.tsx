@@ -1,11 +1,20 @@
 'use client';
 
-import type { ShiftInviteStatus } from '@repo/data';
-import { Badge, Button, cn, Input, VolunteeringMemberRow } from '@repo/ui';
+import {
+  Badge,
+  Button,
+  cn,
+  Input,
+  type ShiftVolunteeringDisplayState,
+  VolunteeringMemberRow,
+} from '@repo/ui';
 import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { toInviteDisplayState } from '../invite-status-display';
+import {
+  type InviteStatus,
+  toInviteDisplayState,
+} from '../invite-status-display';
 
 /** Label + gap + search bar + minimum list area */
 const TRANSFER_LIST_MIN_HEIGHT = 222;
@@ -15,7 +24,9 @@ type Member = {
   name: string;
   email: string;
   image?: string | null;
-  inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
+  inviteStatus?: InviteStatus | null;
+  /** When set, overrides inviteStatus → display mapping (e.g. events). */
+  displayState?: ShiftVolunteeringDisplayState;
 };
 
 type TransferListProps = {
@@ -72,12 +83,12 @@ export function TransferList({
           <Badge variant="outline">{filteredAvailable.length}</Badge>
         </div>
         <div className="flex flex-col border rounded-md overflow-hidden flex-1 min-h-0 shadow-xs">
-          <div className="flex items-center gap-2 px-3 py-2.5 border-b">
+          <div className="flex items-center gap-2 border-b">
             <Input
               placeholder={t('transferList.searchPlaceholder')}
               value={availableSearch}
               onChange={(e) => setAvailableSearch(e.target.value)}
-              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0"
+              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0 px-3 py-2.5 rounded-b-none"
             />
           </div>
           <div className="overflow-y-auto flex-1 p-1">
@@ -88,8 +99,13 @@ export function TransferList({
               >
                 <div className="size-5 rounded-full bg-muted shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{member.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-sm truncate" title={member.name}>
+                    {member.name}
+                  </p>
+                  <p
+                    className="text-xs text-muted-foreground truncate"
+                    title={member.email}
+                  >
                     {member.email}
                   </p>
                 </div>
@@ -97,8 +113,8 @@ export function TransferList({
                   type="button"
                   variant="ghost"
                   size="icon-xs"
+                  tooltip={t('transferList.addAria', { name: member.name })}
                   onClick={() => addMember(member)}
-                  aria-label={t('transferList.addAria', { name: member.name })}
                 >
                   <CirclePlus className="size-4" />
                 </Button>
@@ -119,12 +135,12 @@ export function TransferList({
           <Badge variant="outline">{invited.length}</Badge>
         </div>
         <div className="flex flex-col border rounded-md overflow-hidden flex-1 min-h-0 shadow-xs">
-          <div className="flex items-center gap-2 px-3 py-2.5 border-b">
+          <div className="flex items-center gap-2 border-b">
             <Input
               placeholder={t('transferList.searchPlaceholder')}
               value={invitedSearch}
               onChange={(e) => setInvitedSearch(e.target.value)}
-              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0"
+              className="border-0 shadow-none p-0 h-auto focus-visible:ring-0 px-3 py-2.5 rounded-b-none"
             />
           </div>
           <div className="overflow-y-auto flex-1 p-1">
@@ -134,11 +150,10 @@ export function TransferList({
                 name={member.name}
                 email={member.email}
                 state={
-                  member.inviteStatus
-                    ? toInviteDisplayState(
-                        member.inviteStatus as ShiftInviteStatus,
-                      )
-                    : 'invited'
+                  member.displayState ??
+                  (member.inviteStatus
+                    ? toInviteDisplayState(member.inviteStatus)
+                    : 'invited')
                 }
                 phase="before"
                 className="hover:bg-accent"
@@ -147,10 +162,10 @@ export function TransferList({
                     type="button"
                     variant="ghost"
                     size="icon-xs"
-                    onClick={() => removeMember(member.id)}
-                    aria-label={t('transferList.removeAria', {
+                    tooltip={t('transferList.removeAria', {
                       name: member.name,
                     })}
+                    onClick={() => removeMember(member.id)}
                   >
                     <CircleX className="size-4" />
                   </Button>

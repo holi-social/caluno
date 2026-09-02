@@ -1,4 +1,5 @@
 import { cn } from '@repo/ui';
+import { ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 
 interface DetailCoverImageProps {
@@ -27,6 +28,28 @@ export function DetailCoverImage({
         className="object-cover"
         sizes="(max-width: 768px) 100vw, 1024px"
       />
+    </div>
+  );
+}
+
+interface DetailCoverImagePlaceholderProps {
+  label: string;
+  className?: string;
+}
+
+export function DetailCoverImagePlaceholder({
+  label,
+  className,
+}: DetailCoverImagePlaceholderProps) {
+  return (
+    <div
+      className={cn(
+        'flex h-48 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 text-muted-foreground md:h-56',
+        className,
+      )}
+    >
+      <ImageIcon className="size-8 opacity-60" aria-hidden />
+      <span className="text-sm font-medium">{label}</span>
     </div>
   );
 }

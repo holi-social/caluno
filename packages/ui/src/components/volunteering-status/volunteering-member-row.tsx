@@ -64,9 +64,13 @@ export function VolunteeringMemberRow({
         />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <p className="truncate text-sm font-medium" title={name}>
+          {name}
+        </p>
         {email ? (
-          <p className="truncate text-xs text-muted-foreground">{email}</p>
+          <p className="truncate text-xs text-muted-foreground" title={email}>
+            {email}
+          </p>
         ) : null}
       </div>
       {trailing ? <div className="shrink-0">{trailing}</div> : null}

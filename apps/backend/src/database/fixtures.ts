@@ -1,7 +1,8 @@
 import { hashPassword } from 'better-auth/crypto';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { DocumentKind, SigneeType } from '../accounting/enums';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
   DEFAULT_OWNER_ROLE_NAME,
@@ -11,6 +12,7 @@ import {
 import { permissions } from '../auth/schemas/permission.schema';
 import { EventInviteStatus } from '../event/enums';
 import { MembershipRequestStatus } from '../membership/enums';
+import { FieldType } from '../requirement-profile/enums';
 import { ShiftInviteStatus, ShiftVisibility } from '../shift/enums';
 import { expandShift } from '../shift/utils/rrule-expander';
 import { slugify } from '../utils/slug.util';
@@ -19,8 +21,9 @@ import * as schema from './schema';
 
 process.env.TZ = 'Europe/Berlin';
 
-const FIXTURE_PASSWORD = 'abcd1234';
+const FIXTURE_PASSWORD = process.env.FIXTURE_PASSWORD ?? 'abcd1234';
 const ORG_NAME = 'Playground';
+const ORG_SLUG = 'playground';
 const FIXTURE_TIMEZONE = 'Europe/Berlin';
 const SHIFT_DURATION_MINUTES = 240;
 const RECURRENCE_WEEKS_BACK = 12;
@@ -39,7 +42,7 @@ const SHOWCASE_SHIFT_IMAGE_URL =
   'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80';
 const ORG_COVER_IMAGE_URL =
   'https://images.unsplash.com/photo-1593113646773-028c64a8f1b8?auto=format&fit=crop&w=1200&q=80';
-const DEMO_USER_EMAIL = 'demo@clippy.social';
+const DEMO_USER_EMAIL = 'testing+demo@caluno.org';
 
 const WEEKLY_RRULE = {
   MONDAY: 'FREQ=WEEKLY;BYDAY=MO;WKST=MO',
@@ -57,6 +60,7 @@ const SUPERVISOR_PERMISSIONS = [
   PERMISSIONS.SHIFT_VIEW,
   PERMISSIONS.SHIFT_EDIT,
   PERMISSIONS.VOLUNTEER_VIEW,
+  PERMISSIONS.CHECK_IN_MANAGE,
 ] as const;
 
 type Database = NodePgDatabase<typeof relations>;
@@ -68,7 +72,7 @@ type FixtureUser = {
 };
 
 const memberEmail = (index: number): string =>
-  `member${String(index).padStart(2, '0')}@clippy.social`;
+  `testing+${String(index).padStart(3, '0')}@caluno.org`;
 
 type FixtureDateParts = {
   year: number;
@@ -192,6 +196,14 @@ const createAuthUser = async (
   hashedPassword: string,
   input: { email: string; name: string },
 ): Promise<FixtureUser> => {
+  const existing = await db.query.users.findFirst({
+    where: { email: input.email },
+  });
+
+  if (existing) {
+    return { id: existing.id, email: existing.email, name: existing.name };
+  }
+
   const id = crypto.randomUUID();
 
   await db.insert(schema.users).values({
@@ -213,28 +225,46 @@ const createAuthUser = async (
   return { id, email: input.email, name: input.name };
 };
 
-const createMembershipWithRole = async (
+const ensureMembershipWithRole = async (
   db: Database,
   userId: string,
   organizationUnitId: string,
   roleId: string,
 ): Promise<void> => {
-  const [membership] = await db
-    .insert(schema.memberships)
-    .values({ userId, organizationUnitId })
-    .returning();
+  const existingMembership = await db.query.memberships.findFirst({
+    where: { userId, organizationUnitId },
+  });
 
-  if (!membership) {
-    throw new Error('Failed to create membership');
+  let membershipId: string;
+
+  if (existingMembership) {
+    membershipId = existingMembership.id;
+  } else {
+    const [membership] = await db
+      .insert(schema.memberships)
+      .values({ userId, organizationUnitId })
+      .returning();
+
+    if (!membership) {
+      throw new Error('Failed to create membership');
+    }
+
+    membershipId = membership.id;
   }
 
-  await db.insert(schema.membershipRoles).values({
-    membershipId: membership.id,
-    roleId,
+  const existingRole = await db.query.membershipRoles.findFirst({
+    where: { membershipId, roleId },
   });
+
+  if (!existingRole) {
+    await db.insert(schema.membershipRoles).values({
+      membershipId,
+      roleId,
+    });
+  }
 };
 
-const createPlaygroundOrganization = async (
+const ensurePlaygroundOrganization = async (
   db: Database,
   adminUserId: string,
 ): Promise<{
@@ -248,14 +278,92 @@ const createPlaygroundOrganization = async (
     (permission) => !permission.startsWith('org-role:'),
   );
 
+  const existingOrg = await db.query.organizations.findFirst({
+    where: { slug: ORG_SLUG },
+  });
+
+  if (existingOrg) {
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { organizationId: existingOrg.id, slug: ORG_SLUG },
+    });
+
+    if (!rootUnit) {
+      throw new Error(
+        'Existing Playground organization is missing its root unit',
+      );
+    }
+
+    const roles = await db.query.roles.findMany({
+      where: { organizationId: existingOrg.id },
+    });
+
+    const ownerRole = roles.find(
+      (role) => role.name === DEFAULT_OWNER_ROLE_NAME,
+    );
+    const memberRole = roles.find(
+      (role) => role.name === DEFAULT_MEMBER_ROLE_NAME,
+    );
+    const supervisorRole = roles.find(
+      (role) => role.name === SUPERVISOR_ROLE_NAME,
+    );
+
+    if (!ownerRole || !memberRole || !supervisorRole) {
+      throw new Error(
+        'Existing Playground organization is missing expected roles',
+      );
+    }
+
+    const existingMembership = await db.query.memberships.findFirst({
+      where: { userId: adminUserId, organizationUnitId: rootUnit.id },
+    });
+
+    if (!existingMembership) {
+      const [membership] = await db
+        .insert(schema.memberships)
+        .values({ userId: adminUserId, organizationUnitId: rootUnit.id })
+        .returning();
+
+      if (!membership) {
+        throw new Error('Failed to create admin membership');
+      }
+
+      await db.insert(schema.membershipRoles).values({
+        membershipId: membership.id,
+        roleId: ownerRole.id,
+      });
+    } else {
+      const existingRole = await db.query.membershipRoles.findFirst({
+        where: { membershipId: existingMembership.id, roleId: ownerRole.id },
+      });
+
+      if (!existingRole) {
+        await db.insert(schema.membershipRoles).values({
+          membershipId: existingMembership.id,
+          roleId: ownerRole.id,
+        });
+      }
+    }
+
+    return {
+      organizationId: existingOrg.id,
+      rootUnitId: rootUnit.id,
+      ownerRoleId: ownerRole.id,
+      memberRoleId: memberRole.id,
+      supervisorRoleId: supervisorRole.id,
+    };
+  }
+
   return db.transaction(async (tx) => {
     const [organization] = await tx
       .insert(schema.organizations)
       .values({
         name: ORG_NAME,
-        slug: slugify(ORG_NAME),
-        contactEmail: 'admin@clippy.social',
+        slug: ORG_SLUG,
+        contactEmail: 'testing@caluno.org',
         description: 'Local development playground organization',
+        address: 'Hauptstraße 1',
+        city: 'Berlin',
+        zipCode: '10115',
       })
       .returning();
 
@@ -284,11 +392,14 @@ const createPlaygroundOrganization = async (
         parentId: null,
         typeId: rootType.id,
         name: organization.name,
-        slug: organization.slug,
+        slug: ORG_SLUG,
         contactEmail: organization.contactEmail,
         description: organization.description,
         coverUrl: ORG_COVER_IMAGE_URL,
-        address: 'Hauptstraße 1, 10115 Berlin',
+        address: 'Hauptstraße 1',
+        city: 'Berlin',
+        zipCode: '10115',
+        legalRep: 'Max Mustermann',
       })
       .returning();
 
@@ -444,13 +555,33 @@ const pickRecentPastInstance = (
   return instance;
 };
 
-const createShiftWithInvites = async (
+const ensureShiftWithInvites = async (
   db: Database,
   organizationUnitId: string,
   createdById: string,
   shift: ShiftFixture,
 ): Promise<{ shiftId: string; instanceId: string; instanceStartsAt: Date }> => {
   const durationMinutes = shift.durationMinutes ?? SHIFT_DURATION_MINUTES;
+
+  const existingShift = shift.id
+    ? await db.query.shifts.findFirst({ where: { id: shift.id } })
+    : await db.query.shifts.findFirst({
+        where: { title: shift.title, organizationUnitId },
+      });
+
+  if (existingShift) {
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: existingShift.id },
+    });
+
+    const recentInstance = pickRecentPastInstance(instances);
+
+    return {
+      shiftId: existingShift.id,
+      instanceId: recentInstance.id,
+      instanceStartsAt: recentInstance.actualStartsAt,
+    };
+  }
 
   const [createdShift] = await db
     .insert(schema.shifts)
@@ -537,7 +668,7 @@ const createShiftWithInvites = async (
   };
 };
 
-const createEvent = async (
+const ensureEvent = async (
   db: Database,
   organizationUnitId: string,
   createdById: string,
@@ -552,6 +683,14 @@ const createEvent = async (
     endsAt: Date;
   },
 ): Promise<typeof schema.events.$inferSelect> => {
+  const existingEvent = await db.query.events.findFirst({
+    where: { id: event.id },
+  });
+
+  if (existingEvent) {
+    return existingEvent;
+  }
+
   const [createdEvent] = await db
     .insert(schema.events)
     .values({
@@ -576,22 +715,37 @@ const createEvent = async (
   return createdEvent;
 };
 
-const createTimeEntries = async (
+const ensureTimeEntries = async (
   db: Database,
   approvedMembers: FixtureUser[],
   shiftInstances: {
     communitySupport: { startsAt: Date; instanceId: string };
     foodDistribution: { startsAt: Date; instanceId: string };
   },
+  organizationUnitId: string,
 ): Promise<void> => {
+  const instanceIds = [
+    shiftInstances.communitySupport.instanceId,
+    shiftInstances.foodDistribution.instanceId,
+  ];
+
+  const existingEntries = await db.query.timeEntries.findMany({
+    where: { shiftInstanceId: { in: instanceIds } },
+  });
+
+  if (existingEntries.length > 0) {
+    return;
+  }
+
   const entries: Array<typeof schema.timeEntries.$inferInsert> = [];
 
   for (const [index, member] of approvedMembers.entries()) {
     const memberNumber = index + 1;
 
-    if (member.email === 'supervisor@clippy.social') {
+    if (member.email === 'testing+supervisor@caluno.org') {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(shiftInstances.communitySupport.startsAt, 0.5),
         endedAt: addHours(shiftInstances.communitySupport.startsAt, 3.5),
@@ -599,6 +753,7 @@ const createTimeEntries = async (
       });
       entries.push({
         shiftInstanceId: shiftInstances.foodDistribution.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(shiftInstances.foodDistribution.startsAt, 0),
         endedAt: addHours(shiftInstances.foodDistribution.startsAt, 3),
@@ -610,6 +765,7 @@ const createTimeEntries = async (
     const closedHours = 2 + (memberNumber % 3);
     entries.push({
       shiftInstanceId: shiftInstances.communitySupport.instanceId,
+      organizationUnitId,
       volunteerId: member.id,
       startedAt: addHours(
         shiftInstances.communitySupport.startsAt,
@@ -625,6 +781,7 @@ const createTimeEntries = async (
     if (memberNumber % 2 === 0) {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(
           shiftInstances.communitySupport.startsAt,
@@ -641,6 +798,7 @@ const createTimeEntries = async (
     if (memberNumber <= 6) {
       entries.push({
         shiftInstanceId: shiftInstances.foodDistribution.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(
           shiftInstances.foodDistribution.startsAt,
@@ -657,6 +815,7 @@ const createTimeEntries = async (
     if (memberNumber <= 3) {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(
           shiftInstances.communitySupport.startsAt,
@@ -673,6 +832,438 @@ const createTimeEntries = async (
   }
 };
 
+const ensurePersonalInformationForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'personal-information' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'personal-information',
+        name: 'Personal Information',
+        description: 'Basic personal details for volunteers.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Personal Information form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Personal Information',
+        description: 'Required personal details.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Personal Information block');
+    }
+
+    await db.insert(schema.formBlockFields).values([
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'First name',
+        required: true,
+        fieldOrder: 0,
+      },
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'Last name',
+        required: true,
+        fieldOrder: 1,
+      },
+    ]);
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingUnitRequiredForm =
+    await db.query.organizationUnitRequiredForms.findFirst({
+      where: { organizationUnitId, formId: form.id },
+    });
+
+  if (!existingUnitRequiredForm) {
+    await db.insert(schema.organizationUnitRequiredForms).values({
+      organizationUnitId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+const ensureBankingInformationForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+  shiftId: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'banking-information' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'banking-information',
+        name: 'Banking Information',
+        description: 'Bank account details for reimbursements.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Banking Information form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Banking Information',
+        description: 'Bank account details.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Banking Information block');
+    }
+
+    await db.insert(schema.formBlockFields).values([
+      {
+        blockId: block.id,
+        type: FieldType.IBAN,
+        label: 'IBAN',
+        systemKey: 'iban',
+        required: true,
+        fieldOrder: 0,
+      },
+      {
+        blockId: block.id,
+        type: FieldType.TEXT,
+        label: 'BIC',
+        systemKey: 'bic',
+        required: true,
+        fieldOrder: 1,
+      },
+    ]);
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingShiftRequiredForm = await db.query.shiftRequiredForms.findFirst(
+    {
+      where: { shiftId, formId: form.id },
+    },
+  );
+
+  if (!existingShiftRequiredForm) {
+    await db.insert(schema.shiftRequiredForms).values({
+      shiftId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+const ensureCodeOfConductForm = async (
+  db: Database,
+  organizationId: string,
+  organizationUnitId: string,
+  createdById: string,
+  eventId: string,
+): Promise<typeof schema.requirementForms.$inferSelect> => {
+  let form = await db.query.requirementForms.findFirst({
+    where: { organizationId, slug: 'code-of-conduct' },
+  });
+
+  if (!form) {
+    const [createdForm] = await db
+      .insert(schema.requirementForms)
+      .values({
+        organizationId,
+        organizationUnitId,
+        slug: 'code-of-conduct',
+        name: 'Code of Conduct',
+        description: 'Acknowledge the volunteer code of conduct.',
+        shareToken: crypto.randomUUID(),
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!createdForm) {
+      throw new Error('Failed to create Code of Conduct form');
+    }
+
+    form = createdForm;
+
+    const [block] = await db
+      .insert(schema.formBlocks)
+      .values({
+        organizationId,
+        title: 'Code of Conduct',
+        description: 'Please acknowledge our code of conduct.',
+        required: true,
+        createdBy: createdById,
+        updatedBy: createdById,
+      })
+      .returning();
+
+    if (!block) {
+      throw new Error('Failed to create Code of Conduct block');
+    }
+
+    await db.insert(schema.formBlockFields).values({
+      blockId: block.id,
+      type: FieldType.CHECKBOX,
+      label: 'I agree to follow the Code of Conduct',
+      required: true,
+      fieldOrder: 0,
+    });
+
+    await db.insert(schema.requirementFormBlockRefs).values({
+      formId: form.id,
+      blockId: block.id,
+      fieldOrder: 0,
+      required: true,
+    });
+  }
+
+  const existingEventRequiredForm = await db.query.eventRequiredForms.findFirst(
+    {
+      where: { eventId, formId: form.id },
+    },
+  );
+
+  if (!existingEventRequiredForm) {
+    await db.insert(schema.eventRequiredForms).values({
+      eventId,
+      formId: form.id,
+      order: 0,
+    });
+  }
+
+  return form;
+};
+
+/**
+ * Seeds default contract + invoice document templates for an org (both
+ * Pauschale reimbursement types) with the standard volunteer →
+ * permission-holder signee chain. Runs on every `db:fixtures` (bootstrap and
+ * staging) for every accounting-enabled organization, so a freshly provisioned
+ * org never hits "No contract template configured for reimbursement type …" —
+ * the coordinator can create documents out of the box and customize the
+ * templates in the builder afterwards.
+ *
+ * The body is a minimal but renderable contract/invoice template. Existing
+ * org-default templates are left untouched so an org's hand-built templates
+ * win.
+ */
+const ensureAccountingDocumentTemplates = async (
+  db: Database,
+  organizationId: string,
+): Promise<void> => {
+  const accountingManagePermission = await db.query.permissions.findFirst({
+    where: { key: PERMISSIONS.ACCOUNTING_MANAGE },
+  });
+
+  const reimbursementTypes = await db.query.reimbursementTypes.findMany();
+
+  const contractBody = {
+    header: {
+      titleLines: ['Zusatzvereinbarung zur', 'Aufwandsentschädigung'],
+      orgIdentityLine: {
+        id: 'header-org-identity',
+        text: '{orgName} {orgAddress}',
+        fields: [
+          {
+            id: 'header-org-name',
+            value: { kind: 'bound', source: 'org_name' },
+          },
+          {
+            id: 'header-org-address',
+            value: { kind: 'bound', source: 'org_address' },
+          },
+        ],
+        enabled: true,
+      },
+    },
+    blocks: [
+      {
+        id: 'payout',
+        kind: 'text',
+        title: 'Auszahlung',
+        lines: [
+          {
+            id: 'iban-line',
+            text: 'IBAN: {volunteerIban}',
+            fields: [
+              {
+                id: 'iban-field',
+                value: { kind: 'bound', source: 'volunteer_iban' },
+              },
+            ],
+            enabled: true,
+          },
+          {
+            id: 'bic-line',
+            text: 'BIC: {volunteerBic}',
+            fields: [
+              {
+                id: 'bic-field',
+                value: { kind: 'bound', source: 'volunteer_bic' },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+        enabled: true,
+      },
+    ],
+    footer: {
+      closingLine: {
+        id: 'closing',
+        text: 'Vielen Dank',
+        fields: [],
+        enabled: true,
+      },
+    },
+  };
+
+  const invoiceBody = {
+    header: {
+      titleLines: ['Stundennachweis'],
+      orgIdentityLine: {
+        id: 'header-org-identity',
+        text: '{orgName} {orgAddress}',
+        fields: [
+          {
+            id: 'header-org-name',
+            value: { kind: 'bound', source: 'org_name' },
+          },
+          {
+            id: 'header-org-address',
+            value: { kind: 'bound', source: 'org_address' },
+          },
+        ],
+        enabled: true,
+      },
+    },
+    blocks: [],
+    footer: {
+      closingLine: {
+        id: 'closing',
+        text: 'Vielen Dank',
+        fields: [],
+        enabled: true,
+      },
+    },
+  };
+
+  const signees = (permissionId: string | undefined) => [
+    { order: 0, signeeType: SigneeType.VOLUNTEER, requiredPermissionId: null },
+    ...(permissionId
+      ? [
+          {
+            order: 1,
+            signeeType: SigneeType.PERMISSION_HOLDER,
+            requiredPermissionId: permissionId,
+          },
+        ]
+      : []),
+  ];
+
+  for (const type of reimbursementTypes) {
+    for (const kind of [DocumentKind.CONTRACT, DocumentKind.INVOICE]) {
+      // A template exists already (org-default for this type+kind) — leave it.
+      const existing = await db.query.documentTemplates.findFirst({
+        where: {
+          organizationId,
+          organizationUnitId: { isNull: true },
+          reimbursementTypeId: type.id,
+          kind,
+          isDeleted: false,
+        },
+      });
+      if (existing) continue;
+
+      const [template] = await db
+        .insert(schema.documentTemplates)
+        .values({
+          organizationId,
+          organizationUnitId: null,
+          reimbursementTypeId: type.id,
+          kind,
+          body: kind === DocumentKind.CONTRACT ? contractBody : invoiceBody,
+          isDeleted: false,
+        })
+        .returning();
+
+      if (!template) {
+        throw new Error(
+          `Failed to create ${kind} template for reimbursement type ${type.key}`,
+        );
+      }
+
+      await db.insert(schema.templateSignees).values(
+        signees(accountingManagePermission?.id).map((signee) => ({
+          documentTemplateId: template.id,
+          order: signee.order,
+          signeeType: signee.signeeType,
+          requiredPermissionId: signee.requiredPermissionId,
+        })),
+      );
+    }
+  }
+};
+
 async function seedFixtures() {
   const pool = new Pool({
     host: process.env.DB_HOST,
@@ -684,17 +1275,25 @@ async function seedFixtures() {
   });
 
   const db = drizzle({ client: pool, relations });
+
   const hashedPassword = await hashPassword(FIXTURE_PASSWORD);
 
   const admin = await createAuthUser(db, hashedPassword, {
-    email: 'admin@clippy.social',
+    email: 'testing+admin@caluno.org',
     name: 'Playground Admin',
   });
 
-  const org = await createPlaygroundOrganization(db, admin.id);
+  const org = await ensurePlaygroundOrganization(db, admin.id);
+
+  await ensurePersonalInformationForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+  );
 
   const supervisor = await createAuthUser(db, hashedPassword, {
-    email: 'supervisor@clippy.social',
+    email: 'testing+supervisor@caluno.org',
     name: 'Playground Supervisor',
   });
 
@@ -716,14 +1315,14 @@ async function seedFixtures() {
     name: 'Demo Volunteer',
   });
 
-  await createMembershipWithRole(
+  await ensureMembershipWithRole(
     db,
     supervisor.id,
     org.rootUnitId,
     org.supervisorRoleId,
   );
 
-  await createMembershipWithRole(
+  await ensureMembershipWithRole(
     db,
     demoUser.id,
     org.rootUnitId,
@@ -731,7 +1330,7 @@ async function seedFixtures() {
   );
 
   for (const member of members) {
-    await createMembershipWithRole(
+    await ensureMembershipWithRole(
       db,
       member.id,
       org.rootUnitId,
@@ -740,34 +1339,78 @@ async function seedFixtures() {
   }
 
   const pendingUsers = await Promise.all(
-    ['pending01@clippy.social', 'pending02@clippy.social'].map((email, index) =>
-      createAuthUser(db, hashedPassword, {
-        email,
-        name: `Pending Applicant ${String(index + 1).padStart(2, '0')}`,
-      }),
+    ['testing+pending01@caluno.org', 'testing+pending02@caluno.org'].map(
+      (email, index) =>
+        createAuthUser(db, hashedPassword, {
+          email,
+          name: `Pending Applicant ${String(index + 1).padStart(2, '0')}`,
+        }),
     ),
   );
 
   const rejectedUser = await createAuthUser(db, hashedPassword, {
-    email: 'rejected01@clippy.social',
+    email: 'testing+rejected01@caluno.org',
     name: 'Rejected Applicant',
   });
 
-  await db.insert(schema.membershipRequests).values([
-    ...pendingUsers.map((user) => ({
-      userId: user.id,
-      organizationUnitId: org.rootUnitId,
-      status: MembershipRequestStatus.PENDING,
-    })),
+  // The document signing chain requires the volunteer's bank/personal profile
+  // fields before a contract/invoice can be signed (otherwise the rendered
+  // PDF comes out with gaps). Seed a complete profile for the members so the
+  // fixture accounts can sign documents out of the box.
+  for (const [index, member] of members.entries()) {
+    const existing = await db.query.userProfiles.findFirst({
+      where: { userId: member.id },
+    });
+    if (!existing) {
+      await db.insert(schema.userProfiles).values({
+        userId: member.id,
+        data: {
+          // A valid German IBAN (mod-97 checksum). Same account for the
+          // fixture members so it round-trips the validator.
+          iban: 'DE89 3704 0044 0532 0130 00',
+          bic: 'COBADEFFXXX',
+          address: `Musterstraße ${index + 1}`,
+          'birth-date': '1990-08-02',
+        },
+      });
+    }
+  }
+
+  const ensureMembershipRequest = async (
+    userId: string,
+    status: MembershipRequestStatus,
+    extra: Partial<typeof schema.membershipRequests.$inferInsert> = {},
+  ): Promise<void> => {
+    const existing = await db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationUnitId: org.rootUnitId,
+      },
+    });
+
+    if (!existing) {
+      await db.insert(schema.membershipRequests).values({
+        userId,
+        organizationUnitId: org.rootUnitId,
+        status,
+        ...extra,
+      });
+    }
+  };
+
+  for (const user of pendingUsers) {
+    await ensureMembershipRequest(user.id, MembershipRequestStatus.PENDING);
+  }
+
+  await ensureMembershipRequest(
+    rejectedUser.id,
+    MembershipRequestStatus.REJECTED,
     {
-      userId: rejectedUser.id,
-      organizationUnitId: org.rootUnitId,
-      status: MembershipRequestStatus.REJECTED,
       reviewedById: admin.id,
       reviewedAt: new Date(),
       rejectionReason: 'Fixture rejected applicant',
     },
-  ]);
+  );
 
   const approvedUserIds = [
     admin.id,
@@ -805,7 +1448,7 @@ async function seedFixtures() {
     16,
   );
 
-  const publicEvent = await createEvent(db, org.rootUnitId, admin.id, {
+  const publicEvent = await ensureEvent(db, org.rootUnitId, admin.id, {
     id: PUBLIC_EVENT_ID,
     title: 'Public Test Event',
     description:
@@ -816,7 +1459,7 @@ async function seedFixtures() {
     endsAt: addHours(eventAssistanceStart, SHIFT_DURATION_MINUTES / 60 + 4),
   });
 
-  const communitySupport = await createShiftWithInvites(
+  const communitySupport = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -834,7 +1477,7 @@ async function seedFixtures() {
     },
   );
 
-  const foodDistribution = await createShiftWithInvites(
+  const foodDistribution = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -852,7 +1495,7 @@ async function seedFixtures() {
     },
   );
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: EVENT_ASSISTANCE_SHIFT_ID,
     title: 'Event Assistance',
     startsAt: eventAssistanceStart,
@@ -908,7 +1551,7 @@ async function seedFixtures() {
     10,
   );
 
-  const showcaseEvent = await createEvent(db, org.rootUnitId, admin.id, {
+  const showcaseEvent = await ensureEvent(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_EVENT_ID,
     title: 'Volunteer Fair',
     description:
@@ -919,11 +1562,19 @@ async function seedFixtures() {
     endsAt: addHours(showcaseFullStart, SHIFT_DURATION_MINUTES / 60),
   });
 
+  await ensureCodeOfConductForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+    showcaseEvent.id,
+  );
+
   const showcaseOpenInviteIds = [
     supervisor.id,
     ...members.slice(0, 7).map((member) => member.id),
   ];
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_OPEN_SHIFT_ID,
     title: 'Welcome Desk',
     startsAt: showcaseOpenStart,
@@ -942,12 +1593,20 @@ async function seedFixtures() {
     ),
   });
 
+  await ensureBankingInformationForm(
+    db,
+    org.organizationId,
+    org.rootUnitId,
+    admin.id,
+    SHOWCASE_OPEN_SHIFT_ID,
+  );
+
   const showcaseFullInviteIds = [
     admin.id,
     supervisor.id,
     ...members.slice(0, 4).map((member) => member.id),
   ];
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_FULL_SHIFT_ID,
     title: 'Stage Setup',
     startsAt: showcaseFullStart,
@@ -963,7 +1622,7 @@ async function seedFixtures() {
     inviteUserIds: showcaseFullInviteIds,
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     id: SHOWCASE_UNLIMITED_SHIFT_ID,
     title: 'Cleanup Crew',
     startsAt: showcaseUnlimitedStart,
@@ -983,11 +1642,17 @@ async function seedFixtures() {
   // Demo account follows the Volunteer Fair (so the event page shows the
   // "You're helping" state) but not the Public Test Event, so both the
   // followed and not-yet-followed states are there to demo.
-  await db.insert(schema.eventInvites).values({
-    eventId: showcaseEvent.id,
-    userId: demoUser.id,
-    status: EventInviteStatus.ACCEPTED,
+  const existingEventInvite = await db.query.eventInvites.findFirst({
+    where: { eventId: showcaseEvent.id, userId: demoUser.id },
   });
+
+  if (!existingEventInvite) {
+    await db.insert(schema.eventInvites).values({
+      eventId: showcaseEvent.id,
+      userId: demoUser.id,
+      status: EventInviteStatus.ACCEPTED,
+    });
+  }
 
   // Standalone ALL_MEMBERS shifts spread across the next few weeks, left
   // un-invited for the demo account so /discover has real content on
@@ -1005,7 +1670,7 @@ async function seedFixtures() {
   const tutoringDay = discoverDay(11);
   const gardenDay = discoverDay(18);
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Park Cleanup Day',
     startsAt: fixtureWallClockToUtc(
       parkCleanupDay.year,
@@ -1024,7 +1689,7 @@ async function seedFixtures() {
     inviteUserIds: members.slice(0, 2).map((member) => member.id),
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Warehouse Sorting',
     startsAt: fixtureWallClockToUtc(
       warehouseSortingDay.year,
@@ -1043,7 +1708,7 @@ async function seedFixtures() {
     inviteUserIds: members.slice(2, 4).map((member) => member.id),
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'After-School Tutoring',
     startsAt: fixtureWallClockToUtc(
       tutoringDay.year,
@@ -1061,7 +1726,7 @@ async function seedFixtures() {
     inviteUserIds: members.slice(4, 5).map((member) => member.id),
   });
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Community Garden Planting',
     startsAt: fixtureWallClockToUtc(
       gardenDay.year,
@@ -1150,7 +1815,7 @@ async function seedFixtures() {
 
   for (const [index, entry] of pendingInviteShifts.entries()) {
     const day = discoverDay(2 + index);
-    await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
       title: entry.title,
       startsAt: fixtureWallClockToUtc(day.year, day.month, day.day, entry.hour),
       rrule: ONE_TIME_RRULE,
@@ -1167,7 +1832,7 @@ async function seedFixtures() {
   // Recurring pending invite (weekly x3) — exercises the day picker on the
   // invite detail and brings the pending total to 12.
   const recurringPendingDay = discoverDay(4);
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Weekly Meal Prep',
     startsAt: fixtureWallClockToUtc(
       recurringPendingDay.year,
@@ -1190,7 +1855,7 @@ async function seedFixtures() {
   // reachable at their shift-detail URL (logged in the fixtures summary) to
   // demo the accepted/declined/cancelled detail states directly.
   const acceptedDay = discoverDay(5);
-  const acceptedInvite = await createShiftWithInvites(
+  const acceptedInvite = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1212,7 +1877,7 @@ async function seedFixtures() {
   );
 
   const declinedDay = discoverDay(6);
-  const declinedInvite = await createShiftWithInvites(
+  const declinedInvite = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1240,7 +1905,7 @@ async function seedFixtures() {
   );
 
   const cancelledDay = discoverDay(7);
-  const cancelledInvite = await createShiftWithInvites(
+  const cancelledInvite = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1265,7 +1930,7 @@ async function seedFixtures() {
   );
 
   const selfJoinedDay = discoverDay(8);
-  const selfJoinedShift = await createShiftWithInvites(
+  const selfJoinedShift = await ensureShiftWithInvites(
     db,
     org.rootUnitId,
     admin.id,
@@ -1322,7 +1987,7 @@ async function seedFixtures() {
     9,
   );
 
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Overlap Test Pair A',
     startsAt: fixtureWallClockToUtc(
       pairDay.year,
@@ -1334,7 +1999,7 @@ async function seedFixtures() {
     durationMinutes: 240,
     inviteUserIds: [overlapMember.id],
   });
-  await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+  await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
     title: 'Overlap Test Pair B',
     startsAt: fixtureWallClockToUtc(
       pairDay.year,
@@ -1354,7 +2019,7 @@ async function seedFixtures() {
   // so the sweep-line clusterer groups all 6 together.
   const PILE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
   for (const [index, letter] of PILE_LETTERS.entries()) {
-    await createShiftWithInvites(db, org.rootUnitId, admin.id, {
+    await ensureShiftWithInvites(db, org.rootUnitId, admin.id, {
       title: `Overlap Test Pile ${letter}`,
       startsAt: fixtureWallClockToUtc(
         pileDay.year,
@@ -1369,21 +2034,31 @@ async function seedFixtures() {
     });
   }
 
-  await createTimeEntries(db, [supervisor, ...members], {
-    communitySupport: {
-      startsAt: communitySupport.instanceStartsAt,
-      instanceId: communitySupport.instanceId,
+  await ensureTimeEntries(
+    db,
+    [supervisor, ...members],
+    {
+      communitySupport: {
+        startsAt: communitySupport.instanceStartsAt,
+        instanceId: communitySupport.instanceId,
+      },
+      foodDistribution: {
+        startsAt: foodDistribution.instanceStartsAt,
+        instanceId: foodDistribution.instanceId,
+      },
     },
-    foodDistribution: {
-      startsAt: foodDistribution.instanceStartsAt,
-      instanceId: foodDistribution.instanceId,
-    },
-  });
+    org.rootUnitId,
+  );
 
   console.log(`Created Playground organization (${org.organizationId})`);
   console.log(`Root unit: ${org.rootUnitId}`);
-  console.log('Users: 16 accounts with password abcd1234');
+  console.log(
+    'Users: 16 accounts seeded (password from FIXTURE_PASSWORD, default: abcd1234)',
+  );
   console.log('Memberships: 13 approved, 2 pending, 1 rejected');
+  console.log(
+    'Requirement forms: Personal Information (org unit), Banking Information (Welcome Desk shift), Code of Conduct (Volunteer Fair event)',
+  );
   console.log(
     `Demo account: ${DEMO_USER_EMAIL} — member with invited shifts (Community Support, Food Distribution, Event Assistance), follows Volunteer Fair, and has Welcome Desk/Stage Setup/Cleanup Crew plus 4 more shifts across the next 3 weeks left to discover`,
   );
@@ -1408,6 +2083,44 @@ async function seedFixtures() {
       `  cancelled → /shifts/${cancelledInvite.shiftId} (CANCELLED, post-withdrawal)`,
       `  self-joined → /shifts/${selfJoinedShift.shiftId} (SELF_JOINED, no Cancel)`,
     ].join('\n'),
+  );
+
+  // No admin UI to toggle accountingEnabled yet — this script never runs in production.
+  const enabledOrgs = await db
+    .update(schema.organizations)
+    .set({ accountingEnabled: true })
+    .returning({ id: schema.organizations.id });
+  console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
+
+  // Backfill missing unit postal fields so accounting documents have an org
+  // address/city/zip to render (a document with "—" in the footer is a hard
+  // dead-end the org can't fix without an edit form). The document renders the
+  // UNIT's profile, so patch the org's root unit. Only fills gaps.
+  for (const enabledOrg of enabledOrgs) {
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { organizationId: enabledOrg.id, parentId: { isNull: true } },
+    });
+    if (!rootUnit) continue;
+    const patch: Partial<typeof schema.organizationUnits.$inferInsert> = {};
+    if (!rootUnit.address) patch.address = 'Hauptstraße 1';
+    if (!rootUnit.city) patch.city = 'Berlin';
+    if (!rootUnit.zipCode) patch.zipCode = '10115';
+    if (!rootUnit.legalRep) patch.legalRep = 'Max Mustermann';
+    if (Object.keys(patch).length > 0) {
+      await db
+        .update(schema.organizationUnits)
+        .set(patch)
+        .where(eq(schema.organizationUnits.id, rootUnit.id));
+    }
+  }
+
+  // Give every accounting-enabled org default contract + invoice templates so
+  // documents can be created out of the box on a fresh provision.
+  for (const enabledOrg of enabledOrgs) {
+    await ensureAccountingDocumentTemplates(db, enabledOrg.id);
+  }
+  console.log(
+    `Seeded default accounting document templates on ${enabledOrgs.length} organization(s).`,
   );
 
   await pool.end();

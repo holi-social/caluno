@@ -15,6 +15,8 @@ export const users = snakeCase.table('users', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
   locale: text('locale'),
+  privacyPolicyVersion: text('privacy_policy_version'),
+  privacyPolicyAcceptedAt: timestamp('privacy_policy_accepted_at'),
   checkInId: text('check_in_id')
     .notNull()
     .unique()

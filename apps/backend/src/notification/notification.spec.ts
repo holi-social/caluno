@@ -4,6 +4,7 @@ jest.mock('nanoid', () => ({
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { DocumentKind } from '../accounting/enums';
 import type { Locale } from '../graphql/locale';
 import { AppI18nService } from '../i18n/app-i18n.service';
 import type { EmailTemplateContext } from '../i18n/email-translate';
@@ -19,13 +20,24 @@ import { UserLocaleService } from '../i18n/user-locale.service';
 import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email/email.service';
+import { documentAwaitingSignatureTemplate } from './email/templates/document-awaiting-signature.template';
+import { documentDeclinedByOrgTemplate } from './email/templates/document-declined-by-org.template';
+import { eventCancelledTemplate } from './email/templates/event-cancelled.template';
+import { eventInvitedTemplate } from './email/templates/event-invited.template';
+import { eventJoinedTemplate } from './email/templates/event-joined.template';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
+import { membershipLeftTemplate } from './email/templates/membership-left.template';
+import { membershipRemovedTemplate } from './email/templates/membership-removed.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { passwordResetTemplate } from './email/templates/password-reset.template';
+import { shiftInstanceCancelledTemplate } from './email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
+import { shiftInstanceSeriesCancelledTemplate } from './email/templates/shift-instance-series-cancelled.template';
 import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
+import { DocumentListener } from './listeners/document.listener';
+import { EventListener } from './listeners/event.listener';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
 import { ShiftListener } from './listeners/shift.listener';
@@ -95,6 +107,8 @@ describe('NotificationModule', () => {
         OrganizationListener,
         MembershipListener,
         ShiftListener,
+        EventListener,
+        DocumentListener,
         { provide: EmailService, useValue: emailService },
         { provide: UserService, useValue: userService },
         { provide: UserLocaleService, useValue: userLocaleService },
@@ -204,7 +218,7 @@ describe('NotificationModule', () => {
       createFixtureTranslator('en'),
     );
 
-    expect(email.subject).toBe('Reset your Clippy password');
+    expect(email.subject).toBe('Reset your Caluno password');
     expect(email.html).toContain(resetUrl);
     expect(email.html).toContain('This link expires in 60 minutes.');
   });
@@ -307,6 +321,114 @@ describe('NotificationModule', () => {
     );
 
     notificationService.notifyMembershipApproved(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith(user.id);
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends membership left email to each reviewer', async () => {
+    const users = new Map([
+      [
+        'leaver-1',
+        {
+          id: 'leaver-1',
+          name: 'Sam Volunteer',
+          email: 'volunteer@example.com',
+        },
+      ],
+      [
+        'reviewer-1',
+        {
+          id: 'reviewer-1',
+          name: 'Alice Reviewer',
+          email: 'alice@example.com',
+        },
+      ],
+      [
+        'reviewer-2',
+        {
+          id: 'reviewer-2',
+          name: 'Bob Reviewer',
+          email: 'bob@example.com',
+        },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      leaverUserId: 'leaver-1',
+      recipientUserIds: ['reviewer-1', 'reviewer-2'],
+    };
+    const expectedAlice = await membershipLeftTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Alice',
+      },
+      createFixtureTranslator('en'),
+    );
+    const expectedBob = await membershipLeftTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Bob',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyMembershipLeft(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('leaver-1');
+    expect(userService.findById).toHaveBeenCalledWith('reviewer-1');
+    expect(userService.findById).toHaveBeenCalledWith('reviewer-2');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expectedAlice.subject,
+      html: expectedAlice.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'bob@example.com',
+      subject: expectedBob.subject,
+      html: expectedBob.html,
+    });
+  });
+
+  it('sends membership removed email when event is emitted', async () => {
+    const user = {
+      id: 'user-member-1',
+      name: 'Sam Smith',
+      email: 'volunteer@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+      userId: user.id,
+    };
+    const expected = await membershipRemovedTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Sam',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyMembershipRemoved(payload);
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -452,6 +574,96 @@ describe('NotificationModule', () => {
     expect(expected.html).toContain('Bring gloves.<br />Arrive 10 min early.');
   });
 
+  it('sends shift instance cancelled emails to affected volunteers', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      startsAt,
+      endsAt,
+      instanceId: 'instance-1',
+    };
+    const expected = await shiftInstanceCancelledTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceCancelled(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends shift instance series cancelled emails to affected volunteers', async () => {
+    const fromDate = new Date('2026-07-10T00:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      fromDate,
+    };
+    const expected = await shiftInstanceSeriesCancelledTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        fromDate,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceSeriesCancelled(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
   it('sends shift invited emails for all-instance invites', async () => {
     const firstOccurrenceStartsAt = new Date('2026-07-10T09:00:00.000Z');
     const firstOccurrenceEndsAt = new Date('2026-07-10T12:00:00.000Z');
@@ -508,5 +720,253 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
+  });
+
+  it('sends event invited emails to invited members', async () => {
+    const startsAt = new Date('2026-09-01T09:00:00.000Z');
+    const endsAt = new Date('2026-09-01T17:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventId: 'event-1',
+      eventTitle: 'Community Fair',
+      eventLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      startsAt,
+      endsAt,
+    };
+    const expected = await eventInvitedTemplate(
+      {
+        eventId: payload.eventId,
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        eventLocation: payload.eventLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventInvited(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends event joined email to each event manager', async () => {
+    const startsAt = new Date('2026-09-01T09:00:00.000Z');
+    const users = new Map([
+      [
+        'volunteer-1',
+        {
+          id: 'volunteer-1',
+          name: 'Sam Volunteer',
+          email: 'volunteer@example.com',
+        },
+      ],
+      [
+        'manager-1',
+        {
+          id: 'manager-1',
+          name: 'Alice Manager',
+          email: 'alice@example.com',
+        },
+      ],
+      [
+        'manager-2',
+        {
+          id: 'manager-2',
+          name: 'Bob Manager',
+          email: 'bob@example.com',
+        },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventTitle: 'Community Fair',
+      joinedUserId: 'volunteer-1',
+      recipientUserIds: ['manager-1', 'manager-2'],
+      startsAt,
+    };
+    const expectedAlice = await eventJoinedTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Alice',
+        startsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+    const expectedBob = await eventJoinedTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Bob',
+        startsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventJoined(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-2');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expectedAlice.subject,
+      html: expectedAlice.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'bob@example.com',
+      subject: expectedBob.subject,
+      html: expectedBob.html,
+    });
+  });
+
+  it('sends event cancelled emails to affected participants', async () => {
+    const startsAt = new Date('2026-09-01T09:00:00.000Z');
+    const endsAt = new Date('2026-09-01T17:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventTitle: 'Community Fair',
+      eventLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      startsAt,
+      endsAt,
+    };
+    const expected = await eventCancelledTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        eventLocation: payload.eventLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventCancelled(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends awaiting-signature email to the volunteer', async () => {
+    const user = {
+      id: 'user-vol-1',
+      name: 'Alexandra Bauer',
+      email: 'alex@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      volunteerUserId: user.id,
+      documentId: 'contract-1',
+      documentKind: DocumentKind.CONTRACT,
+      organizationName: 'Acme Volunteers',
+    };
+    const expected = await documentAwaitingSignatureTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Alexandra',
+        documentName: 'Supplementary agreement',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyDocumentAwaitingSignature(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.subject).toContain('Supplementary agreement');
+  });
+
+  it('sends declined-by-org email with the reason to the volunteer', async () => {
+    const user = {
+      id: 'user-vol-2',
+      name: 'Alexandra Bauer',
+      email: 'alex@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+    userLocaleService.resolveForUser.mockResolvedValue('de');
+
+    const payload = {
+      volunteerUserId: user.id,
+      documentId: 'timesheet-1',
+      documentKind: DocumentKind.INVOICE,
+      organizationName: 'Acme Volunteers',
+      reason: 'Zeitraum stimmt nicht überein',
+    };
+    const expected = await documentDeclinedByOrgTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Alexandra',
+        documentName: 'Stundennachweis',
+        reason: payload.reason,
+      },
+      createFixtureTranslator('de'),
+    );
+
+    notificationService.notifyDocumentDeclinedByOrg(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain(payload.reason);
+    expect(expected.subject).toContain('abgelehnt');
   });
 });

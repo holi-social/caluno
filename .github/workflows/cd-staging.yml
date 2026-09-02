@@ -1,0 +1,29 @@
+# Deploys `main` to staging. The pre-deploy gate lives in reusable-deploy.yml,
+# alongside the image builds. See SETUP.md for the one-time setup.
+name: CD · Staging
+
+on:
+  push:
+    branches: [main]
+
+# One deploy at a time, never cancelled mid-apply.
+concurrency:
+  group: cd-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      environment: staging
+      moving-tag: staging
+      api-url: https://staging.api.caluno.org
+      web-url: https://staging.app.caluno.org
+    secrets: inherit

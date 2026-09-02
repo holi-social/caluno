@@ -22,12 +22,17 @@ test.describe('public event detail page', () => {
     ).toBeVisible();
   });
 
-  test('redirects anonymous follow click to signup with redirect cookie', async ({
+  test('redirects anonymous follow click to signup with invite context', async ({
     page,
   }) => {
     await page.goto(`${BASE_URL}/en/events/${PUBLIC_EVENT_ID}`);
     await page.getByRole('button', { name: /step up to help/i }).click();
-    await expect(page).toHaveURL(/signup/);
+    await expect(page).toHaveURL(/\/en\/signup/);
+    await expect(
+      page.getByRole('heading', { name: /join playground/i }),
+    ).toBeVisible();
+    await expect(page.getByText(/powered by/i)).toBeVisible();
+    await expect(page.getByText('caluno')).toBeVisible();
   });
 
   test('shows event badge on shift detail when part of event', async ({

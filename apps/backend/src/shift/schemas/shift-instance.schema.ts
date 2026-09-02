@@ -23,6 +23,7 @@ export const shiftInstances = snakeCase.table(
     overrideInstructions: text('override_instructions'),
     overrideLocation: text('override_location'),
     overrideMaxVolunteers: integer('override_max_volunteers'),
+    overrideMinVolunteers: integer('override_min_volunteers'),
     isException: boolean('is_exception').notNull().default(false),
     isCancelled: boolean('is_cancelled').notNull().default(false),
     cancelledBySync: boolean('cancelled_by_sync').notNull().default(false),

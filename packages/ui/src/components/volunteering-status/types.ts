@@ -32,6 +32,7 @@ export type VolunteeringActionLabel =
   | 'Decline'
   | 'Invite'
   | 'Uninvite'
+  | 'View'
   | 'Check in'
   | 'Check out'
   | 'Add timesheet'

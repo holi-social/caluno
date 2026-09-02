@@ -51,7 +51,7 @@ const applyDatabaseEnvironment = (): void => {
   process.env.DB_PORT ??= process.env.POSTGRES_PORT ?? '5432';
   process.env.DB_USER ??= process.env.POSTGRES_USER ?? 'postgres';
   process.env.DB_PASSWORD ??= process.env.POSTGRES_PASSWORD ?? 'postgres';
-  process.env.DB_NAME ??= process.env.POSTGRES_DB ?? 'clippy';
+  process.env.DB_NAME ??= process.env.POSTGRES_DB ?? 'caluno';
 };
 
 const assertLocalDbHost = (): void => {
@@ -79,16 +79,20 @@ const run = (command: string, args: string[], cwd = REPO_ROOT): void => {
 const logFixtureSummary = (): void => {
   console.log('\nPlayground fixtures loaded.');
   console.log('Organization: Playground');
-  console.log('Password for all accounts: abcd1234\n');
-  console.log('Accounts:');
-  console.log('  admin@clippy.social          (Owner)');
-  console.log('  supervisor@clippy.social   (Supervisor)');
-  console.log('  demo@clippy.social         (Member — use this one for demos)');
-  console.log('  member01@clippy.social … member10@clippy.social (Member)');
   console.log(
-    '  pending01@clippy.social, pending02@clippy.social (pending request)',
+    'Password for all accounts: abcd1234 (override with FIXTURE_PASSWORD)\n',
   );
-  console.log('  rejected01@clippy.social   (rejected request)');
+  console.log('Accounts:');
+  console.log('  testing+admin@caluno.org          (Owner)');
+  console.log('  testing+supervisor@caluno.org   (Supervisor)');
+  console.log(
+    '  testing+demo@caluno.org         (Member — use this one for demos)',
+  );
+  console.log('  testing+001@caluno.org … testing+010@caluno.org (Member)');
+  console.log(
+    '  testing+pending01@caluno.org, testing+pending02@caluno.org (pending request)',
+  );
+  console.log('  testing+rejected01@caluno.org   (rejected request)');
   console.log('\nShifts (weekly, Europe/Berlin):');
   console.log(
     '  Community Support   Mon 08:00–12:00  (all members + demo invited)',
@@ -100,7 +104,10 @@ const logFixtureSummary = (): void => {
     '  Event Assistance    Fri 16:00–20:00  (demo + member05–07 invited)',
   );
   console.log(
-    '\nDemo account also follows the Volunteer Fair event and has 4 more',
+    '\nRequirement form: Personal Information — block with required First name and Last name.',
+  );
+  console.log(
+    'Demo account also follows the Volunteer Fair event and has 4 more',
   );
   console.log('shifts across the next 3 weeks left to discover.');
 };

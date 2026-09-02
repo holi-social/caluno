@@ -13,6 +13,7 @@ import {
   MembershipFieldResolver,
   MembershipMutationResolver,
   MembershipQueryResolver,
+  MembershipRequestFieldResolver,
   MembershipRequestQueryResolver,
 } from './resolvers';
 
@@ -31,6 +32,7 @@ import {
     MembershipFieldResolver,
     MembershipQueryResolver,
     MembershipRequestQueryResolver,
+    MembershipRequestFieldResolver,
     MembershipMutationResolver,
     OrganizationUnitMapper,
     RoleMapper,

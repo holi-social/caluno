@@ -14,13 +14,20 @@ export class SignupPage extends AuthPage {
     return this.page.getByRole('link', { name: 'Sign in' });
   }
 
-  // Privacy-policy consent checkbox that gates submit.
-  get consentCheckbox() {
-    return this.page.getByRole('checkbox').first();
+  get privacyCheckbox() {
+    return this.page.getByRole('checkbox', { name: /privacy policy/i });
+  }
+
+  get privacyLink() {
+    return this.page.getByRole('link', { name: 'Privacy Policy' });
   }
 
   async goto() {
     await this.page.goto(this.url('/signup'), { waitUntil: 'load' });
+  }
+
+  async acceptPrivacyPolicy() {
+    await this.privacyCheckbox.check();
   }
 
   async signup(
@@ -31,7 +38,7 @@ export class SignupPage extends AuthPage {
     await this.nameInput.fill(name);
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
-    await this.consentCheckbox.check();
+    await this.acceptPrivacyPolicy();
     const [res] = await Promise.all([
       this.page.waitForResponse(
         (r) => r.url().includes('/api/auth/sign-up/email'),
@@ -60,12 +67,18 @@ export class SignupPage extends AuthPage {
   }
 
   // Fills only the provided fields; leaves the rest untouched.
-  async fillForm(values: { name?: string; email?: string; password?: string }) {
+  async fillForm(values: {
+    name?: string;
+    email?: string;
+    password?: string;
+    privacyAccepted?: boolean;
+  }) {
     if (values.name !== undefined) await this.nameInput.fill(values.name);
     if (values.email !== undefined) await this.emailInput.fill(values.email);
     if (values.password !== undefined) {
       await this.passwordInput.fill(values.password);
     }
+    if (values.privacyAccepted) await this.acceptPrivacyPolicy();
   }
 
   private fieldLocator(field: 'name' | 'email' | 'password') {

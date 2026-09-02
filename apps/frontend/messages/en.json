@@ -1,198 +1,739 @@
 {
-  "Common": {
-    "save": "Save",
-    "saving": "Saving...",
-    "saveChanges": "Save changes",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "deleting": "Deleting...",
-    "loading": "Loading...",
-    "create": "Create",
-    "creating": "Creating...",
-    "submit": "Submit",
-    "submitting": "Submitting...",
-    "copyToClipboard": "Copy to clipboard",
-    "linkCopied": "Link copied to clipboard",
-    "previous": "Previous",
-    "next": "Next",
-    "back": "Back",
-    "searchPlaceholder": "Search...",
-    "yes": "Yes",
-    "no": "No",
-    "view": "View",
-    "edit": "Edit",
-    "required": "Required",
-    "optional": "Optional",
-    "none": "None",
-    "moveUp": "Move up",
-    "moveDown": "Move down",
-    "dash": "—",
-    "toggleTheme": "Toggle theme",
-    "menu": "Menu",
-    "signOut": "Sign Out",
-    "brand": "Clippy",
-    "greeting": "Hi {name}",
-    "avatarAlt": "Avatar of {name}"
-  },
   "Auth": {
-    "login": {
-      "title": "Sign in",
-      "emailLabel": "Email",
-      "emailPlaceholder": "you@example.com",
-      "passwordLabel": "Password",
-      "passwordPlaceholder": "••••••••",
-      "submit": "Sign in",
-      "submitting": "Signing in...",
-      "noAccount": "Don't have an account?",
-      "signUpLink": "Sign up",
-      "forgotPasswordLink": "Forgot password?",
-      "invalidCredentials": "Invalid credentials",
-      "sendVerificationFailed": "Email is not verified, and we couldn't send a new verification code.",
-      "genericError": "Sign in failed. Please try again."
-    },
+    "brandName": "caluno",
+    "joinTitle": "Join {orgName}",
+    "poweredBy": "Powered by",
     "forgotPassword": {
-      "title": "Reset your password",
+      "checkSpam": "If you don't see it, check your spam folder.",
       "description": "Enter your email address and we'll send you a link to reset your password.",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
-      "submit": "Send reset link",
-      "sending": "Sending reset link...",
       "emailSent": "If an account exists for that email, a password reset link will arrive shortly.",
-      "checkSpam": "If you don't see it, check your spam folder.",
-      "sendFailed": "Failed to send reset link. Please try again.",
       "remembered": "Remembered your password?",
-      "signInLink": "Sign in"
+      "sendFailed": "Failed to send reset link. Please try again.",
+      "sending": "Sending reset link...",
+      "signInLink": "Sign in",
+      "submit": "Send reset link",
+      "title": "Reset your password"
     },
-    "resetPassword": {
-      "title": "Choose a new password",
-      "description": "Enter a new password for your account.",
-      "newPasswordLabel": "New password",
-      "confirmPasswordLabel": "Confirm password",
-      "passwordPlaceholder": "••••••••",
-      "submit": "Reset password",
-      "submitting": "Resetting password...",
-      "passwordMismatch": "Passwords do not match",
-      "missingToken": "This password reset link is missing a token.",
-      "invalidToken": "This password reset link is invalid or has expired.",
-      "resetFailed": "Failed to reset password. Please request a new reset link.",
-      "signInLink": "Back to sign in"
-    },
-    "signup": {
-      "title": "Create your account",
-      "nameLabel": "Full Name",
-      "namePlaceholder": "John Doe",
+    "login": {
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
+      "forgotPasswordLink": "Forgot password?",
+      "genericError": "Sign in failed. Please try again.",
+      "invalidCredentials": "Invalid credentials",
+      "noAccount": "Don't have an account?",
       "passwordLabel": "Password",
       "passwordPlaceholder": "••••••••",
-      "passwordHint": "At least 6 characters",
-      "submit": "Create account",
-      "submitting": "Creating account...",
-      "hasAccount": "Already have an account?",
-      "signInLink": "Sign in",
-      "createAccountFailed": "Failed to create account",
-      "genericError": "Creating your account failed. Please try again."
+      "sendVerificationFailed": "Email is not verified, and we couldn't send a new verification code.",
+      "signUpLink": "Sign up",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "title": "Sign in",
+      "description": "Welcome back to caluno. Sign in to join shifts and volunteer with your organization."
     },
-    "verifyEmail": {
-      "title": "Verify your email",
-      "requestDescription": "Enter your email address and we'll send you a verification code.",
+    "resetPassword": {
+      "confirmPasswordLabel": "Confirm password",
+      "description": "Enter a new password for your account.",
+      "invalidToken": "This password reset link is invalid or has expired.",
+      "missingToken": "This password reset link is missing a token.",
+      "newPasswordLabel": "New password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordPlaceholder": "••••••••",
+      "resetFailed": "Failed to reset password. Please request a new reset link.",
+      "signInLink": "Back to sign in",
+      "submit": "Reset password",
+      "submitting": "Resetting password...",
+      "title": "Choose a new password"
+    },
+    "signup": {
+      "createAccountFailed": "Failed to create account",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
-      "sendCode": "Send verification code",
-      "sending": "Sending code...",
-      "codeSent": "Check {email} for your verification code.",
+      "genericError": "Creating your account failed. Please try again.",
+      "hasAccount": "Already have an account?",
+      "nameLabel": "Full name",
+      "namePlaceholder": "John Doe",
+      "passwordHint": "At least 6 characters",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "privacyAcknowledge": "I have read and acknowledge the <privacyLink>Privacy Policy</privacyLink>.",
+      "privacyRequired": "Please acknowledge the Privacy Policy to create an account.",
+      "signInLink": "Sign in",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "title": "Create your account",
+      "description": "Welcome to caluno. Sign up to join shifts and volunteer with your organization."
+    },
+    "verifyEmail": {
       "codeRequested": "If email delivery is available, a verification code will arrive at {email} shortly.",
-      "verificationDescription": "Enter the verification code for {email}.",
+      "codeSent": "Check {email} for your verification code.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
       "otpLabel": "Verification code",
       "otpPlaceholder": "123456",
-      "verifySubmit": "Verify email",
-      "verifying": "Verifying...",
-      "resendCode": "Resend code",
-      "sendCodeFailed": "Failed to send verification code",
-      "verifyCodeFailed": "Failed to verify code",
       "remembered": "Already verified?",
-      "signInLink": "Sign in"
+      "requestDescription": "Enter your email address and we'll send you a verification code.",
+      "resendCode": "Resend code",
+      "sendCode": "Send verification code",
+      "sendCodeFailed": "Failed to send verification code",
+      "sending": "Sending code...",
+      "signInLink": "Sign in",
+      "title": "Verify your email",
+      "verificationDescription": "Enter the verification code for {email}.",
+      "verifyCodeFailed": "Failed to verify code",
+      "verifySubmit": "Verify email",
+      "verifying": "Verifying..."
     }
   },
-  "Metadata": {
-    "title": "Clippy",
-    "description": "Volunteer management platform",
-    "unauthorizedTitle": "Access Denied | Clippy"
+  "CheckIn": {
+    "manualCheckin": "Manual checkin",
+    "myQrCodeTab": "My QR code",
+    "qrScannerTab": "QR Scanner",
+    "scanACode": "Scan a code"
   },
-  "Unauthorized": {
-    "title": "Access Denied",
-    "message": "You don't have permission to access this resource.",
-    "homeLink": "Go to your organizations"
+  "Common": {
+    "avatarAlt": "Avatar of {name}",
+    "back": "Back",
+    "brand": "Caluno",
+    "cancel": "Cancel",
+    "copyToClipboard": "Copy to clipboard",
+    "create": "Create",
+    "creating": "Creating...",
+    "dash": "—",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "edit": "Edit",
+    "greeting": "Hi {name}",
+    "linkCopied": "Link copied to clipboard",
+    "loading": "Loading...",
+    "menu": "Menu",
+    "moveDown": "Move down",
+    "moveUp": "Move up",
+    "next": "Next",
+    "no": "No",
+    "none": "None",
+    "optional": "Optional",
+    "previous": "Previous",
+    "required": "Required",
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "searchPlaceholder": "Search...",
+    "signOut": "Sign out",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "toggleTheme": "Toggle theme",
+    "view": "View",
+    "yes": "Yes",
+    "done": "Done"
+  },
+  "Error": {
+    "digestLabel": "ID: {digest}",
+    "generic": "Something went wrong",
+    "goHome": "Go home",
+    "orgNotFound": {
+      "description": "The organization you're looking for doesn't exist.",
+      "homeLink": "Go to your organizations",
+      "title": "Organization not found"
+    },
+    "reloadPage": "Reload page",
+    "title": "Something went wrong",
+    "tryAgain": "Try again"
+  },
+  "Event": {
+    "action": {
+      "deleteAria": "Delete",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
+      "shareAria": "Copy link"
+    },
+    "card": {
+      "pill": "{shiftsCount, plural, =0 {No shifts} one {1 shift} other {# shifts}}{formsCount, plural, =0 {} one { · 1 form} other { · # forms}}",
+      "viewButton": "View event",
+      "volunteers": "{count, plural, one {1 volunteer signed up} other {# volunteers signed up}}"
+    },
+    "deleteDialog": {
+      "confirm": "Delete",
+      "description": "Are you sure you want to delete this event? This action cannot be undone.",
+      "title": "Delete event"
+    },
+    "detail": {
+      "backLink": "Back to events",
+      "coverImageAlt": "Cover image for {title}",
+      "createdByLabel": "Created by",
+      "createdLabel": "Created",
+      "editButton": "Edit",
+      "emptyLocation": "No location",
+      "imagePlaceholder": "Add cover image",
+      "informationTitle": "Event information",
+      "inviteButton": "Invite",
+      "shiftsCount": "{count, plural, one {# shift} other {# shifts}}",
+      "status": {
+        "active": "Active",
+        "finished": "Finished"
+      },
+      "statusLabel": "Status",
+      "tabs": {
+        "shifts": "Shifts",
+        "volunteers": "Volunteers"
+      },
+      "requiredForms": {
+        "addExisting": "Add existing",
+        "addedToast": "Form attached",
+        "createNew": "Create new",
+        "dedupHint": "Volunteers won't be asked for information they've already provided.",
+        "fileUploadLabel": "File upload",
+        "noBlocks": "No blocks",
+        "noFormsFound": "No forms found",
+        "pill": {
+          "none": "No forms required",
+          "required": "{count, plural, one {1 form required} other {{count} forms required}}"
+        },
+        "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+        "removeAria": "Remove",
+        "removedToast": "Form removed",
+        "searchForms": "Search forms...",
+        "subtitle": "Completed before joining {eventTitle}",
+        "title": "Forms required to join",
+        "updateFailedToast": "Failed to update required forms"
+      },
+      "shiftsCard": {
+        "addAria": "Create shift",
+        "addButton": "Create shift",
+        "emptyDescription": "Create a shift for this event to get started.",
+        "emptyTitle": "No shifts yet",
+        "title": "Shifts"
+      },
+      "volunteersCard": {
+        "checkInAria": "Check in",
+        "empty": "No volunteers invited yet.",
+        "inviteAria": "Invite members",
+        "inviteButton": "Invite",
+        "status": {
+          "invited": "Invited",
+          "signedUp": "Signed up",
+          "accepted": "Accepted",
+          "declined": "Declined",
+          "cancelled": "Canceled",
+          "rejected": "Rejected"
+        },
+        "actionUninvite": "Uninvite",
+        "uninviteSuccess": "Volunteer removed from event",
+        "uninviteError": "Could not remove volunteer",
+        "actionInvite": "Invite",
+        "inviteSuccess": "Volunteer invited again",
+        "inviteError": "Could not invite volunteer",
+        "title": "Volunteers"
+      }
+    },
+    "empty": {
+      "description": "Get started by creating your first event.",
+      "title": "No events yet"
+    },
+    "error": {
+      "title": "Failed to load events",
+      "tryAgain": "Try again"
+    },
+    "form": {
+      "coverUrlLabel": "Cover URL",
+      "endsAtLabel": "End",
+      "locationLabel": "Location",
+      "locationPlaceholder": "e.g. Phoenix Park",
+      "logoUrlLabel": "Logo URL",
+      "startsAtLabel": "Start",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. Summer Festival",
+      "validation": {
+        "endAfterStart": "End date must be after start date",
+        "endRequired": "End date is required",
+        "invalidUrl": "Must be a valid URL",
+        "startRequired": "Start date is required",
+        "titleRequired": "Title is required"
+      }
+    },
+    "invite": {
+      "copyInviteLink": "Copy invite link",
+      "description": "Invite members to {eventTitle}. They're notified about the event — this doesn't assign them to its shifts.",
+      "helperText": "Prefer a link? Share it with anyone to invite them to the event.",
+      "title": "Invite members"
+    },
+    "list": {
+      "createButton": "Create event",
+      "subtitle": "Manage your organization's events",
+      "title": "Events"
+    },
+    "sheet": {
+      "createDescription": "Add a new event to group related shifts.",
+      "createTitle": "Create event",
+      "editDescription": "Update the event details below.",
+      "editTitle": "Edit event"
+    },
+    "toast": {
+      "created": "Event created",
+      "deleted": "Event deleted",
+      "invited": "Members invited",
+      "linkCopied": "Invite link copied to clipboard",
+      "updated": "Event updated"
+    }
+  },
+  "EventDetail": {
+    "aboutHeading": "About the event",
+    "badge": "Event",
+    "coverImageAlt": "Cover image for {title}",
+    "followCta": "Step up to help",
+    "followNote": "Get invited to shifts, or sign up for one yourself.",
+    "followingCta": "You're helping",
+    "forms": {
+      "description": "Please complete the required forms before joining this event.",
+      "joinedToast": "You're now helping with {eventTitle}",
+      "noForms": "No forms are required.",
+      "pendingRequestToast": "Pending request — a coordinator will confirm your membership.",
+      "rejectedToast": "Request not approved",
+      "requestFailed": "Failed to send request",
+      "requestSentToast": "Request sent — a coordinator will confirm it.",
+      "requirementsNeededToast": "Please complete all required forms first",
+      "title": "Join {eventTitle}"
+    },
+    "fullyBooked": "Fully booked",
+    "noShifts": "No shifts planned yet.",
+    "noShiftsOnDay": "No shifts on this day.",
+    "pendingCta": "Pending request",
+    "pendingNote": "A coordinator will confirm your request.",
+    "rejectedCta": "You cannot join this event",
+    "requestSentToast": "Request sent — a coordinator will confirm it.",
+    "requiredFormsTitle": "Required forms",
+    "shiftsCount": "{n, plural, one {# shift} other {# shifts}}",
+    "shiftsHeading": "Shifts",
+    "shiftsMeta": "{days} days · {occurrences} occurrences",
+    "shiftsSummary": "{shifts} shifts · {spotsLeft} spots free",
+    "shiftsSummaryFull": "{shifts} shifts · Fully booked",
+    "shiftsSummaryNoSpots": "{shifts} shifts",
+    "shiftsToggleCalendar": "Calendar",
+    "shiftsToggleList": "List",
+    "showAllShifts": "Show all shifts",
+    "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
+    "today": "Today",
+    "unlimitedSpots": "Open"
   },
   "LocaleSwitcher": {
     "label": "Language"
   },
-  "Profile": {
-    "title": "Edit Profile",
-    "pictureLabel": "Profile picture",
-    "saved": "Profile updated",
-    "saveFailed": "Failed to update profile"
+  "MemberSelect": {
+    "allSelected": "All members have been selected",
+    "availableLabel": "Available",
+    "copyToast": "Share this link with the volunteer",
+    "inviteByLink": "Invite by link",
+    "invitedLabel": "Invited",
+    "noResults": "No members found",
+    "searchPlaceholder": "Search name or email..."
   },
-  "Navigation": {
-    "home": "Home",
-    "organizations": "Organizations",
-    "overview": "Overview",
-    "events": "Events",
-    "shifts": "Shifts",
-    "timesheets": "Timesheets",
-    "volunteers": "Volunteers",
-    "checkIn": "Check in",
-    "myTime": "My Time",
-    "requirementForms": "Requirement Forms",
-    "settings": "Settings",
-    "roles": "Roles",
-    "orgUnits": "Org Units",
-    "selectOrganization": "Select organization",
-    "admin": "Admin",
-    "qrIdTitle": "QR iD",
-    "qrIdDescription": "This is your personal QR code to check in to shifts",
-    "profile": "Profile",
-    "volunteering": "Volunteering"
-  },
-  "Pagination": {
-    "showing": "Showing {start}-{end} of {total} {name}",
-    "pageOf": "Page {current} of {total}"
-  },
-  "Error": {
-    "title": "Something went wrong",
-    "tryAgain": "Try again",
-    "reloadPage": "Reload page",
-    "goHome": "Go home",
-    "generic": "Something went wrong",
-    "digestLabel": "ID: {digest}",
-    "orgNotFound": {
-      "title": "Organization Not Found",
-      "description": "The organization you're looking for doesn't exist.",
-      "homeLink": "Go to your organizations"
+  "MembershipDetail": {
+    "forms": {
+      "completedOn": "You filled in the form on {date}",
+      "fillIn": "Fill in form",
+      "notCompletedPrompt": "This organisation has asked you to fill in this form.",
+      "status": {
+        "completed": "Completed",
+        "notCompleted": "Not completed"
+      },
+      "subtitle": "Forms this organisation has asked you to fill in.",
+      "title": "Your forms",
+      "view": "View"
+    },
+    "joinedDate": "Joined · {date}",
+    "role": "Role",
+    "submission": {
+      "accepted": "Accepted",
+      "answerColumn": "Answer",
+      "fieldColumn": "Field",
+      "noFields": "This form has no fields.",
+      "submittedOn": "Submitted on {date}"
+    },
+    "documents": {
+      "title": "Your documents",
+      "subtitle": "Agreements and timesheets for reimbursements",
+      "names": {
+        "agreement": "Supplementary agreement",
+        "timesheet": "Timesheet"
+      },
+      "status": {
+        "awaiting-signature": "To sign",
+        "awaiting-countersignature": "To countersign",
+        "signed": "Active",
+        "declined": "Declined"
+      },
+      "figures": "{shifts} Shifts · {hours} hours · {amount}",
+      "lines": {
+        "generated": "Generated on {date} by {name}",
+        "signedByMe": "You signed on {date}",
+        "countersignedBy": "{name} countersigned on {date}",
+        "declinedBy": "{name} declined on {date}"
+      },
+      "actions": {
+        "download": "Download",
+        "sign": "Sign",
+        "decline": "Decline"
+      },
+      "missingProfileWarning": "Your profile is missing details this document needs.",
+      "missingProfileCta": "Complete your profile to sign",
+      "toasts": {
+        "signed": "{name} signed.",
+        "signedError": "{name} could not be signed. Please try again.",
+        "declined": "{name} declined.",
+        "declinedError": "{name} could not be declined. Please try again.",
+        "downloadUnavailable": "The document is not available for download yet."
+      },
+      "empty": {
+        "title": "No documents yet",
+        "description": "Agreements and timesheets this organisation generates for you will appear here."
+      },
+      "declineSheet": {
+        "title": "Decline document",
+        "description": "This organisation needs to understand why you are declining this {documentName}.",
+        "reasonLabel": "Reason for declining",
+        "reasonPlaceholder": "Explain why you are declining the document…",
+        "submit": "Decline"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "The document is not available for preview yet."
+      },
+      "downloadUnavailableNote": "PDF not available yet."
     }
   },
-  "MemberSelect": {
-    "availableLabel": "Available",
-    "invitedLabel": "Invited",
-    "searchPlaceholder": "Search name or email...",
-    "noResults": "No members found",
-    "allSelected": "All members have been selected",
-    "inviteByLink": "Invite by link",
-    "copyToast": "Share this link with the volunteer"
+  "MembershipRequest": {
+    "actions": {
+      "approve": "Approve",
+      "approveDisabledTitle": "Required forms are incomplete",
+      "cancel": "Cancel",
+      "dismiss": "Dismiss",
+      "leave": "Leave",
+      "reject": "Reject",
+      "rejectDialogDescription": "Are you sure you want to reject this membership request? Please provide a reason so the volunteer understands why their request was declined.",
+      "rejectDialogTitle": "Reject membership request",
+      "rejecting": "Rejecting...",
+      "rejectionReasonLabel": "Rejection reason",
+      "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
+      "withdraw": "Withdraw",
+      "open": "Open"
+    },
+    "cancelButton": "Cancel request",
+    "cancelButtonSubmitting": "Canceling...",
+    "card": {
+      "rejectionReasonLabel": "Rejection reason:",
+      "viewAria": "View",
+      "viewButton": "View volunteer"
+    },
+    "dialog": {
+      "leaveDescription": "Are you sure you want to leave {orgName}?",
+      "leaveTitle": "Revoke membership",
+      "withdrawDescription": "Are you sure you want to withdraw your request to join {orgName}?",
+      "withdrawTitle": "Withdraw request"
+    },
+    "empty": "No membership requests yet.",
+    "invite": {
+      "accepted": {
+        "cta": "Go to {orgName}",
+        "message": "You're already a member of {orgName}.",
+        "title": "You're all set"
+      },
+      "error": {
+        "homeButton": "Go to home",
+        "requestsButton": "Your requests",
+        "title": "Something went wrong"
+      },
+      "joinErrorFallback": "Failed to join organization",
+      "pending": {
+        "message": "Your membership request for {orgName} is pending approval. An admin will review it shortly.",
+        "title": "Request pending",
+        "viewRequests": "View your requests"
+      },
+      "rejected": {
+        "homeButton": "Go to home",
+        "message": "Your membership request for {orgName} was rejected. Contact an admin if you believe this was a mistake.",
+        "requestsButton": "Your requests",
+        "title": "Request rejected"
+      },
+      "requirements": {
+        "description": "Before you can join this organization, you need to complete the following requirements.",
+        "documentsDescription": "Upload all required documents, then submit them for review.",
+        "documentsTitle": "Upload required documents",
+        "missingDocuments": "Upload all required documents before submitting.",
+        "requiredBadge": "Required",
+        "statusLabel": "Status: {status, select, approved {approved} rejected {rejected} pending {pending} other {pending}}",
+        "submitDocuments": "Submit documents",
+        "submitFailed": "Failed to submit documents",
+        "submitSuccess": "Documents submitted",
+        "submitting": "Submitting...",
+        "title": "Join {orgName}"
+      },
+      "sent": {
+        "message": "Your membership request for {orgName} has been sent successfully. An admin will review it shortly.",
+        "title": "Request sent",
+        "viewRequests": "View your requests"
+      },
+      "unexpectedError": "Unexpected response from server"
+    },
+    "joinForms": {
+      "description": "Please complete the required forms before requesting to join.",
+      "joined": "You have joined the organization",
+      "noForms": "No forms are required.",
+      "rejected": "Your request was rejected",
+      "requestFailed": "Failed to send request",
+      "requestPending": "Your request is pending approval",
+      "requirementsNeeded": "Please complete all required forms first",
+      "title": "Join {orgName}"
+    },
+    "meta": {
+      "declinedDate": "Declined · {date}",
+      "joinedDate": "Joined · {date}",
+      "requestedDate": "Requested · {date}"
+    },
+    "page": {
+      "subtitle": "Your requests to join organizations",
+      "title": "Memberships"
+    },
+    "requiredForms": {
+      "title": "Required forms"
+    },
+    "status": {
+      "accepted": "Accepted",
+      "approved": "Approved",
+      "declined": "Declined",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "requested": "Requested"
+    },
+    "toast": {
+      "approveFailed": "Failed to approve membership request",
+      "approved": "Membership request approved",
+      "cancelFailed": "Failed to cancel membership request",
+      "cancelled": "Membership request cancelled",
+      "dismissFailed": "Failed to dismiss membership request",
+      "dismissed": "Membership request dismissed",
+      "leaveFailed": "Failed to leave organization",
+      "left": "You have left {orgName}",
+      "rejected": "Membership request rejected",
+      "withdrawFailed": "Failed to withdraw request",
+      "withdrawn": "Request withdrawn"
+    },
+    "validation": {
+      "rejectionReasonRequired": "Rejection reason is required"
+    }
+  },
+  "Metadata": {
+    "description": "Volunteer management platform",
+    "title": "Caluno",
+    "unauthorizedTitle": "Access denied | Caluno"
+  },
+  "MyTime": {
+    "empty": {
+      "cta": "Find a shift",
+      "description": "Once you check in to a shift, your volunteering hours will appear here.",
+      "title": "No hours yet"
+    },
+    "generalTime": "General time",
+    "state": {
+      "completed": "Completed",
+      "inProgress": "In progress"
+    },
+    "summary": {
+      "total": "Total volunteered"
+    },
+    "title": "Your records"
+  },
+  "Navigation": {
+    "admin": "Admin",
+    "checkIn": "Check in",
+    "events": "Events",
+    "home": "Home",
+    "myTime": "Your records",
+    "orgUnits": "Org units",
+    "organizationSettings": "Organization settings",
+    "organizations": "Organizations",
+    "overview": "Overview",
+    "profile": "Profile",
+    "qrIdDescription": "Show this QR code on-site to confirm your attendance.",
+    "qrIdTitle": "QR ID",
+    "requirementForms": "Requirement forms",
+    "roles": "Roles",
+    "selectOrganization": "Select organization",
+    "shifts": "Shifts",
+    "timesheets": "Timesheets",
+    "volunteering": "Volunteering",
+    "volunteers": "Volunteers",
+    "accounting": "Accounting",
+    "reimbursements": "Reimbursements",
+    "accountingSettings": "Settings",
+    "myDocuments": "My documents",
+    "myDocumentsBadge": "{count} documents need your signature"
+  },
+  "OrgDetail": {
+    "aboutHeading": "About us",
+    "coverImageAlt": "Cover image for {title}",
+    "errorBody": "It was removed or the link is no longer valid.",
+    "errorHeading": "This organization no longer exists",
+    "eventMeta": "{shifts, plural, one {# shift} other {# shifts}} · {spots, plural, one {# spot free} other {# spots free}}",
+    "eventMetaFull": "{shifts, plural, one {# shift} other {# shifts}} · Fully booked",
+    "eventMetaUnlimited": "{shifts, plural, one {# shift} other {# shifts}} · Open",
+    "eventsCount": "{n, plural, one {# event} other {# events}}",
+    "eventsHeading": "Events",
+    "fullyBooked": "Fully booked",
+    "memberCount": "{n, plural, one {# member} other {# members}}",
+    "noEvents": "No events yet.",
+    "noShifts": "No individual shifts yet.",
+    "openShiftsCount": "{n, plural, one {# open shift} other {# open shifts}}",
+    "requestMembership": "Request membership",
+    "requestMembershipNote": "A coordinator will confirm your request.",
+    "requestPending": "Request pending",
+    "requestRejected": "Request not approved",
+    "requestSentToast": "Request sent — a coordinator will confirm it.",
+    "shiftsCount": "{n, plural, one {# shift} other {# shifts}}",
+    "shiftsHeading": "Individual shifts",
+    "shiftsSubheading": "Not part of an event",
+    "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
+    "unlimitedSpots": "Open"
+  },
+  "OrgUnit": {
+    "delete": {
+      "childrenWarning": "Warning: this unit has children. Deleting it will affect the hierarchy.",
+      "confirmLabel": "Type DELETE to confirm",
+      "confirmPlaceholder": "DELETE",
+      "description": "This action cannot be undone. The unit will be permanently deleted.",
+      "title": "Delete \"{name}\""
+    },
+    "detail": {
+      "aboutTitle": "About",
+      "contactTitle": "Contact",
+      "editButton": "Edit",
+      "hierarchyTitle": "Hierarchy",
+      "partOf": "Part of "
+    },
+    "form": {
+      "addressLabel": "Address",
+      "addressPlaceholder": "e.g. 123 Main St, City",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g. Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "e.g. 10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe this organizational unit...",
+      "emailLabel": "Email",
+      "emailPlaceholder": "e.g. contact@example.com",
+      "logoLabel": "Logo",
+      "logoPlaceholder": "e.g. https://example.com/logo.png",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Marketing",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "e.g. +1 555 000 0000",
+      "typeLabel": "Type",
+      "typePlaceholder": "Select a type",
+      "websiteLabel": "Website URL",
+      "websitePlaceholder": "e.g. https://example.com"
+    },
+    "page": {
+      "subtitle": "Manage the organizational unit hierarchy for {orgName}",
+      "title": "Org units"
+    },
+    "sheet": {
+      "createDescription": "Create a new organization unit.",
+      "createTitle": "Create organization unit",
+      "editDescription": "Edit organization unit.",
+      "editTitle": "Edit organization unit"
+    },
+    "toast": {
+      "created": "Organization unit created",
+      "updated": "Organization unit updated"
+    },
+    "tree": {
+      "addChildAria": "Add",
+      "copyLinkAria": "Copy link",
+      "copyToast": "Organization unit link copied to clipboard",
+      "deleteAria": "Delete",
+      "editAria": "Edit",
+      "empty": "No organization unit hierarchy found. Contact your administrator.",
+      "visitAria": "Visit"
+    },
+    "validation": {
+      "nameMin": "Name must be at least 2 characters",
+      "typeRequired": "Organization unit type is required"
+    }
+  },
+  "Organization": {
+    "create": {
+      "addressLabel": "Address",
+      "addressPlaceholder": "123 Main St, City, State 12345",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "What does your organization do?",
+      "emailLabel": "Email",
+      "emailPlaceholder": "contact@organization.org",
+      "errors": {
+        "generic": "Failed to create organization. Please try again.",
+        "nameRequired": "Organization name is required",
+        "rootNotResolved": "Organization created, but failed to resolve root organization unit."
+      },
+      "logoLabel": "Logo",
+      "nameLabel": "Organization name",
+      "namePlaceholder": "My Organization",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "submit": "Create organization",
+      "submitting": "Creating organization...",
+      "title": "Create an organization",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org"
+    },
+    "home": {
+      "description": "You don't have any organizations to administer",
+      "title": "No organizations",
+      "toVolunteering": "Back to volunteering"
+    }
+  },
+  "Pagination": {
+    "pageOf": "Page {current} of {total}",
+    "showing": "Showing {start}-{end} of {total} {name}"
+  },
+  "Profile": {
+    "accountSettings": "Account settings",
+    "edit": "Edit",
+    "emailLocked": "Linked to your login",
+    "identity": {
+      "subtitles": {
+        "firstName": "As on your ID",
+        "iban": "For expense and allowance payments",
+        "lastName": "As on your ID",
+        "preferredName": "If you'd like to be called something else",
+        "bic": "Bank identifier code (BIC) for your account",
+        "taxId": "Your tax identification number (for expense reports)"
+      }
+    },
+    "language": "Language",
+    "languageDescription": "App display language",
+    "moreSettingsPrompt": "For more settings visit your <link>Volunteering Profile</link>",
+    "organizations": "Your organizations",
+    "pageTitle": "Profile",
+    "personalInformation": "Personal information",
+    "pictureLabel": "Profile picture",
+    "saveFailed": "Failed to update profile",
+    "saved": "Profile updated",
+    "title": "Edit profile"
   },
   "QRScanner": {
     "error": {
-      "noPermission": {
-        "title": "Camera access required",
-        "description": "Please allow camera access in your browser settings to scan QR codes."
+      "generic": {
+        "description": "Unable to access the camera. Please try again.",
+        "title": "Camera error"
       },
       "noCamera": {
-        "title": "No camera found",
-        "description": "No camera was detected on this device. Please connect a camera or use a device with a built-in camera."
+        "description": "No camera was detected on this device. Please connect a camera or use a device with a built-in camera.",
+        "title": "No camera found"
       },
-      "generic": {
-        "title": "Camera error",
-        "description": "Unable to access the camera. Please try again."
+      "noPermission": {
+        "description": "Please allow camera access in your browser settings to scan QR codes.",
+        "title": "Camera access required"
       }
     },
     "rescan": "Rescan"
@@ -200,1124 +741,1406 @@
   "QueryParamTabs": {
     "empty": "No items yet."
   },
-  "Settings": {
-    "title": "Settings"
+  "RequiredFormRenderer": {
+    "formProgress": "Form progress",
+    "noForms": "No forms are required.",
+    "step": "Form {current} of {total}",
+    "submitAll": "Submit all forms",
+    "submittingAll": "Submitting all forms..."
   },
-  "Organization": {
-    "home": {
-      "title": "No organizations",
-      "description": "You don't have any organizations to administer",
-      "toVolunteering": "Back to volunteering"
+  "RequirementForm": {
+    "actions": {
+      "blockCreated": "Block created",
+      "blockSaved": "Block saved",
+      "couldNotCopyLink": "Could not copy link",
+      "failedToAddField": "Failed to add field",
+      "failedToCreateForm": "Failed to create form",
+      "failedToDeleteField": "Failed to delete field",
+      "failedToLoadBlock": "Failed to load block",
+      "failedToSaveBlock": "Failed to save block",
+      "failedToSaveForm": "Failed to save form",
+      "failedToSubmitForm": "Failed to submit form",
+      "failedToUpdateField": "Failed to update field",
+      "fieldAdded": "Field added",
+      "fieldDeleted": "Field deleted",
+      "fieldUpdated": "Field updated",
+      "formSaved": "Form saved",
+      "linkCopied": "Link copied",
+      "linkCopiedDescription": "{url}"
     },
-    "create": {
-      "title": "Create an organization",
-      "nameLabel": "Organization Name",
-      "namePlaceholder": "My Organization",
+    "block": {
+      "addDocument": "Add document",
+      "addField": "Add field",
+      "addOption": "Add option",
+      "addProfileField": "Add profile field",
+      "back": "Back",
+      "blockTitleLabel": "Block title",
+      "cancel": "Cancel",
+      "createBlock": "Create block",
+      "createDescriptionPlaceholder": "What does this block collect?",
+      "createTitle": "Create block",
+      "creating": "Creating...",
       "descriptionLabel": "Description",
-      "descriptionPlaceholder": "What does your organization do?",
-      "emailLabel": "Email",
-      "emailPlaceholder": "contact@organization.org",
-      "phoneLabel": "Phone",
-      "phonePlaceholder": "+1 (555) 123-4567",
-      "websiteLabel": "Website",
-      "websitePlaceholder": "https://organization.org",
-      "addressLabel": "Address",
-      "addressPlaceholder": "123 Main St, City, State 12345",
-      "logoLabel": "Logo",
-      "submit": "Create organization",
-      "submitting": "Creating organization...",
-      "errors": {
-        "nameRequired": "Organization name is required",
-        "generic": "Failed to create organization. Please try again.",
-        "rootNotResolved": "Organization created, but failed to resolve root organization unit."
-      }
-    }
-  },
-  "OrgUnit": {
-    "page": {
-      "title": "Org Units",
-      "subtitle": "Manage the organizational unit hierarchy for {orgName}"
+      "descriptionPlaceholder": "Help text for this field",
+      "documentFileDescription": "PDF or image, max 10 MB",
+      "documentFileLabel": "Document",
+      "documentLabelLabel": "Document label",
+      "documentLabelPlaceholder": "e.g. Terms of Service",
+      "editTitle": "Edit block",
+      "enterDocumentFileError": "Please upload a document.",
+      "fieldN": "Field {n}",
+      "fieldsTitle": "Fields ({count})",
+      "iconLabel": "Icon",
+      "iconPlaceholder": "e.g. user",
+      "labelLabel": "Label",
+      "labelPlaceholder": "Field label",
+      "loading": "Loading…",
+      "lockedNotice": "This block is locked because it's used in a form that has received submissions.",
+      "noFields": "No fields yet. Add your first field to this block.",
+      "optionLabelPlaceholder": "Label {n}",
+      "optionValuePlaceholder": "Value {n}",
+      "optional": "Optional",
+      "optionsLabel": "Options",
+      "placeholderLabel": "Placeholder",
+      "placeholderPlaceholder": "e.g. Enter your name",
+      "profileFieldHint": "Volunteers fill these in once and they're reused across organizations.",
+      "required": "Required",
+      "saveBlock": "Save block",
+      "saveChanges": "Save changes",
+      "saving": "Saving...",
+      "systemField": "System field",
+      "titlePlaceholder": "e.g. Personal Information",
+      "typeLabel": "Type",
+      "typePlaceholder": "Select type"
+    },
+    "blockLibrary": {
+      "noBlocksDescription": "Create reusable blocks to use across multiple forms.",
+      "noBlocksTitle": "No blocks yet",
+      "subtitle": "Reusable blocks for your forms",
+      "title": "Block library"
+    },
+    "blockSheet": {
+      "createDescription": "Create a new reusable block with fields.",
+      "createTitle": "Create block",
+      "editDescription": "Edit this block and its fields.",
+      "editTitle": "Edit block",
+      "loading": "Loading…",
+      "viewDescription": "This block is locked. It's used in a form with submissions.",
+      "viewTitle": "View block"
+    },
+    "builder": {
+      "addAnotherBlockHint": "Add another block to continue building this form",
+      "addBlock": "Add block",
+      "addBlockDescription": "Select an existing block or create a new one",
+      "addBlockTitle": "Add block",
+      "allBlocksInUse": "All blocks are already in use",
+      "copyShareLink": "Copy share link",
+      "createNewBlock": "Create new block",
+      "descriptionFallback": "Build your form by adding blocks",
+      "editBlock": "Edit",
+      "emptyDescription": "Add your first block to start building this form.",
+      "emptyTitle": "No blocks yet",
+      "fieldsCount": "{count} fields",
+      "lockedTooltip": "Locked",
+      "noFields": "No fields",
+      "noPreview": "Add blocks to see a preview",
+      "previewTitle": "Preview",
+      "saveDisabledHint": "Add a block to save this form",
+      "saveForm": "Save form",
+      "saving": "Saving...",
+      "shareLinkCopied": "Share link copied to clipboard",
+      "submissionsWarning": "This form has submissions",
+      "submissionsWarningDescription": "Editing is disabled because volunteers have already submitted responses. Create a copy if you need a new version.",
+      "unsavedChangesDescription": "You have unsaved changes. If you leave now, your changes will be lost.",
+      "unsavedChangesLeave": "Leave without saving",
+      "unsavedChangesStay": "Keep editing",
+      "unsavedChangesTitle": "Unsaved changes",
+      "viewBlock": "View"
+    },
+    "card": {
+      "content": "Content",
+      "delete": "Delete",
+      "deleteBlockDescription": "will be permanently removed.",
+      "deleteBlockTitle": "Delete block?",
+      "deleteFormDescription": "will be permanently removed.",
+      "deleteFormTitle": "Delete form?",
+      "deleting": "Deleting...",
+      "edit": "Edit",
+      "fields": "Fields",
+      "noFieldsYet": "No fields yet.",
+      "share": "Share",
+      "submissions": "Submissions",
+      "updated": "Updated {date}",
+      "usedIn": "Used in",
+      "usedInForms": "Used in the following forms:",
+      "view": "View"
+    },
+    "dashboard": {
+      "blocksTab": "Blocks",
+      "createBlock": "Create block",
+      "createForm": "Create form",
+      "formsTab": "Forms",
+      "noBlocks": "No blocks yet. Create your first block.",
+      "noBlocksMatch": "No blocks match the current filters.",
+      "noForms": "No forms yet. Create your first form.",
+      "noFormsMatch": "No forms match the current filters.",
+      "searchBlocks": "Search blocks...",
+      "searchForms": "Search forms..."
+    },
+    "fieldForm": {
+      "add": "Add",
+      "address": "Address",
+      "birthDate": "Birth date",
+      "cancel": "Cancel",
+      "checkbox": "Checkbox",
+      "city": "City",
+      "date": "Date",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional help text",
+      "document": "Document",
+      "documentFileDescription": "PDF or image, max 10 MB",
+      "documentFileLabel": "Document",
+      "documentLabelLabel": "Document label",
+      "documentLabelPlaceholder": "e.g. Data Privacy Policy",
+      "dropdown": "Dropdown",
+      "email": "Email",
+      "enterDocumentFileError": "Please upload a document.",
+      "enterDocumentLabelError": "Please enter a document label.",
+      "enterLabelError": "Please enter a label.",
+      "enterOptionError": "Please enter at least one option.",
+      "enterTextError": "Please enter text.",
+      "fieldTypeLabel": "Field type",
+      "fieldTypePlaceholder": "Select type...",
+      "firstName": "First name",
+      "gender": "Gender",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "taxId": "Tax ID",
+      "infoText": "Info text",
+      "labelLabel": "Label",
+      "labelPlaceholder": "e.g. Favorite color",
+      "lastName": "Last name",
+      "longText": "Long text",
+      "multiSelect": "Multi select",
+      "number": "Number",
+      "optionsLabel": "Options",
+      "phone": "Phone",
+      "placeholderLabel": "Placeholder",
+      "placeholderPlaceholder": "e.g. Enter your answer",
+      "preferredName": "Preferred name",
+      "profileField": "Profile field: {key} — value will be saved to the user's profile for pre-fill on future forms.",
+      "profileFieldNone": "None",
+      "profileFieldOptional": "Profile field (optional)",
+      "required": "Required",
+      "save": "Save",
+      "selectTypeError": "Please select a field type.",
+      "shortText": "Short text",
+      "textLabel": "Text",
+      "textPlaceholder": "e.g. Please read the following information",
+      "zipCode": "ZIP code"
     },
     "form": {
-      "nameLabel": "Name",
-      "namePlaceholder": "e.g. Marketing",
-      "typeLabel": "Type",
-      "typePlaceholder": "Select a type",
-      "emailLabel": "Email",
-      "emailPlaceholder": "e.g. contact@example.com",
-      "phoneLabel": "Phone",
-      "phonePlaceholder": "e.g. +1 555 000 0000",
-      "websiteLabel": "Website URL",
-      "websitePlaceholder": "e.g. https://example.com",
-      "logoLabel": "Logo",
-      "logoPlaceholder": "e.g. https://example.com/logo.png",
-      "addressLabel": "Address",
-      "addressPlaceholder": "e.g. 123 Main St, City",
+      "cancel": "Cancel",
+      "create": "Create",
+      "createButton": "Create form",
+      "createDialogTitle": "Create form",
+      "createSubtitle": "Create a new form to collect information from volunteers.",
+      "createTitle": "Create requirement form",
+      "creating": "Creating...",
       "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Describe this organizational unit..."
+      "descriptionOptional": "Description (optional)",
+      "descriptionPlaceholder": "What is this form for?",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Onboarding Form"
     },
-    "detail": {
-      "editButton": "Edit",
-      "aboutTitle": "About",
-      "contactTitle": "Contact",
-      "hierarchyTitle": "Hierarchy",
-      "partOf": "Part of "
+    "submission": {
+      "accepted": "Accepted",
+      "answerColumn": "Answer",
+      "fallbackForm": "Form",
+      "fallbackVolunteer": "Volunteer",
+      "fieldColumn": "Field",
+      "noFields": "No fields defined for this form."
     },
-    "tree": {
-      "visitAria": "Visit org unit",
-      "copyLinkAria": "Copy org unit link to clipboard",
-      "copyToast": "Org unit link copied to clipboard",
-      "addChildAria": "Add child",
-      "editAria": "Edit",
-      "deleteAria": "Delete",
-      "empty": "No org unit tree found. Contact your administrator."
+    "submissions": {
+      "emailColumn": "Email",
+      "empty": "No submissions yet.",
+      "emptySearch": "No volunteers match your search.",
+      "lastSubmittedColumn": "Last submitted",
+      "searchPlaceholder": "Search volunteers…",
+      "submissionsColumn": "Submissions",
+      "subtitle": "Volunteers who submitted this form. Click a volunteer to view their submission.",
+      "title": "Submissions — {formName}",
+      "viewSubmission": "View →",
+      "volunteerColumn": "Volunteer"
     },
-    "toast": {
-      "updated": "Organization unit updated",
-      "created": "Organization unit created"
-    },
-    "sheet": {
-      "editTitle": "Edit organization unit",
-      "createTitle": "Create organization unit",
-      "editDescription": "Edit organization unit.",
-      "createDescription": "Create a new organization unit."
-    },
-    "delete": {
-      "title": "Delete \"{name}\"",
-      "description": "This action cannot be undone. The unit will be permanently deleted.",
-      "childrenWarning": "Warning: this unit has children. Deleting it will affect the hierarchy.",
-      "confirmLabel": "Type DELETE to confirm",
-      "confirmPlaceholder": "DELETE"
+    "table": {
+      "blocks": "Blocks",
+      "cannotDeleteAria": "Locked",
+      "copyShareLinkAria": "Copy link",
+      "deleteBlockAria": "Delete",
+      "deleteBlockDescription": "{name} will be permanently removed.",
+      "deleteFormAria": "Delete",
+      "deleteFormDescription": "{name} will be permanently removed.",
+      "description": "Description",
+      "editBlockAria": "Edit block",
+      "editFormAria": "Edit form",
+      "editable": "Editable",
+      "fieldCount": "{count, plural, one {# field} other {# fields}}",
+      "fields": "Fields",
+      "name": "Name",
+      "submissionsAria": "Submissions",
+      "title": "Title",
+      "updated": "Updated",
+      "usedIn": "Used in",
+      "viewBlockAria": "View",
+      "yes": "Yes"
     },
     "validation": {
-      "nameMin": "Name must be at least 2 characters",
-      "typeRequired": "Organization unit type is required"
+      "dateNotFuture": "{label} cannot be in the future",
+      "fieldLabelRequired": "Field label is required",
+      "fieldRequired": "{label} is required",
+      "invalidCharacters": "{label} contains invalid characters",
+      "invalidIban": "{label} must be a valid IBAN",
+      "invalidBic": "{label} must be a valid BIC",
+      "invalidOptions": "{label} contains invalid options",
+      "labelRequired": "Label is required",
+      "maxChars": "{label} must be {maxLen} characters or fewer",
+      "minAge": "You must be at least {minAge} years old",
+      "mustBeNumber": "{label} must be a number",
+      "mustBeValidDate": "{label} must be a valid date",
+      "mustBeValidEmail": "{label} must be a valid email",
+      "mustBeValidPhone": "{label} must be a valid phone number",
+      "nameRequired": "Name is required",
+      "titleRequired": "Title is required",
+      "validPostalCode": "{label} must be a valid postal code"
+    },
+    "volunteerForm": {
+      "alreadySubmittedMessage": "Your form has been submitted correctly.",
+      "alreadySubmittedTitle": "Form submitted",
+      "back": "Back",
+      "birthDateFormat": "DD/MM/YYYY",
+      "checkboxYes": "Yes",
+      "documentAcknowledgement": "I acknowledge and accept",
+      "failedToSubmit": "Failed to submit form",
+      "membershipRequestNotice": "By submitting this form you will send a membership request to {orgName}. An admin will review and approve your request.",
+      "next": "Next",
+      "noBlocks": "This form has no blocks.",
+      "noFields": "This block has no fields configured yet.",
+      "pickDate": "Pick a date",
+      "selectOption": "Select an option",
+      "step": "Step {current} of {total}",
+      "submit": "Submit",
+      "submitting": "Submitting...",
+      "successMessage": "Your application is pending review. An admin will get back to you shortly.",
+      "successTitle": "Application received!"
     }
   },
   "Role": {
-    "page": {
-      "title": "Roles",
-      "subtitle": "Manage roles and permissions for {orgName}",
-      "createButton": "Create Role",
-      "empty": "No roles yet. Create your first role to get started."
+    "action": {
+      "deleteAria": "Delete",
+      "deleteDescription": "Are you sure you want to delete this role?",
+      "deleteError": "Failed to delete role. {error}",
+      "deleteSuccess": "Role deleted",
+      "deleteTitle": "Delete",
+      "editAria": "Edit"
     },
     "detail": {
-      "noPermissions": "No permissions assigned to this role.",
-      "typeLabel": "Type",
-      "system": "System",
       "custom": "Custom",
-      "totalPermissionsLabel": "Total permissions"
+      "noPermissions": "No permissions assigned to this role.",
+      "system": "System",
+      "totalPermissionsLabel": "Total permissions",
+      "typeLabel": "Type"
     },
     "form": {
-      "nameLabel": "Name",
-      "namePlaceholder": "e.g. Project Manager",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "What is this role for?",
-      "permissionsLabel": "Permissions",
-      "permissionsHint": "Select what users with this role can do."
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Project Manager",
+      "permissionsHint": "Select what users with this role can do.",
+      "permissionsLabel": "Permissions"
     },
-    "table": {
-      "name": "Name",
-      "description": "Description",
-      "permissions": "Permissions",
-      "systemBadge": "System",
-      "permissionsCount": "{n} permissions"
+    "noRole": "No role",
+    "owner": "Owner",
+    "page": {
+      "createButton": "Create role",
+      "empty": "No roles yet. Create your first role to get started.",
+      "subtitle": "Manage roles and permissions for {orgName}",
+      "title": "Roles"
     },
     "permissions": {
       "all": "All",
-      "partial": "Partial",
-      "none": "None"
+      "none": "None",
+      "partial": "Partial"
     },
-    "action": {
-      "editAria": "Edit role",
-      "deleteTitle": "Delete Role",
-      "deleteDescription": "Are you sure you wish to delete this Role?",
-      "deleteAria": "Delete role",
-      "deleteError": "Failed to delete Role. {error}",
-      "deleteSuccess": "Role deleted"
-    },
-    "owner": "Owner",
-    "noRole": "No role",
     "select": {
-      "searchPlaceholder": "Search roles...",
+      "addCustom": "Add custom",
       "empty": "No roles found.",
-      "addCustom": "Add custom"
+      "searchPlaceholder": "Search roles..."
     },
     "sheet": {
-      "createTitle": "Create Role",
       "createDescription": "Define a new role with specific permissions.",
-      "editTitle": "Edit Role",
-      "editDescription": "Update permissions for the role"
+      "createTitle": "Create role",
+      "editDescription": "Update permissions for the role",
+      "editTitle": "Edit role"
+    },
+    "table": {
+      "description": "Description",
+      "name": "Name",
+      "permissions": "Permissions",
+      "permissionsCount": "{n} permissions",
+      "systemBadge": "System"
     },
     "validation": {
       "nameMin": "Name must be at least 2 characters",
       "permissionsRequired": "At least one permission required"
     }
   },
-  "MembershipRequest": {
-    "page": {
-      "title": "Memberships",
-      "subtitle": "Your requests to join organizations"
-    },
-    "status": {
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
-    },
-    "empty": "No membership requests yet.",
-    "card": {
-      "viewButton": "View volunteer",
-      "viewAria": "View volunteer",
-      "rejectionReasonLabel": "Rejection reason:"
-    },
-    "actions": {
-      "approve": "Approve",
-      "reject": "Reject",
-      "rejecting": "Rejecting...",
-      "rejectDialogTitle": "Reject membership request",
-      "rejectDialogDescription": "Are you sure you want to reject this membership request? Please provide a reason so the volunteer understands why their request was declined.",
-      "rejectionReasonLabel": "Rejection reason",
-      "rejectionReasonPlaceholder": "Explain why the request is being rejected...",
-      "cancel": "Cancel",
-      "approveDisabledTitle": "Required forms are incomplete"
-    },
-    "toast": {
-      "approved": "Membership request approved",
-      "approveFailed": "Failed to approve membership request",
-      "rejected": "Membership request rejected",
-      "cancelled": "Membership request cancelled",
-      "cancelFailed": "Failed to cancel membership request"
-    },
-    "cancelButton": "Cancel Request",
-    "cancelButtonSubmitting": "Cancelling...",
-    "validation": {
-      "rejectionReasonRequired": "Rejection reason is required"
-    },
-    "invite": {
-      "accepted": {
-        "title": "You're all set",
-        "message": "You're already a member of {orgName}.",
-        "cta": "Go to {orgName}"
-      },
-      "pending": {
-        "title": "Request pending",
-        "message": "Your membership request for {orgName} is pending approval. An admin will review it shortly.",
-        "viewRequests": "View my requests"
-      },
-      "rejected": {
-        "title": "Request rejected",
-        "message": "Your membership request for {orgName} was rejected. Contact an admin if you believe this was a mistake.",
-        "homeButton": "Go to home",
-        "requestsButton": "My requests"
-      },
-      "sent": {
-        "title": "Request sent",
-        "message": "Your membership request for {orgName} has been sent successfully. An admin will review it shortly.",
-        "viewRequests": "View my requests"
-      },
-      "requirements": {
-        "title": "Join {orgName}",
-        "description": "Before you can join this organization, you need to complete the following requirements.",
-        "requiredBadge": "Required",
-        "statusLabel": "Status: {status, select, approved {approved} rejected {rejected} pending {pending} other {pending}}",
-        "documentsTitle": "Upload required documents",
-        "documentsDescription": "Upload each required document, then submit them for review.",
-        "missingDocuments": "Upload all required documents before submitting.",
-        "submitDocuments": "Submit documents",
-        "submitting": "Submitting...",
-        "submitSuccess": "Documents submitted",
-        "submitFailed": "Failed to submit documents"
-      },
-      "error": {
-        "title": "Something went wrong",
-        "homeButton": "Go to home",
-        "requestsButton": "My requests"
-      },
-      "joinErrorFallback": "Failed to join organization",
-      "unexpectedError": "Unexpected response from server"
-    },
-    "joinForms": {
-      "title": "Join {orgName}",
-      "description": "Please complete the required forms before requesting to join.",
-      "noForms": "No forms are required.",
-      "completed": "Completed",
-      "pending": "Pending",
-      "fillOut": "Fill out",
-      "fillFormTitle": "Fill out form",
-      "requestToJoin": "Request to join",
-      "joined": "You have joined the organization",
-      "requestPending": "Your request is pending approval",
-      "rejected": "Your request was rejected",
-      "requirementsNeeded": "Please complete all required forms first",
-      "requestFailed": "Failed to send request"
-    },
-    "requiredForms": {
-      "title": "Required forms"
-    }
-  },
-  "Volunteer": {
-    "page": {
-      "title": "Volunteers",
-      "subtitle": "Manage volunteers in your organization",
-      "copyInviteLink": "Copy invite link",
-      "inviteLinkCopied": "Invite link copied to clipboard"
-    },
-    "table": {
-      "name": "Name",
-      "email": "Email",
-      "roles": "Roles"
-    },
-    "action": {
-      "viewProfileAria": "View volunteer profile",
-      "checkInAria": "Check-in volunteer",
-      "checkInShiftAria": "Check-in the volunteer to a shift"
-    },
-    "requests": {
-      "pendingEmpty": "No pending requests yet.",
-      "rejectedEmpty": "No rejected requests yet."
-    },
-    "empty": {
-      "title": "No volunteers yet",
-      "description": "Share the invitation link to get volunteers to sign-up."
-    },
-    "sheet": {
-      "userInfo": "User info",
-      "emailLabel": "Email",
-      "addressLabel": "Address",
-      "birthdayLabel": "Birthday",
-      "qrIdLabel": "QR ID",
-      "submittedForms": "Submitted forms",
-      "noSubmissions": "No submitted forms yet.",
-      "formFallback": "Form",
-      "titleFallback": "Volunteer"
-    },
-    "requiredForms": {
-      "title": "Forms required to join",
-      "subtitle": "Completed before approval into {brand} › {unitName}",
-      "pill": {
-        "required": "{count, plural, one {1 form required} other {{count} forms required}}",
-        "none": "No forms required"
-      },
-      "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
-      "addExisting": "+ Add existing",
-      "createNew": "Create new",
-      "searchForms": "Search forms...",
-      "noFormsFound": "No forms found",
-      "dedupHint": "Volunteers won't be asked for information they've already provided.",
-      "fileUploadLabel": "file upload",
-      "removeAria": "Remove {name}",
-      "addedToast": "Form attached",
-      "removedToast": "Form removed",
-      "updateFailedToast": "Failed to update required forms"
+  "Settings": {
+    "title": "Settings",
+    "organizationProfile": {
+      "title": "Organization profile",
+      "subtitle": "Update your organization's address and contact details.",
+      "addressLabel": "Organization address",
+      "addressPlaceholder": "123 Main St",
+      "cityLabel": "City",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Contact email",
+      "contactEmailPlaceholder": "contact@organization.org",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org",
+      "saved": "Organization updated",
+      "saveFailed": "Failed to update organization"
     }
   },
   "Shift": {
-    "page": {
-      "title": "Shifts",
-      "subtitle": "Shift details",
-      "createButton": "Create shift"
-    },
-    "eventBadge": "Event",
-    "empty": {
-      "title": "No shifts yet",
-      "description": "Get started by creating your first shift and inviting volunteers."
-    },
-    "tabs": {
-      "weekplan": "Weekplan",
-      "allShifts": "All shifts"
+    "action": {
+      "copyLinkAria": "Copy link",
+      "deleteDescription": "Are you sure you want to delete this shift and all its timesheets?",
+      "deleteError": "Failed to delete shift. {error}",
+      "deleteSuccess": "Successfully deleted shift.",
+      "deleteTitle": "Delete",
+      "editAria": "Edit",
+      "inviteAria": "Invite",
+      "leaveShift": "Leave shift",
+      "recordTime": "Record time",
+      "viewAria": "View"
     },
     "calendar": {
+      "nextAria": "Next",
+      "prevAria": "Previous",
       "week": "Week {week}"
     },
+    "card": {
+      "inviteAria": "Invite",
+      "invited": "Invited",
+      "noVolunteers": "No volunteers invited",
+      "openInstanceAria": "Open"
+    },
+    "checkIn": {
+      "checkIn": "Check in",
+      "checkInTitle": "Check-in",
+      "checkInWithShift": "Choose a shift instead",
+      "checkInWithoutShift": "Check in without a shift",
+      "checkOut": "Check-out",
+      "checkOutTitle": "Check-out",
+      "checkedInAt": "Checked in: {time}",
+      "checkingIn": "Checking in...",
+      "checkingOut": "Checking out...",
+      "checkingOutAt": "Checking out: {time}",
+      "generalCheckIn": "General check-in",
+      "invalidCheckin": {
+        "blocked": {
+          "description": "The volunteer is not permitted to check-in. They must contact headquarters for assistance.",
+          "title": "Check-in denied"
+        },
+        "notMember": {
+          "description": "The volunteer is not a member of this organization unit.",
+          "title": "Check-in denied"
+        }
+      },
+      "noShiftSelected": "No shift selected",
+      "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
+      "selectOrgTitle": "Check-in",
+      "successNext": "Next",
+      "tryAgain": "Try again",
+      "volunteerCheckedIn": "Volunteer checked in",
+      "volunteerCheckedOut": "Volunteer checked out",
+      "volunteerNotFoundDescription": "There is no volunteer that matches this QR ID. The QR ID may have been re-generated and so this QR ID is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR ID manually or search for the volunteer to check them in.",
+      "volunteerNotFoundTitle": "Volunteer does not exist"
+    },
+    "checkInSelector": {
+      "empty": "No volunteer found",
+      "placeholder": "Select a volunteer"
+    },
+    "detail": {
+      "createdByLabel": "Created by",
+      "createdLabel": "Created",
+      "imageAlt": "Image for {title}",
+      "requiredForms": {
+        "addExisting": "Add existing",
+        "addedToast": "Form attached",
+        "createNew": "Create new",
+        "dedupHint": "Volunteers won't be asked for information they've already provided.",
+        "fileUploadLabel": "File upload",
+        "noBlocks": "No blocks",
+        "noFormsFound": "No forms found",
+        "pill": {
+          "none": "No forms required",
+          "required": "{count, plural, one {1 form required} other {{count} forms required}}"
+        },
+        "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+        "removeAria": "Remove",
+        "removedToast": "Form removed",
+        "searchForms": "Search forms...",
+        "subtitle": "Completed before joining {shiftTitle}",
+        "title": "Forms required to join",
+        "updateFailedToast": "Failed to update required forms"
+      },
+      "statusLabel": "Status",
+      "visibilityLabel": "Visibility"
+    },
+    "editInstanceForm": {
+      "applyToAllDescription": "Changes apply to every future occurrence of this shift. Earlier edits to single occurrences will be overwritten. Past occurrences stay as they are.",
+      "applyToAllLabel": "Apply to all future instances"
+    },
+    "empty": {
+      "description": "Get started by creating your first shift and inviting volunteers.",
+      "title": "No shifts yet"
+    },
+    "eventBadge": "Event",
+    "form": {
+      "chooseDays": "Choose which days this shift repeats",
+      "dateTimeLabel": "Date and time",
+      "imageLabel": "Image",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Describe volunteers' responsibilities and requirements for this shift",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Main Hall, 123 Main St",
+      "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift",
+      "maxVolunteersLabel": "Max volunteers",
+      "maxVolunteersPlaceholder": "e.g. 50",
+      "minVolunteersDescription": "Minimum number of people required to open the shift",
+      "minVolunteersLabel": "Min volunteers",
+      "minVolunteersPlaceholder": "e.g. 2",
+      "nameLabel": "Shift name",
+      "namePlaceholder": "e.g. Morning cashier shift",
+      "noRecurrence": "No recurrence",
+      "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
+      "openShiftLabel": "Open shift",
+      "recurring": "Recurring shift",
+      "timeRangeConstraint": "Shifts must start and end within ({window})."
+    },
+    "instanceDetail": {
+      "deleteAria": "Delete",
+      "deleteDialog": {
+        "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
+        "oneTimeDescription": "This is a one-time shift instance. Are you sure you want to delete it?",
+        "error": "Failed to delete shift instance. {error}",
+        "futureDescription": "Deletes this shift and every upcoming occurrence in the series. Past occurrences are kept.",
+        "futureTitle": "This and all future shifts",
+        "onlyThisDescription": "Deletes the shift on {date}. Other occurrences stay untouched.",
+        "onlyThisTitle": "Only this shift",
+        "success": "Shift instance deleted.",
+        "title": "Delete shift instance"
+      },
+      "editCta": "Edit",
+      "imagePlaceholder": "Add an image",
+      "informationTitle": "Shift information",
+      "inviteCta": "Invite",
+      "inviteLink": "Invite link",
+      "title": "Shift instance"
+    },
+    "inviteForm": {
+      "copyInviteLink": "Copy invite link",
+      "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}.",
+      "inviteAllLabel": "Invite to all future instances of this shift",
+      "managingLabel": "You are managing volunteers for:",
+      "title": "Invite and manage participants"
+    },
+    "inviteStatus": {
+      "accepted": "Accepted",
+      "actionInvite": "Invite",
+      "actionUninvite": "Uninvite",
+      "cancelled": "Canceled",
+      "declined": "Declined",
+      "inviteError": "Could not invite volunteer",
+      "inviteSuccess": "Volunteer invited again",
+      "invited": "Invited",
+      "rejected": "Rejected",
+      "signedUp": "Signed up",
+      "summaryAccepted": "accepted",
+      "summaryInvited": "invited",
+      "summarySignedUp": "signed up",
+      "summarySpots": "spots",
+      "uninviteError": "Could not remove volunteer",
+      "uninviteSuccess": "Volunteer removed from shift",
+      "volunteersTitle": "Volunteers"
+    },
+    "join": {
+      "accept": "Accept",
+      "accepted": "You've accepted the invitation.",
+      "cancelBody": "You'll give up your spot on {date}. The organization will be notified.",
+      "cancelShift": "Cancel shift",
+      "cancelTitle": "Cancel shift?",
+      "cancelled": "You've canceled your shift.",
+      "confirmCancel": "Cancel shift",
+      "decline": "Decline",
+      "declined": "You've declined the invitation.",
+      "failed": "Failed to join shift",
+      "full": "Shift full",
+      "inviteOnly": "Invite only",
+      "joinShift": "Join shift",
+      "joined": "You have joined the shift",
+      "joining": "Joining...",
+      "keepShift": "Keep shift",
+      "pending": "Your membership request is pending. You will be added to this shift once approved.",
+      "pendingCta": "Request pending",
+      "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
+      "reenter": "Re-enter shift",
+      "rejected": "Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.",
+      "rejectedCta": "Request not approved",
+      "requestSent": "Request sent",
+      "requirementsFallback": "Requirement profile ui (to be implemented)",
+      "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
+      "unexpected": "Unexpected response from server"
+    },
+    "loading": "Loading...",
+    "notFound": "Shift not found.",
+    "page": {
+      "createButton": "Create shift",
+      "subtitle": "Shift details",
+      "title": "Shifts"
+    },
+    "recurrence": {
+      "preset": {
+        "custom": "Custom recurrence",
+        "daily": "Every day",
+        "none": "Does not repeat",
+        "weekend": "Every weekend day",
+        "workingDays": "Every working day"
+      },
+      "weekDay": {
+        "FRIDAY": "Fr",
+        "MONDAY": "Mo",
+        "SATURDAY": "Sa",
+        "SUNDAY": "Su",
+        "THURSDAY": "Th",
+        "TUESDAY": "Tu",
+        "WEDNESDAY": "We"
+      }
+    },
+    "scanner": {
+      "description": "Please try again or scan a different copy of the QR ID.",
+      "invalidToast": "Not a valid check-in ID. Please try again.",
+      "title": "Invalid check-in ID"
+    },
+    "selector": {
+      "chooseShift": "Choose a shift",
+      "noActiveShifts": "No active shifts",
+      "noActiveShiftsDescription": "Please <addShift>create a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>."
+    },
+    "sheet": {
+      "createDescription": "Create a new shift.",
+      "createEventDescription": "Schedule a shift for this event.",
+      "createEventTitle": "Create shift",
+      "createTitle": "Create shift",
+      "editDescription": "Edit shift.",
+      "editInstanceDescription": "Edit this occurrence of the shift.",
+      "editInstanceTitle": "Edit shift",
+      "editTitle": "Edit shift",
+      "inviteDescription": "Invited volunteers will receive an invite email with shift details and a link to the system.",
+      "inviteTitle": "Invite volunteers"
+    },
+    "status": {
+      "active": "Active",
+      "finished": "Finished"
+    },
+    "successDialog": {
+      "bodyInvited": "Your shift is active. Invited volunteers have been notified.",
+      "bodyOpen": "Your open shift is active. All volunteers in your organization have been notified and can now sign up.",
+      "copyInviteLink": "Copy invite link",
+      "recurrence": {
+        "daily": "Daily",
+        "oneTime": "One-time",
+        "weekend": "Weekends",
+        "workingDays": "Weekdays"
+      },
+      "shareLabel": "Link to the shift",
+      "title": "Shift created",
+      "weekDayShort": {
+        "FRIDAY": "Fri.",
+        "MONDAY": "Mon.",
+        "SATURDAY": "Sat.",
+        "SUNDAY": "Sun.",
+        "THURSDAY": "Thu.",
+        "TUESDAY": "Tue.",
+        "WEDNESDAY": "Wed."
+      }
+    },
     "table": {
+      "firstDate": "First date",
       "name": "Name",
-      "firstDate": "First Date",
       "pattern": "Pattern",
+      "requiredForms": "Forms",
       "time": "Time",
       "visibility": "Visibility"
+    },
+    "tabs": {
+      "allShifts": "All shifts",
+      "weekplan": "Weekplan"
+    },
+    "toast": {
+      "created": "Shift created",
+      "inviteChanged": "Volunteer invitations changed",
+      "updated": "Shift updated"
+    },
+    "transferList": {
+      "addAria": "Add",
+      "removeAria": "Remove"
+    },
+    "validation": {
+      "endTimeRequired": "End time is required",
+      "instanceClearRecurrenceUnsupported": "You can't remove the recurrence here. Edit it on the Edit shift page instead.",
+      "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
+      "instanceRecurrenceConflict": "The new recurrence doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence.",
+      "instanceTimeConflict": "Another occurrence of this shift already starts at that time.",
+      "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
+      "nameRequired": "Name is required",
+      "organizationUnitRequired": "Organization unit is required",
+      "shiftIdRequired": "Shift ID is required",
+      "startTimeRequired": "Start time is required",
+      "windowViolation": "Must fall within the event window"
     },
     "visibility": {
       "ALL_MEMBERS": "Open shift",
       "INVITED_MEMBERS": "Invite only"
+    }
+  },
+  "ShiftDetail": {
+    "acceptedBadge": "Accepted",
+    "back": "Back",
+    "cancelUntilNote": "You can cancel until {date}.",
+    "cancelledBadge": "Canceled",
+    "cancelledNote": "You're no longer signed up for {date}.",
+    "coverImageAlt": "Cover image for {title}",
+    "dateLabel": "Date",
+    "declinedBadge": "Declined",
+    "declinedNote": "You declined the invitation to this shift.",
+    "earlier": "Earlier",
+    "errorBody": "It was cancelled or the link is no longer valid.",
+    "errorHeading": "This shift no longer exists",
+    "errorOrgCta": "Go to organisation",
+    "eventBadge": "Part of {eventTitle}",
+    "forms": {
+      "description": "Please complete the required forms before joining this shift.",
+      "joinedToast": "You've joined {shiftTitle}",
+      "noForms": "No forms are required.",
+      "rejectedToast": "Request not approved",
+      "requestFailed": "Failed to send request",
+      "requestSentToast": "Request sent — a coordinator will confirm it.",
+      "requirementsNeededToast": "Please complete all required forms first",
+      "title": "Join {shiftTitle}"
     },
-    "status": {
-      "finished": "Finished",
-      "active": "Active"
-    },
-    "card": {
-      "invited": "Invited",
-      "noVolunteers": "No volunteers invited",
-      "inviteAria": "Invite volunteers",
-      "openInstanceAria": "Open shift instance details"
-    },
-    "form": {
-      "nameLabel": "Shift name",
-      "namePlaceholder": "e.g. Morning cashier shift",
-      "dateTimeLabel": "Date and time",
-      "locationLabel": "Location",
-      "locationPlaceholder": "Main Hall, 123 Main St",
-      "instructionsLabel": "Instructions",
-      "instructionsPlaceholder": "Describe volunteers' responsibilities and requirements for this shift",
-      "recurring": "Recurring shift",
-      "noRecurrence": "No recurrence",
-      "chooseDays": "Choose which days this shift repeats",
-      "openShiftLabel": "Open shift",
-      "openShiftDescription": "Any volunteer can sign up for this shift",
-      "timeRangeConstraint": "Shifts must start and end within ({window}).",
-      "imageLabel": "Image"
-    },
-    "recurrence": {
-      "preset": {
-        "none": "Does not repeat",
-        "daily": "Every day",
-        "workingDays": "Every working day",
-        "weekend": "Every weekend day",
-        "custom": "Custom recurrence"
-      },
-      "weekDay": {
-        "MONDAY": "Mo",
-        "TUESDAY": "Tu",
-        "WEDNESDAY": "We",
-        "THURSDAY": "Th",
-        "FRIDAY": "Fr",
-        "SATURDAY": "Sa",
-        "SUNDAY": "Su"
-      }
-    },
-    "inviteForm": {
-      "title": "Invite and manage participants",
-      "minVolunteersLabel": "Min volunteers",
-      "minVolunteersPlaceholder": "e.g. 2",
-      "minVolunteersDescription": "Minimum number of people required to open the shift",
-      "maxVolunteersLabel": "Max volunteers",
-      "maxVolunteersPlaceholder": "e.g. 50",
-      "maxVolunteersDescription": "Maximum number of people allowed to sign up for the shift",
-      "copyInviteLink": "Copy invite link",
-      "managingLabel": "You are managing volunteers for:",
-      "inviteAllLabel": "Invite to all future instances of this shift",
-      "inviteAllDescription": "Volunteers will get invited to all shifts starting from {startDate}, every {days}."
-    },
-    "transferList": {
-      "available": "Available",
-      "invited": "Invited",
-      "searchPlaceholder": "Name or email",
-      "addAria": "Add {name}",
-      "removeAria": "Remove {name}"
-    },
-    "selector": {
-      "noActiveShifts": "No active shifts",
-      "noActiveShiftsDescription": "Please <addShift>add a shift</addShift> or adjust the time-range of an <existingShift>existing shift</existingShift>.",
-      "chooseShift": "Choose a shift"
-    },
-    "checkInSelector": {
-      "placeholder": "Select a volunteer",
-      "empty": "No volunteer found"
-    },
-    "checkIn": {
-      "checkIn": "Check in",
-      "checkingIn": "Checking-in...",
-      "noShiftSelected": "No shift selected",
-      "volunteerCheckedIn": "Volunteer checked-in",
-      "checkOut": "Check-out",
-      "checkingOut": "Checking-out...",
-      "volunteerCheckedOut": "Volunteer checked-out",
-      "scanDescription": "Scan the volunteers QR iD to check them in or out",
-      "enterQrTitle": "Or enter their QR iD",
-      "searchVolunteerTitle": "Or search for a volunteer",
-      "checkInTitle": "Check-in",
-      "checkOutTitle": "Check-out",
-      "selectOrgTitle": "Check-in",
-      "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
-      "checkedInAt": "Checked in: {time}",
-      "checkingOutAt": "Checking out: {time}",
-      "volunteerNotFoundTitle": "Volunteer does not exist",
-      "volunteerNotFoundDescription": "There is no volunteer that matches this QR iD. The QR iD may have been re-generated and so this QR iD is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR iD manually or search for the volunteer to check them in.",
-      "tryAgain": "Try again",
-      "invalidCheckin": {
-        "blocked": {
-          "title": "Check-in denied",
-          "description": "The volunteer is not permitted to check-in. They must contact Headquarters for assistance."
-        },
-        "notMember": {
-          "title": "Check-in denied",
-          "description": "The volunteer is not a member of this Organization Unit."
-        }
-      },
-      "successNext": "Next"
-    },
-    "scanner": {
-      "title": "Invalid check-in ID",
-      "description": "Please try rescanning or rescan a different copy of QR ID.",
-      "invalidToast": "Not a valid check-in ID. Please try again."
-    },
-    "join": {
-      "joinShift": "Join shift",
-      "joining": "Joining...",
-      "inviteOnly": "Invite only",
-      "full": "Shift full",
-      "joined": "You have joined the shift",
-      "joinedCta": "You're signed up",
-      "pending": "Your membership request is pending. You will be added to this shift once approved.",
-      "pendingCta": "Request pending",
-      "rejected": "Your membership request for this organization was rejected. Contact an admin if you believe this was a mistake.",
-      "rejectedCta": "Request not approved",
-      "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
-      "requirementsFallback": "Requirement profile ui (to be implemented)",
-      "failed": "Failed to join shift",
-      "unexpected": "Unexpected response from server",
-      "requestSent": "Request sent",
-      "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
-      "accept": "Accept",
-      "decline": "Decline",
-      "accepted": "You've accepted the invitation.",
-      "declined": "You've declined the invitation.",
-      "cancelShift": "Cancel shift",
-      "cancelTitle": "Cancel shift?",
-      "cancelBody": "You'll give up your spot on {date}. The organisation will be notified.",
-      "keepShift": "Keep shift",
-      "confirmCancel": "Yes, cancel",
-      "cancelled": "You've cancelled your shift."
-    },
-    "action": {
-      "viewAria": "View shift",
-      "editAria": "Edit shift",
-      "inviteAria": "Invite volunteers",
-      "copyLinkAria": "Copy shift link to clipboard",
-      "recordTime": "Record time",
-      "leaveShift": "Leave shift",
-      "deleteTitle": "Delete shift",
-      "deleteDescription": "Are you sure you wish to delete this shift and all its timesheets?",
-      "deleteSuccess": "Successfully deleted Shift.",
-      "deleteError": "Failed to delete Shift. {error}"
-    },
-    "sheet": {
-      "createTitle": "Create shift",
-      "createDescription": "Create a new shift.",
-      "createEventTitle": "Add shift",
-      "createEventDescription": "Schedule a shift for this event.",
-      "editTitle": "Edit shift",
-      "editDescription": "Edit shift.",
-      "inviteTitle": "Invite volunteers",
-      "inviteDescription": "Invited volunteers will receive an invitation email with shift details and a link to the system."
-    },
-    "toast": {
-      "created": "Shift created",
-      "updated": "Shift updated",
-      "inviteChanged": "Volunteers invitations changed"
-    },
-    "detail": {
-      "visibilityLabel": "Visibility",
-      "statusLabel": "Status",
-      "createdByLabel": "Created by",
-      "createdLabel": "Created",
-      "imageAlt": "Image for {title}"
-    },
-    "notFound": "Shift not found.",
-    "loading": "Loading...",
-    "validation": {
-      "nameRequired": "Name is required",
-      "startTimeRequired": "Start time is required",
-      "endTimeRequired": "End time is required",
-      "organizationUnitRequired": "Organization unit is required",
-      "shiftIdRequired": "Shift ID is required",
-      "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
-      "windowViolation": "Must fall within the event window"
-    },
-    "inviteStatus": {
-      "invited": "Invited",
-      "accepted": "Accepted",
-      "signedUp": "Signed up",
-      "declined": "Declined",
-      "cancelled": "Canceled",
-      "rejected": "Rejected",
-      "summaryInvited": "invited",
-      "summaryAccepted": "accepted",
-      "summarySignedUp": "signed up",
-      "summarySpots": "spots",
-      "volunteersTitle": "Volunteers",
-      "actionInvite": "Invite",
-      "actionUninvite": "Uninvite",
-      "uninviteSuccess": "Volunteer removed from shift",
-      "uninviteError": "Could not remove volunteer",
-      "inviteSuccess": "Volunteer invited again",
-      "inviteError": "Could not invite volunteer"
-    },
-    "instanceDetail": {
-      "title": "Shift instance",
-      "subtitle": "Volunteers and invite status for this occurrence",
-      "inviteCta": "Manage invites",
-      "backToShift": "Back to shift"
+    "fullNote": "This shift is already full.",
+    "joinedNote": "You're signed up for this shift.",
+    "later": "Later",
+    "locationDivider": "·",
+    "pendingNote": "Your membership request is pending. You will be added to this shift once approved.",
+    "pickDayLabel": "Choose a day",
+    "respondBeforeNote": "Respond before {date}. You can change your mind until the shift starts.",
+    "signUpCta": "Sign up for {date}",
+    "signUpNote": "You can cancel at any time.",
+    "spotsFree": "· {n} free",
+    "spotsFull": "· full",
+    "spotsTaken": "{filled} of {max} spots taken",
+    "timeLabel": "Time",
+    "whatYouDoHeading": "What you'll do",
+    "whenWhereHeading": "When & where"
+  },
+  "Storage": {
+    "upload": {
+      "browse": "Browse files",
+      "chooseFile": "Choose a file",
+      "clear": "Remove",
+      "dropHint": "Drag and drop a file here, or click to browse",
+      "failed": "Upload failed",
+      "imageHint": "Recommended: JPEG or PNG, up to 2 MB",
+      "invalidFileType": "This file type is not allowed. Use JPEG, PNG, or HEIC.",
+      "label": "Upload file",
+      "previewAlt": "Uploaded file preview",
+      "replace": "Replace",
+      "uploaded": "File uploaded",
+      "uploading": "Uploading..."
     }
   },
   "TimeEntry": {
-    "page": {
-      "title": "Timesheets",
-      "createButton": "Add Time Entry"
+    "action": {
+      "deleteDescription": "Are you sure you want to delete this time entry?",
+      "deleteError": "Failed to delete time entry. {error}",
+      "deleteSuccess": "Time entry deleted",
+      "deleteTitle": "Delete",
+      "editAria": "Edit"
+    },
+    "detail": {
+      "closedStatus": "Closed",
+      "createdLabel": "Created",
+      "openStatus": "Open",
+      "shiftLabel": "Shift",
+      "statusLabel": "Status",
+      "title": "Time entry",
+      "unknownVolunteer": "Unknown volunteer"
     },
     "empty": {
-      "title": "No time entries",
-      "description": "You can check somebody into a Shift or manually add a Time Entry."
-    },
-    "table": {
-      "shift": "Shift",
-      "volunteer": "Volunteer",
-      "time": "Time",
-      "duration": "Duration",
-      "notAvailable": "N/A"
+      "description": "You can check somebody into a shift or manually add a time entry.",
+      "title": "No time entries"
     },
     "form": {
-      "selectShiftLabel": "Select Shift",
-      "selectShiftPlaceholder": "Select a shift",
-      "selectShiftHint": "Select a shift to view available dates",
-      "selectVolunteerLabel": "Select Volunteer",
-      "selectVolunteerPlaceholder": "Select a volunteer",
-      "startEndTimeLabel": "Start and end time",
+      "loadInstancesError": "Failed to load instances.",
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
-      "loadInstancesError": "Failed to load instances."
+      "notTiedToShiftLabel": "Not tied to a shift",
+      "selectShiftHint": "Select a shift to view available dates",
+      "selectShiftLabel": "Select shift",
+      "selectShiftPlaceholder": "Select a shift",
+      "selectVolunteerLabel": "Select volunteer",
+      "selectVolunteerPlaceholder": "Select a volunteer",
+      "startEndTimeLabel": "Start and end time"
+    },
+    "format": {
+      "open": "open"
+    },
+    "page": {
+      "createButton": "Add time entry",
+      "title": "Timesheets"
     },
     "picker": {
       "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
       "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
     },
     "sheet": {
-      "createTitle": "Add Time Entry",
       "createDescription": "Record a new time entry for a volunteer shift session.",
-      "editTitle": "Edit Time Entry",
-      "editDescription": "Adjust the details of this Time Entry."
+      "createTitle": "Add time entry",
+      "editDescription": "Adjust the details of this time entry.",
+      "editTitle": "Edit time entry"
     },
-    "detail": {
-      "title": "Time Entry",
-      "unknownVolunteer": "Unknown volunteer",
-      "shiftLabel": "Shift",
-      "statusLabel": "Status",
-      "createdLabel": "Created",
-      "openStatus": "Open",
-      "closedStatus": "Closed"
-    },
-    "action": {
-      "editAria": "Edit Time Entry",
-      "deleteTitle": "Delete time entry",
-      "deleteDescription": "Are you sure you wish to delete this time entry?",
-      "deleteSuccess": "Time entry deleted",
-      "deleteError": "Failed to delete time entry. {error}"
-    },
-    "format": {
-      "open": "open"
+    "table": {
+      "duration": "Duration",
+      "notAvailable": "N/A",
+      "shift": "Shift",
+      "time": "Time",
+      "volunteer": "Volunteer"
     },
     "validation": {
-      "organizationUnitRequired": "Organization Unit is required",
-      "shiftInstanceRequired": "Shift date is required",
-      "volunteerRequired": "Volunteer is required",
-      "startedAtRequired": "Start time is required",
       "endedAtRequired": "End time is required",
-      "timeEntryIdRequired": "Time Entry ID is required"
+      "organizationUnitRequired": "Organization unit is required",
+      "shiftInstanceRequired": "Shift date is required",
+      "startedAtRequired": "Start time is required",
+      "timeEntryIdRequired": "Time entry ID is required",
+      "volunteerRequired": "Volunteer is required"
     }
   },
-  "RequirementForm": {
-    "builder": {
-      "previewTitle": "Preview",
-      "descriptionFallback": "Build your form by adding blocks",
-      "addBlock": "Add Block",
-      "saveForm": "Save Form",
-      "saving": "Saving...",
-      "copyShareLink": "Copy Share Link",
-      "shareLinkCopied": "Share link copied to clipboard",
-      "submissionsWarning": "This form has submissions",
-      "submissionsWarningDescription": "Editing is disabled because volunteers have already submitted responses. Create a copy if you need a new version.",
-      "addBlockTitle": "Add block",
-      "addBlockDescription": "Select an existing block or create a new one",
-      "createNewBlock": "Create new block",
-      "noFields": "No fields",
-      "allBlocksInUse": "All blocks are already in use",
-      "noPreview": "Add blocks to see a preview",
-      "lockedTooltip": "Cannot edit, block in use in a submitted form",
-      "viewBlock": "View block",
-      "editBlock": "Edit block",
-      "fieldsCount": "{count} fields"
-    },
-    "block": {
-      "editTitle": "Edit Block",
-      "createTitle": "Create Block",
-      "blockTitleLabel": "Block Title",
-      "titlePlaceholder": "e.g. Personal Information",
-      "createDescriptionPlaceholder": "What does this block collect?",
-      "descriptionLabel": "Description",
-      "iconLabel": "Icon",
-      "iconPlaceholder": "e.g. user",
-      "saveBlock": "Save Block",
-      "saving": "Saving...",
-      "fieldsTitle": "Fields ({count})",
-      "noFields": "No fields yet. Add your first field to this block.",
-      "addField": "Add field",
-      "addProfileField": "Add profile field",
-      "profileFieldHint": "Volunteers fill these in once and they're reused across organizations.",
-      "addDocument": "Add document",
-      "lockedNotice": "This block is locked because it's used in a form that has received submissions.",
-      "createBlock": "Create Block",
-      "cancel": "Cancel",
-      "back": "Back",
-      "fieldN": "Field {n}",
-      "systemField": "System field",
-      "typeLabel": "Type",
-      "typePlaceholder": "Select type",
-      "labelLabel": "Label",
-      "labelPlaceholder": "Field label",
-      "descriptionPlaceholder": "Help text for this field",
-      "placeholderLabel": "Placeholder",
-      "placeholderPlaceholder": "e.g. Enter your name",
-      "documentFileLabel": "Document",
-      "documentFileDescription": "PDF or image, max 10 MB",
-      "enterDocumentFileError": "Please upload a document.",
-      "documentLabelLabel": "Document Label",
-      "documentLabelPlaceholder": "e.g. Terms of Service",
-      "optionsLabel": "Options",
-      "addOption": "Add Option",
-      "optionLabelPlaceholder": "Label {n}",
-      "optionValuePlaceholder": "Value {n}",
-      "required": "Required",
-      "optional": "Optional",
-      "saveChanges": "Save changes",
-      "creating": "Creating...",
-      "loading": "Loading…"
-    },
-    "form": {
-      "createTitle": "Create Requirement Form",
-      "createSubtitle": "Create a new form to collect information from volunteers.",
-      "createButton": "Create Form",
-      "createDialogTitle": "Create Form",
-      "nameLabel": "Name",
-      "namePlaceholder": "e.g. Onboarding Form",
-      "descriptionLabel": "Description",
-      "descriptionOptional": "Description (optional)",
-      "descriptionPlaceholder": "What is this form for?",
-      "cancel": "Cancel",
-      "creating": "Creating...",
-      "create": "Create"
-    },
-    "card": {
-      "share": "Share",
-      "view": "View",
-      "edit": "Edit",
-      "delete": "Delete",
-      "submissions": "Submissions",
-      "deleteFormTitle": "Delete form?",
-      "deleteFormDescription": "will be permanently removed.",
-      "deleteBlockTitle": "Delete block?",
-      "deleteBlockDescription": "will be permanently removed.",
-      "deleting": "Deleting...",
-      "content": "Content",
-      "updated": "Updated {date}",
-      "fields": "Fields",
-      "usedIn": "Used in",
-      "noFieldsYet": "No fields yet.",
-      "usedInForms": "Used in the following forms:"
-    },
-    "table": {
-      "name": "Name",
-      "description": "Description",
-      "blocks": "Blocks",
-      "updated": "Updated",
-      "title": "Title",
-      "fields": "Fields",
-      "usedIn": "Used in",
-      "editable": "Editable",
-      "fieldCount": "{count, plural, one {# field} other {# fields}}",
-      "deleteFormDescription": "{name} will be permanently removed.",
-      "deleteBlockDescription": "{name} will be permanently removed.",
-      "yes": "Yes",
-      "copyShareLinkAria": "Copy share link",
-      "editFormAria": "Edit form",
-      "submissionsAria": "Submissions",
-      "cannotDeleteAria": "Cannot delete — form has submissions",
-      "deleteFormAria": "Delete form",
-      "editBlockAria": "Edit block",
-      "viewBlockAria": "View block",
-      "deleteBlockAria": "Delete block"
-    },
-    "dashboard": {
-      "formsTab": "Forms",
-      "blocksTab": "Blocks",
-      "createForm": "Create Form",
-      "createBlock": "Create Block",
-      "noForms": "No forms yet. Create your first form.",
-      "noBlocks": "No blocks yet. Create your first block.",
-      "noFormsMatch": "No forms match the current filters.",
-      "noBlocksMatch": "No blocks match the current filters.",
-      "searchForms": "Search forms...",
-      "searchBlocks": "Search blocks..."
-    },
-    "blockLibrary": {
-      "title": "Block Library",
-      "subtitle": "Reusable blocks for your forms",
-      "noBlocksTitle": "No blocks yet",
-      "noBlocksDescription": "Create reusable blocks to use across multiple forms."
-    },
-    "fieldForm": {
-      "shortText": "Short Text",
-      "longText": "Long Text",
-      "number": "Number",
-      "date": "Date",
-      "email": "Email",
-      "phone": "Phone",
-      "dropdown": "Dropdown",
-      "multiSelect": "Multi Select",
-      "checkbox": "Checkbox",
-      "document": "Document",
-      "infoText": "Info Text",
-      "fieldTypeLabel": "Field Type",
-      "fieldTypePlaceholder": "Select type...",
-      "textLabel": "Text",
-      "labelLabel": "Label",
-      "textPlaceholder": "e.g. Please read the following information",
-      "labelPlaceholder": "e.g. Favorite color",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Optional help text",
-      "placeholderLabel": "Placeholder",
-      "placeholderPlaceholder": "e.g. Enter your answer",
-      "profileField": "Profile field: {key} — value will be saved to the user's profile for pre-fill on future forms.",
-      "profileFieldOptional": "Profile field (optional)",
-      "profileFieldNone": "None",
-      "firstName": "First name",
-      "lastName": "Last name",
-      "preferredName": "Preferred name",
-      "gender": "Gender",
-      "address": "Address",
-      "zipCode": "ZIP code",
-      "city": "City",
-      "birthDate": "Birth date",
-      "documentFileLabel": "Document",
-      "documentFileDescription": "PDF or image, max 10 MB",
-      "enterDocumentFileError": "Please upload a document.",
-      "documentLabelLabel": "Document Label",
-      "documentLabelPlaceholder": "e.g. Data Privacy Policy",
-      "required": "Required",
-      "selectTypeError": "Please select a field type.",
-      "enterTextError": "Please enter text.",
-      "enterLabelError": "Please enter a label.",
-      "enterDocumentLabelError": "Please enter a document label.",
-      "enterOptionError": "Please enter at least one option.",
-      "cancel": "Cancel",
-      "save": "Save",
-      "add": "Add",
-      "optionsLabel": "Options"
-    },
-    "blockSheet": {
-      "viewTitle": "View block",
-      "editTitle": "Edit block",
-      "createTitle": "Create block",
-      "viewDescription": "This block is locked — used in a form with submissions.",
-      "editDescription": "Edit this block and its fields.",
-      "createDescription": "Create a new reusable block with fields.",
-      "loading": "Loading…"
-    },
-    "volunteerForm": {
-      "successTitle": "Application received!",
-      "successMessage": "Your application is pending review. An admin will get back to you shortly.",
-      "noBlocks": "This form has no blocks.",
-      "membershipRequestNotice": "By submitting this form you will send a membership request to {orgName}. An admin will review and approve your request.",
-      "step": "Step {current} of {total}",
-      "noFields": "This block has no fields configured yet.",
-      "back": "Back",
-      "submit": "Submit",
-      "submitting": "Submitting...",
-      "next": "Next",
-      "failedToSubmit": "Failed to submit form",
-      "documentAcknowledgement": "I acknowledge and accept",
-      "checkboxYes": "Yes",
-      "selectOption": "Select an option",
-      "pickDate": "Pick a date",
-      "alreadySubmittedTitle": "Form submitted",
-      "alreadySubmittedMessage": "Your form has been submitted correctly."
-    },
-    "submission": {
-      "fallbackVolunteer": "Volunteer",
-      "fallbackForm": "Form",
-      "fieldColumn": "Field",
-      "answerColumn": "Answer",
-      "noFields": "No fields defined for this form.",
-      "accepted": "Accepted"
-    },
-    "validation": {
-      "nameRequired": "Name is required",
-      "titleRequired": "Title is required",
-      "fieldLabelRequired": "Field label is required",
-      "labelRequired": "Label is required",
-      "minAge": "You must be at least {minAge} years old",
-      "fieldRequired": "{label} is required",
-      "mustBeNumber": "{label} must be a number",
-      "mustBeValidDate": "{label} must be a valid date",
-      "mustBeValidEmail": "{label} must be a valid email",
-      "mustBeValidPhone": "{label} must be a valid phone number",
-      "invalidOptions": "{label} contains invalid options",
-      "maxChars": "{label} must be {maxLen} characters or fewer",
-      "invalidCharacters": "{label} contains invalid characters",
-      "validPostalCode": "{label} must be a valid postal code"
-    },
-    "actions": {
-      "formSaved": "Form saved",
-      "blockSaved": "Block saved",
-      "fieldAdded": "Field added",
-      "fieldUpdated": "Field updated",
-      "fieldDeleted": "Field deleted",
-      "blockCreated": "Block created",
-      "failedToCreateForm": "Failed to create form",
-      "failedToSaveBlock": "Failed to save block",
-      "failedToAddField": "Failed to add field",
-      "failedToUpdateField": "Failed to update field",
-      "failedToDeleteField": "Failed to delete field",
-      "failedToLoadBlock": "Failed to load block",
-      "failedToSubmitForm": "Failed to submit form",
-      "failedToSaveForm": "Failed to save form",
-      "linkCopied": "Link copied",
-      "linkCopiedDescription": "{url}",
-      "couldNotCopyLink": "Could not copy link"
-    }
+  "Unauthorized": {
+    "homeLink": "Go to your organizations",
+    "message": "You don't have permission to access this resource.",
+    "title": "Access denied"
   },
-  "MyTime": {
-    "title": "My Time",
-    "summary": {
-      "total": "Total volunteered"
-    },
-    "state": {
-      "inProgress": "In progress",
-      "completed": "Completed"
-    },
-    "empty": {
-      "title": "No hours yet",
-      "description": "Once you check in to a shift, your volunteering hours will appear here.",
-      "cta": "Find a shift"
-    }
-  },
-  "EventDetail": {
-    "badge": "Event",
-    "coverImageAlt": "Cover image for {title}",
-    "shiftsSummary": "{shifts} shifts · {spotsLeft} spots free",
-    "shiftsSummaryFull": "{shifts} shifts · Fully booked",
-    "shiftsSummaryNoSpots": "{shifts} shifts",
-    "followCta": "Step up to help",
-    "followingCta": "You're helping ✓",
-    "pendingCta": "Request pending",
-    "rejectedCta": "Request not approved",
-    "followNote": "Get invited to shifts, or sign up for one yourself.",
-    "pendingNote": "A coordinator will confirm your request.",
-    "requestSentToast": "Request sent — a coordinator will confirm it.",
-    "aboutHeading": "About the event",
-    "shiftsHeading": "Shifts",
-    "shiftsCount": "{n, plural, one {# shift} other {# shifts}}",
-    "shiftsToggleList": "List",
-    "shiftsToggleCalendar": "Calendar",
-    "shiftsMeta": "{days} days · {occurrences} occurrences",
-    "showAllShifts": "Show all shifts",
-    "noShifts": "No shifts planned yet.",
-    "noShiftsOnDay": "No shifts on this day.",
-    "fullyBooked": "Fully booked",
-    "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
-    "unlimitedSpots": "Open",
-    "today": "Today"
-  },
-  "ShiftDetail": {
-    "coverImageAlt": "Cover image for {title}",
-    "eventBadge": "Part of {eventTitle}",
-    "back": "Back",
-    "timeLabel": "Time",
-    "dateLabel": "Date",
-    "pickDayLabel": "Choose a day",
-    "earlier": "Earlier",
-    "later": "Later",
-    "spotsTaken": "{filled} of {max} spots taken",
-    "spotsFree": "· {n} free",
-    "spotsFull": "· full",
-    "spotsUnlimited": "Open spots",
-    "signUpCta": "Sign up for {date}",
-    "signUpNote": "You can cancel at any time.",
-    "fullNote": "This shift is already full.",
-    "joinedNote": "You're signed up for this shift.",
-    "pendingNote": "Your membership request is pending. You will be added to this shift once approved.",
-    "respondBeforeNote": "Respond before {date}. You can change your mind until the shift starts.",
-    "acceptedBadge": "Accepted",
-    "declinedBadge": "Declined",
-    "cancelUntilNote": "You can cancel until {date}.",
-    "cancelledNote": "You're no longer signed up for {date}.",
-    "whatYouDoHeading": "What you'll do",
-    "whenWhereHeading": "When & Where",
-    "locationDivider": "·",
-    "errorHeading": "This shift no longer exists",
-    "errorBody": "It was cancelled or the link is no longer valid.",
-    "errorOrgCta": "Go to organisation"
-  },
-  "Event": {
-    "list": {
-      "title": "Events",
-      "subtitle": "Manage your organization's events",
-      "createButton": "Create event"
-    },
-    "table": {
-      "event": "Event",
-      "dates": "Dates",
-      "location": "Location",
-      "shifts": "Shifts"
-    },
+  "Volunteer": {
     "action": {
-      "viewAria": "View event",
-      "editAria": "Edit event",
-      "inviteAria": "Invite members",
-      "shareAria": "Copy invite link",
-      "deleteAria": "Delete event"
-    },
-    "deleteDialog": {
-      "title": "Delete event",
-      "description": "Are you sure you want to delete this event? This action cannot be undone.",
-      "confirm": "Delete"
+      "checkInAria": "Check in",
+      "checkInShiftAria": "Check in",
+      "remove": "Remove",
+      "removeAria": "Remove",
+      "removeDescription": "Are you sure you want to remove {name} from this organisation? This cannot be undone.",
+      "removeFailedToast": "Could not remove volunteer",
+      "removeTitle": "Remove from organisation",
+      "removedToast": "{name} was removed from this organisation",
+      "viewProfileAria": "View"
     },
     "empty": {
-      "title": "No events yet",
-      "description": "Get started by creating your first event."
+      "description": "Share the invite link to get volunteers to sign up.",
+      "title": "No volunteers yet"
+    },
+    "page": {
+      "copyInviteLink": "Copy invite link",
+      "inviteLinkCopied": "Invite link copied to clipboard",
+      "subtitle": "Manage volunteers in your organization",
+      "title": "Volunteers"
+    },
+    "requests": {
+      "pendingEmpty": "No pending requests yet.",
+      "rejectedEmpty": "No rejected requests yet."
+    },
+    "requiredForms": {
+      "addExisting": "Add existing",
+      "addedToast": "Form attached",
+      "createNew": "Create new",
+      "dedupHint": "Volunteers won't be asked for information they've already provided.",
+      "fileUploadLabel": "File upload",
+      "noBlocks": "No blocks",
+      "noFormsFound": "No forms found",
+      "pill": {
+        "none": "No forms required",
+        "required": "{count, plural, one {1 form required} other {{count} forms required}}"
+      },
+      "questionCount": "{count, plural, one {1 question} other {{count} questions}}",
+      "removeAria": "Remove",
+      "removedToast": "Form removed",
+      "searchForms": "Search forms...",
+      "subtitle": "Completed before approval into {brand} › {unitName}",
+      "title": "Forms required to join",
+      "updateFailedToast": "Failed to update required forms"
     },
     "sheet": {
-      "createTitle": "Create event",
-      "createDescription": "Add a new event to group related shifts.",
-      "editTitle": "Edit event",
-      "editDescription": "Update the event details below."
+      "addressLabel": "Address",
+      "birthdayLabel": "Birthday",
+      "emailLabel": "Email",
+      "formFallback": "Form",
+      "noSubmissions": "No submitted forms yet.",
+      "qrIdLabel": "QR ID",
+      "submittedForms": "Submitted forms",
+      "titleFallback": "Volunteer",
+      "userInfo": "Personal information"
     },
-    "detail": {
-      "backLink": "Back to events",
-      "coverImageAlt": "Cover image for {title}",
-      "editButton": "Edit",
-      "inviteButton": "Invite members",
-      "volunteersCard": {
-        "title": "Volunteers",
-        "inviteButton": "Invite",
-        "inviteAria": "Invite members",
-        "checkInAria": "Check in",
-        "empty": "No volunteers invited yet."
-      },
-      "shiftsCard": {
-        "title": "Shifts",
-        "addAria": "Add shift",
-        "addButton": "Add shift",
-        "emptyTitle": "No shifts yet",
-        "emptyDescription": "Add a shift to this event to get started."
-      }
-    },
-    "invite": {
-      "title": "Invite members",
-      "description": "Invite members to {eventTitle}. They’re notified about the event — this doesn’t assign them to its shifts.",
-      "copyInviteLink": "Copy invite link",
-      "helperText": "Prefer a link? Share it with anyone to invite them to the event."
-    },
-    "form": {
-      "titleLabel": "Title",
-      "titlePlaceholder": "e.g. Summer Festival",
-      "startsAtLabel": "Start",
-      "endsAtLabel": "End",
-      "locationLabel": "Location",
-      "locationPlaceholder": "e.g. Phoenix Park",
-      "logoUrlLabel": "Logo URL",
-      "coverUrlLabel": "Cover URL",
-      "validation": {
-        "titleRequired": "Title is required",
-        "startRequired": "Start date is required",
-        "endRequired": "End date is required",
-        "endAfterStart": "End date must be after start date",
-        "invalidUrl": "Must be a valid URL"
-      }
-    },
-    "toast": {
-      "created": "Event created",
-      "updated": "Event updated",
-      "deleted": "Event deleted",
-      "invited": "Members invited",
-      "linkCopied": "Invite link copied to clipboard"
-    },
-    "error": {
-      "title": "Failed to load events",
-      "tryAgain": "Try again"
-    }
-  },
-  "Storage": {
-    "upload": {
-      "label": "Upload file",
-      "chooseFile": "Choose a file",
-      "browse": "Browse files",
-      "dropHint": "Drag and drop a file here, or click to browse",
-      "replace": "Replace",
-      "uploaded": "File uploaded",
-      "uploading": "Uploading...",
-      "failed": "Upload failed",
-      "invalidFileType": "This file type is not allowed. Use JPEG, PNG, or HEIC.",
-      "clear": "Remove",
-      "previewAlt": "Uploaded file preview",
-      "imageHint": "Recommended: JPEG or PNG, up to 2 MB"
+    "table": {
+      "email": "Email",
+      "name": "Name",
+      "roles": "Roles"
     }
   },
   "VolunteerHome": {
-    "greeting": "Hi, {firstName}!",
-    "greetingFallback": "Welcome back!",
-    "yourShiftsHeading": "Your shifts",
-    "yourShiftsCount": "{n, plural, one {# shift} other {# shifts}}",
-    "yourShiftsThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
-    "yourShiftsSeeAll": "See all",
-    "yourShiftsEmpty": "You have no upcoming shifts.",
-    "invitationsHeading": "Invitations",
-    "invitationsEmpty": "No pending invitations",
-    "discoverHeading": "Discover",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "conflictCollapse": "Show less",
+    "conflictExpand": "Show all {n} overlapping shifts",
+    "conflictMore": "+{n} more",
+    "dayStripLabel": "Day selector",
+    "dayStripNext": "Next days",
+    "dayStripPrevious": "Previous days",
+    "discoverConflict": "Conflicts with a shift you've signed up for",
     "discoverCta": "Discover shifts",
     "discoverEmpty": "No shifts match these filters",
     "discoverEmptyBody": "Try adjusting your filters, or check back later.",
     "discoverEmptyHome": "No shifts to discover right now. Check back soon.",
-    "discoverConflict": "Conflicts with a shift you've signed up for",
-    "partOfEvent": "Part of {event}",
+    "discoverEventsEmptyHome": "No events to discover right now. Check back soon.",
+    "discoverHeading": "Discover",
+    "discoverPendingEmptyBody": "Shifts from {orgName} appear here once your request is confirmed.\nCheck in and Your records stay available anytime.",
+    "discoverPendingEmptyTitle": "Nothing to discover yet",
+    "discoverPendingSubtitle": "Shifts from {orgName} show up here once your request is confirmed",
+    "discoverTabAssignments": "Assignments",
+    "discoverTabEvents": "Events",
+    "discoverThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
+    "eventCoverImageAlt": "Cover image for {title}",
     "filterNextWeek": "Next week",
     "filterThisWeekend": "This weekend",
-    "weekly": "Weekly",
-    "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "fullyBooked": "Fully booked",
-    "overlapWarning": "You have overlapping shifts in your schedule",
-    "todayButton": "Today",
     "goToToday": "Go to today",
     "goToTop": "Go to top",
-    "conflictExpand": "Show all {n} overlapping shifts",
-    "conflictMore": "+{n} more",
-    "conflictCollapse": "Show less",
-    "discoverThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}",
-    "dayStripLabel": "Day selector",
-    "dayStripPrevious": "Previous days",
-    "dayStripNext": "Next days",
-    "checkIn": "Check in",
-    "checkOut": "Check out",
-    "timerStartsIn": "starts in {time}",
-    "timerStartedAgo": "Started {time} ago",
-    "timerVolunteering": "You're volunteering for {time}",
-    "eventCoverImageAlt": "Cover image for {title}",
-    "loadPast": "Load past",
+    "greeting": "Hi, {firstName}!",
+    "greetingFallback": "Welcome back!",
+    "invitationsEmpty": "No pending invitations",
+    "invitationsHeading": "Invitations",
+    "inviteAccept": "Accept",
+    "inviteAccepted": "Invitation accepted",
+    "inviteActionFailed": "Something went wrong. Please try again.",
+    "inviteDecline": "Decline",
+    "inviteDeclined": "Invitation declined",
+    "inviteKindEvent": "Event",
+    "inviteKindShift": "Shift",
+    "invitedOn": "invited you · sent {date}",
     "loadMore": "Load more",
-    "invitedOn": "Invited · {date}"
-  },
-  "OrgDetail": {
-    "coverImageAlt": "Cover image for {title}",
-    "requestMembership": "Request membership",
-    "requestMembershipNote": "A coordinator will confirm your request.",
-    "memberCount": "{n, plural, one {# member} other {# members}}",
-    "openShiftsCount": "{n, plural, one {# open shift} other {# open shifts}}",
-    "aboutHeading": "About us",
-    "eventsHeading": "Events",
-    "eventsCount": "{n, plural, one {# event} other {# events}}",
-    "noEvents": "No events yet.",
-    "eventMeta": "{shifts, plural, one {# shift} other {# shifts}} · {spots, plural, one {# spot free} other {# spots free}}",
-    "eventMetaFull": "{shifts, plural, one {# shift} other {# shifts}} · Fully booked",
-    "eventMetaUnlimited": "{shifts, plural, one {# shift} other {# shifts}} · Open",
-    "shiftsHeading": "Individual shifts",
-    "shiftsSubheading": "Not part of an event",
-    "shiftsCount": "{n, plural, one {# shift} other {# shifts}}",
-    "noShifts": "No individual shifts yet.",
-    "fullyBooked": "Fully booked",
-    "unlimitedSpots": "Open",
+    "loadPast": "Load past",
+    "overlapWarning": "You have overlapping shifts in your schedule",
+    "partOfEvent": "Part of {event}",
+    "pendingBadge": "Pending",
+    "pendingRequestBody": "An admin is reviewing your request. This usually takes a few days.",
+    "pendingRequestContact": "Questions? {name} can help.",
+    "pendingRequestCta": "View your requests",
+    "pendingRequestTitle": "{orgName} is reviewing your request",
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
-    "errorHeading": "This organization no longer exists",
-    "errorBody": "It was removed or the link is no longer valid.",
-    "requestPending": "Request pending",
-    "requestRejected": "Request not approved",
-    "requestSentToast": "Request sent — a coordinator will confirm it."
+    "timerStartedAgo": "Started {time} ago",
+    "timerStartsIn": "starts in {time}",
+    "timerVolunteering": "You're volunteering for {time}",
+    "todayButton": "Today",
+    "weekly": "Weekly",
+    "yourEventsEmpty": "You have no upcoming events.",
+    "yourEventsHeading": "Your events",
+    "yourEventsThisWeek": "{n, plural, one {# event this week} other {# events this week}}",
+    "yourShiftsCount": "{n, plural, one {# shift} other {# shifts}}",
+    "yourShiftsEmpty": "You have no upcoming shifts.",
+    "yourShiftsHeading": "Your shifts",
+    "yourShiftsSeeAll": "See all",
+    "yourShiftsThisWeek": "{n, plural, one {# shift this week} other {# shifts this week}}"
+  },
+  "Accounting": {
+    "settings": {
+      "title": "Accounting Settings",
+      "subtitle": "Configure rates and document templates for volunteering reimbursements.",
+      "tabs": {
+        "rates": "Rates",
+        "templates": "Templates"
+      },
+      "rates": {
+        "sectionTitle": "Hourly rate",
+        "sectionSubtitle": "Org-wide rate for volunteering reimbursements, by allowance type.",
+        "epLabel": "Ehrenamtspauschale",
+        "ulLabel": "Übungsleiterpauschale",
+        "yearlyLimit": "Up to {limit}/year",
+        "saveSuccess": "Rate updated",
+        "saveError": "The rate could not be saved. Please try again.",
+        "loadError": "Rates could not be loaded. Please reload the page.",
+        "errors": {
+          "invalidRate": "Enter a valid rate greater than zero"
+        },
+        "rateUnit": "/hr",
+        "provenance": {
+          "inherited": "Org default"
+        }
+      },
+      "templates": {
+        "sectionTitle": "Document templates",
+        "sectionSubtitle": "All templates for documents needed to pay out a respective Pauschale."
+      }
+    },
+    "reimbursements": {
+      "title": "Reimbursements",
+      "subtitle": "Create, sign, and download documents.",
+      "createDocument": "Create document",
+      "periodLabel": "Period",
+      "periodPicker": {
+        "allTime": "All time",
+        "thisMonth": "This month",
+        "lastMonth": "Last month",
+        "customPeriod": "Custom period",
+        "apply": "Apply"
+      },
+      "filters": {
+        "docTypeLabel": "Document type",
+        "docTypeAll": "All documents",
+        "docTypeContracts": "Contracts only",
+        "docTypeTimesheets": "Timesheets only",
+        "pauschaletypeLabel": "Allowance type"
+      },
+      "tableHead": {
+        "volunteer": "Volunteer",
+        "status": "Status",
+        "hours": "Hrs.",
+        "amount": "Amount",
+        "action": "Action"
+      },
+      "tiles": {
+        "all": "All process stages",
+        "docCount": "{count} Documents",
+        "waitingOnYou": "{count} waiting on you",
+        "contractGenerate": "Create contracts",
+        "contractSigning": "Sign contracts",
+        "timesheetGenerate": "Create timesheets",
+        "timesheetSigning": "Sign timesheets",
+        "needsTimesheet": "Timesheet needed",
+        "readyToGo": "Ready to go"
+      },
+      "toolbar": {
+        "typeAll": "All allowance types",
+        "typeEP": "Ehrenamt",
+        "typeUL": "Übungsleiter",
+        "searchPlaceholder": "Search volunteers …",
+        "sortActionNeeded": "Action needed first",
+        "sortNewest": "Newest first"
+      },
+      "empty": {
+        "allDone": "All done",
+        "allDoneHint": "No open documents in this period.",
+        "filtered": "No entries in this category."
+      },
+      "resetPrototype": "Reset prototype",
+      "resetPrototypeToast": "Prototype data reset.",
+      "createDocumentModal": {
+        "stepIndicator": "Step {step} of {total}",
+        "step1Title": "Volunteer & document",
+        "step2Title": "Review & send",
+        "volunteerPlaceholder": "Search for a volunteer …",
+        "noVolunteersFound": "No volunteers found.",
+        "selectDocumentTitle": "Select a document",
+        "noDocumentYet": "Not created yet",
+        "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
+        "viewVolunteer": "View volunteer",
+        "createButton": "Create {kind}",
+        "createButtonEmpty": "Create new document"
+      },
+      "bundle": {
+        "actionLabel": "Download bundle",
+        "readyCount": "{count} ready",
+        "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
+        "neverDownloaded": "not downloaded yet",
+        "unknownUser": "unknown"
+      },
+      "batchBar": {
+        "selected": "{count} selected",
+        "countersignAll": "Sign all",
+        "remindAll": "Remind all",
+        "bundleAll": "Download all bundles",
+        "mixed": "Mixed selection",
+        "clearSelection": "Clear",
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+      },
+      "actionToasts": {
+        "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
+        "remind": "{count, plural, =1 {Reminder sent to {name}.} other {Reminders sent to {count} volunteers.}}",
+        "countersign": "{count, plural, =1 {{name}'s document countersigned.} other {{count} documents countersigned.}}"
+      },
+      "contractGeneratedToast": "Contract generation started for {name}.",
+      "docs": {
+        "kindLabel": {
+          "contract": "Contract",
+          "timesheet": "Timesheet"
+        },
+        "sheet": {
+          "period": "Period",
+          "pipelineLabel": "Process",
+          "pipeline": {
+            "generate": "Create",
+            "sign": "Sign",
+            "declined": "Declined",
+            "volSign": "Volunteer",
+            "coordSign": "Coordinator",
+            "superSign": "Supervisor",
+            "active": "Active",
+            "ready": "Ready",
+            "actorOrg": "Organization"
+          },
+          "limitSection": "Annual budget",
+          "invoicesPaidOut": "Paid out",
+          "invoicesPending": "Pending payment",
+          "timelineSection": "Timeline",
+          "timelineEmpty": "No activity yet",
+          "timelineCreated": "Created",
+          "timelineSigned": "Signed",
+          "timelineCountersigned": "Countersigned",
+          "timelineActivated": "Activated",
+          "timelineDeclined": "Declined",
+          "declineReasonTitle": "Decline reason",
+          "noAction": "No action required",
+          "pdfView": "View PDF",
+          "pdfDownload": "Download",
+          "pdfViewToast": "Preview opened for {period}.",
+          "pdfDownloadToast": "Download started for {period}.",
+          "timesheetHours": {
+            "title": "Volunteering hours",
+            "paidShifts": "Hours with reimbursement",
+            "shifts": "{count} shifts",
+            "grossAmount": "Gross amount",
+            "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
+            "viewBtn": "View timesheets"
+          },
+          "pdfUnavailableNote": "PDF not available yet."
+        },
+        "statusLabel": {
+          "contractGenerate": "Create contract",
+          "contractSigningVol": "Waiting for signature",
+          "contractSigningCoord": "Countersignature required",
+          "contractActive": "Active contract",
+          "timesheetGenerate": "Create timesheet",
+          "timesheetSigningVol": "Waiting for signature",
+          "timesheetSigningSuper": "Supervisor signature",
+          "timesheetReady": "Ready to go",
+          "nonCompliant": "No active contract",
+          "nonCompliantHint": "No active contract for this allowance type yet — create or activate one to make this timesheet compliant",
+          "notYetCreated": "Not yet created",
+          "overCap": "Annual cap will be exceeded",
+          "overCapHint": "This timesheet's amount pushes the volunteer at or over their yearly allowance cap",
+          "contractMissing": "No contract — create manually",
+          "timesheetMuted": "Recorded without a contract",
+          "declined": "Declined"
+        },
+        "actions": {
+          "create": "Preview and create",
+          "remind": "Send reminder",
+          "countersign": "Countersign",
+          "decline": "Decline",
+          "seeDetails": "See details",
+          "createNew": "Create new {docType}"
+        },
+        "nonCompliantDialog": {
+          "titleSingle": "{action, select, create {Create} remind {Send a reminder for} countersign {Countersign} other {Proceed with}} a timesheet without an active contract?",
+          "titleBatchAll": "{action, select, create {Create} remind {Send reminders for} countersign {Countersign} other {Proceed with}} {count} timesheets without an active contract?",
+          "titleBatchMixed": "{count} of {total} timesheets have no active contract",
+          "descriptionSingle": "This volunteer has no active contract for this allowance type yet. You can still {action, select, create {create} remind {send a reminder for} countersign {countersign} other {proceed with}} this timesheet, but it stays flagged as non-compliant until a contract is active.",
+          "descriptionBatchAll": "None of the selected volunteers have an active contract for this allowance type yet. You can still {action, select, create {create} remind {send reminders for} countersign {countersign} other {proceed with}} these timesheets, but they stay flagged as non-compliant until a contract is active.",
+          "descriptionBatchMixed": "{count} of the selected timesheets have no active contract for this allowance type.",
+          "actionAnyway": "{action, select, create {Create anyway} remind {Remind anyway} countersign {Sign anyway} other {Proceed anyway}}",
+          "actionAllAnyway": "{action, select, create {Create all anyway} remind {Remind all anyway} countersign {Sign all anyway} other {Proceed with all anyway}}",
+          "onlyCompliantAction": "{action, select, create {Only create compliant} remind {Only remind compliant} countersign {Only sign compliant} other {Only proceed with compliant}}",
+          "generateContractInstead": "Generate contract instead",
+          "viewContractInstead": "View contract instead"
+        },
+        "declineDialog": {
+          "title": "Decline this {docType}?",
+          "description": "The volunteer will need a newly issued document — this one can't be resumed once declined.",
+          "reasonLabel": "Reason for declining",
+          "reasonPlaceholder": "Explain what needs to change …",
+          "submit": "Decline",
+          "toast": "{name}'s document was declined."
+        }
+      },
+      "profileField": {
+        "editButtonLabel": "Edit",
+        "saveButtonLabel": "Save",
+        "fromProfileHint": "From {name}'s profile",
+        "editingHint": "You're only editing this for {docType, select, contract {this contract} invoice {this invoice} other {this document}} — the data on {name}'s profile stays unchanged.",
+        "overrideHint": "Edited for {docType, select, contract {this contract} invoice {this invoice} other {this document}} only",
+        "missingValue": "Not provided",
+        "gapHint": "{name} did not share this data in their profile — add it for {docType, select, contract {this contract} invoice {this invoice} other {this document}}"
+      },
+      "contractModal": {
+        "title": "Create contract",
+        "cancel": "Cancel",
+        "sendForSigning": "Save and send for signing",
+        "sending": "Sending…",
+        "sentToast": "Contract sent to {name} for signing.",
+        "sendErrorToast": "Couldn't send the contract to {name}. Please try again.",
+        "loadErrorTitle": "Couldn't load profile data",
+        "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the contract",
+        "sendError": "The contract couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create a contract template",
+        "completeOrgProfileCta": "Complete your organization profile",
+        "hoursUnitMonth": "month",
+        "hoursUnitWeek": "week",
+        "hoursUnitHint": "per {unit}",
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": "Additional agreement",
+          "signatureVolunteer": "Volunteer signature",
+          "signatureCoordinator": "Coordinator signature",
+          "unsigned": "Not yet signed"
+        }
+      },
+      "invoiceModal": {
+        "title": "Create invoice",
+        "cancel": "Cancel",
+        "sendForSigning": "Save and send for signing",
+        "sending": "Sending…",
+        "sentToast": "Invoice sent to {name} for signing.",
+        "sendErrorToast": "Couldn't send the invoice to {name}. Please try again.",
+        "loadErrorTitle": "Couldn't load invoice data",
+        "loadError": "{name}'s invoice data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the invoice",
+        "sendError": "The invoice couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create an invoice template",
+        "completeOrgProfileCta": "Complete your organization profile",
+        "nameFieldLabel": "Name",
+        "periodFieldLabel": "Billing period",
+        "periodPicker": {
+          "placeholder": "Select a period",
+          "thisMonth": "This month",
+          "lastMonth": "Last month",
+          "apply": "Apply"
+        },
+        "capCard": {
+          "title": "Yearly cap",
+          "value": "{before} → {after}",
+          "subline": "of {total} yearly cap"
+        },
+        "hoursCard": {
+          "title": "Eligible hours",
+          "rowCheckboxLabel": "Include {shiftName} in this invoice",
+          "hoursValue": "{hours}h",
+          "editHint": "To edit hours or shift details, go to <link>Timesheets</link>."
+        },
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": "Invoice",
+          "signatureVolunteer": "Volunteer signature",
+          "signatureSupervisor": "Supervisor signature",
+          "unsigned": "Not yet signed"
+        }
+      },
+      "signToasts": {
+        "contract": "Contract countersigned for {name}.",
+        "contractError": "Contract could not be countersigned for {name}.",
+        "invoice": "Timesheet countersigned for {name}.",
+        "invoiceError": "Timesheet could not be countersigned for {name}."
+      },
+      "declineToasts": {
+        "contract": "Contract declined for {name}.",
+        "contractError": "Contract could not be declined for {name}.",
+        "invoice": "Timesheet declined for {name}.",
+        "invoiceError": "Timesheet could not be declined for {name}."
+      }
+    },
+    "templates": {
+      "title": "Templates",
+      "sections": {
+        "ep": "Ehrenamtspauschale",
+        "ul": "Übungsleiterpauschale",
+        "unconfiguredWarning": "Shifts of this Pauschalen type cannot be scheduled until both templates are configured."
+      },
+      "documentKind": {
+        "contract": "Contract",
+        "invoice": "Invoice"
+      },
+      "loadError": "Templates could not be loaded. Please reload the page.",
+      "builder": {
+        "breadcrumb": {
+          "accounting": "Accounting",
+          "templates": "Templates"
+        },
+        "saveButton": "Save template",
+        "saveSuccessToast": "Template saved",
+        "saveErrorToast": "The template could not be saved. Please try again.",
+        "orgProfile": {
+          "blockedMessage": "Your organization info is missing details this template needs. Complete the organization info before saving.",
+          "blockedCta": "Complete organization info",
+          "blockedAskSomeone": "Ask someone who can manage the organization to complete the organization info."
+        },
+        "previewScrollRegionLabel": "Document preview, scrollable",
+        "preview": {
+          "disclaimerBadge": "Preview",
+          "documentTitle": {
+            "contract": "Additional agreement",
+            "invoice": "Invoice"
+          },
+          "signatureVolunteer": "Volunteer signature",
+          "signatureCoordinator": "Coordinator signature",
+          "signatureSupervisor": "Supervisor signature",
+          "unsigned": "Not yet signed"
+        },
+        "blockEditor": {
+          "headerTitle": "Header",
+          "invoiceNumberFormatLabel": "Invoice number format",
+          "lockedHint": "Mandatory — always included in the generated document.",
+          "tableFixedHint": "Rows are filled from timesheets when an invoice is generated.",
+          "firstColumnSourceLabel": "First column content",
+          "firstColumnSourceOptions": {
+            "agreement_task_description": {
+              "label": "Task description from the agreement",
+              "hint": "Each row shows the task description stored in the agreement."
+            },
+            "custom": {
+              "label": "Custom",
+              "hint": "Each row shows the text entered here."
+            }
+          },
+          "firstColumnPlaceholders": {
+            "agreementTaskDescription": "Task description",
+            "custom": "e.g. Other task"
+          },
+          "alreadyReceivedHint": "Calculated automatically from the linked contract period when an invoice is generated.",
+          "incompleteCount": "{count} fields need a value",
+          "notSetYet": "not set yet",
+          "sameAsAbove": "same value as set above",
+          "scrollRegionLabel": "Template editor, scrollable"
+        },
+        "editorGroups": {
+          "org": "Organization details",
+          "volunteer": "Volunteer details",
+          "engagement": "Engagement details",
+          "extra": "Extra clauses"
+        },
+        "hoursUnit": {
+          "month": "Month",
+          "week": "Week"
+        },
+        "periodPicker": {
+          "tabYear": "Year",
+          "tabMonth": "Month",
+          "tabRange": "Period",
+          "previousYear": "Previous year",
+          "nextYear": "Next year",
+          "previousYearBlock": "Previous period",
+          "nextYearBlock": "Next period",
+          "apply": "Apply"
+        },
+        "manualFieldLabels": {
+          "contract-lifespan": "Contract period",
+          "tasks": "Task description",
+          "hours-amount": "Hours",
+          "freeform-text": "Freeform text",
+          "kostenstelle": "Kostenstelle",
+          "kostentraeger": "Kostenträger",
+          "rechtstraeger": "Rechtsträger"
+        },
+        "manualFieldPlaceholders": {
+          "contract-lifespan": "Select period",
+          "tasks": "Describe the main activities for {pauschale}",
+          "hours-amount-month": "e.g. 20",
+          "hours-amount-week": "e.g. 5",
+          "freeform-text": "Add other clauses here if you need to",
+          "kostenstelle": "e.g. K-4200",
+          "kostentraeger": "e.g. KT-100",
+          "rechtstraeger": "e.g. Diakonisches Werk e.V."
+        },
+        "fieldSource": {
+          "volunteerProfile": "Filled from the volunteer's profile.",
+          "generationTime": "Filled in automatically when the document is generated.",
+          "organizationProfile": "Filled from your organization's profile.",
+          "rateSettings": "Filled from the rate configured in Accounting settings.",
+          "yearlyLimit": "Filled from the legally fixed yearly cap."
+        },
+        "invoiceNumberFormats": {
+          "date-number": "DD-MM-YYYY-Number",
+          "date-kostenstelle-number": "DD-MM-YYYY-Kostenstelle-Number",
+          "compact-date-number": "DDMMYYYY-Number",
+          "kostenstelle-month-year-number": "Kostenstelle-MMYYYY-Number"
+        },
+        "fieldList": {
+          "requiresCollection": "Missing data",
+          "profileWarningBefore": "Volunteers aren't asked for this yet.",
+          "profileWarningAction": "Create a form in Form builder",
+          "profileWarningAfter": "to collect it."
+        },
+        "dataSources": {
+          "volunteer_first_name": "First name (Volunteer)",
+          "volunteer_last_name": "Last name (Volunteer)",
+          "org_name": "Organisation name",
+          "org_address": "Organisation address",
+          "org_city": "City (Organisation)",
+          "org_legal_rep": "Legal representative",
+          "pauschalen_type": "Pauschale type",
+          "hourly_rate": "Hourly rate",
+          "period_start": "Period start",
+          "period_end": "Period end",
+          "total_hours": "Total hours",
+          "total_amount": "Total amount",
+          "generated_date": "Generated date",
+          "document_number": "Invoice number",
+          "volunteer_iban": "IBAN (Volunteer)",
+          "volunteer_bic": "BIC (Volunteer)",
+          "volunteer_address": "Address (Volunteer)",
+          "volunteer_dob": "Date of birth (Volunteer)",
+          "volunteer_tax_id": "Tax ID (Volunteer)",
+          "contract_period": "Contract period",
+          "already_received_amount": "Amount already received",
+          "yearly_limit_amount": "Yearly cap"
+        }
+      },
+      "card": {
+        "empty": {
+          "alertText": "Not yet configured",
+          "createButton": "Create template"
+        },
+        "editButton": "Edit template",
+        "lastEdited": "Last edited {date} by {name}",
+        "badges": {
+          "renewal": {
+            "monthly": "Renews monthly",
+            "yearly": "Renews yearly"
+          },
+          "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
+        }
+      }
+    }
+  },
+  "MyDocuments": {
+    "title": "My documents",
+    "backLabel": "Back",
+    "loadMore": "Load more ({remaining})",
+    "empty": {
+      "title": "No documents yet",
+      "description": "Agreements and timesheets from your organizations will appear here."
+    }
   }
 }

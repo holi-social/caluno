@@ -1,4 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 
 @ObjectType()
 export class EventOrganizationUnit {
@@ -13,4 +15,10 @@ export class EventOrganizationUnit {
 
   @Field(() => String, { nullable: true })
   logoUrl?: string | null;
+
+  @Field(() => [RequiredFormRef])
+  requiredForms!: RequiredFormRef[];
+
+  @Field(() => JoinStatus)
+  myMembershipState!: JoinStatus;
 }

@@ -40,6 +40,19 @@ export class ShiftQueryResolver {
     return this.shiftMapper.toModelOrThrow(shift);
   }
 
+  @Permissions(PERMISSIONS.SHIFT_VIEW)
+  @Query(() => ShiftInstance)
+  async shiftInstance(
+    @Args('id', { type: () => ID }) id: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const shiftInstance = await this.shiftService.findInstanceById(
+      id,
+      context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(shiftInstance);
+  }
+
   @AllowAnonymous()
   @Query(() => [ShiftInstance])
   async publicShiftInstances(
@@ -48,6 +61,15 @@ export class ShiftQueryResolver {
     const instances =
       await this.shiftService.findPublicInstancesByShiftId(shiftId);
     return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @AllowAnonymous()
+  @Query(() => ShiftInstance)
+  async publicShiftInstance(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.findPublicInstance(id);
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
 
   @AllowAnonymous()
@@ -140,14 +162,16 @@ export class ShiftQueryResolver {
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => [ShiftInstance])
   async weeklyShifts(
-    @Args('from', { type: () => Date }) from: Date,
-    @Args('to', { type: () => Date }) to: Date,
+    @Args() pagination: DateRangePaginationInput,
+    @Args('eventId', { type: () => ID, nullable: true })
+    eventId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance[]> {
     const instances = await this.shiftService.findShiftsForWeek(
       context.organizationUnitId,
-      from,
-      to,
+      pagination.startsAfter,
+      pagination.endsBefore,
+      eventId,
     );
     return this.shiftInstanceMapper.toArray(instances);
   }
@@ -161,6 +185,12 @@ export class ShiftQueryResolver {
     order: SortOrder,
     @Args('statuses', { type: () => [ShiftInviteStatus], nullable: true })
     statuses: ShiftInviteStatus[] | null | undefined,
+    @Args('includeIntended', {
+      type: () => Boolean,
+      defaultValue: false,
+      nullable: true,
+    })
+    includeIntended: boolean | undefined,
     @Session() session: UserSession,
   ): Promise<ShiftInstancePaginatedResponse> {
     const { instances, total } = await this.shiftService.findMyShiftInstances(
@@ -172,6 +202,7 @@ export class ShiftQueryResolver {
       pagination.offset,
       order,
       statuses ?? undefined,
+      includeIntended ?? false,
     );
     return new ShiftInstancePaginatedResponse({
       items: this.shiftInstanceMapper.toArray(instances),

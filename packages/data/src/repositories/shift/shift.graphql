@@ -14,11 +14,22 @@ query GetShift($id: String!) {
     originalStartsAt
     durationMinutes
     organizationUnitId
+    requiredFormsCount
+    requiredForms {
+      ...RequiredFormRefFields
+    }
     organizationUnit {
       id
       name
       logoUrl
       myMembershipState
+      requiredForms {
+        ...RequiredFormRefFields
+      }
+      organization {
+        id
+        name
+      }
     }
     createdBy {
       id
@@ -44,6 +55,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      requiredFormsCount
       createdBy {
         id
         name
@@ -70,6 +82,7 @@ query GetEventShifts($eventId: ID!, $limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      requiredFormsCount
       createdBy {
         id
         name
@@ -113,6 +126,18 @@ mutation DeleteShift($id: String!) {
   }
 }
 
+mutation SetShiftRequiredForms($shiftId: ID!, $formIds: [String!]!) {
+  setShiftRequiredForms(shiftId: $shiftId, formIds: $formIds) {
+    ...RequiredFormRefFields
+  }
+}
+
+mutation SetShiftInstanceRequiredForms($instanceId: ID!, $formIds: [String!]!) {
+  setShiftInstanceRequiredForms(instanceId: $instanceId, formIds: $formIds) {
+    ...RequiredFormRefFields
+  }
+}
+
 mutation UpdateMembersForShiftInstance(
   $instanceId: String!
   $memberIds: [String!]!
@@ -124,6 +149,27 @@ mutation UpdateMembersForShiftInstance(
     inviteToAllInstances: $inviteToAllInstances
   ) {
     id
+  }
+}
+
+mutation UpdateShiftInstance(
+  $instanceId: String!
+  $input: UpdateShiftInstanceInput!
+  $applyToAllFuture: Boolean
+) {
+  updateShiftInstance(
+    instanceId: $instanceId
+    input: $input
+    applyToAllFuture: $applyToAllFuture
+  ) {
+    id
+  }
+}
+
+mutation DeleteShiftInstance($id: String!, $applyToAllFuture: Boolean) {
+  deleteShiftInstance(id: $id, applyToAllFuture: $applyToAllFuture) {
+    id
+    isCancelled
   }
 }
 
@@ -192,14 +238,7 @@ mutation JoinShiftInstance($instanceId: String!) {
       status
     }
     requiredForms {
-      form {
-        id
-        name
-        description
-      }
-      order
-      submitted
-      submissionId
+      ...RequiredFormWithStatusFields
     }
   }
 }
@@ -243,16 +282,23 @@ query GetShiftInstances($shiftId: ID!) {
   }
 }
 
-query GetShiftInstanceDetail($shiftId: ID!) {
-  shiftInstances(shiftId: $shiftId) {
+query GetShiftInstance($id: ID!) {
+  shiftInstance(id: $id) {
     id
     actualStartsAt
     actualEndsAt
     overrideTitle
+    overrideLocation
+    overrideInstructions
     overrideMaxVolunteers
+    overrideMinVolunteers
     isCancelled
     filledCount
     spotsLeft
+    requiredFormsCount
+    requiredForms {
+      ...RequiredFormRefFields
+    }
     master {
       id
       title
@@ -261,6 +307,14 @@ query GetShiftInstanceDetail($shiftId: ID!) {
       minVolunteers
       maxVolunteers
       visibility
+      rrule
+      createdAt
+      imageUrl
+      createdBy {
+        id
+        name
+        image
+      }
     }
     invites {
       status
@@ -269,23 +323,36 @@ query GetShiftInstanceDetail($shiftId: ID!) {
         name
         email
         image
+        checkInId
       }
     }
   }
 }
 
-query GetWeeklyShifts($from: DateTime!, $to: DateTime!) {
-  weeklyShifts(from: $from, to: $to) {
+query GetWeeklyShifts(
+  $startsAfter: DateTime!
+  $endsBefore: DateTime!
+  $eventId: ID
+) {
+  weeklyShifts(
+    startsAfter: $startsAfter
+    endsBefore: $endsBefore
+    eventId: $eventId
+  ) {
     id
+    overrideTitle
     actualStartsAt
     actualEndsAt
     isCancelled
+    overrideMinVolunteers
+    overrideMaxVolunteers
     master {
       id
       title
       minVolunteers
       maxVolunteers
       visibility
+      rrule
     }
     volunteers {
       id
@@ -312,6 +379,11 @@ fragment PublicShiftDetailInstanceFields on ShiftInstance {
   filledCount
   spotsLeft
   myInviteStatus
+  isIntendingToJoin
+  requiredFormsCount
+  requiredForms {
+    ...RequiredFormRefFields
+  }
 }
 
 query GetPublicShiftInstances($shiftId: ID!) {
@@ -320,12 +392,22 @@ query GetPublicShiftInstances($shiftId: ID!) {
   }
 }
 
+query GetPublicShiftInstance($id: ID!) {
+  publicShiftInstance(id: $id) {
+    ...PublicShiftDetailInstanceFields
+  }
+}
+
 fragment VolunteerHomeShiftInstance on ShiftInstance {
   id
+  overrideTitle
   actualStartsAt
   actualEndsAt
   isCheckedIn
   filledCount
+  myInviteStatus
+  myInvitedAt
+  isIntendingToJoin
   master {
     id
     title
@@ -335,6 +417,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     organizationUnit {
       id
       name
+      logoUrl
     }
     event {
       id
@@ -352,6 +435,7 @@ query GetMyShiftInstances(
   $offset: Int = 0
   $order: SortOrder = ASC
   $statuses: [ShiftInviteStatus!]
+  $includeIntended: Boolean = false
 ) {
   myShiftInstances(
     includePast: $includePast
@@ -361,6 +445,7 @@ query GetMyShiftInstances(
     offset: $offset
     order: $order
     statuses: $statuses
+    includeIntended: $includeIntended
   ) {
     items {
       ...VolunteerHomeShiftInstance

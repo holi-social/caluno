@@ -1,12 +1,22 @@
 import 'reflect-metadata';
-import { beforeAll, describe, expect, it } from 'bun:test';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { eq } from 'drizzle-orm';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { EventInviteStatus } from '../src/event/enums';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
@@ -20,18 +30,26 @@ import { RequirementFormService } from '../src/requirement-profile/services/requ
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
 import { UserProfileService } from '../src/requirement-profile/services/user-profile.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
+import { PostHogService } from '../src/shared/observability/posthog.service';
+import { ShiftInviteStatus } from '../src/shift/enums';
 import {
+  cancelShiftInstance,
   createFormSubmission,
   createMembershipRequest,
   createRequirementForm,
+  createShiftInstance,
   createUser,
+  setEventRequiredForms,
   setRequiredForms,
+  setShiftRequiredForms,
 } from './factories';
+import { createEvent } from './factories/event.factory';
 import {
   addMembership,
   createOrganizationWithType,
   createUnit,
 } from './factories/org.factory';
+import { createShift } from './factories/shift.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -68,16 +86,22 @@ describe('RequiredFormService', () => {
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
-    requiredFormService = new RequiredFormService(db);
-    const userProfileService = new UserProfileService(db);
+    requiredFormService = new RequiredFormService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
+    const userProfileService = new UserProfileService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     formSubmissionService = new FormSubmissionService(
       db,
       userProfileService,
       requiredFormService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     requirementFormService = new RequirementFormService(
       db,
       requiredFormService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     const authServiceMock = {
@@ -94,6 +118,8 @@ describe('RequiredFormService', () => {
       authServiceMock,
       notificationServiceMock,
       requiredFormService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -208,31 +234,6 @@ describe('RequiredFormService', () => {
       expect(statuses[0]?.submitted).toBe(false);
       expect(statuses[0]?.submissionId).toBeNull();
     });
-
-    it('does not count REJECTED submissions as satisfied', async () => {
-      const { user, unit } = await setupOrg();
-      const { form } = await createRequirementForm(db, {
-        organizationId: unit.organizationId,
-        organizationUnitId: unit.id,
-        createdById: user.id,
-      });
-      await setRequiredForms(db, {
-        organizationUnitId: unit.id,
-        formIds: [form.id],
-      });
-      await createFormSubmission(db, {
-        formId: form.id,
-        userId: user.id,
-        status: 'rejected',
-      });
-
-      const statuses = await requiredFormService.getRequiredFormStatuses(
-        user.id,
-        orgUnitTarget(unit.id),
-      );
-
-      expect(statuses[0]?.submitted).toBe(false);
-    });
   });
 
   describe('hasRequiredForms', () => {
@@ -264,6 +265,151 @@ describe('RequiredFormService', () => {
       expect(
         await requiredFormService.hasRequiredForms(orgUnitTarget(unit.id)),
       ).toBe(false);
+    });
+  });
+
+  describe('countRequiredFormsByEventIds', () => {
+    it('returns counts for multiple events', async () => {
+      const { user, unit } = await setupOrg();
+      const eventA = await createEvent(db, { organizationUnitId: unit.id });
+      const eventB = await createEvent(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+
+      await setEventRequiredForms(db, {
+        eventId: eventA.id,
+        formIds: [formA.id, formB.id],
+      });
+      await setEventRequiredForms(db, {
+        eventId: eventB.id,
+        formIds: [formA.id],
+      });
+
+      const counts = await requiredFormService.countRequiredFormsByEventIds([
+        eventA.id,
+        eventB.id,
+      ]);
+
+      const countsByEventId = new Map(
+        counts.map((row) => [row.eventId, row.count]),
+      );
+      expect(countsByEventId.get(eventA.id)).toBe(2);
+      expect(countsByEventId.get(eventB.id)).toBe(1);
+    });
+
+    it('returns zero for events with no required forms', async () => {
+      const { unit } = await setupOrg();
+      const event = await createEvent(db, { organizationUnitId: unit.id });
+
+      const counts = await requiredFormService.countRequiredFormsByEventIds([
+        event.id,
+      ]);
+
+      expect(counts).toEqual([]);
+    });
+
+    it('returns an empty array for empty input', async () => {
+      const counts = await requiredFormService.countRequiredFormsByEventIds([]);
+      expect(counts).toEqual([]);
+    });
+  });
+
+  describe('countRequiredFormsByShiftIds', () => {
+    it('returns counts for multiple shifts', async () => {
+      const { user, unit } = await setupOrg();
+      const shiftA = await createShift(db, { organizationUnitId: unit.id });
+      const shiftB = await createShift(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+
+      await setShiftRequiredForms(db, {
+        shiftId: shiftA.id,
+        formIds: [formA.id, formB.id],
+      });
+      await setShiftRequiredForms(db, {
+        shiftId: shiftB.id,
+        formIds: [formA.id],
+      });
+
+      const counts = await requiredFormService.countRequiredFormsByShiftIds([
+        shiftA.id,
+        shiftB.id,
+      ]);
+
+      const countsByShiftId = new Map(
+        counts.map((row) => [row.shiftId, row.count]),
+      );
+      expect(countsByShiftId.get(shiftA.id)).toBe(2);
+      expect(countsByShiftId.get(shiftB.id)).toBe(1);
+    });
+
+    it('returns zero for shifts with no required forms', async () => {
+      const { unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+
+      const counts = await requiredFormService.countRequiredFormsByShiftIds([
+        shift.id,
+      ]);
+
+      expect(counts).toEqual([]);
+    });
+
+    it('returns an empty array for empty input', async () => {
+      const counts = await requiredFormService.countRequiredFormsByShiftIds([]);
+      expect(counts).toEqual([]);
+    });
+  });
+
+  describe('getRequiredFormsByShiftIds', () => {
+    it('returns forms grouped by shift, ordered by attachment order', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form A',
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form B',
+      });
+
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [formB.id, formA.id],
+      });
+
+      const rows = await requiredFormService.getRequiredFormsByShiftIds([
+        shift.id,
+      ]);
+
+      expect(rows).toHaveLength(2);
+      expect(rows[0]?.form.id).toBe(formB.id);
+      expect(rows[1]?.form.id).toBe(formA.id);
+    });
+
+    it('returns an empty array for empty input', async () => {
+      const rows = await requiredFormService.getRequiredFormsByShiftIds([]);
+      expect(rows).toEqual([]);
     });
   });
 
@@ -388,6 +534,122 @@ describe('RequiredFormService', () => {
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
+
+    it('replaces the required-form list for a shift', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form: formA } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form A',
+      });
+      const { form: formB } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        name: 'Form B',
+      });
+
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [formA.id],
+      });
+      const result = await requiredFormService.setRequiredForms(
+        { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+        [formB.id],
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.form.id).toBe(formB.id);
+    });
+
+    it('throws when a shift form does not belong to the organization', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { organization: otherOrg, type: otherType } =
+        await createOrganizationWithType(
+          db,
+          `Other Org ${crypto.randomUUID()}`,
+        );
+      const otherUnit = await createUnit(db, {
+        organizationId: otherOrg.id,
+        typeId: otherType.id,
+        name: 'root',
+      });
+      const { form: otherForm } = await createRequirementForm(db, {
+        organizationId: otherOrg.id,
+        organizationUnitId: otherUnit.id,
+        createdById: user.id,
+      });
+
+      await expect(
+        requiredFormService.setRequiredForms(
+          { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+          [otherForm.id],
+        ),
+      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+
+    it('throws when the shift does not exist', async () => {
+      await expect(
+        requiredFormService.setRequiredForms(
+          {
+            targetType: RequiredFormTargetType.SHIFT,
+            targetId: crypto.randomUUID(),
+          },
+          [],
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+
+    it('throws when an org-unit form has no blocks', async () => {
+      const { user, unit } = await setupOrg();
+      const [emptyForm] = await db
+        .insert(schema.requirementForms)
+        .values({
+          organizationId: unit.organizationId,
+          organizationUnitId: unit.id,
+          slug: 'empty-form',
+          name: 'Empty Form',
+          shareToken: crypto.randomUUID(),
+          createdBy: user.id,
+          updatedBy: user.id,
+        })
+        .returning();
+      if (!emptyForm) throw new Error('Failed to create empty form');
+
+      await expect(
+        requiredFormService.setRequiredForms(orgUnitTarget(unit.id), [
+          emptyForm.id,
+        ]),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('throws when a shift form has no blocks', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const [emptyForm] = await db
+        .insert(schema.requirementForms)
+        .values({
+          organizationId: unit.organizationId,
+          organizationUnitId: unit.id,
+          slug: 'empty-form',
+          name: 'Empty Form',
+          shareToken: crypto.randomUUID(),
+          createdBy: user.id,
+          updatedBy: user.id,
+        })
+        .returning();
+      if (!emptyForm) throw new Error('Failed to create empty form');
+
+      await expect(
+        requiredFormService.setRequiredForms(
+          { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+          [emptyForm.id],
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
   });
 
   describe('isFormRequiredByAnyTarget', () => {
@@ -400,6 +662,24 @@ describe('RequiredFormService', () => {
       });
       await setRequiredForms(db, {
         organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      expect(await requiredFormService.isFormRequiredByAnyTarget(form.id)).toBe(
+        true,
+      );
+    });
+
+    it('returns true when the form is attached to a shift', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
         formIds: [form.id],
       });
 
@@ -436,7 +716,10 @@ describe('RequiredFormService', () => {
       });
 
       const submission = await formSubmissionService.submitRequiredForm(
-        unit.id,
+        {
+          targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+          targetId: unit.id,
+        },
         form.id,
         { values: [] },
         user.id,
@@ -456,12 +739,89 @@ describe('RequiredFormService', () => {
 
       await expect(
         formSubmissionService.submitRequiredForm(
-          unit.id,
+          {
+            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+            targetId: unit.id,
+          },
           form.id,
           { values: [] },
           user.id,
         ),
       ).rejects.toBeInstanceOf(ForbiddenGraphQLError);
+    });
+
+    it('rejects an empty JSON-array selection for a required MULTI_CHOICE field', async () => {
+      const { user, unit } = await setupOrg();
+      const { form, block, field } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        required: true,
+      });
+      await db
+        .update(schema.formBlockFields)
+        .set({
+          type: 'MULTI_CHOICE',
+          options: [{ label: 'A', value: 'A' }],
+        })
+        .where(eq(schema.formBlockFields.id, field.id));
+      await setRequiredForms(db, {
+        organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      await expect(
+        formSubmissionService.submitRequiredForm(
+          {
+            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+            targetId: unit.id,
+          },
+          form.id,
+          {
+            values: [{ fieldId: field.id, blockId: block.id, value: '[]' }],
+          },
+          user.id,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('accepts a JSON-array selection for a required MULTI_CHOICE field', async () => {
+      const { user, unit } = await setupOrg();
+      const { form, block, field } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+        required: true,
+      });
+      await db
+        .update(schema.formBlockFields)
+        .set({
+          type: 'MULTI_CHOICE',
+          options: [{ label: 'A, B', value: 'A, B' }],
+        })
+        .where(eq(schema.formBlockFields.id, field.id));
+      await setRequiredForms(db, {
+        organizationUnitId: unit.id,
+        formIds: [form.id],
+      });
+
+      const submission = await formSubmissionService.submitRequiredForm(
+        {
+          targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+          targetId: unit.id,
+        },
+        form.id,
+        {
+          values: [{ fieldId: field.id, blockId: block.id, value: '["A, B"]' }],
+        },
+        user.id,
+      );
+
+      expect(submission.formId).toBe(form.id);
+      const stored = await db.query.formSubmissionValues.findFirst({
+        where: { submissionId: submission.id, fieldId: field.id },
+      });
+      expect(stored?.value).toEqual(['A, B']);
     });
   });
 
@@ -517,7 +877,7 @@ describe('RequiredFormService', () => {
   });
 
   describe('MembershipService.approveMembershipRequest', () => {
-    it('throws when a required form is not submitted', async () => {
+    it('approves even when a required form is not submitted', async () => {
       const { user, unit } = await setupOrg();
       const { form } = await createRequirementForm(db, {
         organizationId: unit.organizationId,
@@ -538,13 +898,13 @@ describe('RequiredFormService', () => {
       await addMembership(db, reviewer.id, unit.id);
       await createDefaultMemberRole(db, unit.organizationId);
 
-      await expect(
-        membershipService.approveMembershipRequest(
-          membershipRequest.id,
-          unit.id,
-          reviewer.id,
-        ),
-      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+      const approved = await membershipService.approveMembershipRequest(
+        membershipRequest.id,
+        unit.id,
+        reviewer.id,
+      );
+
+      expect(approved.status).toBe('ACCEPTED');
     });
 
     it('approves when all required forms are submitted', async () => {
@@ -592,8 +952,312 @@ describe('RequiredFormService', () => {
       });
 
       await expect(
-        requirementFormService.delete(form.id, unit.id),
+        requirementFormService.delete(form.id, unit.id, user.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+
+    it('rejects deletion when the form is required by a shift', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const { form } = await createRequirementForm(db, {
+        organizationId: unit.organizationId,
+        organizationUnitId: unit.id,
+        createdById: user.id,
+      });
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [form.id],
+      });
+
+      await expect(
+        requirementFormService.delete(form.id, unit.id, user.id),
+      ).rejects.toBeInstanceOf(ConflictGraphQLError);
+    });
+  });
+
+  describe('RequiredFormService.formsForUser', () => {
+    let moduleRef: TestingModule;
+    let db: Database;
+    let service: RequiredFormService;
+
+    beforeAll(async () => {
+      await ensureTestDatabase();
+      moduleRef = await Test.createTestingModule({
+        imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
+      }).compile();
+      db = moduleRef.get<Database>(DATABASE_CONNECTION);
+      service = new RequiredFormService(db, {
+        capture: () => {},
+      } as unknown as PostHogService);
+
+      registerTestResourceCleanup(async () => {
+        await moduleRef.close();
+      });
+    });
+
+    // Per-test seeded ids, cleaned up in afterEach.
+    let orgId: string;
+    let orgUnitId: string;
+    let userId: string;
+    let requiredFormId: string;
+    let submittedFormId: string;
+    let eventId: string;
+    let eventFormId: string;
+    let seededEventInviteIds: string[] = [];
+    let seededSubmissionIds: string[] = [];
+    let shiftId: string;
+    let shiftInstanceId: string;
+    let shiftFormId: string;
+    let seededShiftInstanceInviteIds: string[] = [];
+
+    const seedWorld = async () => {
+      const user = await createUser(db);
+      userId = user.id;
+
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Drill-in Org ${crypto.randomUUID()}`,
+      );
+      orgId = organization.id;
+
+      const unit = await createUnit(db, {
+        organizationId: orgId,
+        typeId: type.id,
+        name: 'drill-in-unit',
+      });
+      orgUnitId = unit.id;
+
+      const { form: requiredForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Required Form',
+      });
+      requiredFormId = requiredForm.id;
+
+      const { form: submittedForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Submitted Form',
+      });
+      submittedFormId = submittedForm.id;
+
+      const { form: eventForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Event Form',
+      });
+      eventFormId = eventForm.id;
+
+      // org-unit required form
+      await setRequiredForms(db, {
+        organizationUnitId: orgUnitId,
+        formIds: [requiredFormId],
+      });
+
+      // event + event-required form + invite for the user
+      const event = await createEvent(db, {
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+      });
+      eventId = event.id;
+      await setEventRequiredForms(db, {
+        eventId,
+        formIds: [eventFormId],
+      });
+      const [invite] = await db
+        .insert(schema.eventInvites)
+        .values({
+          eventId,
+          userId,
+          status: EventInviteStatus.INVITED,
+        })
+        .returning();
+      if (invite) seededEventInviteIds.push(invite.id);
+
+      // shift + shift-instance invite + shift-required form
+      const { form: shiftForm } = await createRequirementForm(db, {
+        organizationId: orgId,
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+        name: 'Shift Form',
+      });
+      shiftFormId = shiftForm.id;
+
+      const shift = await createShift(db, {
+        organizationUnitId: orgUnitId,
+        createdById: userId,
+      });
+      shiftId = shift.id;
+
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const shiftInstance = instances[0];
+      if (!shiftInstance) {
+        throw new Error('seed shift produced no instances');
+      }
+      shiftInstanceId = shiftInstance.id;
+
+      const [shiftInvite] = await db
+        .insert(schema.shiftInstanceInvites)
+        .values({
+          instanceId: shiftInstance.id,
+          userId,
+          status: ShiftInviteStatus.INVITED,
+        })
+        .returning();
+      if (shiftInvite) seededShiftInstanceInviteIds.push(shiftInvite.id);
+
+      await setShiftRequiredForms(db, {
+        shiftId: shift.id,
+        formIds: [shiftFormId],
+      });
+
+      // one submitted (non-required) form
+      const submission = await createFormSubmission(db, {
+        formId: submittedFormId,
+        userId,
+      });
+      seededSubmissionIds.push(submission.id);
+    };
+
+    const cleanup = async () => {
+      await db
+        .delete(schema.formSubmissions)
+        .where(eq(schema.formSubmissions.userId, userId));
+      for (const inviteId of seededEventInviteIds) {
+        await db
+          .delete(schema.eventInvites)
+          .where(eq(schema.eventInvites.id, inviteId));
+      }
+      seededEventInviteIds = [];
+      seededSubmissionIds = [];
+      if (eventId) {
+        await db
+          .delete(schema.eventRequiredForms)
+          .where(eq(schema.eventRequiredForms.eventId, eventId));
+        await db.delete(schema.events).where(eq(schema.events.id, eventId));
+      }
+      for (const inviteId of seededShiftInstanceInviteIds) {
+        await db
+          .delete(schema.shiftInstanceInvites)
+          .where(eq(schema.shiftInstanceInvites.id, inviteId));
+      }
+      seededShiftInstanceInviteIds = [];
+      if (shiftId) {
+        await db
+          .delete(schema.shiftRequiredForms)
+          .where(eq(schema.shiftRequiredForms.shiftId, shiftId));
+        // deleting the shift cascades to its instances and their invites
+        await db.delete(schema.shifts).where(eq(schema.shifts.id, shiftId));
+      }
+      if (orgUnitId) {
+        await db
+          .delete(schema.organizationUnitRequiredForms)
+          .where(
+            eq(
+              schema.organizationUnitRequiredForms.organizationUnitId,
+              orgUnitId,
+            ),
+          );
+      }
+      for (const formId of [
+        requiredFormId,
+        submittedFormId,
+        eventFormId,
+        shiftFormId,
+      ]) {
+        if (formId) {
+          await db
+            .delete(schema.requirementForms)
+            .where(eq(schema.requirementForms.id, formId));
+        }
+      }
+      if (orgUnitId) {
+        await db
+          .delete(schema.organizationUnits)
+          .where(eq(schema.organizationUnits.id, orgUnitId));
+      }
+      if (orgId) {
+        await db
+          .delete(schema.organizationUnitTypes)
+          .where(eq(schema.organizationUnitTypes.organizationId, orgId));
+        await db
+          .delete(schema.organizations)
+          .where(eq(schema.organizations.id, orgId));
+      }
+      if (userId) {
+        await db.delete(schema.users).where(eq(schema.users.id, userId));
+      }
+      orgId = '';
+      orgUnitId = '';
+      userId = '';
+      requiredFormId = '';
+      submittedFormId = '';
+      eventId = '';
+      eventFormId = '';
+      shiftId = '';
+      shiftInstanceId = '';
+      shiftFormId = '';
+    };
+
+    beforeEach(async () => {
+      await seedWorld();
+    });
+
+    afterEach(async () => {
+      await cleanup();
+    });
+
+    it('returns org-unit required forms (membership requested)', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const form = forms.find((f) => f.id === requiredFormId);
+      expect(form).toBeDefined();
+    });
+
+    it('returns event-required forms (user invited)', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const form = forms.find((f) => f.id === eventFormId);
+      expect(form).toBeDefined();
+    });
+
+    it('returns shift-required forms (user invited to a shift instance)', async () => {
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const form = forms.find((f) => f.id === shiftFormId);
+      expect(form).toBeDefined();
+    });
+
+    it('returns the shift form once even when multiple instances invite the user', async () => {
+      // a second instance on the same shift, also inviting the user;
+      // afterEach drops the shift, cascading to both instances and invites
+      const secondInstance = await createShiftInstance(db, shiftId);
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId: secondInstance.id,
+        userId,
+        status: ShiftInviteStatus.INVITED,
+      });
+
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      const matches = forms.filter((f) => f.id === shiftFormId);
+      expect(matches).toHaveLength(1);
+    });
+
+    it('excludes the shift form when the invited instance is cancelled', async () => {
+      await cancelShiftInstance(db, shiftInstanceId);
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      expect(forms.find((f) => f.id === shiftFormId)).toBeUndefined();
+    });
+
+    it('excludes the shift form when the instance invite is not pending', async () => {
+      await db
+        .update(schema.shiftInstanceInvites)
+        .set({ status: ShiftInviteStatus.ACCEPTED })
+        .where(eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId));
+      const forms = await service.requiredFormsForUser(userId, orgUnitId);
+      expect(forms.find((f) => f.id === shiftFormId)).toBeUndefined();
     });
   });
 });

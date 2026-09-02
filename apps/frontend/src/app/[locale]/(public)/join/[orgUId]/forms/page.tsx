@@ -1,11 +1,12 @@
 import { JoinStatus } from '@repo/data';
-import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { redirect as redirectWithLocale } from '@/i18n/navigation';
+import { OrgPageHeader } from '@/domain/org-unit/components/org-page-header';
+import { buildSubmittedFormIds } from '@/domain/requirement-form/resolve-required-forms';
+import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
 import { getDataClient } from '@/lib/data-client';
 import { getSafeRedirect } from '@/lib/safe-redirect';
-import { JoinFormsClient, type RequiredFormItem } from './join-forms-client';
+import { JoinFormsClient } from './join-forms-client';
 
 interface JoinFormsPageProps {
   params: Promise<{ locale: string; orgUId: string }>;
@@ -26,48 +27,44 @@ export default async function JoinFormsPage({
       orgUId,
       redirectTo: redirectTo ?? `/join/${orgUId}/forms`,
     });
-    redirectWithLocale({ href: `/api/invite?${searchParams}`, locale });
+    redirect({ href: `/api/invite?${searchParams}`, locale });
   }
 
   const data = await getDataClient();
 
-  const [orgUnit, userProfile, submissionsResult, joinResult] =
-    await Promise.all([
-      data.organizationUnit.findById(orgUId),
-      data.requirementForm.getMyUserProfile(),
-      data.requirementForm.findMyFormSubmissions(orgUId),
-      data.membershipRequest.join(orgUId).catch(() => null),
-    ]);
+  const [orgUnit, userProfile, joinResult] = await Promise.all([
+    data.organizationUnit.findById(orgUId),
+    data.requirementForm.getMyUserProfile(),
+    data.membershipRequest.join(orgUId).catch(() => null),
+  ]);
 
   if (!orgUnit) {
-    redirect('/');
+    redirect({ href: '/', locale });
+    return;
   }
 
   if (joinResult?.status === JoinStatus.Joined) {
-    redirect(getSafeRedirect(redirectTo) ?? `/admin/${orgUId}`);
+    redirect({
+      href: getSafeRedirect(redirectTo, `/admin/${orgUId}`),
+      locale,
+    });
   }
 
-  const profileData =
-    userProfile?.data &&
-    typeof userProfile.data === 'object' &&
-    !Array.isArray(userProfile.data)
-      ? (userProfile.data as Record<string, string>)
-      : {};
+  const mySubmissions =
+    await data.requirementForm.findMyFormSubmissions(orgUId);
 
-  const submittedFormIds = new Set<string>(
-    submissionsResult
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter((id): id is string => Boolean(id)),
-  );
+  const profileData = (userProfile?.data ?? {}) as Record<string, string>;
+
+  const submittedFormIds = buildSubmittedFormIds(mySubmissions);
 
   return (
-    <div className="min-h-screen bg-muted/30 py-10 px-4">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-muted/30">
+      <OrgPageHeader logoUrl={orgUnit.logoUrl} />
+      <div className="mx-auto max-w-2xl px-4 py-10">
         <JoinFormsClient
           orgUId={orgUId}
           orgName={orgUnit.name}
-          requiredForms={orgUnit.requiredForms as RequiredFormItem[]}
+          requiredForms={orgUnit.requiredForms}
           profileData={profileData}
           initialSubmittedFormIds={submittedFormIds}
           redirectTo={redirectTo}

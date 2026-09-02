@@ -31,6 +31,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
         endsAt: new Date(event.endsAt),
         location: event.location ?? undefined,
       }}
+      initialRequiredFormIds={event.requiredForms.map((ref) => ref.form.id)}
       logoPreviewUrl={event.logoUrl}
       coverPreviewUrl={event.coverUrl}
     />

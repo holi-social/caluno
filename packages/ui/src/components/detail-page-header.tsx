@@ -54,9 +54,9 @@ export function DetailPageHeader({
         className,
       )}
     >
-      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-3 md:px-20">
+      <div className="mx-auto w-full max-w-4xl flex items-center justify-between gap-3 px-4 py-3">
         {/* Left lockup: back button + optional page title */}
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             onClick={onBack}

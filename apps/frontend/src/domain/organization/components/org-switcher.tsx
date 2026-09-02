@@ -66,14 +66,7 @@ export function OrgSwitcher() {
                         currentorgUId === org.id ? 'opacity-100' : 'opacity-0',
                       )}
                     />
-                    <div className="flex flex-col">
-                      <span>{org.name}</span>
-                      {org.description && (
-                        <span className="text-xs text-muted-foreground">
-                          {org.description}
-                        </span>
-                      )}
-                    </div>
+                    <span>{org.name}</span>
                   </Link>
                 </CommandItem>
               ))}

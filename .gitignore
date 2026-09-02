@@ -62,6 +62,17 @@ AGENTS.local.md
 .ai/SESSION
 .ai/metrics.jsonl
 .ai/specs/
+.ai/plans/
 .ai/handoff/
 
 gitleaks-report.json
+
+# Subagent-driven-development scratch workspaces
+.superpowers/
+docs/superpowers/
+
+# Claude Code isolated worktrees
+.claude/worktrees/
+
+# Personal mise config
+mise.toml

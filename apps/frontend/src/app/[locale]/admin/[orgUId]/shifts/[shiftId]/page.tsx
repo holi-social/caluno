@@ -5,6 +5,7 @@ import {
   CalendarFold,
   CalendarSync,
   Clock,
+  Clock10Icon,
   FileText,
   LockKeyholeOpen,
   MapPin,
@@ -14,6 +15,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { DetailCoverImage } from '@/components/detail-entity-image';
 import { UserCard } from '@/components/user-card';
+import { ShiftRequiredFormsPopover } from '@/domain/shift/components/shift-required-forms-popover';
 import { getVisibilityConfig } from '@/domain/shift/components/shifts-table';
 import { parseShiftListQuery } from '@/domain/shift/routes';
 import { getDataClient } from '@/lib/data-client';
@@ -38,7 +40,7 @@ export default async function ShiftViewPage({
 
   const t = await getTranslations('Shift');
   const data = await getDataClient({ orgUId });
-  const { formatDateTime, formatRange } = await getFormatting();
+  const { formatDateTime, formatDate, formatTimeRange } = await getFormatting();
   const visibilityConfig = getVisibilityConfig(t);
   const shift = await data.shift.findById(shiftId);
 
@@ -57,7 +59,8 @@ export default async function ShiftViewPage({
           <h1 className="page-title line-clamp-2">{shift.title}</h1>
           <p className="text-muted-foreground mt-1">{t('page.subtitle')}</p>
         </div>
-        <div className="shrink-0">
+        <div className="flex shrink-0 gap-2">
+          <ShiftRequiredFormsPopover orgUId={orgUId} shiftId={shiftId} />
           <ShiftViewActionBar
             id={shiftId}
             organizationUnitId={orgUId}
@@ -81,7 +84,11 @@ export default async function ShiftViewPage({
               <ul className="space-y-4">
                 <li className="flex gap-2">
                   <Calendar className="text-muted-foreground shrink-0" />
-                  <span>{formatRange(startsAt, endsAt)}</span>
+                  <span>{formatDate(startsAt)}</span>
+                </li>
+                <li className="flex gap-2">
+                  <Clock10Icon className="text-muted-foreground shrink-0" />
+                  <span>{formatTimeRange(startsAt, endsAt)}</span>
                 </li>
                 <li className="flex gap-2">
                   <CalendarSync className="text-muted-foreground shrink-0" />

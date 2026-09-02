@@ -22,7 +22,7 @@ export class OrganizationUnitRepository extends BaseRepository {
 
   async findOrganizationTree(): Promise<OrgUnitTreeNode | null> {
     const data = await this.sdk.GetOrganizationTree();
-    return (data.organizationTree?.root as OrgUnitTreeNode) ?? null;
+    return (data.organizationTree?.root as unknown as OrgUnitTreeNode) ?? null;
   }
 
   async findAllTypes() {

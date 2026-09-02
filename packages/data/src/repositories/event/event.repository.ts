@@ -1,9 +1,15 @@
-import type {
-  CreateEventInput,
-  GetEventAttendeesQuery,
-  GetEventQuery,
-  GetEventsQuery,
-  UpdateEventInput,
+import {
+  type CreateEventInput,
+  type EventInviteStatus,
+  type GetAvailableEventsQuery,
+  type GetEventInvitesQuery,
+  type GetEventQuery,
+  type GetEventsQuery,
+  type GetMyEventsQuery,
+  type SetEventRequiredFormsMutation,
+  SortOrder,
+  type UpdateEventInput,
+  type UpdateEventInviteStatusMutation,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -12,7 +18,10 @@ import {
 
 export type RawEvent = GetEventQuery['event'];
 export type EventListItem = GetEventsQuery['events']['items'][number];
-export type EventAttendee = GetEventAttendeesQuery['eventAttendees'][number];
+export type EventInviteItem = GetEventInvitesQuery['eventInvites'][number];
+export type MyEvent = GetMyEventsQuery['myEvents']['items'][number];
+export type DiscoverEvent =
+  GetAvailableEventsQuery['availableEvents']['items'][number];
 
 export class EventRepository extends BaseRepository {
   async findAll(options: PaginationOptions = {}) {
@@ -23,14 +32,72 @@ export class EventRepository extends BaseRepository {
     return data.events;
   }
 
+  async findMyEvents(
+    options: {
+      includePast?: boolean;
+      from?: Date;
+      to?: Date;
+      limit?: number;
+      offset?: number;
+      order?: SortOrder;
+      statuses?: EventInviteStatus[];
+    } = {},
+  ): Promise<{
+    items: MyEvent[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  }> {
+    const data = await this.sdk.GetMyEvents({
+      includePast: options.includePast ?? false,
+      startsAfter: options.from?.toISOString(),
+      endsBefore: options.to?.toISOString(),
+      limit: options.limit ?? 15,
+      offset: options.offset ?? 0,
+      order: options.order ?? SortOrder.Asc,
+      statuses: options.statuses,
+    });
+    return data.myEvents;
+  }
+
+  async findAvailableEvents(
+    options: {
+      startsAfter?: Date;
+      endsBefore?: Date;
+      organizationUnitIds?: string[];
+      limit?: number;
+      offset?: number;
+    } = {},
+  ): Promise<{
+    items: DiscoverEvent[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  }> {
+    const data = await this.sdk.GetAvailableEvents({
+      startsAfter: options.startsAfter?.toISOString(),
+      endsBefore: options.endsBefore?.toISOString(),
+      organizationUnitIds: options.organizationUnitIds,
+      limit: options.limit ?? 15,
+      offset: options.offset ?? 0,
+    });
+    return data.availableEvents;
+  }
+
   async findById(id: string): Promise<RawEvent> {
     const data = await this.sdk.GetEvent({ id });
     return data.event;
   }
 
-  async findAttendees(eventId: string): Promise<EventAttendee[]> {
-    const data = await this.sdk.GetEventAttendees({ eventId });
-    return data.eventAttendees;
+  async findInvites(eventId: string): Promise<EventInviteItem[]> {
+    const data = await this.sdk.GetEventInvites({ eventId });
+    return data.eventInvites;
   }
 
   async create(input: CreateEventInput): Promise<RawEvent> {
@@ -54,5 +121,26 @@ export class EventRepository extends BaseRepository {
   ): Promise<{ id: string }> {
     const data = await this.sdk.InviteMembersToEvent({ eventId, memberIds });
     return { id: data.inviteMembersToEvent.id };
+  }
+
+  async updateEventInviteStatus(
+    eventId: string,
+    status: EventInviteStatus,
+    userId?: string,
+  ): Promise<UpdateEventInviteStatusMutation['updateEventInviteStatus']> {
+    const data = await this.sdk.UpdateEventInviteStatus({
+      eventId,
+      status,
+      userId,
+    });
+    return data.updateEventInviteStatus;
+  }
+
+  async setRequiredForms(
+    eventId: string,
+    formIds: string[],
+  ): Promise<SetEventRequiredFormsMutation['setEventRequiredForms']> {
+    const data = await this.sdk.SetEventRequiredForms({ eventId, formIds });
+    return data.setEventRequiredForms;
   }
 }

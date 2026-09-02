@@ -3,9 +3,9 @@ import { BASE_URL } from '../pages/AuthPage';
 import { LoginPage } from '../pages/LoginPage';
 
 // Depends on the local dev seed fixtures (apps/backend/src/database/fixtures.ts)
-// — run with E2E_BASE_URL=http://localhost:3000. admin@clippy.social is a
+// — run with E2E_BASE_URL=http://localhost:3000. testing+admin@caluno.org is a
 // member of the seeded "Playground" org.
-const ADMIN_EMAIL = 'admin@clippy.social';
+const ADMIN_EMAIL = 'testing+admin@caluno.org';
 const ADMIN_PASSWORD = 'abcd1234';
 
 const ORG_DASHBOARD = /\/admin\/[0-9a-f-]{36}$/;
@@ -20,7 +20,7 @@ test('visiting /admin without a last-visited-org cookie goes to the first access
   // doesn't exist on the real volunteer home page, just the redirect off /login.
   await page.waitForURL(/\/en\/?$/, { timeout: 15000 });
 
-  // A fresh login has no `clippy.last_org_slug` cookie yet — this is exactly
+  // A fresh login has no `caluno.last_org_slug` cookie yet — this is exactly
   // the reported bug's precondition, so no need to clear cookies manually.
   await page.goto(`${BASE_URL}/en/admin`, { waitUntil: 'load' });
 

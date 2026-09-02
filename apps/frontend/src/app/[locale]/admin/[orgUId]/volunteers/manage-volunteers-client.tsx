@@ -28,11 +28,12 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ButtonClipboard } from '@/components/button-clipboard';
 import MembershipRequestCard from '@/domain/membership-requests/components/membership-request-card';
+import { RemoveMembershipButton } from '@/domain/memberships/components/remove-membership-button';
 import { organizationUnitUrl } from '@/domain/organization/share';
 import { EmptyVolunteers } from '@/domain/volunteer/empty-volunteers';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
-import { RequiredFormsPopover } from './required-forms-popover';
+import { VolunteerRequiredFormsPopover } from './required-forms-popover';
 import { RoleSelectCell } from './role-select-cell';
 
 const TAB_APPROVED = 'APPROVED';
@@ -114,7 +115,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    aria-label={t('action.viewProfileAria')}
+                    tooltip={t('action.viewProfileAria')}
                     onClick={() =>
                       openVolunteerSheet({
                         userId: membership.user.id,
@@ -134,11 +135,15 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                     <Button
                       size="icon-xs"
                       variant="outline"
-                      aria-label={t('action.checkInShiftAria')}
+                      tooltip={t('action.checkInShiftAria')}
                     >
                       <LogIn />
                     </Button>
                   </Link>
+                  <RemoveMembershipButton
+                    membershipId={membership.id}
+                    volunteerName={membership.user.name}
+                  />
                 </div>
               </TableCell>
             </TableRow>
@@ -227,7 +232,7 @@ export default function ManageVolunteersClient({ orgUId }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          <RequiredFormsPopover orgUId={orgUId} />
+          <VolunteerRequiredFormsPopover orgUId={orgUId} />
           <ButtonClipboard
             text={t('page.copyInviteLink')}
             copyText={orgUnitUrl}

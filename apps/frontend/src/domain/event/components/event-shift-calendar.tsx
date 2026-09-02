@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { DayStrip } from '@/domain/home/components/day-strip';
 import { isSameDay } from '@/domain/home/lib/date-helpers';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { getEventDayRange } from '../lib/event-calendar-days';
@@ -73,7 +74,7 @@ export function EventShiftCalendar({
           {instancesOnDay.map(({ instance, shift }) => (
             <li key={instance.id}>
               <Link
-                href={`/shifts/${shift.id}`}
+                href={shiftPublicPath(shift.id, instance.id)}
                 className="block rounded-xl border border-border bg-card p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               >
                 <p className="text-sm font-medium text-muted-foreground">

@@ -9,4 +9,7 @@ export const SYSTEM_PROFILE_KEYS = new Set<string>([
   'zip',
   'city',
   'birth-date',
+  'iban',
+  'bic',
+  'tax-id',
 ]);

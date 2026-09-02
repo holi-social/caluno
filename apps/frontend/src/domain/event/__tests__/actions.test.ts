@@ -1,6 +1,11 @@
 import { describe, expect, it, mock } from 'bun:test';
 
 const deleteMock = mock(async (_id: string) => ({ id: 'event-1' }));
+const revalidatePathMock = mock((_path: string) => undefined);
+
+mock.module('next/cache', () => ({
+  revalidatePath: revalidatePathMock,
+}));
 
 mock.module('@/lib/data-client', () => ({
   getDataClient: async () => ({

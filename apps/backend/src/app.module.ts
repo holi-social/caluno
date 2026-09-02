@@ -5,12 +5,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
-import {
-  AuthGuard,
-  AuthModule as BetterAuthModule,
-} from '@thallesp/nestjs-better-auth';
+import { SentryModule } from '@sentry/nestjs/setup';
+import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
-import { createAuthConfig } from './auth/auth';
+import { Logger } from 'nestjs-pino';
+import { AccountingModule } from './accounting/accounting.module';
+import { type BetterAuthLogger, createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
 import { PermissionGuard } from './auth/guards/permission.guard';
 import { type Database, DatabaseModule } from './database/database.module';
@@ -22,6 +22,7 @@ import { resolveRequestLocale } from './graphql/locale';
 import { AppI18nService } from './i18n/app-i18n.service';
 import { AppI18nModule } from './i18n/i18n.module';
 import { UserLocaleService } from './i18n/user-locale.service';
+import { LegalModule } from './legal/legal.module';
 import { MembershipModule } from './membership/membership.module';
 import { MembershipLifecycleModule } from './membership-lifecycle/membership-lifecycle.module';
 import { EmailService } from './notification/email/email.service';
@@ -31,6 +32,14 @@ import { passwordResetTemplate } from './notification/email/templates/password-r
 import { NotificationModule } from './notification/notification.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RequirementProfileModule } from './requirement-profile/requirement-profile.module';
+import { ObservabilityModule } from './shared/observability/observability.module';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from './shared/observability/posthog.events';
+import { PostHogService } from './shared/observability/posthog.service';
+import { validatePostHogEnv } from './shared/observability/validate-posthog-env';
+import { validateSentryEnv } from './shared/observability/validate-sentry-env';
 import { ShiftModule } from './shift/shift.module';
 import { StorageModule } from './storage/storage.module';
 import { TimeTrackingModule } from './time-tracking/time-tracking.module';
@@ -44,8 +53,11 @@ const autoSchemaFile =
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
+    ObservabilityModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: (config) => validatePostHogEnv(validateSentryEnv(config)),
     }),
     EventEmitterModule.forRoot({
       wildcard: true,
@@ -70,7 +82,6 @@ const autoSchemaFile =
 
           return {
             req,
-            user,
             locale,
             organizationUnitId: req.headers['x-organization-unit-id'],
           };
@@ -84,6 +95,7 @@ const autoSchemaFile =
         ConfigModule,
         NotificationModule,
         AppI18nModule,
+        ObservabilityModule,
       ],
       useFactory: (
         database: Database,
@@ -91,9 +103,43 @@ const autoSchemaFile =
         emailService: EmailService,
         userLocaleService: UserLocaleService,
         appI18n: AppI18nService,
+        postHogService: PostHogService,
+        pinoLogger: Logger,
       ) => {
         const webUrl = configService.getOrThrow<string>('WEB_URL');
         const shouldVerifyEmail = process.env.NODE_ENV === 'production';
+
+        /**
+         * Route Better Auth's internal logging (rate-limit warnings, plugin
+         * messages, etc.) through the nestjs-pino Logger so it is emitted as
+         * structured JSON on stdout instead of a bare console.warn. pino's
+         * method names differ from Better Auth's level strings, so map them.
+         */
+        const betterAuthLogger: BetterAuthLogger = {
+          disabled: false,
+          // Better Auth writes log level + timestamp + colored labels itself
+          // when left to the default logger; we own both today.
+          disableColors: true,
+          log: (level, message, ...args) => {
+            // Bind `context` as a pino field by passing it as the first
+            // object argument; trailing args are pino interpolation values.
+            const ctx = { context: 'BetterAuth' };
+            switch (level) {
+              case 'debug':
+                pinoLogger.debug(ctx, message, ...args);
+                break;
+              case 'info':
+                pinoLogger.log(ctx, message, ...args);
+                break;
+              case 'warn':
+                pinoLogger.warn(ctx, message, ...args);
+                break;
+              case 'error':
+                pinoLogger.error(ctx, message, ...args);
+                break;
+            }
+          },
+        };
 
         return {
           auth: betterAuth(
@@ -101,7 +147,29 @@ const autoSchemaFile =
               database,
               trustedOrigins: [webUrl],
               cookieDomain: configService.get('COOKIE_DOMAIN'),
+              logger: betterAuthLogger,
               emailVerificationEnabled: shouldVerifyEmail,
+              onSessionCreated: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_LOG_IN,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
+              },
+              onSessionDeleted: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_LOG_OUT,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
+              },
+              onUserCreated: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_SIGN_UP,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
+              },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
                   userId,
@@ -123,6 +191,11 @@ const autoSchemaFile =
                 await emailService.send({
                   to: email,
                   ...emailContent,
+                });
+                postHogService.capture({
+                  event: POSTHOG_EVENT.PASSWORD_RESET_SEND,
+                  userId,
+                  properties: { surface: POSTHOG_SURFACE.AUTH },
                 });
               },
               sendVerificationOTP: async ({ email, otp, type, headers }) => {
@@ -152,6 +225,19 @@ const autoSchemaFile =
                   to: email,
                   ...emailContent,
                 });
+                const user = await database.query.users.findFirst({
+                  where: { email },
+                });
+                if (user) {
+                  postHogService.capture({
+                    event: POSTHOG_EVENT.OTP_SEND,
+                    userId: user.id,
+                    properties: {
+                      surface: POSTHOG_SURFACE.AUTH,
+                      source: type,
+                    },
+                  });
+                }
               },
             }),
           ),
@@ -163,6 +249,8 @@ const autoSchemaFile =
         EmailService,
         UserLocaleService,
         AppI18nService,
+        PostHogService,
+        Logger,
       ],
     }),
     UserModule,
@@ -173,21 +261,19 @@ const autoSchemaFile =
     NotificationModule,
     TimeTrackingModule,
     GraphqlModule,
+    LegalModule,
     ShiftModule,
     EventModule,
     StorageModule,
     BetterAuthModule,
     AuthModule,
+    AccountingModule,
   ],
   controllers: [],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: LoaderInterceptor,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,

@@ -10,6 +10,7 @@ import {
   FieldLabel,
   Input,
 } from '@repo/ui';
+import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -106,6 +107,7 @@ export function CreateFormDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
+              <X />
               {t('cancel')}
             </Button>
             <Button
@@ -113,6 +115,7 @@ export function CreateFormDialog({
               onClick={handleCreate}
               disabled={!name.trim() || creating}
             >
+              <Plus />
               {creating ? t('creating') : t('create')}
             </Button>
           </div>

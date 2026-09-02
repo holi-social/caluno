@@ -9,11 +9,11 @@ export function CreateEventButton({ orgUId }: { orgUId: string }) {
   const t = useTranslations('Event');
 
   return (
-    <Link href={`/admin/${orgUId}/events/new`}>
-      <Button>
+    <Button asChild>
+      <Link href={`/admin/${orgUId}/events/new`}>
         <PlusIcon />
         {t('list.createButton')}
-      </Button>
-    </Link>
+      </Link>
+    </Button>
   );
 }

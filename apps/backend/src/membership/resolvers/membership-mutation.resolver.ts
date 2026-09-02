@@ -78,6 +78,8 @@ export class MembershipMutationResolver {
             order: s.order,
             submitted: s.submitted,
             submissionId: s.submissionId,
+            targetType: s.targetType,
+            targetId: s.targetId,
           }))
         : null,
     };

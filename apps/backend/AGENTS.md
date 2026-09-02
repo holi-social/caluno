@@ -1,4 +1,4 @@
-# Clippy Backend GraphQL API
+# Caluno Backend GraphQL API
 
 The backend api for securely managing volunteers and shifts in multi-tiered organizations.
 
@@ -110,15 +110,18 @@ Integration tests connect to the `postgres` maintenance database to create/drop 
 
 `bun bootstrap` resets the **development** database (not `_test`) via `docker compose down -v`, then migrates, seeds permissions, and loads [`src/database/fixtures.ts`](src/database/fixtures.ts). Refuses to run unless `DB_HOST` is `localhost`, `127.0.0.1`, or `postgres`.
 
+The same fixture script is used for staging via `bun run db:fixtures:staging`.
+
 | Account | Role / status |
 |---|---|
-| `admin@clippy.social` | Owner |
-| `supervisor@clippy.social` | Supervisor |
-| `member01@` … `member10@clippy.social` | Member |
-| `pending01@`, `pending02@` | Pending membership request |
-| `rejected01@` | Rejected membership request |
+| `testing+admin@caluno.org` | Owner |
+| `testing+supervisor@caluno.org` | Supervisor |
+| `testing+demo@caluno.org` | Member (demo account) |
+| `testing+001@` … `testing+010@caluno.org` | Member |
+| `testing+pending01@`, `testing+pending02@caluno.org` | Pending membership request |
+| `testing+rejected01@caluno.org` | Rejected membership request |
 
-Password for all fixture accounts: `abcd1234`. Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00).
+Password for all fixture accounts: `abcd1234` (override with `FIXTURE_PASSWORD`). Organization: **Playground**. Shifts (weekly, Europe/Berlin): Community Support (Mon 08:00–12:00), Food Distribution (Wed 12:00–16:00), Event Assistance (Fri 16:00–20:00). Requirement form: Personal Information — block with required First name and Last name fields.
 
 ## Tech Stack
 - **NestJS 11** primary web framework
@@ -167,6 +170,8 @@ domain/
 - Errors: throw `ForbiddenGraphQLError` / `NotFoundGraphQLError` / `BadRequestGraphQLError` / `ConflictGraphQLError` from `graphql/errors` — never raw exceptions.
 - GraphQL InputType Field defined with { nullable: true } need to be typed as optional and nullable: `fieldname?: type | null`
 - **File bytes never go through GraphQL.** Uploads use REST storage endpoints; GraphQL only links `fileId` to domain entities.
+- **Observability (Sentry)**: app code never imports `@sentry/nestjs` directly — inject `ObservabilityService` (`src/shared/observability/`) for `captureException` / `startSpan` / `setUser` / `withIsolationScope`. `src/instrument.ts` is the only SDK init and must stay the first import in `main.ts`. Expected domain errors (`*GraphQLError` with codes in `EXPECTED_GRAPHQL_ERROR_CODES` from `@repo/observability`) are filtered out of Sentry by `SentryExceptionFilter`; `InternalServerGraphQLError` and unexpected errors are reported.
+- **Observability (PostHog)**: app code never imports `posthog-node` directly — inject `PostHogService` (`src/shared/observability/`) and call `capture()` **once after a successful domain write** (not GraphQL resolvers, not `@OnEvent` email listeners). Event names come only from `POSTHOG_EVENT` in `posthog.events.ts` (runtime source of truth). `capture()` injects `event_description` from that registry. Envelope is snake_case: `surface`, optional `organization_id` / `organization_unit_id` / `source`; no PII (email, name, form answers, tokens, IP). `distinctId` is the daily HMAC of the **subject** user (usually the volunteer). Org-scoped events set PostHog group `organization` from `organization_id`. Missing `POSTHOG_API_KEY` / `POSTHOG_DISTINCT_SECRET` keeps capture a no-op. Convention: `EVENT_TAXONOMY.md`. The client and `PostHogInterceptor` live in `ObservabilityModule`; `main.ts` must not construct either.
 
 ## Storage (REST)
 Authenticated file uploads use presigned PUT to Scaleway Object Storage (MinIO locally). Module: `src/storage/`.
@@ -182,7 +187,7 @@ Env: `STORAGE_ENDPOINT`, `STORAGE_BUCKET`, `STORAGE_REGION`, `STORAGE_ACCESS_KEY
 `StorageModule` applies `express.json()` middleware scoped to `/storage/*` because `main.ts` disables the global body parser for Better Auth.
 
 ## i18n
-`AppI18nModule` wraps `nestjs-i18n` with catalogs at `src/i18n/locales/{locale}/*.json`. `AppI18nService.translate(locale, key)` and `createTranslator(locale, namespace)` are namespace-agnostic. `UserLocaleService` resolves locale via `UserService.resolveLocale` (stored user locale, request headers, fallback `en`). Transactional emails use namespace `email` via `createEmailTemplateContext()` in `notification/email/`; pure template functions take `{ t, formatDateTime, formatDate, formatTime, formatList }`. Date/time formatting uses `Europe/Berlin` and ICU regional tags `en-DE` / `de-DE` so English copy still follows German date order and 24h time. Auth callbacks forward Better Auth `request` headers; the frontend auth client sends `x-locale` from the `clippy.locale` cookie.
+`AppI18nModule` wraps `nestjs-i18n` with catalogs at `src/i18n/locales/{locale}/*.json`. `AppI18nService.translate(locale, key)` and `createTranslator(locale, namespace)` are namespace-agnostic. `UserLocaleService` resolves locale via `UserService.resolveLocale` (stored user locale, request headers, fallback `en`). Transactional emails use namespace `email` via `createEmailTemplateContext()` in `notification/email/`; pure template functions take `{ t, formatDateTime, formatDate, formatTime, formatList }`. Date/time formatting uses `Europe/Berlin` and ICU regional tags `en-DE` / `de-DE` so English copy still follows German date order and 24h time. Auth callbacks forward Better Auth `request` headers; the frontend auth client sends `x-locale` from the `caluno.locale` cookie.
 
 ## Drizzle
 Database schema in `src/database/schema.ts` (re-exports domain schemas; relations in `database/schema.relations.ts`).
@@ -207,3 +212,7 @@ Update this section when a decision changes one of these (pipeline Decision rout
 - **No `forwardRef` in `apps/backend`**. Module dependencies must form a DAG. Cycles are broken by extracting lower-level data modules (`OrganizationUnitDataModule`) or by moving cross-domain GraphQL field resolution into the higher-level module (`EventModule` owns the `Shift.event` field).
 - **`OrganizationUnitDataModule`** sits below `AuthModule` in the dependency graph. `AuthService` uses `OrganizationUnitDataService` for ancestor-unit lookups and org resolution, so `AuthModule` does not depend on `OrganizationModule`.
 - **Shift vs event participation are separate vocabularies — do not unify them.** `ShiftInstance` exposes only the raw `myInviteStatus` (nullable `ShiftInviteStatus`); there is no coarse `myJoinStatus`. The volunteer CTA is derived client-side from `myInviteStatus` + `OrganizationUnit.myMembershipState` (two orthogonal facts). Events are a lower-commitment "following" shortlist, so `Event.isFollowing` is a boolean — deliberately not shift-invite vocabulary; org membership state is read separately. Retiring the old ambiguous `myJoinStatus` projection is the reason for this split. (volunteer-shift-invite-response / VOLI-839)
+- **`InviteStatus` (in `apps/frontend/src/domain/shift/invite-status-display.ts`) intentionally shares admin-invite vocabulary between shift and event.** `ShiftInviteStatus` and `EventInviteStatus` already mirror each other (`Invited`/`Accepted`/`SelfJoined`/`VolunteerRejected`/`Cancelled`/`AdminRejected`); `toInviteDisplayState()` maps both to the same `ShiftVolunteeringDisplayState` for admin UI (invite sheets, event/shift detail). This is a different axis from the follow vocabulary above (`isFollowing`/`myInviteStatus`), which stays unshared — this entry only covers the admin-invite enums. (event-invite-status-display / VOLI-1028)
+- **Admin event uninvite/re-invite cascades to event-linked shifts.** Setting an event invite to `ADMIN_REJECTED` also sets active shift + shift-instance invites for that user on shifts with the same `eventId` to `ADMIN_REJECTED` (via `ShiftService.adminRejectInvitesForEventUser`). No notification is sent. Admin re-invite (`ADMIN_REJECTED` → `INVITED`) reverses this: `ShiftService.adminReinviteInvitesForEventUser` restores this user's `ADMIN_REJECTED` shift + shift-instance invites on the event's shifts back to `INVITED`; shift invites in other states (e.g. `VOLUNTEER_REJECTED`) are left untouched. Admin event volunteer lists include `ADMIN_REJECTED` so re-invite stays available. The event invite sheet does not preselect `ADMIN_REJECTED` (`preselectedInviteMemberIds`); `inviteMembersToEvent` only resurrects them when explicitly included in `memberIds`. `Event.myJoinStatus` / `requestJoinEvent` map event-invite `ADMIN_REJECTED` to `JoinStatus.REJECTED` so the public Follow CTA stays disabled (membership `REJECTED` remains the org-level path). Admin-only invite targets (`ADMIN_REJECTED`, `INVITED` via `updateEventInviteStatus`) always require `SHIFT_EDIT`, including self. (VOLI-997)
+- **Ending a membership hard-deletes org-unit invites and the membership request.** `leaveMembership` and `removeMembership` share one path: after deleting the membership row, hard-delete that user's membership request for that unit, all `shift_invites` on that unit (past or future — they seed instance expansion), `shift_instance_invites` for instances that have not ended, and `event_invites` for events that have not ended. Past events/instances keep their invites. Sibling/child units, other organizations, and other users are untouched. This is complete removal, not `ADMIN_REJECTED`. Time entries, form submissions, and remaining memberships in other units of the same org are not part of this path yet. (VOLI-1109)
+- **Privacy policy PDFs live in `apps/backend/legal/`** as `datenschutzhinweise-YYYY-MM-DD.pdf`. The current version is the newest matching filename. `GET /legal/privacy-policy.pdf` (`@AllowAnonymous()`) serves that file. Signup sends `privacyPolicyAccepted: true` on the request body only — it is not a Better Auth `additionalField` (those must exist on the Drizzle `users` table, and create hooks merge rather than replace). A non-null `privacyPolicyAcceptedAt` is the stored proof of acceptance; the server also stamps `privacyPolicyVersion`. The client does not send a version. (privacy-policy-backend-source)
