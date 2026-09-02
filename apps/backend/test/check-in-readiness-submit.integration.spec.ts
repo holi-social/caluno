@@ -13,6 +13,7 @@ import { PERMISSIONS } from '../src/auth/constants';
 import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
 import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftMutationResolver } from '../src/shift/resolvers/shift-mutation.resolver';
 import { TimeTrackingMutationResolver } from '../src/time-tracking/resolvers/time-tracking-mutation.resolver';
 import { TimeTrackingQueryResolver } from '../src/time-tracking/resolvers/time-tracking-query.resolver';
 import {
@@ -483,5 +484,128 @@ describe('check-in readiness/submit mutation permissions', () => {
         TimeTrackingMutationResolver.prototype.checkInVolunteer,
       ),
     ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
+
+  it('gates checkInInviteToShiftInstance on check-in:manage', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        ShiftMutationResolver.prototype.checkInInviteToShiftInstance,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
+});
+
+describe('checkInInviteToShiftInstance mutation', () => {
+  const CHECK_IN_INVITE_TO_SHIFT_INSTANCE = `
+    mutation CheckInInviteToShiftInstance($shiftInstanceId: ID!, $volunteerId: ID!) {
+      checkInInviteToShiftInstance(shiftInstanceId: $shiftInstanceId, volunteerId: $volunteerId) {
+        id
+      }
+    }
+  `;
+
+  let app: INestApplication;
+  let db: Database;
+  let callerUserId: string;
+  let unitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    callerUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `ShiftInvite ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Shift invite unit',
+    });
+    unitId = unit.id;
+
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+
+    const role = await createRole(db, { organizationId: org.organization.id });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const membership = await addMembership(db, callerUserId, unit.id);
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(callerUserId);
+  });
+
+  it('creates an INVITED invite and leaves other invites on the instance intact', async () => {
+    const shift = await createShift(db, { organizationUnitId: unitId });
+    const instance = await createShiftInstance(db, shift.id);
+    const alreadyInvited = await createUser(db);
+    await createShiftInstanceInvite(db, {
+      instanceId: instance.id,
+      userId: alreadyInvited.id,
+      status: ShiftInviteStatus.ACCEPTED,
+    });
+    const volunteer = await createUser(db);
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: CHECK_IN_INVITE_TO_SHIFT_INSTANCE,
+        variables: { shiftInstanceId: instance.id, volunteerId: volunteer.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInInviteToShiftInstance',
+    );
+
+    const invites = await db.query.shiftInstanceInvites.findMany({
+      where: { instanceId: instance.id },
+    });
+    const byUserId = new Map(invites.map((i) => [i.userId, i.status]));
+
+    expect(byUserId.get(volunteer.id)).toBe(ShiftInviteStatus.INVITED);
+    expect(byUserId.get(alreadyInvited.id)).toBe(ShiftInviteStatus.ACCEPTED);
+  });
+
+  it('rejects a shift instance that belongs to a different org unit', async () => {
+    const otherOrg = await createOrganizationWithType(
+      db,
+      `OtherShiftInvite ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrg.organization.id,
+      typeId: otherOrg.type.id,
+      name: 'Other shift invite unit',
+    });
+    const foreignShift = await createShift(db, {
+      organizationUnitId: otherUnit.id,
+    });
+    const foreignInstance = await createShiftInstance(db, foreignShift.id);
+    const volunteer = await createUser(db);
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_INVITE_TO_SHIFT_INSTANCE,
+      variables: {
+        shiftInstanceId: foreignInstance.id,
+        volunteerId: volunteer.id,
+      },
+      // Caller's header names their OWN unit, not the foreign one — the
+      // service must fail to find the instance scoped to that header rather
+      // than silently inviting across org boundaries.
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toContain('not found');
   });
 });

@@ -1083,6 +1083,52 @@ export class ShiftService {
     await this.createInvitesForInstances(tx, [shiftInstance.id], members);
   }
 
+  /**
+   * Creates a single INVITED invite for one volunteer, without touching any
+   * other invite on the instance — unlike `updateMembersForShiftInstance`,
+   * which replaces the whole member list. Used by the check-in flow's
+   * "invite to shift" blocker action.
+   */
+  async inviteVolunteerToShiftInstance(
+    shiftInstanceId: string,
+    volunteerId: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        id: shiftInstanceId,
+        master: { organizationUnitId, isDeleted: false },
+        isCancelled: false,
+      },
+      with: {
+        invites: { columns: { userId: true, status: true } },
+        master: true,
+      },
+    });
+    if (!instance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${shiftInstanceId} not found`,
+      );
+    }
+
+    await this.db.transaction((tx) =>
+      this.inviteMembersToShiftInstance(
+        tx,
+        instance,
+        [volunteerId],
+        ShiftInviteStatus.INVITED,
+      ),
+    );
+
+    void this.loadAndEmitShiftInstanceInvitedNotification(
+      instance.master,
+      instance,
+      [volunteerId],
+    );
+
+    return instance;
+  }
+
   async uninviteMembersFromShiftInstance(
     tx: Database,
     instanceId: string,
