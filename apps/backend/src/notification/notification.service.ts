@@ -56,6 +56,12 @@ type ShiftInstanceRemovedInput =
 type ShiftSeriesRemovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_REMOVED];
 
+type ShiftInstanceLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_LEFT];
+
+type ShiftSeriesLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_LEFT];
+
 type ShiftInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
 
@@ -205,6 +211,14 @@ export class NotificationService {
 
   notifyShiftSeriesRemoved(input: ShiftSeriesRemovedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_SERIES_REMOVED, input);
+  }
+
+  notifyShiftInstanceLeft(input: ShiftInstanceLeftInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_LEFT, input);
+  }
+
+  notifyShiftSeriesLeft(input: ShiftSeriesLeftInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_SERIES_LEFT, input);
   }
 
   notifyShiftInvited(input: ShiftInvitedInput): void {

@@ -2510,6 +2510,69 @@ export class ShiftService {
     }
   }
 
+  private async loadAndEmitShiftInstanceLeftNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceLeft({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftSeriesLeftNotification(
+    shift: ShiftEntity,
+    fromDate: Date,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftSeriesLeft({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        fromDate,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift series left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async loadAndEmitShiftInstanceRemovedNotification(
     shift: ShiftEntity,
     instance: ShiftInstanceEntity,
@@ -3180,6 +3243,14 @@ export class ShiftService {
       );
     }
 
+    if (status === ShiftInviteStatus.CANCELLED && actorUserId === userId) {
+      void this.loadAndEmitShiftSeriesLeftNotification(
+        shift,
+        new Date(),
+        userId,
+      );
+    }
+
     return updated;
   }
 
@@ -3339,6 +3410,14 @@ export class ShiftService {
 
     if (status === ShiftInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {
       void this.loadAndEmitShiftInstanceRemovedNotification(
+        instance.master,
+        instance,
+        userId,
+      );
+    }
+
+    if (status === ShiftInviteStatus.CANCELLED && actorUserId === userId) {
+      void this.loadAndEmitShiftInstanceLeftNotification(
         instance.master,
         instance,
         userId,

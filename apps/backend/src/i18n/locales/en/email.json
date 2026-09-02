@@ -224,6 +224,32 @@
     "previewText": "You've been removed from {shiftTitle} at {organizationName} starting {fromDate}.",
     "subject": "You've been removed from {shiftTitle}"
   },
+  "shiftInstanceLeft": {
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you cancelled your signup for a shift on {brandName}.",
+    "greeting": "Hi {firstName}, your shift signup has been cancelled.",
+    "heading": "You've left a shift",
+    "note": "A coordinator has been informed so they can fill the gap.",
+    "previewText": "You've cancelled your signup for {shiftTitle} at {organizationName}.",
+    "subject": "You've left {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesLeft": {
+    "bodyMessage": "You've cancelled your signups for the '{shiftTitle}' series starting {fromDate}.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "footerNote": "You're receiving this because you cancelled your signups for a shift series on {brandName}.",
+    "greeting": "Hi {firstName}, your shift series signups have been cancelled.",
+    "heading": "You've left a shift series",
+    "note": "A coordinator has been informed so they can fill the gaps.",
+    "previewText": "You've cancelled your signups for {shiftTitle} at {organizationName} starting {fromDate}.",
+    "subject": "You've left {shiftTitle}"
+  },
   "shiftInvited": {
     "buttonLabel": "View shift",
     "detailInstructions": "Instructions",
