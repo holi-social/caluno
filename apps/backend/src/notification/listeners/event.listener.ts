@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
 import { eventCancelledTemplate } from '../email/templates/event-cancelled.template';
+import { eventDetailsChangedTemplate } from '../email/templates/event-details-changed.template';
 import { eventInvitedTemplate } from '../email/templates/event-invited.template';
 import { eventJoinedTemplate } from '../email/templates/event-joined.template';
 import { eventRemovedTemplate } from '../email/templates/event-removed.template';
@@ -138,6 +139,33 @@ export class EventListener {
             recipientFirstName: recipient.firstName,
             startsAt: payload.startsAt,
             endsAt: payload.endsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.EVENT_DETAILS_CHANGED)
+  async handleEventDetailsChanged(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.EVENT_DETAILS_CHANGED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.EVENT_DETAILS_CHANGED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return eventDetailsChangedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            eventTitle: payload.eventTitle,
+            recipientFirstName: recipient.firstName,
+            changes: payload.changes,
           },
           templateContext,
         );

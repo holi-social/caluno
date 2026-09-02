@@ -34,6 +34,22 @@
     "subject": "Du wurdest von {eventTitle} entfernt",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventDetailsChanged": {
+    "field": {
+      "startsAt": "Beginn",
+      "endsAt": "Ende",
+      "location": "Ort",
+      "description": "Beschreibung",
+      "title": "Titel"
+    },
+    "footerNote": "Du erhältst diese E-Mail, weil sich ein Event, für das du angemeldet bist, auf {brandName} geändert hat.",
+    "greeting": "Hallo {firstName}, das Event '{eventTitle}' bei {organizationName} hat sich geändert.",
+    "heading": "Eventdetails geändert",
+    "note": "Du bist weiterhin für dieses Event angemeldet – du musst nicht erneut zusagen.",
+    "previewText": "Die Details für {eventTitle} bei {organizationName} haben sich geändert.",
+    "subject": "Details geändert für {eventTitle}",
+    "updated": "aktualisiert"
+  },
   "eventInvited": {
     "buttonLabel": "Event ansehen",
     "detailEvent": "Event",

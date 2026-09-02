@@ -34,6 +34,22 @@
     "subject": "You've been removed from {eventTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventDetailsChanged": {
+    "field": {
+      "startsAt": "Start",
+      "endsAt": "End",
+      "location": "Location",
+      "description": "Description",
+      "title": "Title"
+    },
+    "footerNote": "You're receiving this because an event you're signed up for on {brandName} has changed.",
+    "greeting": "Hi {firstName}, the event '{eventTitle}' at {organizationName} has changed.",
+    "heading": "Event details changed",
+    "note": "You are still signed up for this event — no need to accept again.",
+    "previewText": "Details for {eventTitle} at {organizationName} have changed.",
+    "subject": "Details changed for {eventTitle}",
+    "updated": "updated"
+  },
   "eventInvited": {
     "buttonLabel": "View event",
     "detailEvent": "Event",

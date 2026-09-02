@@ -80,6 +80,9 @@ type EventCancelledInput =
 type EventRemovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_REMOVED];
 
+type EventDetailsChangedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_DETAILS_CHANGED];
+
 type DocumentAwaitingSignatureInput =
   NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_AWAITING_SIGNATURE];
 
@@ -246,6 +249,10 @@ export class NotificationService {
 
   notifyEventRemoved(input: EventRemovedInput): void {
     this.emitter.emit(NotificationEvent.EVENT_REMOVED, input);
+  }
+
+  notifyEventDetailsChanged(input: EventDetailsChangedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_DETAILS_CHANGED, input);
   }
 
   notifyDocumentAwaitingSignature(input: DocumentAwaitingSignatureInput): void {

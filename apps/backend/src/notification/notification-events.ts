@@ -20,6 +20,7 @@ export const NotificationEvent = {
   EVENT_JOINED: 'notification.event.joined',
   EVENT_CANCELLED: 'notification.event.cancelled',
   EVENT_REMOVED: 'notification.event.removed',
+  EVENT_DETAILS_CHANGED: 'notification.event.details-changed',
   // The volunteer is only ever told about the two things that ask something
   // of them (or take something away): a document waiting for their signature,
   // and the organisation declining a document they had already signed.
