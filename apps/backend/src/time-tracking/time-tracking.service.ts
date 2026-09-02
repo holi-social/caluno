@@ -14,11 +14,13 @@ import {
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { OrganizationService } from '../organization/organization.service';
+import { isParticipatingShiftInviteStatus } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
   POSTHOG_SURFACE,
 } from '../shared/observability/posthog.events';
 import { PostHogService } from '../shared/observability/posthog.service';
+import { ShiftInviteStatus } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
 import { UserService } from '../user/user.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
@@ -370,6 +372,48 @@ export class TimeTrackingService {
       volunteer,
       eligibleOrganizationUnits: eligibleUnits,
       openTimeEntries,
+    };
+  }
+
+  /**
+   * The three facts the check-in readiness gate needs: unit membership
+   * (ancestor-inclusive, matching `getCheckInContext`'s eligibility check),
+   * an open membership request against the exact unit, and the volunteer's
+   * invite status on the specific shift instance.
+   */
+  async getCheckInReadiness(
+    volunteerId: string,
+    shiftInstanceId: string,
+    organizationUnitId: string,
+  ): Promise<{
+    isMember: boolean;
+    openMembershipRequestId: string | null;
+    shiftInviteStatus: ShiftInviteStatus | null;
+    isParticipating: boolean;
+  }> {
+    const [isMember, pendingRequest, inviteStatuses] = await Promise.all([
+      this._membershipService.isMemberOfUnitOrAncestor(
+        volunteerId,
+        organizationUnitId,
+      ),
+      this._membershipService.findPendingMembershipRequest(
+        volunteerId,
+        organizationUnitId,
+      ),
+      this.shiftService.findInviteStatusesForUser(volunteerId, [
+        shiftInstanceId,
+      ]),
+    ]);
+
+    const shiftInviteStatus = inviteStatuses[0]?.status ?? null;
+
+    return {
+      isMember,
+      openMembershipRequestId: pendingRequest?.id ?? null,
+      shiftInviteStatus,
+      isParticipating: isParticipatingShiftInviteStatus(
+        shiftInviteStatus ?? undefined,
+      ),
     };
   }
 
