@@ -63,11 +63,9 @@ export class PostHogDistinctSecretService implements OnModuleInit {
         validForDate: row.validForDate,
       };
       return this.cached.secret;
-    } catch (error) {
-      this.logger.error(
-        'Failed to load PostHog distinct secret',
-        error instanceof Error ? error.stack : undefined,
-      );
+    } catch {
+      // DrizzleQueryError.stack includes SQL bind params (the HMAC secret).
+      this.logger.error('Failed to load PostHog distinct secret');
       return this.cached?.validForDate === today ? this.cached.secret : null;
     }
   }

@@ -1,4 +1,6 @@
+import { createHmac } from 'node:crypto';
 import { Logger } from '@nestjs/common';
+import { createDailyDistinctId } from './posthog.service';
 import { PostHogDistinctSecretService } from './posthog-distinct-secret.service';
 
 const TODAY = '2026-08-20';
@@ -34,6 +36,19 @@ function createService(
   select: jest.Mock,
 ): PostHogDistinctSecretService {
   return new PostHogDistinctSecretService({ insert, select } as never);
+}
+
+function hmac(secret: string, message: string): string {
+  return createHmac('sha256', secret).update(message).digest('hex');
+}
+
+function loggedText(error: jest.SpyInstance): string {
+  return error.mock.calls
+    .flat()
+    .map((arg) =>
+      arg instanceof Error ? `${arg.message}\n${arg.stack}` : String(arg ?? ''),
+    )
+    .join('\n');
 }
 
 describe('PostHogDistinctSecretService', () => {
@@ -77,7 +92,7 @@ describe('PostHogDistinctSecretService', () => {
     expect(secret).toBe('today-secret');
   });
 
-  it('rotates a row whose date is yesterday and does not return the old secret', async () => {
+  it('rotates a row whose date is yesterday and subsequent HMAC uses the new secret', async () => {
     const rotated = {
       slot: 'current',
       secret: 'new-secret',
@@ -92,7 +107,15 @@ describe('PostHogDistinctSecretService', () => {
     const secret = await service.ensureCurrent();
 
     expect(secret).toBe('new-secret');
-    expect(secret).not.toBe('old-secret');
+    if (!secret) {
+      throw new Error('Secret is null');
+    }
+    expect(createDailyDistinctId('user-1', secret)).toBe(
+      hmac('new-secret', 'user-1:2026-08-20'),
+    );
+    expect(createDailyDistinctId('user-1', secret)).not.toBe(
+      hmac('old-secret', 'user-1:2026-08-20'),
+    );
   });
 
   it('uses the winner’s secret when CAS returns no row (concurrent rotate)', async () => {
@@ -136,6 +159,22 @@ describe('PostHogDistinctSecretService', () => {
 
     await expect(service.ensureCurrent()).resolves.toBeNull();
     expect(error).toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('does not log the HMAC secret when the database fails', async () => {
+    const leaked = 'leaked-hmac-secret';
+    const error = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const insert = jest.fn().mockImplementation(() => {
+      throw new Error(
+        `Failed query: insert into "posthog_distinct_secrets"\nparams: ${leaked}`,
+      );
+    });
+    const { select } = mockSelect([]);
+    const service = createService(insert, select);
+
+    await expect(service.ensureCurrent()).resolves.toBeNull();
+    expect(loggedText(error)).not.toContain(leaked);
     error.mockRestore();
   });
 
