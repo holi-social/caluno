@@ -402,10 +402,11 @@ export class TimeTrackingService {
   }
 
   /**
-   * The three facts the check-in readiness gate needs: unit membership
+   * The four facts the check-in readiness gate needs: unit membership
    * (ancestor-inclusive, matching `getCheckInContext`'s eligibility check),
-   * an open membership request against the exact unit, and the volunteer's
-   * invite status on the specific shift instance.
+   * an open membership request against the exact unit, the volunteer's
+   * invite status on the specific shift instance, and whether the volunteer
+   * already has an open time entry for that instance.
    */
   async getCheckInReadiness(
     volunteerId: string,
@@ -416,20 +417,23 @@ export class TimeTrackingService {
     openMembershipRequestId: string | null;
     shiftInviteStatus: ShiftInviteStatus | null;
     isParticipating: boolean;
+    hasOpenTimeEntry: boolean;
   }> {
-    const [isMember, pendingRequest, inviteStatuses] = await Promise.all([
-      this._membershipService.isMemberOfUnitOrAncestor(
-        volunteerId,
-        organizationUnitId,
-      ),
-      this._membershipService.findPendingMembershipRequest(
-        volunteerId,
-        organizationUnitId,
-      ),
-      this.shiftService.findInviteStatusesForUser(volunteerId, [
-        shiftInstanceId,
-      ]),
-    ]);
+    const [isMember, pendingRequest, inviteStatuses, hasOpenTimeEntry] =
+      await Promise.all([
+        this._membershipService.isMemberOfUnitOrAncestor(
+          volunteerId,
+          organizationUnitId,
+        ),
+        this._membershipService.findPendingMembershipRequest(
+          volunteerId,
+          organizationUnitId,
+        ),
+        this.shiftService.findInviteStatusesForUser(volunteerId, [
+          shiftInstanceId,
+        ]),
+        this.shiftService.hasOpenTimeEntry(shiftInstanceId, volunteerId),
+      ]);
 
     const shiftInviteStatus = inviteStatuses[0]?.status ?? null;
 
@@ -440,6 +444,7 @@ export class TimeTrackingService {
       isParticipating: isParticipatingShiftInviteStatus(
         shiftInviteStatus ?? undefined,
       ),
+      hasOpenTimeEntry,
     };
   }
 
