@@ -5,9 +5,10 @@ import type { ShiftVolunteeringDisplayState } from '@repo/ui';
 export type InviteStatus = ShiftInviteStatus | EventInviteStatus;
 
 const ADMIN_UNINVITE_SOURCE_STATUS_VALUES = new Set<string>([
-  ShiftInviteStatus.Invited,
-  ShiftInviteStatus.SelfJoined,
-  ShiftInviteStatus.Accepted,
+  ShiftInviteStatus.AdminInvited,
+  ShiftInviteStatus.AwaitingAdminApproval,
+  ShiftInviteStatus.WaitlistJoined,
+  ShiftInviteStatus.Joined,
 ]);
 
 /** Whether an admin can remove a volunteer (→ ADMIN_REJECTED). */
@@ -25,7 +26,7 @@ export function adminUninviteTargetStatus<S extends InviteStatus>(
   return ShiftInviteStatus.AdminRejected as S;
 }
 
-/** Whether an admin can re-invite a previously rejected volunteer (→ INVITED). */
+/** Whether an admin can re-invite a previously rejected volunteer (→ ADMIN_INVITED). */
 export function canAdminReinvite(status: InviteStatus): boolean {
   return (
     status === ShiftInviteStatus.AdminRejected ||
@@ -40,7 +41,7 @@ export function adminReinviteTargetStatus<S extends InviteStatus>(
   if (!canAdminReinvite(status)) {
     return null;
   }
-  return ShiftInviteStatus.Invited as S;
+  return ShiftInviteStatus.AdminInvited as S;
 }
 
 /**
@@ -59,25 +60,28 @@ export function preselectedInviteMemberIds(
     .map((member) => member.id);
 }
 
-/** Domain invite status → backoffice display state (VOLI-842). */
+/** Domain invite status → backoffice display state (VOLI-842 / invite-status-model). */
 export function toInviteDisplayState(
   status: InviteStatus,
 ): ShiftVolunteeringDisplayState {
   switch (status) {
-    case ShiftInviteStatus.Invited:
-    case EventInviteStatus.Invited:
+    case ShiftInviteStatus.AdminInvited:
+    case EventInviteStatus.AdminInvited:
       return 'invited';
-    case ShiftInviteStatus.Accepted:
-    case EventInviteStatus.Accepted:
+    case ShiftInviteStatus.AwaitingAdminApproval:
+    case EventInviteStatus.AwaitingAdminApproval:
+      return 'requested';
+    case ShiftInviteStatus.WaitlistJoined:
+    case EventInviteStatus.WaitlistJoined:
+      return 'requested';
+    case ShiftInviteStatus.Joined:
+    case EventInviteStatus.Joined:
       return 'accepted';
-    case ShiftInviteStatus.SelfJoined:
-    case EventInviteStatus.SelfJoined:
-      return 'signed_up';
     case ShiftInviteStatus.VolunteerRejected:
     case EventInviteStatus.VolunteerRejected:
       return 'declined';
-    case ShiftInviteStatus.Cancelled:
-    case EventInviteStatus.Cancelled:
+    case ShiftInviteStatus.VolunteerCancelled:
+    case EventInviteStatus.VolunteerCancelled:
       return 'cancelled';
     case ShiftInviteStatus.AdminRejected:
     case EventInviteStatus.AdminRejected:
@@ -129,6 +133,10 @@ export function countInviteDisplayStates(
         break;
       case 'rejected':
         counts.rejected += 1;
+        break;
+      case 'requested':
+        // Count approval/waitlist under invited column for summary until UI splits
+        counts.invited += 1;
         break;
       default:
         break;

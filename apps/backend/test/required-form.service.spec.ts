@@ -904,7 +904,7 @@ describe('RequiredFormService', () => {
         reviewer.id,
       );
 
-      expect(approved.status).toBe('ACCEPTED');
+      expect(approved.status).toBe('JOINED');
     });
 
     it('approves when all required forms are submitted', async () => {
@@ -934,7 +934,7 @@ describe('RequiredFormService', () => {
         reviewer.id,
       );
 
-      expect(approved.status).toBe('ACCEPTED');
+      expect(approved.status).toBe('JOINED');
     });
   });
 
@@ -1072,7 +1072,7 @@ describe('RequiredFormService', () => {
         .values({
           eventId,
           userId,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         })
         .returning();
       if (invite) seededEventInviteIds.push(invite.id);
@@ -1106,7 +1106,7 @@ describe('RequiredFormService', () => {
         .values({
           instanceId: shiftInstance.id,
           userId,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         })
         .returning();
       if (shiftInvite) seededShiftInstanceInviteIds.push(shiftInvite.id);
@@ -1237,7 +1237,7 @@ describe('RequiredFormService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: secondInstance.id,
         userId,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.ADMIN_INVITED,
       });
 
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
@@ -1254,7 +1254,7 @@ describe('RequiredFormService', () => {
     it('excludes the shift form when the instance invite is not pending', async () => {
       await db
         .update(schema.shiftInstanceInvites)
-        .set({ status: ShiftInviteStatus.ACCEPTED })
+        .set({ status: ShiftInviteStatus.JOINED })
         .where(eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId));
       const forms = await service.requiredFormsForUser(userId, orgUnitId);
       expect(forms.find((f) => f.id === shiftFormId)).toBeUndefined();

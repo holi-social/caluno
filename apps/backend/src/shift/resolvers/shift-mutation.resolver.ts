@@ -51,7 +51,7 @@ export class ShiftMutationResolver {
     const isSelf = actorUserId === targetUserId;
     const isAdminOnlyTarget =
       status === ShiftInviteStatus.ADMIN_REJECTED ||
-      status === ShiftInviteStatus.INVITED;
+      status === ShiftInviteStatus.ADMIN_INVITED;
 
     if (isSelf && !isAdminOnlyTarget) {
       return;
@@ -273,7 +273,7 @@ export class ShiftMutationResolver {
   ): Promise<ShiftInvite> {
     const isAdminOnlyTarget =
       status === ShiftInviteStatus.ADMIN_REJECTED ||
-      status === ShiftInviteStatus.INVITED;
+      status === ShiftInviteStatus.ADMIN_INVITED;
 
     if (isAdminOnlyTarget) {
       const hasPermission = await this.authService.hasRequiredPermissions(

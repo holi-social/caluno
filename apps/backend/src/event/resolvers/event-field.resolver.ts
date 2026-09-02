@@ -95,7 +95,7 @@ export class EventFieldResolver {
     const invite = await loader.inviteByEventIdAndUserId.load(
       `${event.id}:${session.user.id}`,
     );
-    if (invite?.status === EventInviteStatus.ACCEPTED) {
+    if (invite?.status === EventInviteStatus.JOINED) {
       return JoinStatus.JOINED;
     }
     if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
