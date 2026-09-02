@@ -77,6 +77,28 @@ export class TimeTrackingMutationResolver {
     return this.entryMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Mutation(() => TimeEntry)
+  async checkInVolunteer(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Args('shiftInstanceId', { type: () => ID, nullable: true })
+    shiftInstanceId: string | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<TimeEntry> {
+    const input = new AddTimeEntryInput();
+    input.volunteerId = volunteerId;
+    input.shiftInstanceId = shiftInstanceId ?? null;
+    input.startedAt = new Date();
+    input.endedAt = null;
+
+    const entity = await this.timeTrackingService.addTimeEntry(
+      context.organizationUnitId,
+      input,
+      context.user.id,
+    );
+    return this.entryMapper.toModelOrThrow(entity);
+  }
+
   // checkIn/checkOut are intentionally NOT @Permissions()-gated: they are
   // volunteer self-service, authorized in the service by membership + an
   // ACCEPTED invite for the current user (not an admin role). The admin path
