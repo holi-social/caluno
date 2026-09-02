@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -2161,6 +2161,23 @@ export class ShiftService {
         Object.keys(shiftInput).length > 0 ||
         inputEventId !== undefined ||
         imageFileId !== undefined;
+
+      const typeChanged =
+        shiftInput.reimbursementTypeId !== undefined &&
+        shiftInput.reimbursementTypeId !== shift.reimbursementTypeId;
+
+      if (typeChanged && shift.reimbursementTypeId) {
+        await tx
+          .update(schema.shiftInstances)
+          .set({ overrideReimbursementTypeId: shift.reimbursementTypeId })
+          .where(
+            and(
+              eq(schema.shiftInstances.masterId, id),
+              isNull(schema.shiftInstances.overrideReimbursementTypeId),
+              lt(schema.shiftInstances.actualEndsAt, new Date()),
+            ),
+          );
+      }
 
       if (hasValuesToUpdate) {
         const durationMinutes =

@@ -332,6 +332,111 @@ describe('ShiftService', () => {
     });
   });
 
+  describe('update — reimbursement type change only affects the future', () => {
+    it('freezes already-occurred instances on their old type when the master type changes', async () => {
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: oldType.id,
+      });
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: daysAgo(2, 8),
+        actualEndsAt: daysAgo(2, 10),
+      });
+      const futureInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date(Date.now() + 300000),
+        actualEndsAt: new Date(Date.now() + 400000),
+      });
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: shift.title,
+        startsAt: shift.originalStartsAt,
+        endsAt: new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        ),
+        visibility: shift.visibility,
+        reimbursementTypeId: newType.id,
+      } as never);
+
+      const [refreshedPast] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstance.id));
+      const [refreshedFuture] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, futureInstance.id));
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+
+      expect(refreshedPast?.overrideReimbursementTypeId).toBe(oldType.id);
+      expect(refreshedFuture?.overrideReimbursementTypeId).toBeNull();
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+    });
+
+    it('does not overwrite an instance that already has its own override', async () => {
+      // createReimbursementType upserts on `key`, and there are only two
+      // keys in the enum (EHRENAMT/UEBUNGSLEITER) — so this test can only
+      // ever have two distinct type rows to work with, not three. That's
+      // still enough: pre-set the past instance's override to `oldType`
+      // (distinct from the `newType` the master is about to change to), and
+      // assert it stays `oldType` — if the `isNull(overrideReimbursementTypeId)`
+      // guard were missing and the snapshot ran unconditionally, this
+      // instance's override would get stomped to `newType` instead.
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: oldType.id,
+      });
+      const pastInstanceWithOwnOverride = await createShiftInstance(
+        db,
+        shift.id,
+        {
+          actualStartsAt: daysAgo(2, 8),
+          actualEndsAt: daysAgo(2, 10),
+          overrideReimbursementTypeId: oldType.id,
+        },
+      );
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: shift.title,
+        startsAt: shift.originalStartsAt,
+        endsAt: new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        ),
+        visibility: shift.visibility,
+        reimbursementTypeId: newType.id,
+      } as never);
+
+      const [refreshed] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstanceWithOwnOverride.id));
+
+      expect(refreshed?.overrideReimbursementTypeId).toBe(oldType.id);
+    });
+  });
+
   describe('findAllForEvent', () => {
     const createTestEvent = async () => {
       const title = `Test Event ${crypto.randomUUID()}`;
