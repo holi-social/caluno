@@ -1,6 +1,6 @@
-@startuml InviteOriginStatusModel
+@startuml InviteStatusModel
 
-title Shift Invite State Model
+title Shift and Event Invite State Model
 
 [*] --> ADMIN_INVITED : admin invites
 [*] --> AWAITING_ADMIN_APPROVAL : volunteer joins \n approval enabled
