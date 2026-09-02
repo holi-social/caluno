@@ -271,6 +271,18 @@ export class ShiftRepository extends BaseRepository {
     return data.checkInShifts;
   }
 
+  async checkInInviteToShiftInstance(
+    organizationUnitId: string,
+    shiftInstanceId: string,
+    volunteerId: string,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.CheckInInviteToShiftInstance(
+      { shiftInstanceId, volunteerId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return { id: data.checkInInviteToShiftInstance.id };
+  }
+
   async findMyShiftInstances(
     options: {
       includePast?: boolean;
