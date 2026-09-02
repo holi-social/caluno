@@ -1,8 +1,4 @@
-import {
-  JoinStatus,
-  type PublicShiftInstance,
-  type RawShift,
-} from '@repo/data';
+import { JoinStatus, type RawShift } from '@repo/data';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -51,12 +47,8 @@ export default async function ShiftPage({
   const data = await getDataClient({ locale: resolveLocale(locale) });
 
   let shift: RawShift | undefined;
-  let instances: PublicShiftInstance[];
   try {
-    [shift, instances] = await Promise.all([
-      findShift(locale, shiftId),
-      data.shift.findPublicInstancesByShiftId(shiftId),
-    ]);
+    shift = await findShift(locale, shiftId);
   } catch {
     notFound();
   }
@@ -69,7 +61,7 @@ export default async function ShiftPage({
   const authenticated = await isAuthenticated();
 
   const selectedInstance = instanceId
-    ? instances.find((instance) => instance.id === instanceId)
+    ? await data.shift.findPublicInstance(instanceId).catch(() => undefined)
     : undefined;
 
   const showJoinForms = search.showJoinForms === 'true';
@@ -126,7 +118,6 @@ export default async function ShiftPage({
 
       <ShiftDetailContent
         shift={shift}
-        instances={instances}
         isAuthenticated={authenticated}
         autoJoin={autoJoin}
         preselectedInstanceId={instanceId}
