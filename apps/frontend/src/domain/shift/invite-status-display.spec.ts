@@ -107,9 +107,9 @@ describe('toInviteDisplayState', () => {
     expect(toInviteDisplayState(ShiftInviteStatus.AdminInvited)).toBe(
       'invited',
     );
-    expect(
-      toInviteDisplayState(ShiftInviteStatus.AwaitingAdminApproval),
-    ).toBe('requested');
+    expect(toInviteDisplayState(ShiftInviteStatus.AwaitingAdminApproval)).toBe(
+      'requested',
+    );
     expect(toInviteDisplayState(ShiftInviteStatus.WaitlistJoined)).toBe(
       'requested',
     );

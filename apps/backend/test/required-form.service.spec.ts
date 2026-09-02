@@ -904,7 +904,7 @@ describe('RequiredFormService', () => {
         reviewer.id,
       );
 
-      expect(approved.status).toBe('JOINED');
+      expect(approved.status).toBe('ACCEPTED');
     });
 
     it('approves when all required forms are submitted', async () => {
@@ -934,7 +934,7 @@ describe('RequiredFormService', () => {
         reviewer.id,
       );
 
-      expect(approved.status).toBe('JOINED');
+      expect(approved.status).toBe('ACCEPTED');
     });
   });
 

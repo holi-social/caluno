@@ -2818,7 +2818,9 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
     expect(byUser.get(waitlisted.id)).toBe(ShiftInviteStatus.WAITLIST_JOINED);
     expect(byUser.get(declined.id)).toBe(ShiftInviteStatus.VOLUNTEER_REJECTED);
-    expect(byUser.get(cancelled.id)).toBe(ShiftInviteStatus.VOLUNTEER_CANCELLED);
+    expect(byUser.get(cancelled.id)).toBe(
+      ShiftInviteStatus.VOLUNTEER_CANCELLED,
+    );
     expect(byUser.get(rejected.id)).toBe(ShiftInviteStatus.ADMIN_REJECTED);
   });
 
@@ -3402,7 +3404,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation Cancel($instanceId: String!) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
-              status: CANCELLED
+              status: VOLUNTEER_CANCELLED
             ) {
               status
             }
@@ -3420,7 +3422,9 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     );
     expect(cancelledInstance?.filledCount).toBe(1);
     expect(cancelledInstance?.spotsLeft).toBe(1);
-    expect(cancelledInstance?.myInviteStatus).toBe(ShiftInviteStatus.VOLUNTEER_CANCELLED);
+    expect(cancelledInstance?.myInviteStatus).toBe(
+      ShiftInviteStatus.VOLUNTEER_CANCELLED,
+    );
 
     await graphqlRequestRequiringData<{
       updateShiftInstanceInviteStatus: { status: string };
@@ -3431,7 +3435,7 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
           mutation Reaccept($instanceId: String!) {
             updateShiftInstanceInviteStatus(
               instanceId: $instanceId
-              status: ACCEPTED
+              status: JOINED
             ) {
               status
             }

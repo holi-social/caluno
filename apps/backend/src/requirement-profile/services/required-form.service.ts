@@ -198,7 +198,10 @@ export class RequiredFormService {
       .where(
         and(
           eq(schema.shiftInstanceInvites.userId, userId),
-          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.ADMIN_INVITED),
+          eq(
+            schema.shiftInstanceInvites.status,
+            ShiftInviteStatus.ADMIN_INVITED,
+          ),
           eq(schema.shiftInstances.isCancelled, false),
           eq(schema.shifts.organizationUnitId, organizationUnitId),
           eq(schema.shifts.isDeleted, false),

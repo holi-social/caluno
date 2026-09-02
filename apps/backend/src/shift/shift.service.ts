@@ -930,7 +930,10 @@ export class ShiftService {
           await this.createInvitesForInstances(
             tx,
             createdInstances.map((i) => i.id),
-            this.toInviteMembers(invitedMemberIds, ShiftInviteStatus.ADMIN_INVITED),
+            this.toInviteMembers(
+              invitedMemberIds,
+              ShiftInviteStatus.ADMIN_INVITED,
+            ),
           );
         }
       }
@@ -1103,7 +1106,8 @@ export class ShiftService {
     } = {},
     actorUserId?: string,
   ): Promise<ShiftInstanceEntity> {
-    const inviteStatus = options.inviteStatus ?? ShiftInviteStatus.ADMIN_INVITED;
+    const inviteStatus =
+      options.inviteStatus ?? ShiftInviteStatus.ADMIN_INVITED;
     const currentShiftInstance = await this.db.query.shiftInstances.findFirst({
       where: {
         id: shiftInstanceId,
@@ -2163,9 +2167,7 @@ export class ShiftService {
             durationMinutes,
             ...(inputEventId !== undefined ? { eventId: inputEventId } : {}),
             ...(imageUrl !== undefined ? { imageUrl } : {}),
-            ...(joinRequiresApproval != null
-              ? { joinRequiresApproval }
-              : {}),
+            ...(joinRequiresApproval != null ? { joinRequiresApproval } : {}),
           })
           .where(
             and(
@@ -2649,11 +2651,7 @@ export class ShiftService {
     }
 
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
-    const hasSeat = await this.hasAvailableSeat(
-      instanceId,
-      maxVolunteers,
-      db,
-    );
+    const hasSeat = await this.hasAvailableSeat(instanceId, maxVolunteers, db);
 
     const existingInvite = await db.query.shiftInstanceInvites.findFirst({
       where: {

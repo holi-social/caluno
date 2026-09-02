@@ -1922,7 +1922,10 @@ async function seedFixtures() {
       location: 'Exhibition Hall B',
       inviteUserIds: [],
       extraInvites: [
-        { userIds: [demoUser.id], status: ShiftInviteStatus.VOLUNTEER_CANCELLED },
+        {
+          userIds: [demoUser.id],
+          status: ShiftInviteStatus.VOLUNTEER_CANCELLED,
+        },
       ],
     },
   );

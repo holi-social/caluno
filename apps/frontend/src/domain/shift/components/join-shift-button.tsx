@@ -329,12 +329,7 @@ export function JoinShiftButton({
     inviteStatus === ShiftInviteStatus.WaitlistJoined
   ) {
     return (
-      <Button
-        variant="outline"
-        size="xl"
-        className={className}
-        disabled
-      >
+      <Button variant="outline" size="xl" className={className} disabled>
         <ClockIcon className="size-5" />
         {inviteStatus === ShiftInviteStatus.WaitlistJoined
           ? t('join.waitlisted')
