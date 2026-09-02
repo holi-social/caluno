@@ -43,11 +43,12 @@ describe('purpose-validation image MIME restrictions', () => {
     expect(isMimeTypeAllowed(rule, 'text/plain')).toBe(false);
   });
 
-  it.each(
-    IMAGE_PURPOSES,
-  )('allows common image MIME types for %s', (purpose) => {
-    const rule = PURPOSE_VALIDATION_RULES[purpose];
-    expect(isMimeTypeAllowed(rule, 'image/png')).toBe(true);
-    expect(isMimeTypeAllowed(rule, 'image/jpeg')).toBe(true);
-  });
+  it.each(IMAGE_PURPOSES)(
+    'allows common image MIME types for %s',
+    (purpose) => {
+      const rule = PURPOSE_VALIDATION_RULES[purpose];
+      expect(isMimeTypeAllowed(rule, 'image/png')).toBe(true);
+      expect(isMimeTypeAllowed(rule, 'image/jpeg')).toBe(true);
+    },
+  );
 });

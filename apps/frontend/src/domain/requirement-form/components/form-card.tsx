@@ -47,7 +47,7 @@ export function FormCard({
   }
 
   async function handleShare() {
-    const url = `${window.location.origin}/f/${form.shareToken}`;
+    const url = `${window.location.origin}/orgs/${orgUId}/forms/${form.shareToken}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success(tActions('linkCopied'), { description: url });

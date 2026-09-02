@@ -1,11 +1,6 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { User } from '../../user/models/user.model';
-import { FormSubmissionStatus } from '../enums';
-
-registerEnumType(FormSubmissionStatus, {
-  name: 'FormSubmissionStatus',
-});
 
 import { FormSubmissionValue } from './form-submission-value.model';
 import { RequirementForm } from './requirement-form.model';
@@ -20,12 +15,6 @@ export class FormSubmission {
 
   @Field(() => String)
   userId!: string;
-
-  @Field(() => String, { nullable: true })
-  membershipId?: string | null;
-
-  @Field(() => FormSubmissionStatus)
-  status!: FormSubmissionStatus;
 
   @Field(() => Date)
   submittedAt!: Date;

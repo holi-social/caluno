@@ -98,8 +98,16 @@ export class RequirementFormRepository extends BaseRepository {
     return data.regenerateFormShareToken;
   }
 
-  async submitForm(token: string, input: SubmitFormInput) {
-    const data = await this.sdk.SubmitForm({ token, input });
+  async submitForm(
+    token: string,
+    organizationUnitId: string,
+    input: SubmitFormInput,
+  ) {
+    const data = await this.sdk.SubmitForm({
+      token,
+      organizationUnitId,
+      input,
+    });
     return data.submitForm;
   }
 

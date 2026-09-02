@@ -1,9 +1,14 @@
 'use server';
 
-import type { CreateOrganizationInput } from '@repo/data';
+import type {
+  CreateOrganizationInput,
+  UpdateOrganizationInput,
+} from '@repo/data';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getDataClient } from '@/lib/data-client';
+import { actionClient } from '@/lib/safe-action';
+import { updateOrganizationSchema } from './schemas';
 
 interface CreateOrganizationResult {
   success: boolean;
@@ -59,3 +64,23 @@ export async function createOrganization(
 
   redirect(`/admin/${org.root.id}`);
 }
+
+export const updateOrganization = actionClient
+  .inputSchema(updateOrganizationSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    const input: UpdateOrganizationInput = {
+      address: parsedInput.address || null,
+      city: parsedInput.city || null,
+      zipCode: parsedInput.zipCode || null,
+      contactEmail: parsedInput.contactEmail || null,
+      phone: parsedInput.phone || null,
+      websiteUrl: parsedInput.websiteUrl || null,
+      logoUrl: parsedInput.logoUrl ?? null,
+    };
+
+    return await data.organization.update(parsedInput.organizationId, input);
+  });

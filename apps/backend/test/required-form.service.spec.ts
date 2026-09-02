@@ -118,6 +118,7 @@ describe('RequiredFormService', () => {
       authServiceMock,
       notificationServiceMock,
       requiredFormService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
     );
 
@@ -232,31 +233,6 @@ describe('RequiredFormService', () => {
 
       expect(statuses[0]?.submitted).toBe(false);
       expect(statuses[0]?.submissionId).toBeNull();
-    });
-
-    it('does not count REJECTED submissions as satisfied', async () => {
-      const { user, unit } = await setupOrg();
-      const { form } = await createRequirementForm(db, {
-        organizationId: unit.organizationId,
-        organizationUnitId: unit.id,
-        createdById: user.id,
-      });
-      await setRequiredForms(db, {
-        organizationUnitId: unit.id,
-        formIds: [form.id],
-      });
-      await createFormSubmission(db, {
-        formId: form.id,
-        userId: user.id,
-        status: 'rejected',
-      });
-
-      const statuses = await requiredFormService.getRequiredFormStatuses(
-        user.id,
-        orgUnitTarget(unit.id),
-      );
-
-      expect(statuses[0]?.submitted).toBe(false);
     });
   });
 

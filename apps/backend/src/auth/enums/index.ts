@@ -12,4 +12,6 @@ export enum PermissionKey {
   REQUIREMENT_PROFILE_EDIT = 'requirement-profile:edit',
 
   ACCOUNTING_MANAGE = 'accounting:manage',
+
+  CHECK_IN_MANAGE = 'check-in:manage',
 }
