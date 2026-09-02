@@ -6,6 +6,7 @@ import {
   DocumentKind,
   SigneeType,
 } from '../src/accounting/enums';
+import { DocumentProfileRequirementService } from '../src/accounting/services/document-profile-requirement.service';
 import { DocumentTemplateService } from '../src/accounting/services/document-template.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
@@ -38,9 +39,15 @@ describe('DocumentTemplateService', () => {
       imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
-    service = new DocumentTemplateService(db, {
-      capture: () => {},
-    } as unknown as PostHogService);
+    service = new DocumentTemplateService(
+      db,
+      {
+        capture: () => {},
+      } as unknown as PostHogService,
+      {
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+    );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
     });
@@ -230,6 +237,52 @@ describe('DocumentTemplateService', () => {
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
+
+    it('rejects a unit-scoped template when the unit lacks an org-profile source it binds', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Org Gate Org ${crypto.randomUUID()}`,
+      );
+      const unit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'unit',
+      });
+      const editor = await createUser(db);
+
+      // The unit has no city, and the template binds org_city → the real
+      // profile-requirement gate must fire. Build the service with the real
+      // dependency (the shared mock always returns []).
+      const gatedService = new DocumentTemplateService(
+        db,
+        {
+          capture: () => {},
+        } as unknown as PostHogService,
+        new DocumentProfileRequirementService(db, {} as never),
+      );
+
+      await expect(
+        gatedService.createDocumentTemplate(
+          organization.id,
+          {
+            organizationUnitId: unit.id,
+            reimbursementTypeId: reimbursementType.id,
+            kind: DocumentKind.CONTRACT,
+            body: {
+              header: {
+                orgIdentityLine: {
+                  enabled: true,
+                  fields: [{ value: { kind: 'bound', source: 'org_city' } }],
+                },
+              },
+            },
+            signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+          },
+          editor.id,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
   });
 
   describe('updateDocumentTemplate', () => {
@@ -308,9 +361,8 @@ describe('DocumentTemplateService', () => {
       const untouched = await db.query.contracts.findFirst({
         where: { id: contract.id },
       });
-      expect(
-        (untouched?.resolvedBody as { header: { title: string } }).header.title,
-      ).toBe('v1');
+      const header = untouched?.resolvedBody.header as { title: string };
+      expect(header.title).toBe('v1');
     });
   });
 

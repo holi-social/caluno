@@ -17,7 +17,7 @@ import {
 } from '@repo/ui';
 import { UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ContractCreationModal } from './contract-creation-modal';
 import {
   DocTypeHeader,
@@ -33,6 +33,16 @@ type DocKind = 'contract' | 'invoice';
 interface DocLine {
   kind: DocKind;
   pauschale: PauschalenType;
+}
+
+/**
+ * Base UI combobox item shape. The input shows the selected item's `label`
+ * (the volunteer's name) while `value` keeps the volunteer id — without the
+ * label, the input would display the raw uuid after selection.
+ */
+interface VolunteerOption {
+  value: string;
+  label: string;
 }
 
 // Grouped by Pauschale type, not by kind.
@@ -114,6 +124,10 @@ export function CreateDocumentModal({
   }, [open]);
 
   const volunteer = volunteers.find((v) => v.id === volunteerId) ?? null;
+  const volunteerOptions = useMemo(
+    () => volunteers.map((v) => ({ value: v.id, label: v.name })),
+    [volunteers],
+  );
   const existingDoc =
     volunteer && selectedLine
       ? getDocLineSummary(volunteer, selectedLine).latest
@@ -157,9 +171,9 @@ export function CreateDocumentModal({
             className="flex-1 space-y-6 overflow-y-auto p-6"
           >
             <Combobox
-              items={volunteers}
-              onValueChange={(id: string | null) => {
-                setVolunteerId(id);
+              items={volunteerOptions}
+              onValueChange={(option: VolunteerOption | null) => {
+                setVolunteerId(option?.value ?? null);
                 setSelectedLine(null);
               }}
             >
@@ -176,9 +190,9 @@ export function CreateDocumentModal({
                   {t('createDocumentModal.noVolunteersFound')}
                 </ComboboxEmpty>
                 <ComboboxList>
-                  {(vol: BoardVolunteer) => (
-                    <ComboboxItem key={vol.id} value={vol.id}>
-                      {vol.name}
+                  {(option: VolunteerOption) => (
+                    <ComboboxItem key={option.value} value={option}>
+                      {option.label}
                     </ComboboxItem>
                   )}
                 </ComboboxList>
@@ -199,68 +213,70 @@ export function CreateDocumentModal({
                     const selected =
                       selectedLine && lineKey(selectedLine) === lineKey(line);
                     return (
-                      <button
-                        key={lineKey(line)}
-                        type="button"
-                        onClick={() => setSelectedLine(line)}
-                        className={cn(
-                          'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
-                          selected
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                            : 'border-border bg-card hover:bg-muted',
-                        )}
-                      >
-                        <DocTypeHeader
-                          kind={line.kind}
-                          pauschale={line.pauschale}
-                          topLine=""
-                          name={lineName(line)}
-                          className="min-w-0 flex-1"
-                        />
-
-                        <div className="min-w-0 flex-1 text-sm">
-                          {count > 0 ? (
-                            <>
-                              <p className="text-card-foreground">
-                                {t('createDocumentModal.documentCount', {
-                                  count,
-                                })}
-                              </p>
-                              {latest && (
-                                <p className="text-xs text-muted-foreground">
-                                  {t(
-                                    `docs.statusLabel.${STATUS_META[latest.status].labelKey}` as Parameters<
-                                      typeof t
-                                    >[0],
-                                  )}
-                                  {latest.lastActionDate
-                                    ? ` · ${latest.lastActionDate}`
-                                    : ''}
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className="text-muted-foreground">
-                              {t('createDocumentModal.noDocumentYet')}
-                            </p>
+                      // The "view volunteer" stub button below sits as a
+                      // sibling overlay, not a descendant: nesting a
+                      // <button> inside this row's <button> would be
+                      // invalid HTML (and breaks hydration).
+                      <div key={lineKey(line)} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLine(line)}
+                          className={cn(
+                            'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
+                            count > 0 && 'pr-28',
+                            selected
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                              : 'border-border bg-card hover:bg-muted',
                           )}
-                        </div>
+                        >
+                          <DocTypeHeader
+                            kind={line.kind}
+                            pauschale={line.pauschale}
+                            topLine=""
+                            name={lineName(line)}
+                            className="min-w-0 flex-1"
+                          />
+
+                          <div className="min-w-0 flex-1 text-sm">
+                            {count > 0 ? (
+                              <>
+                                <p className="text-card-foreground">
+                                  {t('createDocumentModal.documentCount', {
+                                    count,
+                                  })}
+                                </p>
+                                {latest && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {t(
+                                      `docs.statusLabel.${STATUS_META[latest.status].labelKey}` as Parameters<
+                                        typeof t
+                                      >[0],
+                                    )}
+                                    {latest.lastActionDate
+                                      ? ` · ${latest.lastActionDate}`
+                                      : ''}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-muted-foreground">
+                                {t('createDocumentModal.noDocumentYet')}
+                              </p>
+                            )}
+                          </div>
+                        </button>
 
                         {count > 0 && (
-                          <Button
+                          // A stub for now — needs a real userId to open
+                          // the volunteer-profile sheet.
+                          <button
                             type="button"
-                            size="sm"
-                            variant="outline"
-                            className="shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Stub — needs a real userId to open the admin/volunteers 'volunteer-profile' sheet.
-                            }}
+                            className="absolute inset-y-0 right-3 my-auto inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs"
                           >
                             {t('createDocumentModal.viewVolunteer')}
-                          </Button>
+                          </button>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

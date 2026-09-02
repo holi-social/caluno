@@ -206,5 +206,31 @@
     },
     "scheduleRecurring": "{days}, {timeRange}",
     "subject": "You're invited to {shiftTitle}"
+  },
+  "documentAwaitingSignature": {
+    "heading": "Your document is waiting for your signature",
+    "greeting": "Hi {firstName},",
+    "from": "from {organizationName} is waiting for your signature.",
+    "detail": "You can read and download the document before you sign — signing is one tap.",
+    "buttonLabel": "Open my documents",
+    "note": "The document also appears under \"Your documents\" in your profile.",
+    "subject": "{documentName} from {organizationName} is waiting for your signature",
+    "previewText": "{documentName} from {organizationName} is waiting for your signature.",
+    "footerNote": "You're receiving this because a document from {organizationName} needs your signature on {brandName}."
+  },
+  "documentDeclinedByOrg": {
+    "heading": "A document was declined",
+    "greeting": "Hi {firstName},",
+    "from": "from {organizationName} was declined.",
+    "reasonLabel": "Reason given:",
+    "buttonLabel": "Open my documents",
+    "note": "The document can no longer be signed. The organisation may issue a new one.",
+    "subject": "{documentName} from {organizationName} was declined",
+    "previewText": "{documentName} from {organizationName} was declined.",
+    "footerNote": "You're receiving this because a document from {organizationName} was declined on {brandName}."
+  },
+  "documentNames": {
+    "agreement": "Supplementary agreement",
+    "timesheet": "Timesheet"
   }
 }

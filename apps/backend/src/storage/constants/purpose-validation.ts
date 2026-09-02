@@ -27,6 +27,15 @@ export const PURPOSE_VALIDATION_RULES: Record<
     requiredPermission: 'org:view',
     requiresOrganizationUnitId: true,
   },
+  // Server-generated documents (rendered contract/invoice PDFs) — uploaded
+  // via FileService.saveGeneratedFile, never through the presigned path.
+  [FilePurpose.DOCUMENT]: {
+    visibility: 'public',
+    maxByteSize: 25 * 1024 * 1024,
+    allowedMimeTypes: ['application/pdf'],
+    requiredPermission: 'org:view',
+    requiresOrganizationUnitId: true,
+  },
   [FilePurpose.FORM_DOCUMENT]: {
     visibility: 'public',
     maxByteSize: 10 * 1024 * 1024,

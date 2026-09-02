@@ -31,4 +31,13 @@ export class CreateOrganizationUnitInput {
 
   @Field(() => String, { nullable: true })
   address?: string | null;
+
+  @Field(() => String, { nullable: true })
+  city?: string | null;
+
+  @Field(() => String, { nullable: true })
+  zipCode?: string | null;
+
+  @Field(() => String, { nullable: true })
+  legalRep?: string | null;
 }

@@ -18,6 +18,7 @@ type OrgUnitForm =
 
 export type FormSubmission = {
   form: OrgUnitForm;
+  organizationUnitId: string;
   completed: boolean;
   submissionId?: string;
   submittedAt?: string;
@@ -47,7 +48,7 @@ export const MembershipFormCard = async ({
   const actionLabel = t(submission.completed ? 'view' : 'fillIn');
   const actionHref = submission.completed
     ? `/profile/forms/submissions/${submission.submissionId}`
-    : `/f/${submission.form.shareToken}`;
+    : `/orgs/${submission.organizationUnitId}/forms/${submission.form.shareToken}`;
 
   return (
     <Card>

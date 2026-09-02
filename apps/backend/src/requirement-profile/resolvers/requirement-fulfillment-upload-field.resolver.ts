@@ -1,4 +1,5 @@
 import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { FileService } from '../../storage/services/file.service';
 import { RequirementFulfillmentUpload } from '../models/requirement-fulfillment.model';
@@ -11,15 +12,16 @@ export class RequirementFulfillmentUploadFieldResolver {
   async downloadUrl(
     @Parent() fulfillment: RequirementFulfillmentUpload,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<string | null> {
     const fileId = fulfillment.fileId;
-    if (!fileId || !context.user) {
+    if (!fileId || !session) {
       return null;
     }
 
     try {
       const { downloadUrl } = await this.fileService.presignDownload(
-        context.user.id,
+        session.user.id,
         fileId,
         context.organizationUnitId,
       );

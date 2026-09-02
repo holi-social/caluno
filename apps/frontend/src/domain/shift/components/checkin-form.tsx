@@ -68,8 +68,7 @@ export const CheckinForm = ({
     });
   };
 
-  const handleNextCheckin = () =>
-    router.push(`/admin/${organizationUnitId}/check-in/scan`);
+  const handleNextCheckin = () => router.push('/check-in');
 
   const selectedShift = shifts.find((s) => s.id === selectedShiftId);
   const canCheckin =

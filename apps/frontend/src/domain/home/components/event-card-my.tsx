@@ -20,7 +20,11 @@ export function EventCardMy({ event }: EventCardMyProps) {
   const orgLogoUrl = event.organizationUnit?.logoUrl;
 
   return (
-    <Link href={`/events/${event.id}`} className="block h-full">
+    <Link
+      href={`/events/${event.id}`}
+      prefetch={false}
+      className="block h-full"
+    >
       <Card
         className={cn(
           'relative flex h-full w-full flex-col justify-end gap-3 overflow-hidden rounded-xl border border-border p-2',

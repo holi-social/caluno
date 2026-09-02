@@ -73,6 +73,22 @@ export class Invoice {
   @Field(() => [InvoiceTimeEntry])
   invoiceTimeEntries!: InvoiceTimeEntry[];
 
+  /**
+   * The profile-required data sources this document's template reads that the
+   * volunteer has not yet supplied. Empty once the document is ready to be
+   * signed (the sign gate blocks the volunteer otherwise).
+   */
+  @Field(() => [String])
+  missingProfileFields!: string[];
+
+  /**
+   * The org-profile sources (e.g. org_city/org_address) this document's
+   * template needs that the organization has not yet supplied. Empty once the
+   * org profile is complete enough to create the document.
+   */
+  @Field(() => [String])
+  missingOrgProfileFields!: string[];
+
   @Field(() => Date)
   createdAt!: Date;
 
