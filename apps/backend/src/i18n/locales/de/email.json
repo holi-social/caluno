@@ -111,6 +111,14 @@
     "step3Title": "Freiwillige gewinnen",
     "subject": "Deine Organisation \"{organizationName}\" ist bereit"
   },
+  "organizationUnitInvited": {
+    "buttonLabel": "{organizationUnitName} beitreten",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich eingeladen hat, {brandName} beizutreten.",
+    "greeting": "Hallo {firstName}, du wurdest eingeladen, {organizationUnitName} beizutreten.",
+    "heading": "Du bist eingeladen, {organizationUnitName} beizutreten",
+    "previewText": "Du wurdest eingeladen, {organizationUnitName} beizutreten.",
+    "subject": "Du bist eingeladen, {organizationUnitName} beizutreten"
+  },
   "passwordReset": {
     "buttonLabel": "Passwort zurücksetzen",
     "expiry": "Dieser Link läuft in {minutes} Minuten ab.",

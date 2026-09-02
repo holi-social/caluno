@@ -13,6 +13,7 @@ import {
 } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import { NotificationService } from '../notification';
 import { OrganizationService } from '../organization/organization.service';
 import { isParticipatingShiftInviteStatus } from '../shared/invite-status';
 import {
@@ -41,6 +42,7 @@ export class TimeTrackingService {
     private readonly postHogService: PostHogService,
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
+    private readonly notificationService: NotificationService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
@@ -373,6 +375,30 @@ export class TimeTrackingService {
       eligibleOrganizationUnits: eligibleUnits,
       openTimeEntries,
     };
+  }
+
+  /**
+   * Emails a public join link — creates no membership and no request itself
+   * (spec decision 5). The recipient's own join is what later unblocks
+   * check-in, via `checkInReadiness`'s `pendingMembership` state.
+   */
+  async inviteVolunteerToOrganization(
+    organizationUnitId: string,
+    volunteerId: string,
+  ): Promise<void> {
+    const organizationUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { id: true, name: true },
+    });
+    if (!organizationUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    this.notificationService.notifyOrganizationUnitInvited({
+      organizationUnitId: organizationUnit.id,
+      organizationUnitName: organizationUnit.name,
+      userId: volunteerId,
+    });
   }
 
   /**

@@ -494,6 +494,15 @@ describe('check-in readiness/submit mutation permissions', () => {
       ),
     ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
   });
+
+  it('gates checkInInviteToOrganization on check-in:manage', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        TimeTrackingMutationResolver.prototype.checkInInviteToOrganization,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
 });
 
 describe('checkInInviteToShiftInstance mutation', () => {
@@ -607,5 +616,83 @@ describe('checkInInviteToShiftInstance mutation', () => {
     });
 
     expect(response.errors?.[0]?.message).toContain('not found');
+  });
+});
+
+describe('checkInInviteToOrganization mutation', () => {
+  const CHECK_IN_INVITE_TO_ORGANIZATION = `
+    mutation CheckInInviteToOrganization($volunteerId: ID!) {
+      checkInInviteToOrganization(volunteerId: $volunteerId)
+    }
+  `;
+
+  let app: INestApplication;
+  let db: Database;
+  let callerUserId: string;
+  let unitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    callerUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `OrgInvite ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Org invite unit',
+    });
+    unitId = unit.id;
+
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+
+    const role = await createRole(db, { organizationId: org.organization.id });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const membership = await addMembership(db, callerUserId, unit.id);
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(callerUserId);
+  });
+
+  it('succeeds without creating a membership or a membership request', async () => {
+    const volunteer = await createUser(db);
+
+    const data = await graphqlRequestRequiringData<{
+      checkInInviteToOrganization: boolean;
+    }>(
+      app,
+      {
+        query: CHECK_IN_INVITE_TO_ORGANIZATION,
+        variables: { volunteerId: volunteer.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInInviteToOrganization',
+    );
+
+    expect(data.checkInInviteToOrganization).toBe(true);
+
+    const membership = await db.query.memberships.findFirst({
+      where: { userId: volunteer.id, organizationUnitId: unitId },
+    });
+    const request = await db.query.membershipRequests.findFirst({
+      where: { userId: volunteer.id, organizationUnitId: unitId },
+    });
+    expect(membership).toBeUndefined();
+    expect(request).toBeUndefined();
   });
 });
