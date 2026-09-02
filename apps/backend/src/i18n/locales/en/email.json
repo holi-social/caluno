@@ -111,6 +111,14 @@
     "step3Title": "Bring in volunteers",
     "subject": "Your organization \"{organizationName}\" is ready"
   },
+  "organizationUnitInvited": {
+    "buttonLabel": "Join {organizationUnitName}",
+    "footerNote": "You're receiving this because an admin invited you to join {brandName}.",
+    "greeting": "Hi {firstName}, you've been invited to join {organizationUnitName}.",
+    "heading": "You're invited to join {organizationUnitName}",
+    "previewText": "You've been invited to join {organizationUnitName}.",
+    "subject": "You're invited to join {organizationUnitName}"
+  },
   "passwordReset": {
     "buttonLabel": "Reset password",
     "expiry": "This link expires in {minutes} minutes.",

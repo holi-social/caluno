@@ -126,4 +126,17 @@ export class TimeTrackingMutationResolver {
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
+
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Mutation(() => Boolean)
+  async checkInInviteToOrganization(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<boolean> {
+    await this.timeTrackingService.inviteVolunteerToOrganization(
+      context.organizationUnitId,
+      volunteerId,
+    );
+    return true;
+  }
 }
