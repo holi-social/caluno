@@ -5,6 +5,7 @@ import {
   useCheckInInviteToShiftInstance,
   useCheckInReadiness,
   useCheckInShiftInstances,
+  useQueryClient,
 } from '@repo/data/react';
 import { Button, Card, CardContent } from '@repo/ui';
 import { endOfMonth, startOfMonth } from 'date-fns';
@@ -43,15 +44,18 @@ type ManualCheckInPageProps = {
   };
   orgUnits: Array<{ id: string; name: string }>;
   initialOrgUnitId: string;
+  checkInId: string;
 };
 
 export function ManualCheckInPage({
   volunteer,
   orgUnits,
   initialOrgUnitId,
+  checkInId,
 }: ManualCheckInPageProps) {
   const t = useTranslations('CheckIn');
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { formatTimeRange } = useFormatting();
 
   const [selection, setSelection] = useState<CheckInSelection>(() => ({
@@ -153,6 +157,9 @@ export function ManualCheckInPage({
 
       if (result?.serverError) {
         toast.error(result.serverError);
+        await queryClient.invalidateQueries({
+          queryKey: ['check-in-readiness'],
+        });
         return;
       }
 
@@ -204,6 +211,8 @@ export function ManualCheckInPage({
         {selection.shiftInstanceId && readinessState && (
           <CheckInReadinessCard
             state={readinessState}
+            orgUnitId={selection.orgUnitId}
+            checkInId={checkInId}
             onInviteToOrg={handleInviteToOrg}
             onOpenAcceptMembership={() => setOpenSheet('acceptMembership')}
             onInviteToShift={handleInviteToShift}

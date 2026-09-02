@@ -51,6 +51,7 @@ export default async function VolunteeringCheckInPage({
         name: unit.name,
       }))}
       initialOrgUnitId={initialOrgUnitId}
+      checkInId={checkInId}
     />
   );
 }
