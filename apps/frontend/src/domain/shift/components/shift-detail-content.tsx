@@ -8,7 +8,7 @@ import { useFormatting } from '@/lib/formatting/use-formatting';
 import { ShiftActionCardSkeleton } from './shift-detail-skeleton';
 import { ShiftInstancesSidebar } from './shift-instances-sidebar';
 
-export type ShiftDetailShift = {
+export type Shift = {
   id: string;
   organizationUnitId: string;
   title: string;
@@ -27,7 +27,7 @@ export type ShiftDetailShift = {
 };
 
 interface ShiftDetailContentProps {
-  shift: ShiftDetailShift;
+  shift: Shift;
   isAuthenticated: boolean;
   autoJoin?: boolean;
   preselectedInstanceId?: string;

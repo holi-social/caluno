@@ -3,10 +3,10 @@ import { getLocale } from 'next-intl/server';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 import { ShiftActionCard } from './shift-action-card';
-import type { ShiftDetailShift } from './shift-detail-content';
+import type { Shift } from './shift-detail-content';
 
 type ShiftInstancesSectionProps = {
-  shift: ShiftDetailShift;
+  shift: Shift;
   isAuthenticated: boolean;
   autoJoin?: boolean;
   preselectedInstanceId?: string;
