@@ -899,6 +899,7 @@ export class ShiftService {
           originalStartsAt: shiftInput.startsAt,
           durationMinutes,
           eventId: eventId ?? null,
+          reimbursementTypeId: shiftInput.reimbursementTypeId ?? null,
         })
         .returning();
 
