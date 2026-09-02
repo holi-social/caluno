@@ -14,9 +14,11 @@ import type { OrganizationCreatedPayload } from './payloads/organization-created
 import type { ShiftInstanceCancelledPayload } from './payloads/shift-instance-cancelled.payload';
 import type { ShiftInstanceInvitedPayload } from './payloads/shift-instance-invited.payload';
 import type { ShiftInstanceJoinedPayload } from './payloads/shift-instance-joined.payload';
+import type { ShiftInstanceLeftPayload } from './payloads/shift-instance-left.payload';
 import type { ShiftInstanceRemovedPayload } from './payloads/shift-instance-removed.payload';
 import type { ShiftInstanceSeriesCancelledPayload } from './payloads/shift-instance-series-cancelled.payload';
 import type { ShiftInvitedPayload } from './payloads/shift-invited.payload';
+import type { ShiftSeriesLeftPayload } from './payloads/shift-series-left.payload';
 import type { ShiftSeriesRemovedPayload } from './payloads/shift-series-removed.payload';
 
 export interface NotificationEventPayloadMap {
@@ -32,6 +34,8 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED]: ShiftInstanceSeriesCancelledPayload;
   [NotificationEvent.SHIFT_INSTANCE_REMOVED]: ShiftInstanceRemovedPayload;
   [NotificationEvent.SHIFT_SERIES_REMOVED]: ShiftSeriesRemovedPayload;
+  [NotificationEvent.SHIFT_INSTANCE_LEFT]: ShiftInstanceLeftPayload;
+  [NotificationEvent.SHIFT_SERIES_LEFT]: ShiftSeriesLeftPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
   [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;

@@ -10,6 +10,8 @@ export type { MembershipRequestedPayload } from './membership-requested.payload'
 export type { OrganizationCreatedPayload } from './organization-created.payload';
 export type { ShiftInstanceCancelledPayload } from './shift-instance-cancelled.payload';
 export type { ShiftInstanceJoinedPayload } from './shift-instance-joined.payload';
+export type { ShiftInstanceLeftPayload } from './shift-instance-left.payload';
 export type { ShiftInstanceRemovedPayload } from './shift-instance-removed.payload';
 export type { ShiftInstanceSeriesCancelledPayload } from './shift-instance-series-cancelled.payload';
+export type { ShiftSeriesLeftPayload } from './shift-series-left.payload';
 export type { ShiftSeriesRemovedPayload } from './shift-series-removed.payload';

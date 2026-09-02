@@ -224,6 +224,32 @@
     "previewText": "Du wurdest von {shiftTitle} bei {organizationName} ab {fromDate} entfernt.",
     "subject": "Du wurdest von {shiftTitle} entfernt"
   },
+  "shiftInstanceLeft": {
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du deine Anmeldung für einen Einsatz auf {brandName} abgesagt hast.",
+    "greeting": "Hallo {firstName}, deine Einsatz-Anmeldung wurde abgesagt.",
+    "heading": "Du hast einen Einsatz verlassen",
+    "note": "Ein:e Koordinator:in wurde informiert, damit die Lücke besetzt werden kann.",
+    "previewText": "Du hast deine Anmeldung für {shiftTitle} bei {organizationName} abgesagt.",
+    "subject": "Du hast {shiftTitle} verlassen",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesLeft": {
+    "bodyMessage": "Du hast deine Anmeldungen für die Einsatzserie '{shiftTitle}' ab {fromDate} abgesagt.",
+    "detailFrom": "Ab",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "footerNote": "Du erhältst diese E-Mail, weil du deine Anmeldungen für eine Einsatzserie auf {brandName} abgesagt hast.",
+    "greeting": "Hallo {firstName}, deine Anmeldungen für eine Einsatzserie wurden abgesagt.",
+    "heading": "Du hast eine Einsatzserie verlassen",
+    "note": "Ein:e Koordinator:in wurde informiert, damit die Lücken besetzt werden können.",
+    "previewText": "Du hast deine Anmeldungen für {shiftTitle} bei {organizationName} ab {fromDate} abgesagt.",
+    "subject": "Du hast {shiftTitle} verlassen"
+  },
   "shiftInvited": {
     "buttonLabel": "Einsatz ansehen",
     "detailInstructions": "Beschreibung",
