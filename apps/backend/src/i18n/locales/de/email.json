@@ -95,6 +95,16 @@
     "previewText": "{requesterName} möchte {organizationName} beitreten.",
     "subject": "Neue Mitgliedschaftsanfrage für {organizationName}"
   },
+  "membershipRejected": {
+    "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} abgelehnt wurde.",
+    "greetingAfter": "wurde nicht genehmigt.",
+    "greetingBefore": "Hallo {firstName}, deine Mitgliedschaftsanfrage für",
+    "heading": "Deine Mitgliedschaftsanfrage wurde abgelehnt",
+    "outro": "Du kannst die Organisation kontaktieren, wenn du Fragen zu dieser Entscheidung hast.",
+    "previewText": "Deine Mitgliedschaftsanfrage für {organizationName} wurde abgelehnt.",
+    "reasonLabel": "Begründung:",
+    "subject": "Deine Mitgliedschaftsanfrage für {organizationName} wurde abgelehnt"
+  },
   "organizationCreated": {
     "buttonLabel": "{organizationName} öffnen",
     "footerNote": "Du erhältst diese E-Mail, weil du eine Organisation auf {brandName} erstellt hast.",
