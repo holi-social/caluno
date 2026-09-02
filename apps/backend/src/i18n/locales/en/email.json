@@ -185,6 +185,32 @@
     "previewText": "{shiftTitle} at {organizationName} — upcoming shifts cancelled from {fromDate}.",
     "subject": "{shiftTitle}: upcoming shifts cancelled"
   },
+  "shiftInstanceRemoved": {
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because an admin removed you from a shift on {brandName}.",
+    "greeting": "Hi {firstName}, you've been removed from a shift.",
+    "heading": "You've been removed from a shift",
+    "note": "This shift is no longer on your schedule.",
+    "previewText": "You've been removed from {shiftTitle} at {organizationName}.",
+    "subject": "You've been removed from {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesRemoved": {
+    "bodyMessage": "You've been removed from the '{shiftTitle}' series starting {fromDate}.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "footerNote": "You're receiving this because an admin removed you from a shift series on {brandName}.",
+    "greeting": "Hi {firstName}, you've been removed from a shift series.",
+    "heading": "You've been removed from a shift series",
+    "note": "These shifts are no longer on your schedule.",
+    "previewText": "You've been removed from {shiftTitle} at {organizationName} starting {fromDate}.",
+    "subject": "You've been removed from {shiftTitle}"
+  },
   "shiftInvited": {
     "buttonLabel": "View shift",
     "detailInstructions": "Instructions",

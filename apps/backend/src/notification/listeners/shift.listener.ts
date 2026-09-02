@@ -5,8 +5,10 @@ import { createEmailTemplateContext } from '../email/email-template-context';
 import { shiftInstanceCancelledTemplate } from '../email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from '../email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from '../email/templates/shift-instance-joined.template';
+import { shiftInstanceRemovedTemplate } from '../email/templates/shift-instance-removed.template';
 import { shiftInstanceSeriesCancelledTemplate } from '../email/templates/shift-instance-series-cancelled.template';
 import { shiftInvitedTemplate } from '../email/templates/shift-invited.template';
+import { shiftSeriesRemovedTemplate } from '../email/templates/shift-series-removed.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
@@ -170,6 +172,63 @@ export class ShiftListener {
             shiftInstructions: payload.shiftInstructions,
             recipientFirstName: recipient.firstName,
             schedule: payload.schedule,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_REMOVED)
+  async handleShiftInstanceRemoved(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_REMOVED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_REMOVED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceRemovedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_SERIES_REMOVED)
+  async handleShiftSeriesRemoved(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_REMOVED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      {
+        event: NotificationEvent.SHIFT_SERIES_REMOVED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftSeriesRemovedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            recipientFirstName: recipient.firstName,
+            fromDate: payload.fromDate,
           },
           templateContext,
         );
