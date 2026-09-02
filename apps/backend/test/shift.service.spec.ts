@@ -25,6 +25,7 @@ import {
   createShiftInstance,
   createUser,
 } from './factories';
+import { createReimbursementType } from './factories/accounting.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -1671,6 +1672,33 @@ describe('ShiftService', () => {
           notificationService.notifyShiftInstanceSeriesCancelled,
         ).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('create — reimbursement type', () => {
+    it('persists the reimbursement type on the created shift', async () => {
+      const reimbursementType = await createReimbursementType(db);
+
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Coaching session',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        reimbursementTypeId: reimbursementType.id,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBe(reimbursementType.id);
+    });
+
+    it('leaves the shift type-less when not provided', async () => {
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Setup crew',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBeNull();
     });
   });
 });
