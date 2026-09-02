@@ -1,7 +1,8 @@
 'use client';
 
+import { useMyDocumentSummary } from '@repo/data/react';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@repo/ui';
-import { LogOutIcon, SettingsIcon } from 'lucide-react';
+import { FileTextIcon, LogOutIcon, SettingsIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type PropsWithChildren, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
@@ -14,10 +15,16 @@ export function ProfileDropdown({ children }: ProfileDropdownProps) {
   const tCommon = useTranslations('Common');
   const router = useRouter();
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const summary = useMyDocumentSummary();
 
   const handleProfileOpen = async () => {
     setPopoverOpen(false);
     router.push('/profile');
+  };
+
+  const handleDocumentsOpen = () => {
+    setPopoverOpen(false);
+    router.push('/profile/documents');
   };
 
   const handleSignOut = async () => {
@@ -25,12 +32,39 @@ export function ProfileDropdown({ children }: ProfileDropdownProps) {
     router.push('/login');
   };
 
+  // Fail-open: a summary-query error (e.g. a backend that doesn't have the
+  // new query yet, or a transient failure) must never hide the entry — the
+  // documents may still exist via the older org-scoped queries. Only a
+  // confirmed zero total hides it.
+  const hasDocuments = summary.isError || (summary.data?.total ?? 0) > 0;
+  const pendingCount = summary.isError ? 0 : (summary.data?.pending ?? 0);
+
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger className="rounded-full" asChild>
         {children}
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-48 p-1">
+      <PopoverContent align="start" className="w-56 p-1">
+        {hasDocuments && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start px-2!"
+            onClick={handleDocumentsOpen}
+          >
+            <FileTextIcon className="size-4 mr-2" />
+            <span className="flex-1 text-left">{t('myDocuments')}</span>
+            {pendingCount > 0 && (
+              <span
+                role="img"
+                aria-label={t('myDocumentsBadge', { count: pendingCount })}
+                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-xs font-medium text-white tabular-nums"
+              >
+                {pendingCount > 99 ? '99+' : pendingCount}
+              </span>
+            )}
+          </Button>
+        )}
+
         <Button
           variant="ghost"
           className="w-full justify-start px-2!"

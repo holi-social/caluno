@@ -63,6 +63,9 @@ export function EditOrgUnitForm({
       phone: organizationUnit?.phone ?? undefined,
       description: organizationUnit?.description ?? undefined,
       address: organizationUnit?.address ?? undefined,
+      city: organizationUnit?.city ?? undefined,
+      zipCode: organizationUnit?.zipCode ?? undefined,
+      legalRep: organizationUnit?.legalRep ?? undefined,
     },
   });
 
@@ -79,6 +82,9 @@ export function EditOrgUnitForm({
         phone: formData.phone,
         description: formData.description,
         address: formData.address,
+        city: formData.city,
+        zipCode: formData.zipCode,
+        legalRep: formData.legalRep,
       });
 
       if (result?.serverError) {

@@ -42,6 +42,7 @@ export * from './react/hooks/use-join-shift-instance';
 export * from './react/hooks/use-manual-baseline';
 export * from './react/hooks/use-membership-request';
 export * from './react/hooks/use-memberships';
+export * from './react/hooks/use-my-documents';
 export * from './react/hooks/use-my-events';
 export * from './react/hooks/use-my-form-submissions';
 export * from './react/hooks/use-my-permissions';
@@ -63,6 +64,7 @@ export * from './react/hooks/use-update-shift-instance-invite-status';
 export * from './react/hooks/use-update-user-locale';
 export * from './react/hooks/use-user';
 export * from './react/hooks/use-volunteer-submissions';
+export * from './react/hooks/use-volunteers-needing-timesheets';
 export * from './react/hooks/use-weekly-shifts';
 export * from './react/hooks/use-yearly-usage';
 // Organization context (provider, hooks, and cookie utilities)
@@ -78,11 +80,14 @@ export type {
   EligibleTimeEntry,
   InvoiceDetail,
   InvoiceSummary,
+  MyDocumentSummaryData,
+  MyDocumentsGroupData,
   RawBundleDownloadStatus,
   RawEffectiveRate,
   RawManualBaseline,
   RawPendingSignee,
   RawReimbursementType,
+  RawVolunteerNeedsTimesheet,
   RawVolunteerYearlyUsage,
   RawYearlyUsage,
   RecordedBundleDownload,

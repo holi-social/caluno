@@ -6,6 +6,10 @@ import { SYSTEM_PROFILE_KEYS } from '../constants';
 import { UpdateUserProfileInput } from '../inputs/update-user-profile.input';
 import { UserProfileMapper } from '../mappers/user-profile.mapper';
 import { UserProfile } from '../models/user-profile.model';
+import {
+  formatSystemKeyLabel,
+  validateSystemKeyValue,
+} from '../profile-validation';
 import { UserProfileService } from '../services';
 
 @Resolver(() => UserProfile)
@@ -41,6 +45,13 @@ export class UserProfileMutationResolver {
         SYSTEM_PROFILE_KEYS.has(key),
       ),
     );
+
+    // Validate the incoming profile fields (same rules as the form-submission
+    // path), so an invalid IBAN/BIC is rejected here too, not only client-side.
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value !== 'string') continue;
+      validateSystemKeyValue(value, key, formatSystemKeyLabel(key), null);
+    }
 
     const item = await this.userProfileService.upsertData(
       session.user.id,

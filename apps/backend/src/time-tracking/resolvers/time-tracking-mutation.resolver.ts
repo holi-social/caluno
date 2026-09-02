@@ -22,11 +22,12 @@ export class TimeTrackingMutationResolver {
   async addTimeEntry(
     @Args('input') input: AddTimeEntryInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.addTimeEntry(
       context.organizationUnitId,
       input,
-      context.user.id,
+      session.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
@@ -37,12 +38,13 @@ export class TimeTrackingMutationResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: CloseTimeEntryInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.closeTimeEntry(
       id,
       context.organizationUnitId,
       input,
-      context.user.id,
+      session.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
@@ -53,12 +55,13 @@ export class TimeTrackingMutationResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateTimeEntryInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.updateTimeEntry(
       id,
       context.organizationUnitId,
       input,
-      context.user.id,
+      session.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
@@ -68,11 +71,12 @@ export class TimeTrackingMutationResolver {
   async deleteTimeEntry(
     @Args('id', { type: () => ID }) id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<TimeEntry> {
     const entity = await this.timeTrackingService.deleteTimeEntry(
       context.organizationUnitId,
       id,
-      context.user.id,
+      session.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
   }
