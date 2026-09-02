@@ -1571,14 +1571,6 @@ export class ShiftService {
       input.reimbursementTypeId !== undefined &&
       input.reimbursementTypeId !== shift.reimbursementTypeId;
 
-    if (typeChanged) {
-      await this.snapshotPastInstanceTypes(
-        tx,
-        shift.id,
-        shift.reimbursementTypeId,
-      );
-    }
-
     const [updatedShift] = await tx
       .update(schema.shifts)
       .set({
@@ -1708,6 +1700,21 @@ export class ShiftService {
             eq(schema.shiftInstances.isCancelled, false),
           ),
         );
+    }
+
+    // Runs after the override-reset blocks above (not before): those blocks
+    // clear overrideReimbursementTypeId for every instance whose
+    // actualStartsAt >= fromDate, which on a multi-occurrence day can include
+    // an instance that has already ended. Snapshotting first would have that
+    // reset immediately wipe the freeze this call just wrote. Idempotent —
+    // only touches instances with overrideReimbursementTypeId IS NULL and
+    // actualEndsAt < now() — so running it last is safe and closes the gap.
+    if (typeChanged) {
+      await this.snapshotPastInstanceTypes(
+        tx,
+        shift.id,
+        shift.reimbursementTypeId,
+      );
     }
 
     const [refreshedInstance] = await tx
