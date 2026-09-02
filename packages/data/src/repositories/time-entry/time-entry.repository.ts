@@ -2,6 +2,8 @@ import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
   GetCheckInContextQuery,
+  GetCheckInReadinessQuery,
+  GetCheckInVolunteerRequiredFormsQuery,
   GetTimeEntryQuery,
   UpdateTimeEntryInput,
 } from '../../generated/graphql';
@@ -68,5 +70,56 @@ export class TimeEntryRepository extends BaseRepository {
   ): Promise<GetCheckInContextQuery['checkInContext']> {
     const data = await this.sdk.GetCheckInContext({ checkInId });
     return data.checkInContext;
+  }
+
+  async getCheckInReadiness(
+    organizationUnitId: string,
+    volunteerId: string,
+    shiftInstanceId: string,
+  ): Promise<GetCheckInReadinessQuery['checkInReadiness']> {
+    const data = await this.sdk.GetCheckInReadiness(
+      { volunteerId, shiftInstanceId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return data.checkInReadiness;
+  }
+
+  async getCheckInVolunteerRequiredForms(
+    organizationUnitId: string,
+    volunteerId: string,
+  ): Promise<
+    GetCheckInVolunteerRequiredFormsQuery['checkInVolunteerRequiredForms']
+  > {
+    const data = await this.sdk.GetCheckInVolunteerRequiredForms(
+      { volunteerId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return data.checkInVolunteerRequiredForms;
+  }
+
+  /**
+   * No header override: this runs from a server action whose
+   * `getDataClient({ orgUId })` already scopes every request on this client.
+   */
+  async checkInVolunteer(
+    volunteerId: string,
+    shiftInstanceId: string | null,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.CheckInVolunteer({
+      volunteerId,
+      shiftInstanceId,
+    });
+    return data.checkInVolunteer;
+  }
+
+  async checkInInviteToOrganization(
+    organizationUnitId: string,
+    volunteerId: string,
+  ): Promise<boolean> {
+    const data = await this.sdk.CheckInInviteToOrganization(
+      { volunteerId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return data.checkInInviteToOrganization;
   }
 }

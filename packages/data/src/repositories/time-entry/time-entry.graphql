@@ -202,3 +202,40 @@ query GetCheckInContext($checkInId: String!) {
     }
   }
 }
+
+query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+  checkInReadiness(
+    volunteerId: $volunteerId
+    shiftInstanceId: $shiftInstanceId
+  ) {
+    isMember
+    openMembershipRequestId
+    shiftInviteStatus
+    isParticipating
+  }
+}
+
+query GetCheckInVolunteerRequiredForms($volunteerId: ID!) {
+  checkInVolunteerRequiredForms(volunteerId: $volunteerId) {
+    form {
+      id
+      name
+    }
+    order
+    submitted
+    submissionId
+  }
+}
+
+mutation CheckInVolunteer($volunteerId: ID!, $shiftInstanceId: ID) {
+  checkInVolunteer(
+    volunteerId: $volunteerId
+    shiftInstanceId: $shiftInstanceId
+  ) {
+    id
+  }
+}
+
+mutation CheckInInviteToOrganization($volunteerId: ID!) {
+  checkInInviteToOrganization(volunteerId: $volunteerId)
+}

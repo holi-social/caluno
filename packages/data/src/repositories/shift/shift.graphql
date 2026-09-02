@@ -519,3 +519,15 @@ query GetCheckInShifts($search: String) {
     title
   }
 }
+
+mutation CheckInInviteToShiftInstance(
+  $shiftInstanceId: ID!
+  $volunteerId: ID!
+) {
+  checkInInviteToShiftInstance(
+    shiftInstanceId: $shiftInstanceId
+    volunteerId: $volunteerId
+  ) {
+    id
+  }
+}
