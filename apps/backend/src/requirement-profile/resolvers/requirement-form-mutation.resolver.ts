@@ -3,9 +3,11 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
+import { RequiredFormTargetType } from '../enums';
 import { CreateRequirementFormInput } from '../inputs/create-requirement-form.input';
 import { SubmitFormInput } from '../inputs/submit-form.input';
 import { UpdateRequirementFormInput } from '../inputs/update-requirement-form.input';
+import { FormSubmissionMapper } from '../mappers/form-submission.mapper';
 import { RequirementFormMapper } from '../mappers/requirement-form.mapper';
 import { FormSubmission } from '../models/form-submission.model';
 import { RequirementForm } from '../models/requirement-form.model';
@@ -18,6 +20,7 @@ export class RequirementFormMutationResolver {
     private readonly requirementFormService: RequirementFormService,
     private readonly requirementFormMapper: RequirementFormMapper,
     private readonly formSubmissionService: FormSubmissionService,
+    private readonly formSubmissionMapper: FormSubmissionMapper,
   ) {}
 
   @Permissions(PERMISSIONS.REQUIREMENT_PROFILE_EDIT)
@@ -57,10 +60,12 @@ export class RequirementFormMutationResolver {
   async deleteRequirementForm(
     @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequirementForm> {
     const item = await this.requirementFormService.delete(
       id,
       context.organizationUnitId,
+      session.user.id,
     );
     return this.requirementFormMapper.toModelOrThrow(item);
   }
@@ -82,17 +87,19 @@ export class RequirementFormMutationResolver {
 
   @Mutation(() => FormSubmission)
   async submitRequiredForm(
-    @Args('organizationUnitId') organizationUnitId: string,
+    @Args('targetType', { type: () => RequiredFormTargetType })
+    targetType: RequiredFormTargetType,
+    @Args('targetId') targetId: string,
     @Args('formId') formId: string,
     @Args('input') input: SubmitFormInput,
     @Session() session: UserSession,
   ): Promise<FormSubmission> {
     const submission = await this.formSubmissionService.submitRequiredForm(
-      organizationUnitId,
+      { targetType, targetId },
       formId,
       input,
       session.user.id,
     );
-    return submission as unknown as FormSubmission;
+    return this.formSubmissionMapper.toModelOrThrow(submission);
   }
 }

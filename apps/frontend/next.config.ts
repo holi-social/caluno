@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -63,6 +64,31 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
     remotePatterns: storageImagePatterns(),
   },
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
 };
 
-export default withNextIntl(nextConfig);
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT_FRONTEND,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Upload a wider set of client files for readable stack traces.
+  widenClientFileUpload: true,
+  // Source maps are uploaded to Sentry, never publicly served.
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
+  // Bypass ad blockers by tunnelling events through the Next server.
+  tunnelRoute: '/sentry-tunnel',
+  reactComponentAnnotation: { enabled: true },
+  // Only print upload logs in CI.
+  silent: !process.env.CI,
+  disableLogger: true,
+  ...(process.env.SENTRY_RELEASE
+    ? { release: { name: process.env.SENTRY_RELEASE } }
+    : {}),
+});

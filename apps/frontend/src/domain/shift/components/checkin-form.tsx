@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@repo/ui';
-import { Check, PlaneTakeoff, SkipForward } from 'lucide-react';
+import { Check, ScanQrCode, SkipForward } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -38,12 +38,15 @@ export const CheckinForm = ({
   const [serverError, setServerError] = useState<string | null>(null);
   const [selectedShiftId, setSelectedShiftId] = useState(shifts[0]?.id);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [checkInMode, setCheckInMode] = useState<'shift' | 'none'>(
+    shifts.length > 0 ? 'shift' : 'none',
+  );
 
   const handleCheckin = () => {
     setServerError(null);
 
     startTransition(async () => {
-      if (!selectedShiftId) {
+      if (checkInMode === 'shift' && !selectedShiftId) {
         toast.warning(t('checkIn.noShiftSelected'));
         return;
       }
@@ -53,7 +56,7 @@ export const CheckinForm = ({
         volunteerId: volunteer.id,
         startedAt: new Date(),
         endedAt: null,
-        shiftInstanceId: selectedShiftId,
+        shiftInstanceId: checkInMode === 'shift' ? selectedShiftId : undefined,
       });
 
       if (result?.serverError) {
@@ -65,11 +68,11 @@ export const CheckinForm = ({
     });
   };
 
-  const handleNextCheckin = () =>
-    router.push(`/admin/${organizationUnitId}/check-in/scan`);
+  const handleNextCheckin = () => router.push('/check-in');
 
   const selectedShift = shifts.find((s) => s.id === selectedShiftId);
-  const canCheckin = status === 'valid' && selectedShiftId;
+  const canCheckin =
+    status === 'valid' && (checkInMode === 'none' || !!selectedShiftId);
 
   return (
     <>
@@ -80,12 +83,28 @@ export const CheckinForm = ({
           </div>
         )}
 
-        <ShiftSelector
-          shifts={shifts}
-          organizationUnitId={organizationUnitId}
-          onChange={setSelectedShiftId}
-          value={selectedShiftId}
-        />
+        {shifts.length > 0 && (
+          <button
+            type="button"
+            className="text-sm underline text-muted-foreground"
+            onClick={() =>
+              setCheckInMode((mode) => (mode === 'shift' ? 'none' : 'shift'))
+            }
+          >
+            {checkInMode === 'shift'
+              ? t('checkIn.checkInWithoutShift')
+              : t('checkIn.checkInWithShift')}
+          </button>
+        )}
+
+        {checkInMode === 'shift' && (
+          <ShiftSelector
+            shifts={shifts}
+            organizationUnitId={organizationUnitId}
+            onChange={setSelectedShiftId}
+            value={selectedShiftId}
+          />
+        )}
 
         <UserCard user={volunteer} size="lg" />
 
@@ -97,7 +116,7 @@ export const CheckinForm = ({
             className="w-full"
             type="button"
           >
-            <PlaneTakeoff />{' '}
+            <ScanQrCode />{' '}
             {isPending ? t('checkIn.checkingIn') : t('checkIn.checkIn')}
           </Button>
         </div>
@@ -113,9 +132,11 @@ export const CheckinForm = ({
 
           <div className="min-w-0 space-y-4">
             <UserCard user={volunteer} size="lg" />
-            <Card className="p-2 bg-accent mb-6">
-              {selectedShift && <ShiftSelectItem shift={selectedShift} />}
-            </Card>
+            {checkInMode === 'shift' && selectedShift && (
+              <Card className="p-2 bg-accent mb-6">
+                <ShiftSelectItem shift={selectedShift} />
+              </Card>
+            )}
           </div>
           <DialogFooter>
             <Button onClick={handleNextCheckin}>

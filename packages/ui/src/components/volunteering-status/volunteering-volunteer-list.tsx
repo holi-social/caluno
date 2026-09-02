@@ -1,6 +1,13 @@
+import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import { Badge } from '../base/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../base/card';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../base/card';
 import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
@@ -18,6 +25,8 @@ export type VolunteeringVolunteerListItem = {
   statusLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  /** Far-right icon-only actions (e.g. View profile, Check in). */
+  iconActions?: VolunteeringActionLabel[];
 };
 
 export type VolunteeringVolunteerListProps = {
@@ -27,6 +36,8 @@ export type VolunteeringVolunteerListProps = {
   title?: string;
   /** Header summary, e.g. "5 invited · 12 spots". */
   summary?: string;
+  /** Optional action rendered in the card header (e.g. Invite button). */
+  headerAction?: ReactNode;
   /** Localized button labels keyed by action id. */
   actionLabels?: VolunteeringActionLabels;
   onAction?: (
@@ -41,6 +52,7 @@ export function VolunteeringVolunteerList({
   phase,
   title = 'Volunteers',
   summary,
+  headerAction,
   actionLabels,
   onAction,
   className,
@@ -58,6 +70,7 @@ export function VolunteeringVolunteerList({
             <Badge variant="outline">{volunteers.length}</Badge>
           )}
         </CardTitle>
+        {headerAction ? <CardAction>{headerAction}</CardAction> : null}
       </CardHeader>
       <CardContent className="px-6 py-0">
         {volunteers.map((volunteer) => (
@@ -70,6 +83,7 @@ export function VolunteeringVolunteerList({
             completedDuration={volunteer.completedDuration}
             statusLabel={volunteer.statusLabel}
             actions={volunteer.actions}
+            iconActions={volunteer.iconActions}
             actionLabels={actionLabels}
             onAction={
               onAction ? (action) => onAction(volunteer.id, action) : undefined

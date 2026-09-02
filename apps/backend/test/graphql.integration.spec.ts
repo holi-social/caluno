@@ -54,6 +54,7 @@ describe('GraphQL API Integration', () => {
             }
           }
         `,
+          headers: { 'x-organization-unit-id': organizationUnitId },
           variables: {
             input: {
               organizationId,
@@ -96,6 +97,7 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
+        headers: { 'x-organization-unit-id': organizationUnitId },
         variables: {
           input: {
             organizationId,
@@ -130,6 +132,7 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
+      headers: { 'x-organization-unit-id': organizationUnitId },
       variables: { id: profileId },
     });
 
@@ -143,7 +146,7 @@ describe('GraphQL API Integration', () => {
       .insert(schema.files)
       .values({
         storageKey: `private/${organizationUnitId}/${testUserId}/test-document.pdf`,
-        bucket: process.env.STORAGE_BUCKET ?? 'clippy',
+        bucket: process.env.STORAGE_BUCKET ?? 'caluno',
         visibility: FileVisibility.PRIVATE,
         purpose: FilePurpose.REQUIREMENT_DOCUMENT,
         mimeType: 'application/pdf',
@@ -179,6 +182,7 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
+          headers: { 'x-organization-unit-id': organizationUnitId },
           variables: {
             input: {
               profileId,
@@ -260,6 +264,7 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
+      headers: { 'x-organization-unit-id': organizationUnitId },
       variables: { id: submissionId },
     });
 

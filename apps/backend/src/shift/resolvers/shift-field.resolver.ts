@@ -1,4 +1,4 @@
-import { Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { Int, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import {
   AllowAnonymous,
   Session,
@@ -7,6 +7,8 @@ import {
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import { Organization } from '../../organization/models/organization.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
+import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
+import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInstanceMapper } from '../mappers/shift-instance.mapper';
@@ -16,6 +18,7 @@ import type { ShiftEntity } from '../schemas/shift.schema';
 import { ShiftService } from '../shift.service';
 import { ShiftLoader } from './shift.loader';
 import { ShiftInstanceLoader } from './shift-instance.loader';
+import { ShiftRequiredFormsLoader } from './shift-required-forms.loader';
 
 @Resolver(() => Shift)
 export class ShiftFieldResolver {
@@ -23,6 +26,7 @@ export class ShiftFieldResolver {
     private readonly shiftService: ShiftService,
     private readonly userMapper: UserMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
+    private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
   @AllowAnonymous()
@@ -65,5 +69,25 @@ export class ShiftFieldResolver {
   ): Promise<ShiftInstance[]> {
     const rows = await loader.instancesByShiftId.load(shift.id);
     return this.shiftInstanceMapper.toArray(rows);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => Int)
+  async requiredFormsCount(
+    @Parent() shift: ShiftEntity,
+    @Loader(ShiftRequiredFormsLoader) loader: ShiftRequiredFormsLoader,
+  ): Promise<number> {
+    return loader.countByShiftId.load(shift.id);
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => [RequiredFormRef])
+  async requiredForms(
+    @Parent() shift: ShiftEntity,
+    @Loader(ShiftRequiredFormsLoader) loader: ShiftRequiredFormsLoader,
+  ): Promise<RequiredFormRef[]> {
+    const requiredForms = await loader.requiredFormsByShiftId.load(shift.id);
+
+    return this.requiredFormRefMapper.toArray(requiredForms);
   }
 }

@@ -47,7 +47,7 @@ export function FormCard({
   }
 
   async function handleShare() {
-    const url = `${window.location.origin}/f/${form.shareToken}`;
+    const url = `${window.location.origin}/orgs/${orgUId}/forms/${form.shareToken}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success(tActions('linkCopied'), { description: url });
@@ -124,8 +124,7 @@ export function FormCard({
               asChild
               variant="outline"
               className="h-10 flex-1 has-[>svg]:px-6 xl:size-10 xl:flex-none xl:shrink-0"
-              aria-label={t('submissions')}
-              title={t('submissions')}
+              tooltip={t('submissions')}
             >
               <Link
                 href={`/admin/${orgUId}/requirement-forms/${form.id}/submissions`}
@@ -138,10 +137,9 @@ export function FormCard({
               <Button
                 variant="outline"
                 className="text-muted-foreground hover:text-destructive h-10 flex-1 has-[>svg]:px-6 lg:size-10 lg:flex-none lg:shrink-0"
-                onClick={() => setConfirmOpen(true)}
-                aria-label={tTable('deleteFormAria')}
-                title={tTable('deleteFormAria')}
+                tooltip={tTable('deleteFormAria')}
                 disabled={locked}
+                onClick={() => setConfirmOpen(true)}
               >
                 <Trash2 className="size-4" />
                 <span className="ml-1.5 hidden sm:block lg:hidden">

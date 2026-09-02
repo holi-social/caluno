@@ -26,10 +26,7 @@ export function MembershipRequestRequiredForms({
   const requiredForms = orgUnit?.requiredForms ?? [];
 
   const submittedFormIds = new Set(
-    (submissions ?? [])
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter(Boolean),
+    (submissions ?? []).map((s) => s.form?.id).filter(Boolean),
   );
 
   if (requiredForms.length === 0) {
@@ -76,26 +73,4 @@ export function MembershipRequestRequiredForms({
       </div>
     </div>
   );
-}
-
-export function useRequiredFormsSatisfied(
-  userId: string,
-  organizationUnitId: string,
-): boolean {
-  const { data: orgUnit } = useOrganizationUnit(organizationUnitId);
-  const { data: submissions } = useFormSubmissionsForVolunteer(userId);
-
-  const requiredForms = orgUnit?.requiredForms ?? [];
-  if (requiredForms.length === 0) {
-    return true;
-  }
-
-  const submittedFormIds = new Set(
-    (submissions ?? [])
-      .filter((s) => s.status === 'SUBMITTED')
-      .map((s) => s.form?.id)
-      .filter(Boolean),
-  );
-
-  return requiredForms.every((ref) => submittedFormIds.has(ref.form.id));
 }

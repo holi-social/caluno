@@ -27,6 +27,7 @@ export default async function UpdateShiftPage({
       description={t('editDescription')}
       orgUId={orgUId}
       mutate={updateShift.bind(null, orgUId, shift.id)}
+      initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
       initialValues={{
         name: shift.title,
         instructions: shift.instructions ?? undefined,
@@ -37,6 +38,8 @@ export default async function UpdateShiftPage({
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
         imageFileId: shift.imageUrl ?? undefined,
+        minVolunteers: shift.minVolunteers ?? undefined,
+        maxVolunteers: shift.maxVolunteers ?? undefined,
       }}
     />
   );

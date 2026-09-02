@@ -9,13 +9,17 @@ import {
   type GetAvailableShiftInstancesQuery,
   type GetMyShiftInstancesQuery,
   type GetPublicShiftInstancesQuery,
+  type GetShiftInstanceQuery,
   type GetShiftInstancesQuery,
   type GetShiftQuery,
   type GetWeeklyShiftsQuery,
   type JoinShiftInstanceMutation,
+  type SetShiftInstanceRequiredFormsMutation,
+  type SetShiftRequiredFormsMutation,
   type ShiftInviteStatus,
   SortOrder,
   type UpdateShiftInput,
+  type UpdateShiftInstanceInput,
 } from '../../generated/graphql';
 import {
   BaseRepository,
@@ -43,6 +47,8 @@ export interface ShiftDetail extends RawShift {
   recurrenceEndsAt: Date | undefined;
 }
 
+export type ShiftInstanceDetail = GetShiftInstanceQuery['shiftInstance'];
+
 function enrichShift(shift: RawShift): ShiftDetail {
   const startDate = new Date(shift.originalStartsAt);
   const endDate = new Date(startDate.getTime() + shift.durationMinutes * 60000);
@@ -67,6 +73,11 @@ export class ShiftRepository extends BaseRepository {
   ): Promise<PublicShiftInstance[]> {
     const data = await this.sdk.GetPublicShiftInstances({ shiftId });
     return data.publicShiftInstances;
+  }
+
+  async findPublicInstance(id: string): Promise<PublicShiftInstance> {
+    const data = await this.sdk.GetPublicShiftInstance({ id });
+    return data.publicShiftInstance;
   }
 
   async findByIdDetailed(id: string): Promise<ShiftDetail> {
@@ -116,6 +127,27 @@ export class ShiftRepository extends BaseRepository {
     return { id: data.deleteShift.id };
   }
 
+  async setRequiredForms(
+    shiftId: string,
+    formIds: string[],
+  ): Promise<SetShiftRequiredFormsMutation['setShiftRequiredForms']> {
+    const data = await this.sdk.SetShiftRequiredForms({ shiftId, formIds });
+    return data.setShiftRequiredForms;
+  }
+
+  async setInstanceRequiredForms(
+    instanceId: string,
+    formIds: string[],
+  ): Promise<
+    SetShiftInstanceRequiredFormsMutation['setShiftInstanceRequiredForms']
+  > {
+    const data = await this.sdk.SetShiftInstanceRequiredForms({
+      instanceId,
+      formIds,
+    });
+    return data.setShiftInstanceRequiredForms;
+  }
+
   async updateMembers(
     instanceId: string,
     memberIds: string[],
@@ -127,6 +159,30 @@ export class ShiftRepository extends BaseRepository {
       inviteToAllInstances: options?.inviteToAllInstances,
     });
     return { id: data.updateMembersForShiftInstance.id };
+  }
+
+  async updateInstance(
+    instanceId: string,
+    input: UpdateShiftInstanceInput,
+    applyToAllFuture?: boolean,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.UpdateShiftInstance({
+      instanceId,
+      input,
+      applyToAllFuture,
+    });
+    return { id: data.updateShiftInstance.id };
+  }
+
+  async deleteInstance(
+    instanceId: string,
+    applyToAllFuture?: boolean,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.DeleteShiftInstance({
+      id: instanceId,
+      applyToAllFuture,
+    });
+    return { id: data.deleteShiftInstance.id };
   }
 
   async joinInstance(
@@ -144,9 +200,9 @@ export class ShiftRepository extends BaseRepository {
     return data.shiftVolunteers;
   }
 
-  async findInstanceDetail(shiftId: string, instanceId: string) {
-    const data = await this.sdk.GetShiftInstanceDetail({ shiftId });
-    return data.shiftInstances.find((instance) => instance.id === instanceId);
+  async findInstance(id: string) {
+    const data = await this.sdk.GetShiftInstance({ id });
+    return data.shiftInstance;
   }
 
   async updateShiftInstanceInviteStatus(
@@ -167,10 +223,15 @@ export class ShiftRepository extends BaseRepository {
     return data.shiftInstances;
   }
 
-  async findForWeek(from: Date, to: Date): Promise<WeeklyShiftInstance[]> {
+  async findForWeek(
+    startsAfter: Date,
+    endsBefore: Date,
+    eventId?: string | null,
+  ): Promise<WeeklyShiftInstance[]> {
     const data = await this.sdk.GetWeeklyShifts({
-      from: from.toISOString(),
-      to: to.toISOString(),
+      startsAfter: startsAfter.toISOString(),
+      endsBefore: endsBefore.toISOString(),
+      eventId: eventId ?? undefined,
     });
     return data.weeklyShifts;
   }
@@ -178,12 +239,13 @@ export class ShiftRepository extends BaseRepository {
   async findMyShiftInstances(
     options: {
       includePast?: boolean;
-      from?: Date;
-      to?: Date;
+      startsAfter?: Date;
+      endsBefore?: Date;
       limit?: number;
       offset?: number;
       order?: SortOrder;
       statuses?: ShiftInviteStatus[];
+      includeIntended?: boolean;
     } = {},
   ): Promise<{
     items: MyShiftInstance[];
@@ -196,20 +258,21 @@ export class ShiftRepository extends BaseRepository {
   }> {
     const data = await this.sdk.GetMyShiftInstances({
       includePast: options.includePast ?? false,
-      startsAfter: options.from?.toISOString(),
-      endsBefore: options.to?.toISOString(),
+      startsAfter: options.startsAfter?.toISOString(),
+      endsBefore: options.endsBefore?.toISOString(),
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,
       order: options.order ?? SortOrder.Asc,
       statuses: options.statuses,
+      includeIntended: options.includeIntended,
     });
     return data.myShiftInstances;
   }
 
   async findAvailableShiftInstances(
     options: {
-      from?: Date;
-      to?: Date;
+      startsAfter?: Date;
+      endsBefore?: Date;
       organizationUnitIds?: string[];
       limit?: number;
       offset?: number;
@@ -224,8 +287,8 @@ export class ShiftRepository extends BaseRepository {
     };
   }> {
     const data = await this.sdk.GetAvailableShiftInstances({
-      startsAfter: options.from?.toISOString(),
-      endsBefore: options.to?.toISOString(),
+      startsAfter: options.startsAfter?.toISOString(),
+      endsBefore: options.endsBefore?.toISOString(),
       organizationUnitIds: options.organizationUnitIds,
       limit: options.limit ?? 15,
       offset: options.offset ?? 0,

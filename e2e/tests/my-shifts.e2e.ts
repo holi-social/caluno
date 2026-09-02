@@ -11,7 +11,7 @@ import { LoginPage } from '../pages/LoginPage';
 // (2 overlapping shifts) and "Overlap Test Pile" (6 overlapping shifts,
 // A-F) fixtures invited to it — member01 is kept conflict-free as a
 // baseline for other manual checks.
-const MEMBER_EMAIL = 'member02@clippy.social';
+const MEMBER_EMAIL = 'testing+002@caluno.org';
 const MEMBER_PASSWORD = 'abcd1234';
 
 test.describe('my-shifts conflict clustering + day strip', () => {
@@ -153,9 +153,9 @@ test.describe('my-shifts conflict clustering + day strip', () => {
       'No shift currently in the "starts soon" check-in window for this fixture data',
     );
 
-    await expect(checkInLink).toHaveAttribute('href', /\/qr-id$/);
+    await expect(checkInLink).toHaveAttribute('href', /\/check-in$/);
 
     await checkInLink.click();
-    await page.waitForURL(/\/qr-id$/, { timeout: 10000 });
+    await page.waitForURL(/\/check-in$/, { timeout: 10000 });
   });
 });

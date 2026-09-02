@@ -42,6 +42,7 @@ export default async function EditEventShiftPage({
         endsAt: new Date(event.endsAt),
       }}
       imagePreviewUrl={shift.imageUrl}
+      initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
       initialValues={{
         name: shift.title,
         instructions: shift.instructions ?? undefined,
@@ -52,6 +53,8 @@ export default async function EditEventShiftPage({
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
         imageFileId: shift.imageUrl ?? undefined,
+        minVolunteers: shift.minVolunteers ?? undefined,
+        maxVolunteers: shift.maxVolunteers ?? undefined,
       }}
     />
   );

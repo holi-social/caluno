@@ -1,4 +1,8 @@
+export { documentAwaitingSignatureTemplate } from './document-awaiting-signature.template';
+export { documentDeclinedByOrgTemplate } from './document-declined-by-org.template';
 export { membershipApprovedTemplate } from './membership-approved.template';
+export { membershipLeftTemplate } from './membership-left.template';
+export { membershipRemovedTemplate } from './membership-removed.template';
 export { membershipRequestedTemplate } from './membership-requested.template';
 export { organizationCreatedTemplate } from './organization-created.template';
 export { passwordResetTemplate } from './password-reset.template';

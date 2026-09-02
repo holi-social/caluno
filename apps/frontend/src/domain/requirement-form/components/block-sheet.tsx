@@ -3,7 +3,7 @@
 import { useCurrentOrg, useOrgUId } from '@repo/data/react';
 import { useTranslations } from 'next-intl';
 import { Suspense } from 'react';
-import { ClippySheet } from '@/components/sheets/clippy-sheet';
+import { CalunoSheet } from '@/components/sheets/caluno-sheet';
 import { useSheet } from '@/hooks/use-sheet';
 import { BlockForm } from './block-form';
 
@@ -14,22 +14,26 @@ export function BlockSheet() {
     BLOCK_FORM_SHEET,
     'id',
     'readOnly',
+    'forForm',
   );
   const t = useTranslations('RequirementForm.blockSheet');
   const blockId = getParam('id');
   const readOnly = getParam('readOnly') === 'true';
+  const forForm = getParam('forForm') === 'true';
   const isEdit = !!blockId;
   const orgUId = useOrgUId();
   const { organizationId } = useCurrentOrg();
 
   if (!orgUId || !organizationId) return null;
 
-  const handleSuccess = () => {
-    sheetProps.close();
+  const handleSuccess = (newBlockId: string) => {
+    // Opened from the form builder in create mode: hand the new block back
+    // so the builder can append it to the form.
+    sheetProps.close(forForm && !isEdit ? { addBlock: newBlockId } : undefined);
   };
 
   return (
-    <ClippySheet
+    <CalunoSheet
       {...sheetProps}
       title={
         readOnly ? t('viewTitle') : isEdit ? t('editTitle') : t('createTitle')
@@ -58,6 +62,6 @@ export function BlockSheet() {
           onSuccess={handleSuccess}
         />
       </Suspense>
-    </ClippySheet>
+    </CalunoSheet>
   );
 }

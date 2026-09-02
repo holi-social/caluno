@@ -11,7 +11,15 @@ import {
   Separator,
   Textarea,
 } from '@repo/ui';
-import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Plus,
+  Save,
+  SquarePen,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -248,18 +256,6 @@ export function EditBlockForm({
           )}
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="icon">{t('iconLabel')}</FieldLabel>
-          <Input
-            id="icon"
-            type="text"
-            placeholder={t('iconPlaceholder')}
-            disabled={isPending}
-            aria-invalid={!!errors.icon}
-            {...register('icon')}
-          />
-        </Field>
-
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isPending || !isDirty} size="lg">
             <Save className="mr-2 size-4" />
@@ -345,19 +341,21 @@ export function EditBlockForm({
               <div className="ml-4 flex shrink-0 items-center gap-1">
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  tooltip={tCommon('moveUp')}
                   disabled={idx === 0 || isPending}
                   onClick={() => handleMoveField(field.id, 'up')}
                 >
-                  ↑
+                  <ArrowUp className="size-4" />
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  tooltip={tCommon('moveDown')}
                   disabled={idx === fields.length - 1 || isPending}
                   onClick={() => handleMoveField(field.id, 'down')}
                 >
-                  ↓
+                  <ArrowDown className="size-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -367,12 +365,14 @@ export function EditBlockForm({
                     setEditingFieldId(field.id);
                   }}
                 >
-                  {t('edit')}
+                  <SquarePen />
+                  {tCommon('edit')}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="text-muted-foreground hover:text-destructive size-8"
+                  tooltip={tCommon('delete')}
                   onClick={() => setDeletingFieldId(field.id)}
                 >
                   <Trash2 className="size-4" />

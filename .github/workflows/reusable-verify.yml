@@ -1,0 +1,123 @@
+# Verification suite shared by ci.yml and the CD workflows.
+name: Verify
+
+on:
+  workflow_call:
+    inputs:
+      static-checks:
+        description: Run Biome and TypeScript.
+        type: boolean
+        default: true
+      migration-check:
+        description: Assert the Drizzle schema matches the committed migrations.
+        type: boolean
+        default: true
+      tests:
+        description: Run the test suite against a throwaway Postgres.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint & format
+    if: inputs.static-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+      - run: bun run lint
+
+  types:
+    name: Type check
+    if: inputs.static-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'true' # check-types depends on ^build + codegen
+      - run: bun run check-types
+      - uses: ./.github/actions/save-turbo-cache
+        if: success()
+
+  migrations:
+    name: Migrations up to date
+    if: inputs.migration-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+      - name: Check migrations are up to date
+        run: |
+          set -o pipefail
+          # Closed stdin: drizzle-kit prompts on a detected rename.
+          OUTPUT="$(bun run --cwd apps/backend db:generate < /dev/null 2>&1 | tee /dev/stderr)"
+          if ! echo "$OUTPUT" | grep -q "No schema changes, nothing to migrate"; then
+            echo "::error::Schema changes are not reflected in committed migrations. Run 'bun run --cwd apps/backend db:generate' locally and commit the result."
+            exit 1
+          fi
+
+  tests:
+    name: Tests
+    if: inputs.tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read # Postgres comes from the ghcr.io/holi-social mirror
+    services:
+      postgres:
+        image: ghcr.io/holi-social/mirror/postgres:17
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_DB: caluno_test
+          POSTGRES_USER: caluno
+          POSTGRES_PASSWORD: caluno
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: caluno
+      DB_PASSWORD: caluno
+      DB_NAME: caluno_test
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+          token: ${{ secrets.ORG_REPO_PAT }}
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: 'true'
+      - run: bun run build # db:seed runs the compiled seed script
+      - run: bun run --cwd apps/backend db:migrate
+      - run: bun run --cwd apps/backend db:seed
+      - run: bun test
+      - uses: ./.github/actions/save-turbo-cache
+        if: success()

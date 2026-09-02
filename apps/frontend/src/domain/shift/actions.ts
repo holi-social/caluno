@@ -1,13 +1,22 @@
 'use server';
 
-import type { CreateShiftInput, UpdateShiftInput } from '@repo/data';
+import type {
+  CreateShiftInput,
+  UpdateShiftInput,
+  UpdateShiftInstanceInput,
+} from '@repo/data';
 import { ShiftInviteStatus, ShiftVisibility } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import { pickFirstShiftInstanceId } from './create-shift-flow';
 import { generateRrule } from './rrule';
-import { serverShiftDeleteSchema, serverShiftFormSchema } from './schemas';
+import {
+  serverEditShiftInstanceFormSchema,
+  serverShiftDeleteSchema,
+  serverShiftFormSchema,
+  serverShiftInstanceDeleteSchema,
+} from './schemas';
 
 export async function getShift(id: string, organizationUnitId: string) {
   const data = await getDataClient({ orgUId: organizationUnitId });
@@ -38,6 +47,9 @@ export const createShift = actionClient
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId ?? null,
+      minVolunteers: parsedInput.minVolunteers ?? null,
+      maxVolunteers: parsedInput.maxVolunteers ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     const shift = await data.shift.create(input);
@@ -73,10 +85,63 @@ export const updateShift = actionClient
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId,
+      minVolunteers: parsedInput.minVolunteers ?? null,
+      maxVolunteers: parsedInput.maxVolunteers ?? null,
+      requiredFormIds: parsedInput.requiredFormIds,
     };
 
     return await data.shift.update(shiftId, input);
   });
+
+export const updateShiftInstance = actionClient
+  .inputSchema(serverEditShiftInstanceFormSchema)
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(
+    async ({ parsedInput, bindArgsParsedInputs: [orgUId, instanceId] }) => {
+      const data = await getDataClient({ orgUId });
+      const applyToAllFuture = parsedInput.applyToAllFuture ?? false;
+
+      const rrule = applyToAllFuture
+        ? generateRrule(
+            parsedInput.startsAt,
+            parsedInput.recurrenceDays,
+            parsedInput.recurrenceEndsAt,
+          )
+        : undefined;
+
+      const input: UpdateShiftInstanceInput = {
+        title: parsedInput.name,
+        startsAt: parsedInput.startsAt.toISOString(),
+        endsAt: parsedInput.endsAt.toISOString(),
+        location: parsedInput.location,
+        instructions: parsedInput.instructions,
+        minVolunteers: parsedInput.minVolunteers ?? null,
+        maxVolunteers: parsedInput.maxVolunteers ?? null,
+        requiredFormIds: parsedInput.requiredFormIds,
+        // Image always lands on the shift master (backend keeps a one-off
+        // instance's master in sync even without applyToAllFuture), so it
+        // must be sent regardless of that flag — unlike rrule/visibility,
+        // which are only meaningful for a recurring series.
+        ...(parsedInput.imageFileId !== undefined
+          ? { imageFileId: parsedInput.imageFileId }
+          : {}),
+        ...(applyToAllFuture
+          ? {
+              rrule,
+              visibility: parsedInput.openShift
+                ? ShiftVisibility.AllMembers
+                : ShiftVisibility.InvitedMembers,
+            }
+          : {}),
+      };
+
+      return await data.shift.updateInstance(
+        instanceId,
+        input,
+        applyToAllFuture,
+      );
+    },
+  );
 
 export const deleteShift = actionClient
   .inputSchema(serverShiftDeleteSchema)
@@ -86,6 +151,19 @@ export const deleteShift = actionClient
     });
 
     return await data.shift.delete(parsedInput.id);
+  });
+
+export const deleteShiftInstance = actionClient
+  .inputSchema(serverShiftInstanceDeleteSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.shift.deleteInstance(
+      parsedInput.instanceId,
+      parsedInput.applyToAllFuture,
+    );
   });
 
 const updateShiftVolunteersSchema = z.object({
@@ -123,19 +201,3 @@ export const updateShiftInstanceInviteStatus = actionClient
       );
     },
   );
-
-const updateShiftStaffingSchema = z.object({
-  minVolunteers: z.number().int().positive().nullable(),
-  maxVolunteers: z.number().int().positive().nullable(),
-});
-
-export const updateShiftStaffing = actionClient
-  .inputSchema(updateShiftStaffingSchema)
-  .bindArgsSchemas([z.string(), z.string()])
-  .action(async ({ parsedInput, bindArgsParsedInputs: [orgUId, shiftId] }) => {
-    const data = await getDataClient({ orgUId });
-    await data.shift.update(shiftId, {
-      minVolunteers: parsedInput.minVolunteers ?? undefined,
-      maxVolunteers: parsedInput.maxVolunteers ?? undefined,
-    });
-  });

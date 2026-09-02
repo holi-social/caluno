@@ -9,6 +9,8 @@ query GetOrganization($id: String!) {
     contactEmail
     phone
     address
+    city
+    zipCode
     createdAt
     updatedAt
   }
@@ -49,6 +51,9 @@ query GetOrganizationUnit($id: String!) {
     contactEmail
     phone
     address
+    city
+    zipCode
+    legalRep
     organizationId
     requiredForms {
       form {
@@ -171,6 +176,8 @@ query GetMyOrganizationUnits {
     description
     logoUrl
     address
+    city
+    legalRep
     parent {
       id
     }
@@ -179,6 +186,7 @@ query GetMyOrganizationUnits {
       name
       description
       logoUrl
+      accountingEnabled
     }
   }
 }
@@ -191,6 +199,8 @@ query GetMyAdminstableOrganizationUnits {
     description
     logoUrl
     address
+    city
+    legalRep
     parent {
       id
     }
@@ -199,6 +209,30 @@ query GetMyAdminstableOrganizationUnits {
       name
       description
       logoUrl
+      accountingEnabled
+    }
+  }
+}
+
+query GetMyCheckInAdministrableOrganizationUnits {
+  myCheckInAdministrableOrganizationUnits {
+    id
+    slug
+    name
+    description
+    logoUrl
+    address
+    city
+    legalRep
+    parent {
+      id
+    }
+    organization {
+      id
+      name
+      description
+      logoUrl
+      accountingEnabled
     }
   }
 }
@@ -234,6 +268,16 @@ mutation CreateOrganization($input: CreateOrganizationInput!) {
     root {
       id
     }
+  }
+}
+
+mutation UpdateOrganization($id: ID!, $input: UpdateOrganizationInput!) {
+  updateOrganization(id: $id, input: $input) {
+    id
+    name
+    address
+    city
+    zipCode
   }
 }
 
@@ -279,6 +323,10 @@ mutation UpdateOrganizationUnit(
     name
     slug
     deletedAt
+    address
+    city
+    zipCode
+    legalRep
     parent {
       id
     }

@@ -10,12 +10,14 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
 
 export interface DiscoveryShiftInstance {
   id: string;
+  overrideTitle?: string | null;
   actualStartsAt: string;
   actualEndsAt: string;
   filledCount: number;
@@ -24,7 +26,7 @@ export interface DiscoveryShiftInstance {
     title: string;
     maxVolunteers?: number | null;
     rrule?: string | null;
-    organizationUnit: { name: string };
+    organizationUnit: { name: string; logoUrl?: string | null };
     event?: { id: string; title: string; coverImageUrl?: string | null } | null;
   };
 }
@@ -66,10 +68,21 @@ export function ShiftCardDiscovery({
         )}
       </div>
       <h3 className="text-lg font-semibold text-foreground">
-        {shiftInstance.master.title}
+        {shiftInstance.overrideTitle ?? shiftInstance.master.title}
       </h3>
       <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-        <CircleDot className="size-3 shrink-0" />
+        {shiftInstance.master.organizationUnit.logoUrl ? (
+          <Image
+            src={shiftInstance.master.organizationUnit.logoUrl}
+            alt=""
+            width={16}
+            height={16}
+            unoptimized
+            className="size-4 shrink-0 rounded-sm object-cover"
+          />
+        ) : (
+          <CircleDot className="size-3 shrink-0" />
+        )}
         {shiftInstance.master.organizationUnit.name}
       </p>
       {spotsLeft !== null && (
@@ -96,6 +109,7 @@ export function ShiftCardDiscovery({
       {event && (
         <Link
           href={`/events/${event.id}`}
+          prefetch={false}
           className="relative block h-[120px] w-full bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
         >
           {event.coverImageUrl && (
@@ -121,7 +135,8 @@ export function ShiftCardDiscovery({
         <div aria-disabled="true">{body}</div>
       ) : (
         <Link
-          href={`/shifts/${shiftInstance.master.id}`}
+          href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+          prefetch={false}
           className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
         >
           {body}

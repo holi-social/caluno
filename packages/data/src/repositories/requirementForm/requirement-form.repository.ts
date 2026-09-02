@@ -2,6 +2,7 @@ import type {
   CreateFormBlockFieldInput,
   CreateFormBlockInput,
   CreateRequirementFormInput,
+  RequiredFormTargetType,
   SubmitFormInput,
   UpdateFormBlockFieldInput,
   UpdateFormBlockInput,
@@ -97,18 +98,28 @@ export class RequirementFormRepository extends BaseRepository {
     return data.regenerateFormShareToken;
   }
 
-  async submitForm(token: string, input: SubmitFormInput) {
-    const data = await this.sdk.SubmitForm({ token, input });
+  async submitForm(
+    token: string,
+    organizationUnitId: string,
+    input: SubmitFormInput,
+  ) {
+    const data = await this.sdk.SubmitForm({
+      token,
+      organizationUnitId,
+      input,
+    });
     return data.submitForm;
   }
 
   async submitRequiredForm(
-    organizationUnitId: string,
+    targetType: RequiredFormTargetType,
+    targetId: string,
     formId: string,
     input: SubmitFormInput,
   ) {
     const data = await this.sdk.SubmitRequiredForm({
-      organizationUnitId,
+      targetType,
+      targetId,
       formId,
       input,
     });
@@ -147,8 +158,27 @@ export class RequirementFormRepository extends BaseRepository {
     return data.myFormSubmissions;
   }
 
+  async findMyRequiredOrgUnitForms(organizationUnitId: string) {
+    const data = await this.sdk.MyRequiredOrgUnitForms({ organizationUnitId });
+    return data.myRequiredOrgUnitForms;
+  }
+
+  async findMySubmission(id: string) {
+    const data = await this.sdk.MyFormSubmission({ id });
+    return data.myFormSubmission;
+  }
+
   async findAdminSubmission(id: string) {
     const data = await this.sdk.GetAdminFormSubmission({ id });
     return data.adminVolunteerSubmission;
+  }
+
+  async findSubmissionsByForm(formId: string, options: PaginationOptions = {}) {
+    const data = await this.sdk.GetFormSubmissionsByForm({
+      formId,
+      limit: options.limit ?? 100,
+      offset: options.offset ?? 0,
+    });
+    return data.formSubmissionsByForm;
   }
 }

@@ -6,8 +6,8 @@ import { useSdk } from './use-graphql-client';
 
 export function useAvailableShiftInstances(
   options: {
-    from?: Date;
-    to?: Date;
+    startsAfter?: Date;
+    endsBefore?: Date;
     organizationUnitIds?: string[];
     limit?: number;
     offset?: number;

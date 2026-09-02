@@ -1,10 +1,11 @@
 'use server';
 
-import { FieldType } from '@repo/data';
+import { FieldType, RequiredFormTargetType } from '@repo/data';
 import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
+import { choiceOptionSchema } from './option-values';
 import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 
 export const createForm = actionClient
@@ -78,6 +79,7 @@ export const createBlock = actionClient
 
 const submitFormSchema = z.object({
   token: z.string().min(1),
+  organizationUnitId: z.string().min(1),
   values: z.array(
     z.object({
       fieldId: z.string(),
@@ -91,14 +93,19 @@ export const submitForm = actionClient
   .inputSchema(submitFormSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient();
-    const result = await data.requirementForm.submitForm(parsedInput.token, {
-      values: parsedInput.values,
-    });
+    const result = await data.requirementForm.submitForm(
+      parsedInput.token,
+      parsedInput.organizationUnitId,
+      {
+        values: parsedInput.values,
+      },
+    );
     return result;
   });
 
 const submitRequiredFormSchema = z.object({
-  organizationUnitId: z.string().min(1),
+  targetType: z.nativeEnum(RequiredFormTargetType),
+  targetId: z.string().min(1),
   formId: z.string().min(1),
   values: z.array(
     z.object({
@@ -114,7 +121,8 @@ export const submitRequiredForm = actionClient
   .action(async ({ parsedInput }) => {
     const data = await getDataClient();
     const result = await data.requirementForm.submitRequiredForm(
-      parsedInput.organizationUnitId,
+      parsedInput.targetType,
+      parsedInput.targetId,
       parsedInput.formId,
       { values: parsedInput.values },
     );
@@ -331,14 +339,7 @@ const saveBlockSchema = z.object({
       required: z.boolean().optional(),
       systemKey: z.string().optional(),
       lockType: z.boolean().optional(),
-      options: z
-        .array(
-          z.object({
-            label: z.string(),
-            value: z.string(),
-          }),
-        )
-        .optional(),
+      options: z.array(choiceOptionSchema).optional(),
       documentFileId: z.string().nullish(),
       documentLabel: z.string().optional(),
     }),
@@ -446,7 +447,8 @@ export const saveBlock = actionClient
     }
 
     revalidatePath(
-      `/admin/${parsedInput.organizationUnitId}/requirement-forms/blocks`,
+      `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
+      'layout',
     );
     return { blockId };
   });

@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, inArray, isNull } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -15,20 +15,34 @@ import {
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
+import { MembershipRequestStatus } from '../membership/enums';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
 import { buildShiftInviteSchedule } from '../notification/shift-invite-schedule';
 import { OrganizationService } from '../organization/organization.service';
-import type { RequirementFormEntity } from '../requirement-profile/schemas/requirement-form.schema';
+import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
+import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
+import {
+  RequiredFormService,
+  type RequiredFormStatus,
+} from '../requirement-profile/services/required-form.service';
 import { JoinStatus } from '../shared/enums/join-status.enum';
 import {
   ACTIVE_SHIFT_INVITE_STATUSES,
+  ADMIN_UNINVITE_SOURCE_STATUSES,
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
 } from '../shared/invite-status';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_JOIN_SOURCE,
+  POSTHOG_SURFACE,
+  type PostHogJoinSource,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { UserService } from '../user/user.service';
@@ -36,14 +50,16 @@ import { slugify } from '../utils/slug.util';
 import { ShiftInviteStatus, ShiftVisibility, SortOrder } from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
+import { UpdateShiftInstanceInput } from './inputs/update-shift-instance.input';
 import type { ShiftEntity } from './schemas/shift.schema';
 import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
 import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-propagation';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
 import { getDurationMinutes } from './utils/duration';
+import { parseRruleDays, parseRruleUntil } from './utils/parse-rrule';
 import { expandShift } from './utils/rrule-expander';
-import { syncShiftInstances } from './utils/shift-instance-sync';
+import { localDateKey, syncShiftInstances } from './utils/shift-instance-sync';
 
 export { getDurationMinutes } from './utils/duration';
 
@@ -67,6 +83,9 @@ export class ShiftService {
     private readonly notificationService: NotificationService,
     private readonly organizationService: OrganizationService,
     private readonly fileService: FileService,
+    private readonly requiredFormService: RequiredFormService,
+    private readonly formSubmissionService: FormSubmissionService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
@@ -107,7 +126,7 @@ export class ShiftService {
   async findInstanceById(
     id: string,
     organizationUnitId: string,
-  ): Promise<ShiftInstanceEntity> {
+  ): Promise<ShiftInstanceEntity & { master: ShiftEntity }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id },
       with: { master: true },
@@ -178,6 +197,26 @@ export class ShiftService {
     return this.findPublicInstancesByShiftIds([shiftId]);
   }
 
+  /** A single public (non-cancelled) upcoming instance by id, without fetching its shift's whole schedule. */
+  async findPublicInstance(instanceId: string): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        id: instanceId,
+        isCancelled: false,
+        actualStartsAt: { gte: startOfTodayInAppTimeZone() },
+      },
+      with: { master: true },
+    });
+
+    if (!instance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instanceId} not found`,
+      );
+    }
+
+    return instance;
+  }
+
   /** Public (non-cancelled) upcoming instances for many shifts in one query (DataLoader batch). */
   async findPublicInstancesByShiftIds(
     shiftIds: string[],
@@ -224,20 +263,23 @@ export class ShiftService {
           inArray(schema.timeEntries.shiftInstanceId, instanceIds),
           isNull(schema.timeEntries.endedAt),
         ),
-      );
+      ) as Promise<{ shiftInstanceId: string }[]>;
   }
 
   /** A user's shift-instance invite statuses across many instances in one query (DataLoader batch). */
   async findInviteStatusesForUser(
     userId: string,
     instanceIds: string[],
-  ): Promise<{ shiftInstanceId: string; status: ShiftInviteStatus }[]> {
+  ): Promise<
+    { shiftInstanceId: string; status: ShiftInviteStatus; createdAt: Date }[]
+  > {
     if (instanceIds.length === 0) return [];
 
     const rows = await this.db
       .select({
         shiftInstanceId: schema.shiftInstanceInvites.instanceId,
         status: schema.shiftInstanceInvites.status,
+        createdAt: schema.shiftInstanceInvites.createdAt,
       })
       .from(schema.shiftInstanceInvites)
       .where(
@@ -250,6 +292,7 @@ export class ShiftService {
     return rows.map((row) => ({
       shiftInstanceId: row.shiftInstanceId,
       status: row.status as ShiftInviteStatus,
+      createdAt: row.createdAt,
     }));
   }
 
@@ -335,20 +378,83 @@ export class ShiftService {
     offset: number,
     order: SortOrder,
     statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
+    includeIntended = false,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
       await this.getAccessibleOrganizationUnitIds(userId);
 
-    if (organizationUnitIds.length === 0) {
-      return EMPTY_SHIFT_INSTANCE_PAGE;
-    }
-
     const dateCondition = this.buildMyShiftDateCondition(
-      includePast,
       startsAfter,
       endsBefore,
+      includePast,
     );
 
+    if (!includeIntended) {
+      if (organizationUnitIds.length === 0) {
+        return EMPTY_SHIFT_INSTANCE_PAGE;
+      }
+
+      const where = {
+        isCancelled: false,
+        ...dateCondition,
+        master: {
+          isDeleted: false,
+          organizationUnitId: { in: organizationUnitIds },
+        },
+        invites: {
+          userId,
+          status: { in: [...statuses] },
+        },
+      };
+
+      const orderBy = {
+        actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
+      };
+
+      const [instances, totalResult] = await Promise.all([
+        this.db.query.shiftInstances.findMany({
+          where,
+          with: { master: true },
+          orderBy,
+          limit,
+          offset,
+        }),
+        this.db.query.shiftInstances.findMany({
+          where,
+          columns: {},
+          extras: { total: count() },
+        }),
+      ]);
+
+      return { instances, total: totalResult[0]?.total ?? 0 };
+    }
+
+    const [invitedPage, intendedPage] = await Promise.all([
+      organizationUnitIds.length > 0
+        ? this.findMyInvitedShiftInstances(
+            userId,
+            organizationUnitIds,
+            dateCondition,
+            statuses,
+          )
+        : EMPTY_SHIFT_INSTANCE_PAGE,
+      this.findMyIntendedShiftInstances(userId, dateCondition),
+    ]);
+
+    return this.mergeShiftInstancePages(
+      [invitedPage, intendedPage],
+      order,
+      limit,
+      offset,
+    );
+  }
+
+  private async findMyInvitedShiftInstances(
+    userId: string,
+    organizationUnitIds: string[],
+    dateCondition: Record<string, unknown>,
+    statuses: readonly ShiftInviteStatus[],
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const where = {
       isCancelled: false,
       ...dateCondition,
@@ -362,17 +468,10 @@ export class ShiftService {
       },
     };
 
-    const orderBy = {
-      actualStartsAt: order.toLowerCase() as 'asc' | 'desc',
-    };
-
     const [instances, totalResult] = await Promise.all([
       this.db.query.shiftInstances.findMany({
         where,
         with: { master: true },
-        orderBy,
-        limit,
-        offset,
       }),
       this.db.query.shiftInstances.findMany({
         where,
@@ -384,24 +483,131 @@ export class ShiftService {
     return { instances, total: totalResult[0]?.total ?? 0 };
   }
 
+  async findIntendedInstanceIdsForUsers(
+    userIdInstanceIdPairs: Array<{ userId: string; instanceId: string }>,
+  ): Promise<Set<string>> {
+    const userIds = Array.from(
+      new Set(userIdInstanceIdPairs.map((pair) => pair.userId)),
+    );
+
+    if (userIds.length === 0) {
+      return new Set();
+    }
+
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId: { in: userIds },
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { userId: true, metadata: true },
+    });
+
+    const intendedIdsByUser = new Map<string, Set<string>>();
+    for (const request of requests) {
+      if (!request.userId) continue;
+      const intendedIds =
+        (request.metadata as { intendedShiftInstanceIds?: string[] } | null)
+          ?.intendedShiftInstanceIds ?? [];
+      intendedIdsByUser.set(request.userId, new Set(intendedIds));
+    }
+
+    const result = new Set<string>();
+    for (const { userId, instanceId } of userIdInstanceIdPairs) {
+      if (intendedIdsByUser.get(userId)?.has(instanceId)) {
+        result.add(`${instanceId}:${userId}`);
+      }
+    }
+
+    return result;
+  }
+
+  private async findMyIntendedShiftInstances(
+    userId: string,
+    dateCondition: Record<string, unknown>,
+  ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
+    const requests = await this.db.query.membershipRequests.findMany({
+      where: {
+        userId,
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { metadata: true },
+    });
+
+    const intendedIds = requests.flatMap(
+      (request) =>
+        (request.metadata as { intendedShiftInstanceIds?: string[] } | null)
+          ?.intendedShiftInstanceIds ?? [],
+    );
+
+    if (intendedIds.length === 0) {
+      return EMPTY_SHIFT_INSTANCE_PAGE;
+    }
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        id: { in: intendedIds },
+        isCancelled: false,
+        ...dateCondition,
+        master: { isDeleted: false },
+      },
+      with: { master: true },
+    });
+
+    return { instances, total: instances.length };
+  }
+
+  private mergeShiftInstancePages(
+    pages: Array<{ instances: ShiftInstanceEntity[]; total: number }>,
+    order: SortOrder,
+    limit: number,
+    offset: number,
+  ): { instances: ShiftInstanceEntity[]; total: number } {
+    const seen = new Set<string>();
+    const all: ShiftInstanceEntity[] = [];
+
+    for (const page of pages) {
+      for (const instance of page.instances) {
+        if (seen.has(instance.id)) continue;
+        seen.add(instance.id);
+        all.push(instance);
+      }
+    }
+
+    all.sort((a, b) => {
+      const diff =
+        new Date(a.actualStartsAt).getTime() -
+        new Date(b.actualStartsAt).getTime();
+      return order === SortOrder.DESC ? -diff : diff;
+    });
+
+    return {
+      instances: all.slice(offset, offset + limit),
+      total: all.length,
+    };
+  }
+
   private buildMyShiftDateCondition(
-    includePast: boolean,
     startsAfter: Date | null,
     endsBefore: Date | null,
+    includePast: boolean = true,
   ): Record<string, unknown> {
-    if (endsBefore) {
-      return { actualEndsAt: { lt: endsBefore } };
-    }
-
+    const condition: Record<string, unknown> = {};
     if (startsAfter) {
-      return { actualStartsAt: { gte: startsAfter } };
+      condition.actualStartsAt = { gte: startsAfter };
     }
 
+    const actualEndsAt: { gte?: Date; lt?: Date } = {};
     if (!includePast) {
-      return { actualEndsAt: { gte: new Date() } };
+      actualEndsAt.gte = new Date();
+    }
+    if (endsBefore) {
+      actualEndsAt.lt = endsBefore;
+    }
+    if (actualEndsAt.gte || actualEndsAt.lt) {
+      condition.actualEndsAt = actualEndsAt;
     }
 
-    return {};
+    return condition;
   }
 
   async findAvailableShiftInstances(
@@ -412,50 +618,84 @@ export class ShiftService {
     limit: number,
     offset: number,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
-    const userOrganizationUnitIds =
-      await this.getAccessibleOrganizationUnitIds(userId);
+    const [acceptedOrganizationUnitIds, pendingOrganizationUnitIds] =
+      await Promise.all([
+        this.getAccessibleOrganizationUnitIds(userId),
+        this.membershipService.getPendingOrganizationUnitIds(userId),
+      ]);
 
-    if (userOrganizationUnitIds.length === 0) {
+    const accessibleOrganizationUnitIds = [
+      ...acceptedOrganizationUnitIds,
+      ...pendingOrganizationUnitIds,
+    ];
+
+    if (accessibleOrganizationUnitIds.length === 0) {
       return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
-    const effectiveOrgUnitIds = organizationUnitIds?.length
-      ? organizationUnitIds.filter((id) => userOrganizationUnitIds.includes(id))
-      : userOrganizationUnitIds;
+    const requestedOrgUnitIds = organizationUnitIds?.length
+      ? organizationUnitIds.filter((id) =>
+          accessibleOrganizationUnitIds.includes(id),
+        )
+      : accessibleOrganizationUnitIds;
 
-    if (effectiveOrgUnitIds.length === 0) {
+    if (requestedOrgUnitIds.length === 0) {
       return EMPTY_SHIFT_INSTANCE_PAGE;
     }
 
-    const startOfToday = this.getStartOfToday();
-    const effectiveStartsAfter = startsAfter ?? startOfToday;
-    const effectiveEndsBefore =
-      endsBefore ?? new Date('2099-12-31T23:59:59.999Z');
+    const acceptedIds = requestedOrgUnitIds.filter((id) =>
+      acceptedOrganizationUnitIds.includes(id),
+    );
+    const pendingIds = requestedOrgUnitIds.filter((id) =>
+      pendingOrganizationUnitIds.includes(id),
+    );
+
+    const dateCondition = this.buildMyShiftDateCondition(
+      startsAfter ?? this.getStartOfToday(),
+      endsBefore,
+    );
+
+    const visibilityBranches: Record<string, unknown>[] = [];
+
+    if (acceptedIds.length > 0) {
+      visibilityBranches.push({
+        master: { organizationUnitId: { in: acceptedIds } },
+        OR: [
+          { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
+          { invites: { userId, status: ShiftInviteStatus.INVITED } },
+        ],
+      });
+    }
+
+    if (pendingIds.length > 0) {
+      visibilityBranches.push({
+        master: {
+          organizationUnitId: { in: pendingIds },
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        },
+      });
+    }
 
     const where = {
       isCancelled: false,
-      actualStartsAt: { gte: effectiveStartsAfter, lte: effectiveEndsBefore },
-      master: {
-        isDeleted: false,
-        organizationUnitId: { in: effectiveOrgUnitIds },
-      },
+      ...dateCondition,
+      master: { isDeleted: false },
       NOT: {
         invites: {
           userId,
           status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
         },
       },
-      OR: [
-        { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
-        { invites: { userId, status: ShiftInviteStatus.INVITED } },
-      ],
+      OR: visibilityBranches,
     };
 
     const [instances, totalResult] = await Promise.all([
       this.db.query.shiftInstances.findMany({
         where,
         with: { master: true },
-        orderBy: { actualStartsAt: 'asc' },
+        // Tie-break on id so instances sharing the same actualStartsAt keep a
+        // stable order across pages instead of an arbitrary DB-chosen order.
+        orderBy: { actualStartsAt: 'asc', id: 'asc' },
         limit,
         offset,
       }),
@@ -617,7 +857,13 @@ export class ShiftService {
     organizationUnitId: string,
     input: CreateShiftInput,
   ): Promise<ShiftEntity> {
-    const { invitedMemberIds, eventId, imageFileId, ...shiftInput } = input;
+    const {
+      invitedMemberIds,
+      eventId,
+      imageFileId,
+      requiredFormIds,
+      ...shiftInput
+    } = input;
     const durationMinutes = getDurationMinutes(
       shiftInput.startsAt,
       shiftInput.endsAt,
@@ -685,10 +931,30 @@ export class ShiftService {
         }
       }
 
+      if (requiredFormIds && requiredFormIds.length > 0) {
+        await this.setRequiredFormsInTx(
+          tx,
+          shift.id,
+          organizationUnitId,
+          requiredFormIds,
+        );
+      }
+
       return shift;
     });
 
     void this.loadAndEmitShiftInvitedNotification(shift, invitedMemberIds);
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: await this.resolveOrganizationId(organizationUnitId),
+        organization_unit_id: organizationUnitId,
+        shift_id: shift.id,
+      },
+    });
 
     return shift;
   }
@@ -786,6 +1052,7 @@ export class ShiftService {
     >,
     memberIds: string[],
     inviteStatus: ShiftInviteStatus = ShiftInviteStatus.INVITED,
+    actorUserId?: string,
   ): Promise<void> {
     if (memberIds.length === 0) {
       return;
@@ -802,16 +1069,18 @@ export class ShiftService {
       );
     }
 
-    await this.createInvitesForInstances(
-      tx,
-      [shiftInstance.id],
-      this.toInviteMembers(memberIds, inviteStatus),
-    );
-    void this.loadAndEmitShiftInstanceInvitedNotification(
-      shiftInstance.master,
-      shiftInstance,
-      memberIds,
-    );
+    // Inviting yourself happens silently: written straight to ACCEPTED with
+    // no pending state, since there's nothing for the actor to accept.
+    // Notifications for this batch are emitted by the caller after commit.
+    const members = memberIds.map((userId) => ({
+      userId,
+      status:
+        actorUserId != null && userId === actorUserId
+          ? ShiftInviteStatus.ACCEPTED
+          : inviteStatus,
+    }));
+
+    await this.createInvitesForInstances(tx, [shiftInstance.id], members);
   }
 
   async uninviteMembersFromShiftInstance(
@@ -838,7 +1107,9 @@ export class ShiftService {
     options: {
       inviteToAllInstances?: boolean | null;
       inviteStatus?: ShiftInviteStatus;
+      skipCapture?: boolean;
     } = {},
+    actorUserId?: string,
   ): Promise<ShiftInstanceEntity> {
     const inviteStatus = options.inviteStatus ?? ShiftInviteStatus.INVITED;
     const currentShiftInstance = await this.db.query.shiftInstances.findFirst({
@@ -886,18 +1157,39 @@ export class ShiftService {
             currentShiftInstance,
             userIdsToAdd,
             inviteStatus,
+            actorUserId,
           );
           // Resurrect pre-existing inactive (REJECTED/CANCELLED) invite rows —
-          // the insert above no-ops on conflict for those.
-          await tx
-            .update(schema.shiftInstanceInvites)
-            .set({ status: inviteStatus })
-            .where(
-              and(
-                eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
-                inArray(schema.shiftInstanceInvites.userId, userIdsToAdd),
-              ),
-            );
+          // the insert above no-ops on conflict for those. The actor adding
+          // themselves resurrects straight to ACCEPTED, same as a fresh insert.
+          const selfIdsToAdd = actorUserId
+            ? userIdsToAdd.filter((id) => id === actorUserId)
+            : [];
+          const otherIdsToAdd = actorUserId
+            ? userIdsToAdd.filter((id) => id !== actorUserId)
+            : userIdsToAdd;
+          if (otherIdsToAdd.length > 0) {
+            await tx
+              .update(schema.shiftInstanceInvites)
+              .set({ status: inviteStatus })
+              .where(
+                and(
+                  eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+                  inArray(schema.shiftInstanceInvites.userId, otherIdsToAdd),
+                ),
+              );
+          }
+          if (selfIdsToAdd.length > 0) {
+            await tx
+              .update(schema.shiftInstanceInvites)
+              .set({ status: ShiftInviteStatus.ACCEPTED })
+              .where(
+                and(
+                  eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+                  inArray(schema.shiftInstanceInvites.userId, selfIdsToAdd),
+                ),
+              );
+          }
         }
         if (userIdsToRemove.length > 0) {
           await this.uninviteMembersFromShiftInstance(
@@ -1036,10 +1328,13 @@ export class ShiftService {
     // Emit notifications after successful commit
     if (userIdsToAdd.length > 0) {
       if (!options.inviteToAllInstances) {
+        const notifyUserIds = actorUserId
+          ? userIdsToAdd.filter((id) => id !== actorUserId)
+          : userIdsToAdd;
         void this.loadAndEmitShiftInstanceInvitedNotification(
           currentShiftInstance.master,
           currentShiftInstance,
-          userIdsToAdd,
+          notifyUserIds,
         );
       } else {
         void this.loadAndEmitShiftInvitedNotification(
@@ -1047,9 +1342,384 @@ export class ShiftService {
           userIdsToAdd,
         );
       }
+
+      if (!options.skipCapture) {
+        const organizationId = await this.resolveOrganizationId(
+          currentShiftInstance.master.organizationUnitId,
+        );
+        for (const invitedUserId of userIdsToAdd) {
+          this.postHogService.capture({
+            event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE,
+            userId: invitedUserId,
+            properties: {
+              surface: POSTHOG_SURFACE.BACKOFFICE,
+              organization_id: organizationId,
+              organization_unit_id:
+                currentShiftInstance.master.organizationUnitId,
+              shift_id: currentShiftInstance.master.id,
+              shift_instance_id: shiftInstanceId,
+              invite_to_all_instances: Boolean(options.inviteToAllInstances),
+            },
+          });
+        }
+      }
     }
 
     return currentShiftInstance;
+  }
+
+  async updateShiftInstance(
+    instanceId: string,
+    input: UpdateShiftInstanceInput,
+    organizationUnitId: string,
+    options: { applyToAllFuture?: boolean; actorUserId?: string } = {},
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.transaction(async (tx) => {
+      const instance = await tx.query.shiftInstances.findFirst({
+        where: { id: instanceId },
+        with: { master: true },
+      });
+
+      if (
+        !instance ||
+        instance.master.organizationUnitId !== organizationUnitId
+      ) {
+        throw new NotFoundGraphQLError(
+          `Shift instance with ID ${instanceId} not found`,
+        );
+      }
+
+      if (instance.actualEndsAt.getTime() < Date.now()) {
+        throw new ConflictGraphQLError(
+          'Cannot edit a past or completed shift instance',
+        );
+      }
+
+      if (options.applyToAllFuture || instance.master.rrule === null) {
+        return this.updateShiftInstanceSeries(
+          tx,
+          instance,
+          input,
+          organizationUnitId,
+          options.applyToAllFuture ?? false,
+        );
+      } else {
+        return this.updateSingleShiftInstance(tx, instance, input);
+      }
+    });
+
+    if (options.actorUserId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_UPDATE,
+        userId: options.actorUserId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: await this.resolveOrganizationId(organizationUnitId),
+          organization_unit_id: organizationUnitId,
+          shift_id: instance.masterId,
+          shift_instance_id: instance.id,
+          apply_to_all_future: options.applyToAllFuture ?? false,
+        },
+      });
+    }
+
+    return instance;
+  }
+
+  private async updateSingleShiftInstance(
+    tx: Database,
+    instance: ShiftInstanceEntity & { master: ShiftEntity },
+    input: UpdateShiftInstanceInput,
+  ): Promise<ShiftInstanceEntity> {
+    const startsAtChanged =
+      input.startsAt.getTime() !== instance.actualStartsAt.getTime();
+
+    if (startsAtChanged) {
+      const [collision] = await tx
+        .select({ id: schema.shiftInstances.id })
+        .from(schema.shiftInstances)
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, instance.masterId),
+            ne(schema.shiftInstances.id, instance.id),
+            eq(schema.shiftInstances.actualStartsAt, input.startsAt),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        )
+        .limit(1);
+
+      if (collision) {
+        throw new ConflictGraphQLError('shift_instance_time_conflict');
+      }
+    }
+
+    const [updated] = await tx
+      .update(schema.shiftInstances)
+      .set({
+        overrideTitle: input.title,
+        overrideLocation: input.location ?? null,
+        overrideInstructions: input.instructions ?? null,
+        overrideMinVolunteers: input.minVolunteers ?? null,
+        overrideMaxVolunteers: input.maxVolunteers ?? null,
+        actualStartsAt: input.startsAt,
+        actualEndsAt: input.endsAt,
+        isException: true,
+      })
+      .where(eq(schema.shiftInstances.id, instance.id))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instance.id} not found`,
+      );
+    }
+
+    if (input.requiredFormIds !== undefined) {
+      const orgUnit = await tx.query.organizationUnits.findFirst({
+        where: { id: instance.master.organizationUnitId },
+      });
+
+      if (orgUnit) {
+        await this.requiredFormService.applyShiftInstanceRequiredForms(
+          instance.id,
+          orgUnit.organizationId,
+          input.requiredFormIds ?? [],
+          tx,
+        );
+      }
+    }
+
+    return updated;
+  }
+
+  private async updateShiftInstanceSeries(
+    tx: Database,
+    instance: ShiftInstanceEntity & { master: ShiftEntity },
+    input: UpdateShiftInstanceInput,
+    organizationUnitId: string,
+    applyToAllFuture: boolean,
+  ): Promise<ShiftInstanceEntity> {
+    const shift = instance.master;
+    const fromDate = new Date(instance.actualStartsAt);
+    fromDate.setHours(0, 0, 0, 0);
+
+    if (
+      input.startsAt.getFullYear() !== instance.actualStartsAt.getFullYear() ||
+      input.startsAt.getMonth() !== instance.actualStartsAt.getMonth() ||
+      input.startsAt.getDate() !== instance.actualStartsAt.getDate()
+    ) {
+      throw new ConflictGraphQLError('shift_instance_date_mismatch');
+    }
+
+    const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
+    const newOriginalStartsAt = this.applyTimeOfDay(
+      shift.originalStartsAt,
+      input.startsAt,
+    );
+
+    // `input.rrule` is `null` when the user explicitly cleared recurrence,
+    // `undefined` when recurrence wasn't touched by this edit — `??` would
+    // treat both the same, silently discarding an explicit clear.
+    if (input.rrule === null && shift.rrule !== null) {
+      throw new ConflictGraphQLError(
+        'shift_instance_clear_recurrence_unsupported',
+      );
+    }
+    const newRrule = input.rrule === undefined ? shift.rrule : input.rrule;
+
+    // Compare the recurrence PATTERN (weekdays + end date), not the raw
+    // rrule string. The frontend's generateRrule() bakes a DTSTART tied to
+    // the edited occurrence's own date, which essentially never matches the
+    // series' stored anchor — a raw string compare is a false positive on
+    // nearly every save, which silently strands the safe time-only path
+    // below and routes every edit through the heavier resync path instead.
+    const recurrenceChanged = !this.rrulePatternsEqual(shift.rrule, newRrule);
+
+    const imageUrl =
+      input.imageFileId === undefined
+        ? undefined
+        : input.imageFileId
+          ? await this.resolveImageUrl(input.imageFileId)
+          : null;
+
+    const [updatedShift] = await tx
+      .update(schema.shifts)
+      .set({
+        title: input.title,
+        slug: slugify(input.title),
+        location: input.location ?? null,
+        instructions: input.instructions ?? null,
+        minVolunteers: input.minVolunteers ?? null,
+        maxVolunteers: input.maxVolunteers ?? null,
+        ...(input.visibility ? { visibility: input.visibility } : {}),
+        ...(imageUrl !== undefined ? { imageUrl } : {}),
+        rrule: newRrule,
+        originalStartsAt: newOriginalStartsAt,
+        durationMinutes,
+      })
+      .where(
+        and(
+          eq(schema.shifts.id, shift.id),
+          eq(schema.shifts.organizationUnitId, organizationUnitId),
+        ),
+      )
+      .returning();
+
+    if (!updatedShift) {
+      throw new NotFoundGraphQLError(`Shift with ID ${shift.id} not found`);
+    }
+
+    if (input.requiredFormIds !== undefined) {
+      // This method is only reached with applyToAllFuture === false when
+      // there's no series to fork from (rrule === null): the instance IS
+      // the shift, so required forms must land on the master here too —
+      // matching how image/title/location etc. already sync in that case.
+      await this.setRequiredFormsInTx(
+        tx,
+        shift.id,
+        organizationUnitId,
+        input.requiredFormIds ?? [],
+      );
+    }
+
+    // Mirrors ShiftService.update()'s existing behavior: dropping visibility
+    // to invited-only clears standing invites, since "everyone" no longer
+    // applies. Scoped to fromDate onward, matching this method's contract.
+    if (
+      input.visibility &&
+      shift.visibility === ShiftVisibility.ALL_MEMBERS &&
+      input.visibility === ShiftVisibility.INVITED_MEMBERS
+    ) {
+      const futureInstances = await tx.query.shiftInstances.findMany({
+        where: { masterId: shift.id, actualStartsAt: { gte: fromDate } },
+        columns: { id: true },
+      });
+      const futureInstanceIds = futureInstances.map((i) => i.id);
+      if (futureInstanceIds.length > 0) {
+        await tx
+          .delete(schema.shiftInstanceInvites)
+          .where(
+            inArray(schema.shiftInstanceInvites.instanceId, futureInstanceIds),
+          );
+      }
+    }
+
+    if (recurrenceChanged) {
+      const target = expandShift(
+        updatedShift.rrule,
+        updatedShift.originalStartsAt,
+        updatedShift.durationMinutes,
+      );
+
+      const editedDateKey = localDateKey(instance.actualStartsAt);
+      const editedOccurrenceSurvives = target.some(
+        (t) => localDateKey(t.actualStartsAt) === editedDateKey,
+      );
+      if (!editedOccurrenceSurvives) {
+        throw new ConflictGraphQLError('shift_instance_recurrence_conflict');
+      }
+
+      await syncShiftInstances(tx, shift.id, target, { fromDate });
+
+      // syncShiftInstances only rewrites rows whose date/duration actually
+      // changed — rows that already matched the new pattern are left alone,
+      // so they'd otherwise keep stale per-occurrence overrides. Sweep them
+      // separately; the time-rewrite branch below does this as part of its
+      // own UPDATE instead.
+      await tx
+        .update(schema.shiftInstances)
+        .set({
+          overrideTitle: null,
+          overrideLocation: null,
+          overrideInstructions: null,
+          overrideMinVolunteers: null,
+          overrideMaxVolunteers: null,
+          isException: false,
+        })
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, shift.id),
+            gte(schema.shiftInstances.actualStartsAt, fromDate),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        );
+    } else {
+      const startTime = this.toTimeOfDayString(input.startsAt);
+      const endTime = this.toTimeOfDayString(input.endsAt);
+
+      await tx
+        .update(schema.shiftInstances)
+        .set({
+          overrideTitle: null,
+          overrideLocation: null,
+          overrideInstructions: null,
+          overrideMinVolunteers: null,
+          overrideMaxVolunteers: null,
+          isException: false,
+          actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
+          actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
+        })
+        .where(
+          and(
+            eq(schema.shiftInstances.masterId, shift.id),
+            gte(schema.shiftInstances.actualStartsAt, fromDate),
+            eq(schema.shiftInstances.isCancelled, false),
+          ),
+        );
+    }
+
+    const [refreshedInstance] = await tx
+      .select()
+      .from(schema.shiftInstances)
+      .where(eq(schema.shiftInstances.id, instance.id));
+
+    if (!refreshedInstance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${instance.id} not found`,
+      );
+    }
+
+    return refreshedInstance;
+  }
+
+  private rrulePatternsEqual(a: string | null, b: string | null): boolean {
+    const daysA = new Set(parseRruleDays(a));
+    const daysB = new Set(parseRruleDays(b));
+    if (daysA.size !== daysB.size) return false;
+    for (const day of daysA) {
+      if (!daysB.has(day)) return false;
+    }
+    const untilA = parseRruleUntil(a)?.getTime() ?? null;
+    const untilB = parseRruleUntil(b)?.getTime() ?? null;
+    return untilA === untilB;
+  }
+
+  /**
+   * Keeps `base`'s calendar date, adopts `time`'s hour/minute/second.
+   *
+   * Uses UTC getters/setters, not local ones: Drizzle stores/reads these
+   * naive `timestamp` columns via `Date.toISOString()` (UTC digits — Postgres
+   * ignores any offset on a tz-less column), so `base`/`time`'s UTC digits
+   * are what the DB actually holds. Local getters/setters would read/write
+   * the host process's OS timezone instead, drifting by that offset.
+   */
+  private applyTimeOfDay(base: Date, time: Date): Date {
+    const result = new Date(base);
+    result.setUTCHours(
+      time.getUTCHours(),
+      time.getUTCMinutes(),
+      time.getUTCSeconds(),
+      0,
+    );
+    return result;
+  }
+
+  /** See `applyTimeOfDay` for why this uses UTC getters. */
+  private toTimeOfDayString(date: Date): string {
+    const hh = String(date.getUTCHours()).padStart(2, '0');
+    const mm = String(date.getUTCMinutes()).padStart(2, '0');
+    const ss = String(date.getUTCSeconds()).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
   }
 
   private getUserIdDifferences(currentUserIds: string[], newUserIds: string[]) {
@@ -1060,6 +1730,224 @@ export class ShiftService {
       (id) => !newUserIds.includes(id),
     );
     return { userIdsToAdd, userIdsToRemove };
+  }
+
+  async deleteShiftInstance(
+    id: string,
+    organizationUnitId: string,
+    options: { applyToAllFuture?: boolean; actorUserId?: string } = {},
+  ): Promise<ShiftInstanceEntity> {
+    const { shift, cancelledInstance, recipientUserIds, fromDate } =
+      await this.db.transaction(async (tx) => {
+        const instance = await tx.query.shiftInstances.findFirst({
+          where: { id },
+          with: { master: true },
+        });
+
+        if (
+          !instance ||
+          instance.master.organizationUnitId !== organizationUnitId
+        ) {
+          throw new NotFoundGraphQLError(
+            `Shift instance with ID ${id} not found`,
+          );
+        }
+
+        if (instance.actualEndsAt.getTime() < Date.now()) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a past or completed shift instance',
+          );
+        }
+
+        if (!options.applyToAllFuture) {
+          if (await this.hasOpenTimeEntryForInstances([id], tx)) {
+            throw new ConflictGraphQLError(
+              'Cannot delete a shift instance with an open time entry',
+            );
+          }
+
+          const [cancelledInstance] = await tx
+            .update(schema.shiftInstances)
+            .set({ isCancelled: true })
+            .where(
+              and(
+                eq(schema.shiftInstances.id, id),
+                eq(schema.shiftInstances.isCancelled, false),
+              ),
+            )
+            .returning();
+
+          if (!cancelledInstance) {
+            throw new ConflictGraphQLError(
+              `Shift instance with ID ${id} is already cancelled`,
+            );
+          }
+
+          const recipientUserIds = await this.cancelActiveInvitesForInstances(
+            tx,
+            [id],
+          );
+
+          return {
+            shift: instance.master,
+            cancelledInstance,
+            recipientUserIds,
+            fromDate: null as Date | null,
+          };
+        }
+
+        const fromDate = new Date(instance.actualStartsAt);
+        fromDate.setHours(0, 0, 0, 0);
+        const now = new Date();
+
+        const targets = await tx.query.shiftInstances.findMany({
+          where: {
+            masterId: instance.masterId,
+            actualStartsAt: { gte: fromDate },
+            actualEndsAt: { gte: now },
+            isCancelled: false,
+          },
+          columns: { id: true },
+        });
+        const targetIds = targets.map((target) => target.id);
+
+        if (await this.hasOpenTimeEntryForInstances(targetIds, tx)) {
+          throw new ConflictGraphQLError(
+            'Cannot delete a shift instance with an open time entry',
+          );
+        }
+
+        const [cancelledInstance] = await tx
+          .update(schema.shiftInstances)
+          .set({ isCancelled: true })
+          .where(
+            and(
+              eq(schema.shiftInstances.id, id),
+              eq(schema.shiftInstances.isCancelled, false),
+            ),
+          )
+          .returning();
+
+        if (!cancelledInstance) {
+          throw new ConflictGraphQLError(
+            `Shift instance with ID ${id} is already cancelled`,
+          );
+        }
+
+        const restIds = targetIds.filter((targetId) => targetId !== id);
+        let updatedRestIds: string[] = [];
+        if (restIds.length > 0) {
+          const updatedRest = await tx
+            .update(schema.shiftInstances)
+            .set({ isCancelled: true })
+            .where(
+              and(
+                inArray(schema.shiftInstances.id, restIds),
+                eq(schema.shiftInstances.isCancelled, false),
+              ),
+            )
+            .returning({ id: schema.shiftInstances.id });
+          updatedRestIds = updatedRest.map((row) => row.id);
+        }
+
+        const recipientUserIds = await this.cancelActiveInvitesForInstances(
+          tx,
+          [id, ...updatedRestIds],
+        );
+
+        return {
+          shift: instance.master,
+          cancelledInstance,
+          recipientUserIds,
+          fromDate,
+        };
+      });
+
+    if (options.applyToAllFuture) {
+      void this.loadAndEmitShiftInstanceSeriesCancelledNotification(
+        shift,
+        fromDate as Date,
+        recipientUserIds,
+      );
+    } else {
+      void this.loadAndEmitShiftInstanceCancelledNotification(
+        shift,
+        cancelledInstance,
+        recipientUserIds,
+      );
+    }
+
+    if (options.actorUserId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_CANCEL,
+        userId: options.actorUserId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: await this.resolveOrganizationId(organizationUnitId),
+          organization_unit_id: organizationUnitId,
+          shift_id: shift.id,
+          shift_instance_id: cancelledInstance.id,
+          apply_to_all_future: Boolean(options.applyToAllFuture),
+        },
+      });
+    }
+
+    return cancelledInstance;
+  }
+
+  private async cancelActiveInvitesForInstances(
+    tx: Database,
+    instanceIds: string[],
+  ): Promise<string[]> {
+    if (instanceIds.length === 0) {
+      return [];
+    }
+
+    const activeInvites = await tx.query.shiftInstanceInvites.findMany({
+      where: {
+        instanceId: { in: instanceIds },
+        status: { in: [...ACTIVE_SHIFT_INVITE_STATUSES] },
+      },
+      columns: { userId: true },
+    });
+
+    if (activeInvites.length > 0) {
+      await tx
+        .update(schema.shiftInstanceInvites)
+        .set({ status: ShiftInviteStatus.CANCELLED })
+        .where(
+          and(
+            inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+            inArray(schema.shiftInstanceInvites.status, [
+              ...ACTIVE_SHIFT_INVITE_STATUSES,
+            ]),
+          ),
+        );
+    }
+
+    return [...new Set(activeInvites.map((invite) => invite.userId))];
+  }
+
+  private async hasOpenTimeEntryForInstances(
+    instanceIds: string[],
+    executor: Database = this.db,
+  ): Promise<boolean> {
+    if (instanceIds.length === 0) {
+      return false;
+    }
+
+    const [entry] = await executor
+      .select({ id: schema.timeEntries.id })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          inArray(schema.timeEntries.shiftInstanceId, instanceIds),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      )
+      .limit(1);
+
+    return entry !== undefined;
   }
 
   async findVolunteers(
@@ -1219,10 +2107,11 @@ export class ShiftService {
       invitedMemberIds,
       eventId: inputEventId,
       imageFileId,
+      requiredFormIds,
       ...shiftInput
     } = input;
 
-    return this.db.transaction(async (tx) => {
+    const shift = await this.db.transaction(async (tx) => {
       let shift = await tx.query.shifts.findFirst({
         where: { id, organizationUnitId },
       });
@@ -1277,7 +2166,6 @@ export class ShiftService {
           .update(schema.shifts)
           .set({
             ...shiftInput,
-            slug: shiftInput.title ? slugify(shiftInput.title) : undefined,
             originalStartsAt: input.startsAt,
             durationMinutes,
             ...(inputEventId !== undefined ? { eventId: inputEventId } : {}),
@@ -1348,11 +2236,37 @@ export class ShiftService {
         }
       }
 
+      if (requiredFormIds !== undefined) {
+        await this.setRequiredFormsInTx(
+          tx,
+          shift.id,
+          organizationUnitId,
+          requiredFormIds ?? [],
+        );
+      }
+
       return shift;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: await this.resolveOrganizationId(organizationUnitId),
+        organization_unit_id: organizationUnitId,
+        shift_id: shift.id,
+      },
+    });
+
+    return shift;
   }
 
-  async delete(id: string, organizationUnitId: string): Promise<ShiftEntity> {
+  async delete(
+    id: string,
+    organizationUnitId: string,
+    actorUserId?: string,
+  ): Promise<ShiftEntity> {
     const [shift] = await this.db
       .update(schema.shifts)
       .set({ isDeleted: true })
@@ -1368,6 +2282,19 @@ export class ShiftService {
       throw new NotFoundGraphQLError(`Shift with ID ${id} not found`);
     }
 
+    if (actorUserId) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_DELETE,
+        userId: actorUserId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: await this.resolveOrganizationId(organizationUnitId),
+          organization_unit_id: organizationUnitId,
+          shift_id: shift.id,
+        },
+      });
+    }
+
     return shift;
   }
 
@@ -1375,14 +2302,14 @@ export class ShiftService {
     organizationUnitId: string,
   ): Promise<ShiftInstanceEntity[]> {
     const now = new Date();
-    const threeHours = 3 * 60 * 60 * 1000;
-    const threeHoursAgo = new Date(now.getTime() - threeHours);
-    const threeHoursFromNow = new Date(now.getTime() + threeHours);
+    const windowMs = 12 * 60 * 60 * 1000;
+    const windowStart = new Date(now.getTime() - windowMs);
+    const windowEnd = new Date(now.getTime() + windowMs);
 
     const instances = await this.db.query.shiftInstances.findMany({
       where: {
-        actualStartsAt: { lt: threeHoursFromNow },
-        actualEndsAt: { gt: threeHoursAgo },
+        actualStartsAt: { lt: windowEnd },
+        actualEndsAt: { gt: windowStart },
         isCancelled: false,
         master: { organizationUnitId, isDeleted: false },
       },
@@ -1419,20 +2346,30 @@ export class ShiftService {
 
   async findShiftsForWeek(
     organizationUnitId: string,
-    from: Date,
-    to: Date,
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+    eventId?: string | null,
   ): Promise<ShiftInstanceEntity[]> {
     const shifts = await this.db.query.shifts.findMany({
-      where: { organizationUnitId, isDeleted: false },
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(eventId ? { eventId } : {}),
+      },
       columns: { id: true },
     });
     const shiftIds = shifts.map((s) => s.id);
     if (shiftIds.length === 0) return [];
 
+    const dateCondition = this.buildMyShiftDateCondition(
+      startsAfter,
+      endsBefore,
+    );
+
     return this.db.query.shiftInstances.findMany({
       where: {
         masterId: { in: shiftIds },
-        actualStartsAt: { gte: from, lt: to },
+        ...dateCondition,
         isCancelled: false,
       },
       with: { master: true },
@@ -1478,6 +2415,76 @@ export class ShiftService {
     } catch (error) {
       this.logger.error(
         `Failed to emit shift instance invited notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceCancelledNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    recipientUserIds: string[],
+  ): Promise<void> {
+    if (recipientUserIds.length === 0) {
+      return;
+    }
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceSeriesCancelledNotification(
+    shift: ShiftEntity,
+    fromDate: Date,
+    recipientUserIds: string[],
+  ): Promise<void> {
+    if (recipientUserIds.length === 0) {
+      return;
+    }
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceSeriesCancelled({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        recipientUserIds,
+        fromDate,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance series cancelled notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -1583,9 +2590,19 @@ export class ShiftService {
   async joinShiftInstance(
     userId: string,
     instanceId: string,
-    status: ShiftInviteStatus = ShiftInviteStatus.ACCEPTED,
-    tx?: Database,
+    options: {
+      status?: ShiftInviteStatus;
+      tx?: Database;
+      formsAlreadySatisfied?: boolean;
+      source?: PostHogJoinSource;
+    } = {},
   ): Promise<void> {
+    const {
+      status = ShiftInviteStatus.ACCEPTED,
+      tx,
+      formsAlreadySatisfied,
+      source = POSTHOG_JOIN_SOURCE.SELF_JOIN,
+    } = options;
     const db = tx ?? this.db;
 
     const instance = await db.query.shiftInstances.findFirst({
@@ -1612,6 +2629,27 @@ export class ShiftService {
       throw new ConflictGraphQLError(
         'You must be a member of the organization to join this shift.',
       );
+    }
+
+    if (!formsAlreadySatisfied) {
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.SHIFT,
+        targetId: shift.id,
+      });
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instanceId,
+      });
+      const formsCheck = await this.checkShiftAndInstanceRequiredForms(
+        userId,
+        shift.id,
+        instanceId,
+      );
+      if (!formsCheck.satisfied) {
+        throw new ConflictGraphQLError(
+          'You must complete the required forms before joining this shift.',
+        );
+      }
     }
 
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
@@ -1663,6 +2701,13 @@ export class ShiftService {
           .where(eq(schema.shiftInstanceInvites.id, existingInvite.id));
 
         void this.notifyShiftInstanceJoined(userId, shift, instance);
+        await this.captureShiftInstanceJoin({
+          userId,
+          organizationUnitId: shift.organizationUnitId,
+          shiftId: shift.id,
+          shiftInstanceId: instanceId,
+          source,
+        });
       }
 
       return;
@@ -1688,19 +2733,35 @@ export class ShiftService {
       }
     }
 
-    await db
+    const [inserted] = await db
       .insert(schema.shiftInstanceInvites)
       .values({
         instanceId,
         userId,
         status,
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning();
+
+    if (!inserted) {
+      return;
+    }
 
     void this.notifyShiftInstanceJoined(userId, shift, instance);
+    await this.captureShiftInstanceJoin({
+      userId,
+      organizationUnitId: shift.organizationUnitId,
+      shiftId: shift.id,
+      shiftInstanceId: instanceId,
+      source,
+    });
   }
 
-  async joinShift(userId: string, shiftId: string): Promise<ShiftEntity> {
+  async joinShift(
+    userId: string,
+    shiftId: string,
+    source: PostHogJoinSource = POSTHOG_JOIN_SOURCE.SELF_JOIN,
+  ): Promise<ShiftEntity> {
     const shift = await this.db.query.shifts.findFirst({
       where: { id: shiftId, isDeleted: false },
     });
@@ -1720,6 +2781,17 @@ export class ShiftService {
       );
     }
 
+    const requiredFormStatuses = await this.getShiftRequiredFormStatuses(
+      userId,
+      shiftId,
+    );
+    const missingForms = requiredFormStatuses.filter((s) => !s.submitted);
+    if (missingForms.length > 0) {
+      throw new ConflictGraphQLError(
+        'You must complete the required forms before joining this shift.',
+      );
+    }
+
     const nextShiftInstance = await this.db.query.shiftInstances.findFirst({
       where: {
         masterId: shiftId,
@@ -1730,8 +2802,13 @@ export class ShiftService {
     if (nextShiftInstance) {
       const existingShiftInvites = await this.db.query.shiftInvites.findMany({
         where: { shiftId },
-        columns: { userId: true },
+        columns: { userId: true, status: true },
       });
+      const alreadyParticipating = existingShiftInvites.some(
+        (invite) =>
+          invite.userId === userId &&
+          isParticipatingShiftInviteStatus(invite.status),
+      );
       const memberIds = [
         ...new Set([
           ...existingShiftInvites.map((invite) => invite.userId),
@@ -1746,8 +2823,28 @@ export class ShiftService {
         {
           inviteToAllInstances: true,
           inviteStatus: ShiftInviteStatus.ACCEPTED,
+          skipCapture: true,
         },
       );
+
+      if (!alreadyParticipating) {
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.SHIFT_JOIN,
+          userId,
+          properties: {
+            surface:
+              source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+                ? POSTHOG_SURFACE.BACKOFFICE
+                : POSTHOG_SURFACE.VOLUNTEERING,
+            organization_id: await this.resolveOrganizationId(
+              shift.organizationUnitId,
+            ),
+            organization_unit_id: shift.organizationUnitId,
+            source,
+            shift_id: shift.id,
+          },
+        });
+      }
     }
 
     return shift;
@@ -1766,12 +2863,7 @@ export class ShiftService {
       name: string;
       status: string;
     }>;
-    requiredForms?: Array<{
-      form: RequirementFormEntity;
-      order: number;
-      submitted: boolean;
-      submissionId: string | null;
-    }>;
+    requiredForms?: RequiredFormStatus[];
   }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: instanceId, isCancelled: false },
@@ -1815,12 +2907,48 @@ export class ShiftService {
       );
 
       if (result.status === 'REQUIREMENTS_NEEDED') {
+        const targetFormsCheck = await this.checkShiftAndInstanceRequiredForms(
+          userId,
+          shift.id,
+          instanceId,
+        );
         return {
           status: JoinStatus.REQUIREMENTS_NEEDED,
           shiftInstance: instance,
           requirementProfile: result.requirementProfile,
           requirementStatuses: result.requirementStatuses,
-          requiredForms: result.requiredForms,
+          requiredForms: [
+            ...(result.requiredForms ?? []),
+            ...targetFormsCheck.requiredForms,
+          ],
+        };
+      }
+
+      if (result.status === 'REJECTED') {
+        return {
+          status: JoinStatus.REJECTED,
+          shiftInstance: instance,
+          membershipRequest: result.membershipRequest,
+        };
+      }
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.SHIFT,
+        targetId: shift.id,
+      });
+      await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+        targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+        targetId: instanceId,
+      });
+      const targetFormsCheck = await this.checkShiftAndInstanceRequiredForms(
+        userId,
+        shift.id,
+        instanceId,
+      );
+      if (!targetFormsCheck.satisfied) {
+        return {
+          status: JoinStatus.REQUIREMENTS_NEEDED,
+          shiftInstance: instance,
+          requiredForms: targetFormsCheck.requiredForms,
         };
       }
 
@@ -1832,30 +2960,40 @@ export class ShiftService {
         };
       }
 
-      if (result.status === 'REJECTED') {
-        return {
-          status: JoinStatus.REJECTED,
-          shiftInstance: instance,
-          membershipRequest: result.membershipRequest,
-        };
-      }
-
-      await this.joinShiftInstance(
-        userId,
-        instanceId,
-        ShiftInviteStatus.SELF_JOINED,
-      );
+      await this.joinShiftInstance(userId, instanceId, {
+        status: ShiftInviteStatus.SELF_JOINED,
+        formsAlreadySatisfied: true,
+      });
       return {
         status: JoinStatus.JOINED,
         shiftInstance: instance,
       };
     }
-
-    await this.joinShiftInstance(
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shift.id,
+    });
+    await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
+      targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+      targetId: instanceId,
+    });
+    const targetFormsCheck = await this.checkShiftAndInstanceRequiredForms(
       userId,
+      shift.id,
       instanceId,
-      ShiftInviteStatus.SELF_JOINED,
     );
+    if (!targetFormsCheck.satisfied) {
+      return {
+        status: JoinStatus.REQUIREMENTS_NEEDED,
+        shiftInstance: instance,
+        requiredForms: targetFormsCheck.requiredForms,
+      };
+    }
+
+    await this.joinShiftInstance(userId, instanceId, {
+      status: ShiftInviteStatus.SELF_JOINED,
+      formsAlreadySatisfied: true,
+    });
     return {
       status: JoinStatus.JOINED,
       shiftInstance: instance,
@@ -1866,6 +3004,7 @@ export class ShiftService {
     userId: string,
     shiftId: string,
     status: ShiftInviteStatus,
+    actorUserId: string = userId,
   ): Promise<ShiftInviteEntity> {
     const shift = await this.db.query.shifts.findFirst({
       where: { id: shiftId, isDeleted: false },
@@ -1893,7 +3032,7 @@ export class ShiftService {
       await this.assertShiftSeriesAcceptanceCapacity(shiftId, userId);
     }
 
-    return this.db.transaction(async (tx) => {
+    const updated = await this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(schema.shiftInvites)
         .set({ status })
@@ -1909,12 +3048,165 @@ export class ShiftService {
 
       return updated;
     });
+
+    const source = actorUserId === userId ? 'self' : 'admin';
+    const organizationId = await this.resolveOrganizationId(
+      shift.organizationUnitId,
+    );
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INVITE_UPDATE,
+      userId,
+      properties: {
+        surface:
+          source === 'admin'
+            ? POSTHOG_SURFACE.BACKOFFICE
+            : POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: organizationId,
+        organization_unit_id: shift.organizationUnitId,
+        source,
+        shift_id: shiftId,
+        invite_status: status,
+      },
+    });
+    if (
+      status === ShiftInviteStatus.ACCEPTED ||
+      status === ShiftInviteStatus.SELF_JOINED
+    ) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_JOIN,
+        userId,
+        properties: {
+          surface:
+            source === 'admin'
+              ? POSTHOG_SURFACE.BACKOFFICE
+              : POSTHOG_SURFACE.VOLUNTEERING,
+          organization_id: organizationId,
+          organization_unit_id: shift.organizationUnitId,
+          source: POSTHOG_JOIN_SOURCE.INVITE_ACCEPT,
+          shift_id: shiftId,
+        },
+      });
+    }
+
+    return updated;
+  }
+
+  async adminRejectInvitesForEventUser(
+    eventId: string,
+    userId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const shifts = await db.query.shifts.findMany({
+      where: { eventId, isDeleted: false },
+      columns: { id: true },
+    });
+    if (shifts.length === 0) {
+      return;
+    }
+
+    const shiftIds = shifts.map((shift) => shift.id);
+    const uninviteStatuses: ShiftInviteStatus[] = [
+      ...ADMIN_UNINVITE_SOURCE_STATUSES,
+    ];
+
+    await db
+      .update(schema.shiftInvites)
+      .set({ status: ShiftInviteStatus.ADMIN_REJECTED })
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(schema.shiftInvites.shiftId, shiftIds),
+          inArray(schema.shiftInvites.status, uninviteStatuses),
+        ),
+      );
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        isCancelled: false,
+      },
+      columns: { id: true },
+    });
+    if (instances.length === 0) {
+      return;
+    }
+
+    const instanceIds = instances.map((instance) => instance.id);
+    await db
+      .update(schema.shiftInstanceInvites)
+      .set({ status: ShiftInviteStatus.ADMIN_REJECTED })
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          inArray(schema.shiftInstanceInvites.status, uninviteStatuses),
+        ),
+      );
+  }
+
+  /**
+   * Reverses adminRejectInvitesForEventUser: restores this user's
+   * ADMIN_REJECTED invites on the event's shifts (and shift instances) back
+   * to INVITED when an admin re-invites them to the event.
+   */
+  async adminReinviteInvitesForEventUser(
+    eventId: string,
+    userId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const shifts = await db.query.shifts.findMany({
+      where: { eventId, isDeleted: false },
+      columns: { id: true },
+    });
+    if (shifts.length === 0) {
+      return;
+    }
+
+    const shiftIds = shifts.map((shift) => shift.id);
+
+    await db
+      .update(schema.shiftInvites)
+      .set({ status: ShiftInviteStatus.INVITED })
+      .where(
+        and(
+          eq(schema.shiftInvites.userId, userId),
+          inArray(schema.shiftInvites.shiftId, shiftIds),
+          eq(schema.shiftInvites.status, ShiftInviteStatus.ADMIN_REJECTED),
+        ),
+      );
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: {
+        masterId: { in: shiftIds },
+        isCancelled: false,
+      },
+      columns: { id: true },
+    });
+    if (instances.length === 0) {
+      return;
+    }
+
+    const instanceIds = instances.map((instance) => instance.id);
+    await db
+      .update(schema.shiftInstanceInvites)
+      .set({ status: ShiftInviteStatus.INVITED })
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.userId, userId),
+          inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+          eq(
+            schema.shiftInstanceInvites.status,
+            ShiftInviteStatus.ADMIN_REJECTED,
+          ),
+        ),
+      );
   }
 
   async updateShiftInstanceInviteStatus(
     userId: string,
     instanceId: string,
     status: ShiftInviteStatus,
+    actorUserId: string = userId,
   ): Promise<ShiftInstanceInviteEntity> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: instanceId, isCancelled: false },
@@ -1951,6 +3243,47 @@ export class ShiftService {
 
     if (status === ShiftInviteStatus.ACCEPTED) {
       void this.notifyShiftInstanceJoined(userId, instance.master, instance);
+    }
+
+    const source = actorUserId === userId ? 'self' : 'admin';
+    const organizationId = await this.resolveOrganizationId(
+      instance.master.organizationUnitId,
+    );
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
+      userId,
+      properties: {
+        surface:
+          source === 'admin'
+            ? POSTHOG_SURFACE.BACKOFFICE
+            : POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: organizationId,
+        organization_unit_id: instance.master.organizationUnitId,
+        source,
+        shift_id: instance.master.id,
+        shift_instance_id: instanceId,
+        invite_status: status,
+      },
+    });
+    if (
+      status === ShiftInviteStatus.ACCEPTED ||
+      status === ShiftInviteStatus.SELF_JOINED
+    ) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+        userId,
+        properties: {
+          surface:
+            source === 'admin'
+              ? POSTHOG_SURFACE.BACKOFFICE
+              : POSTHOG_SURFACE.VOLUNTEERING,
+          organization_id: organizationId,
+          organization_unit_id: instance.master.organizationUnitId,
+          source: POSTHOG_JOIN_SOURCE.INVITE_ACCEPT,
+          shift_id: instance.master.id,
+          shift_instance_id: instanceId,
+        },
+      });
     }
 
     return updated;
@@ -2039,5 +3372,100 @@ export class ShiftService {
       FilePurpose.SHIFT_IMAGE,
     );
     return this.fileService.resolvePublicUrlForUploadedFile(fileId);
+  }
+
+  private async setRequiredFormsInTx(
+    tx: Database,
+    shiftId: string,
+    organizationUnitId: string,
+    formIds: string[],
+  ): Promise<void> {
+    const orgUnit = await tx.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+    });
+
+    if (!orgUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    await this.requiredFormService.applyShiftRequiredForms(
+      shiftId,
+      orgUnit.organizationId,
+      formIds,
+      tx,
+    );
+  }
+
+  private async getShiftRequiredFormStatuses(
+    userId: string,
+    shiftId: string,
+  ): Promise<RequiredFormStatus[]> {
+    return this.requiredFormService.getRequiredFormStatuses(userId, {
+      targetType: RequiredFormTargetType.SHIFT,
+      targetId: shiftId,
+    });
+  }
+
+  private async getShiftInstanceRequiredFormStatuses(
+    userId: string,
+    shiftInstanceId: string,
+  ): Promise<RequiredFormStatus[]> {
+    return this.requiredFormService.getRequiredFormStatuses(userId, {
+      targetType: RequiredFormTargetType.SHIFT_INSTANCE,
+      targetId: shiftInstanceId,
+    });
+  }
+
+  private async checkShiftAndInstanceRequiredForms(
+    userId: string,
+    shiftId: string,
+    shiftInstanceId: string,
+  ): Promise<{
+    satisfied: boolean;
+    requiredForms: RequiredFormStatus[];
+  }> {
+    const [shiftForms, instanceForms] = await Promise.all([
+      this.getShiftRequiredFormStatuses(userId, shiftId),
+      this.getShiftInstanceRequiredFormStatuses(userId, shiftInstanceId),
+    ]);
+    const requiredForms = [...shiftForms, ...instanceForms];
+    const missingForms = requiredForms.filter((s) => !s.submitted);
+    return { satisfied: missingForms.length === 0, requiredForms };
+  }
+
+  private async resolveOrganizationId(
+    organizationUnitId: string,
+  ): Promise<string | undefined> {
+    const unit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { organizationId: true },
+    });
+    return unit?.organizationId ?? undefined;
+  }
+
+  private async captureShiftInstanceJoin(input: {
+    userId: string;
+    organizationUnitId: string;
+    shiftId: string;
+    shiftInstanceId: string;
+    source: PostHogJoinSource;
+  }): Promise<void> {
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+      userId: input.userId,
+      properties: {
+        surface:
+          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+            ? POSTHOG_SURFACE.BACKOFFICE
+            : POSTHOG_SURFACE.VOLUNTEERING,
+        organization_id: await this.resolveOrganizationId(
+          input.organizationUnitId,
+        ),
+        organization_unit_id: input.organizationUnitId,
+        source: input.source,
+        shift_id: input.shiftId,
+        shift_instance_id: input.shiftInstanceId,
+      },
+    });
   }
 }

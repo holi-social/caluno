@@ -1,10 +1,12 @@
 'use client';
 
+import type { Locale } from '@repo/data';
 import { Button, Input } from '@repo/ui';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { emailOtp } from '@/lib/auth';
+import { setLocaleCookieIfSupported } from '@/lib/locale-cookie';
 
 interface VerifyEmailFormProps {
   initialEmail?: string;
@@ -19,6 +21,7 @@ export function VerifyEmailForm({
 }: VerifyEmailFormProps) {
   const t = useTranslations('Auth.verifyEmail');
   const router = useRouter();
+  const currentLocale = useLocale();
   const [email, setEmail] = useState(initialEmail);
   const [hasCode, setHasCode] = useState(
     Boolean(initialEmail && initialCodeSent),
@@ -82,7 +85,12 @@ export function VerifyEmailForm({
         return;
       }
 
-      router.push(redirectTo);
+      const userLocale = setLocaleCookieIfSupported(
+        (result.data?.user as { locale?: unknown } | undefined)?.locale,
+      );
+      router.push(redirectTo, {
+        locale: userLocale ?? (currentLocale as Locale),
+      });
       router.refresh();
     } catch {
       setError(t('verifyCodeFailed'));
@@ -109,7 +117,7 @@ export function VerifyEmailForm({
 
   if (!hasCode) {
     return (
-      <form onSubmit={handleSendCode} className="mt-8 space-y-6">
+      <form onSubmit={handleSendCode} className="space-y-6">
         {error && (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
             {error}
@@ -144,7 +152,7 @@ export function VerifyEmailForm({
   }
 
   return (
-    <form onSubmit={handleVerify} className="mt-8 space-y-6">
+    <form onSubmit={handleVerify} className="space-y-6">
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
           {error}
@@ -200,7 +208,11 @@ export function VerifyEmailForm({
       <p className="text-center text-sm text-muted-foreground">
         {t('remembered')}{' '}
         <Link
-          href="/login"
+          href={
+            redirectTo && redirectTo !== '/'
+              ? `/login?redirectTo=${encodeURIComponent(redirectTo)}`
+              : '/login'
+          }
           className="font-medium text-primary hover:underline"
         >
           {t('signInLink')}

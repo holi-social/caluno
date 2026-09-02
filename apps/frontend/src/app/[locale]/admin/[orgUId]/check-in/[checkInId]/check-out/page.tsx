@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@repo/ui';
-import { Calendar, Hand, LogIn } from 'lucide-react';
+import { Calendar, Hand, ScanQrCode } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
@@ -46,11 +46,13 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
               <ul className="space-y-3">
                 <li className="flex gap-2">
                   <Calendar className="text-muted-foreground" />
-                  {entry.shiftInstance.overrideTitle ??
-                    entry.shiftInstance.master.title}
+                  {entry.shiftInstance
+                    ? (entry.shiftInstance.overrideTitle ??
+                      entry.shiftInstance.master.title)
+                    : t('generalCheckIn')}
                 </li>
                 <li className="flex gap-2">
-                  <LogIn className="text-muted-foreground" />{' '}
+                  <ScanQrCode className="text-muted-foreground" />{' '}
                   {t('checkedInAt', {
                     time: formatDateTime(new Date(entry.startedAt)),
                   })}

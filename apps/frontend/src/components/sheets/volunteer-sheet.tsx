@@ -4,6 +4,7 @@ import {
   MembershipRequestStatus,
   useAdminUserProfile,
   useFormSubmissionsForVolunteer,
+  useMemberships,
   useOrgUId,
   useUser,
 } from '@repo/data/react';
@@ -21,6 +22,7 @@ import {
 } from '@repo/ui';
 import { ExternalLink, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { RemoveMembershipButton } from '@/domain/memberships/components/remove-membership-button';
 import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
 
@@ -63,12 +65,14 @@ function VolunteerSheetContent({
   status,
   email,
   checkInId,
+  onRemoved,
 }: {
   userId: string;
   name: string;
   status: MembershipRequestStatus;
   email: string;
   checkInId: string;
+  onRemoved: () => void;
 }) {
   const t = useTranslations('Volunteer.sheet');
   const tCommon = useTranslations('Common');
@@ -79,6 +83,8 @@ function VolunteerSheetContent({
     useAdminUserProfile(userId);
   const { data: submissions, isPending: submissionsPending } =
     useFormSubmissionsForVolunteer(userId);
+  const { data: memberships } = useMemberships(orgUId);
+  const membership = memberships?.find((item) => item.user.id === userId);
 
   const profileData = (userProfile?.data ?? {}) as Record<string, unknown>;
   const address =
@@ -125,7 +131,10 @@ function VolunteerSheetContent({
             {birthday && (
               <InfoRow label={t('birthdayLabel')} value={birthday} />
             )}
-            <InfoRow label={t('qrIdLabel')} value={checkInId} />
+            <InfoRow
+              label={t('qrIdLabel')}
+              value={user?.checkInId ?? checkInId}
+            />
           </div>
         )}
       </div>
@@ -160,6 +169,18 @@ function VolunteerSheetContent({
           </div>
         )}
       </div>
+
+      {membership && (
+        <>
+          <Separator />
+          <RemoveMembershipButton
+            membershipId={membership.id}
+            volunteerName={name}
+            appearance="labeled"
+            onRemoved={onRemoved}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -198,6 +219,7 @@ export function VolunteerSheet() {
               status={status}
               email={email}
               checkInId={checkInId}
+              onRemoved={close}
             />
           )}
         </div>

@@ -6,6 +6,7 @@ import {
   ShiftInviteStatus,
   type ShiftVisibility,
 } from '@repo/data';
+import type { RequiredForm } from '@repo/data/react';
 import { Badge, Card } from '@repo/ui';
 import {
   CalendarIcon,
@@ -30,6 +31,12 @@ interface ShiftActionCardProps {
   preselectedInstanceId?: string;
   /** The viewer's org-membership state for this shift's org. */
   membershipState: JoinStatus;
+  /** Master capacity, used when the instance has no override. */
+  masterMaxVolunteers?: number | null;
+  /** Required forms configured on the shift itself. */
+  shiftRequiredForms?: RequiredForm[];
+  /** Required forms configured on the shift's organization unit. */
+  organizationUnitRequiredForms?: RequiredForm[];
 }
 
 const isParticipatingInvite = (
@@ -47,6 +54,9 @@ export function ShiftActionCard({
   autoJoin,
   preselectedInstanceId,
   membershipState,
+  masterMaxVolunteers,
+  shiftRequiredForms = [],
+  organizationUnitRequiredForms = [],
 }: ShiftActionCardProps) {
   const t = useTranslations('ShiftDetail');
   const { formatTimeRange, formatDate } = useFormatting();
@@ -67,6 +77,9 @@ export function ShiftActionCard({
   const [inviteStatusOverrides, setInviteStatusOverrides] = useState<
     Record<string, ShiftInviteStatus>
   >({});
+  const [pendingInstanceIds, setPendingInstanceIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const selected = useMemo(
     () => instances.find((i) => i.id === selectedId) ?? instances[0],
@@ -78,10 +91,13 @@ export function ShiftActionCard({
   }
 
   const isRecurring = instances.length > 1;
-  const max = selected.overrideMaxVolunteers ?? undefined;
+  const max =
+    selected.overrideMaxVolunteers ?? masterMaxVolunteers ?? undefined;
   const inviteStatus =
     inviteStatusOverrides[selected.id] ?? selected.myInviteStatus ?? null;
   const effectiveMembershipState = membershipStateOverride ?? membershipState;
+  const isPendingIntended =
+    selected.isIntendingToJoin || pendingInstanceIds.has(selected.id);
   const justJoined =
     isParticipatingInvite(inviteStatus) &&
     !isParticipatingInvite(selected.myInviteStatus);
@@ -93,14 +109,33 @@ export function ShiftActionCard({
       : Math.max(0, selected.spotsLeft - (justJoined ? 1 : 0));
   const full = spotsLeft === 0;
   const unlimited = spotsLeft == null;
-
-  const resolvedMax = max ?? filled + (spotsLeft ?? 0);
+  const resolvedMax = max ?? (spotsLeft != null ? filled + spotsLeft : filled);
 
   const longDate = formatDate(new Date(selected.actualStartsAt), {
     weekday: 'short',
     day: 'numeric',
     month: 'long',
   });
+
+  const getInviteStatusNote = () => {
+    switch (inviteStatus) {
+      case ShiftInviteStatus.Invited:
+        return t('respondBeforeNote', { date: longDate });
+      case ShiftInviteStatus.Accepted:
+        return t('cancelUntilNote', { date: longDate });
+      case ShiftInviteStatus.Cancelled:
+        return t('cancelledNote', { date: longDate });
+      case ShiftInviteStatus.SelfJoined:
+        return t('joinedNote');
+      case ShiftInviteStatus.VolunteerRejected:
+        return t('declinedNote');
+      default:
+        if (effectiveMembershipState === JoinStatus.Pending) {
+          return t('pendingNote');
+        }
+        return full ? t('fullNote') : t('signUpNote');
+    }
+  };
 
   return (
     <Card className="space-y-4 p-6">
@@ -143,16 +178,14 @@ export function ShiftActionCard({
       {inviteStatus === ShiftInviteStatus.Cancelled && (
         <Badge variant="secondary" className="gap-1">
           <XIcon className="size-3.5" />
-          {t('declinedBadge')}
+          {t('cancelledBadge')}
         </Badge>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 text-sm">
-          <UsersIcon className="size-5 text-foreground" />
-          {unlimited ? (
-            <span className="text-muted-foreground">{t('spotsUnlimited')}</span>
-          ) : (
+      {!unlimited && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-sm">
+            <UsersIcon className="size-5 text-foreground" />
             <span>
               <span className="font-semibold text-foreground">
                 {t('spotsTaken', { filled, max: resolvedMax })}
@@ -161,9 +194,9 @@ export function ShiftActionCard({
                 {full ? t('spotsFull') : t('spotsFree', { n: spotsLeft })}
               </span>
             </span>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="space-y-2">
         <JoinShiftButton
@@ -176,7 +209,14 @@ export function ShiftActionCard({
           autoJoin={autoJoin}
           isFull={full}
           membershipState={effectiveMembershipState}
-          onMembershipStateChange={setMembershipStateOverride}
+          onMembershipStateChange={(nextStatus) => {
+            setMembershipStateOverride(nextStatus);
+            if (nextStatus === JoinStatus.Pending) {
+              setPendingInstanceIds((previous) =>
+                new Set(previous).add(selected.id),
+              );
+            }
+          }}
           inviteStatus={inviteStatus}
           onInviteStatusChange={(nextStatus) =>
             setInviteStatusOverrides((previous) => ({
@@ -184,7 +224,11 @@ export function ShiftActionCard({
               [selected.id]: nextStatus,
             }))
           }
+          isPendingIntended={isPendingIntended}
           startsAt={selected.actualStartsAt}
+          shiftRequiredForms={shiftRequiredForms}
+          instanceRequiredForms={selected.requiredForms?.map((ref) => ref.form)}
+          organizationUnitRequiredForms={organizationUnitRequiredForms}
           className="w-full"
           label={t('signUpCta', {
             date: formatDate(new Date(selected.actualStartsAt), {
@@ -195,19 +239,7 @@ export function ShiftActionCard({
           })}
         />
         <p className="text-center text-sm text-muted-foreground">
-          {inviteStatus === ShiftInviteStatus.Invited
-            ? t('respondBeforeNote', { date: longDate })
-            : inviteStatus === ShiftInviteStatus.Accepted
-              ? t('cancelUntilNote', { date: longDate })
-              : inviteStatus === ShiftInviteStatus.Cancelled
-                ? t('cancelledNote', { date: longDate })
-                : inviteStatus === ShiftInviteStatus.SelfJoined
-                  ? t('joinedNote')
-                  : effectiveMembershipState === JoinStatus.Pending
-                    ? t('pendingNote')
-                    : full
-                      ? t('fullNote')
-                      : t('signUpNote')}
+          {getInviteStatusNote()}
         </p>
       </div>
     </Card>

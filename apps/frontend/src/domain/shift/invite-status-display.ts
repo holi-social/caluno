@@ -1,54 +1,86 @@
-import { ShiftInviteStatus } from '@repo/data';
+import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import type { ShiftVolunteeringDisplayState } from '@repo/ui';
 
-const ADMIN_UNINVITE_SOURCE_STATUSES = [
+/** Shared invite-status values for shift + event (identical GraphQL enums). */
+export type InviteStatus = ShiftInviteStatus | EventInviteStatus;
+
+const ADMIN_UNINVITE_SOURCE_STATUS_VALUES = new Set<string>([
   ShiftInviteStatus.Invited,
   ShiftInviteStatus.SelfJoined,
   ShiftInviteStatus.Accepted,
-] as const;
+]);
 
-/** Whether an admin can remove a volunteer from an instance (→ ADMIN_REJECTED). */
-export function canAdminUninvite(status: ShiftInviteStatus): boolean {
-  return ADMIN_UNINVITE_SOURCE_STATUSES.includes(
-    status as (typeof ADMIN_UNINVITE_SOURCE_STATUSES)[number],
-  );
+/** Whether an admin can remove a volunteer (→ ADMIN_REJECTED). */
+export function canAdminUninvite(status: InviteStatus): boolean {
+  return ADMIN_UNINVITE_SOURCE_STATUS_VALUES.has(status);
 }
 
-/** Target status when an admin removes a volunteer from an instance. */
-export function adminUninviteTargetStatus(
-  status: ShiftInviteStatus,
-): ShiftInviteStatus | null {
-  return canAdminUninvite(status) ? ShiftInviteStatus.AdminRejected : null;
+/** Target status when an admin removes a volunteer. */
+export function adminUninviteTargetStatus<S extends InviteStatus>(
+  status: S,
+): S | null {
+  if (!canAdminUninvite(status)) {
+    return null;
+  }
+  return ShiftInviteStatus.AdminRejected as S;
 }
 
 /** Whether an admin can re-invite a previously rejected volunteer (→ INVITED). */
-export function canAdminReinvite(status: ShiftInviteStatus): boolean {
-  return status === ShiftInviteStatus.AdminRejected;
+export function canAdminReinvite(status: InviteStatus): boolean {
+  return (
+    status === ShiftInviteStatus.AdminRejected ||
+    status === EventInviteStatus.AdminRejected
+  );
 }
 
 /** Target status when an admin re-invites a rejected volunteer. */
-export function adminReinviteTargetStatus(
-  status: ShiftInviteStatus,
-): ShiftInviteStatus | null {
-  return canAdminReinvite(status) ? ShiftInviteStatus.Invited : null;
+export function adminReinviteTargetStatus<S extends InviteStatus>(
+  status: S,
+): S | null {
+  if (!canAdminReinvite(status)) {
+    return null;
+  }
+  return ShiftInviteStatus.Invited as S;
+}
+
+/**
+ * Invite-sheet defaults: keep ADMIN_REJECTED off the Invited column so saving
+ * the sheet (e.g. to add someone else) does not silently re-invite them.
+ * Admins re-add them explicitly from Available.
+ */
+export function preselectedInviteMemberIds(
+  members: ReadonlyArray<{ id: string; inviteStatus?: InviteStatus | null }>,
+): string[] {
+  return members
+    .filter(
+      (member) =>
+        member.inviteStatus == null || !canAdminReinvite(member.inviteStatus),
+    )
+    .map((member) => member.id);
 }
 
 /** Domain invite status → backoffice display state (VOLI-842). */
 export function toInviteDisplayState(
-  status: ShiftInviteStatus,
+  status: InviteStatus,
 ): ShiftVolunteeringDisplayState {
   switch (status) {
     case ShiftInviteStatus.Invited:
+    case EventInviteStatus.Invited:
       return 'invited';
     case ShiftInviteStatus.Accepted:
+    case EventInviteStatus.Accepted:
       return 'accepted';
     case ShiftInviteStatus.SelfJoined:
+    case EventInviteStatus.SelfJoined:
       return 'signed_up';
     case ShiftInviteStatus.VolunteerRejected:
+    case EventInviteStatus.VolunteerRejected:
       return 'declined';
     case ShiftInviteStatus.Cancelled:
+    case EventInviteStatus.Cancelled:
       return 'cancelled';
     case ShiftInviteStatus.AdminRejected:
+    case EventInviteStatus.AdminRejected:
       return 'rejected';
     default: {
       const _exhaustive: never = status;
@@ -67,7 +99,7 @@ export type InviteStatusCounts = {
 };
 
 export function countInviteDisplayStates(
-  statuses: readonly ShiftInviteStatus[],
+  statuses: readonly InviteStatus[],
 ): InviteStatusCounts {
   const counts: InviteStatusCounts = {
     invited: 0,

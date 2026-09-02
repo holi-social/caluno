@@ -2,6 +2,7 @@ import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
 import { RegisterLoader } from '../../graphql/interceptors';
 import { OrganizationUnitDataService } from '../../organization/organization-unit-data.service';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
 import type { EventOrganizationUnit } from '../models/event-organization-unit.model';
 
 @RegisterLoader()
@@ -28,6 +29,8 @@ export class EventOrganizationUnitLoader {
             name: unit.name,
             slug: unit.slug,
             logoUrl: unit.logoUrl ?? null,
+            requiredForms: [],
+            myMembershipState: JoinStatus.NONE,
           }
         : null;
     });

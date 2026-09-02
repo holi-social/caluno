@@ -89,6 +89,19 @@ export function useCancelMembershipRequest() {
   });
 }
 
+export function useRemoveMembershipRequest() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRequestRepository(sdk);
+
+  return useMutation({
+    mutationFn: (id: string) => repository.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['membershipRequests'] });
+    },
+  });
+}
+
 export function useJoinOrganization() {
   const sdk = useSdk();
   const queryClient = useQueryClient();

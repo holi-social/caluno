@@ -1,7 +1,13 @@
 'use client';
 
-import type { ShiftInviteStatus, WeeklyShiftInstance } from '@repo/data';
 import {
+  formatRrulePattern,
+  type ShiftInviteStatus,
+  ShiftVisibility,
+  type WeeklyShiftInstance,
+} from '@repo/data';
+import {
+  ActionTooltip,
   Badge,
   Button,
   Card,
@@ -9,7 +15,13 @@ import {
   VolunteeringShiftCardVolunteers,
 } from '@repo/ui';
 import { format } from 'date-fns';
-import { TriangleAlert, UserPlus, UsersRound } from 'lucide-react';
+import {
+  LockKeyhole,
+  RepeatIcon,
+  TriangleAlert,
+  UserPlus,
+  UsersRound,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { toInviteDisplayState } from '../invite-status-display';
@@ -86,8 +98,8 @@ export function ShiftCard({
 
   const participatingCount = instance.volunteers?.length ?? 0;
   const invites = instance.invites ?? [];
-  const min = instance.master.minVolunteers;
-  const max = instance.master.maxVolunteers;
+  const min = instance.overrideMinVolunteers ?? instance.master.minVolunteers;
+  const max = instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
   const state = getStaffingState(participatingCount, min, max);
 
   const isAtCapacity = max != null && participatingCount >= max;
@@ -112,18 +124,27 @@ export function ShiftCard({
   );
 
   return (
-    <Card className="rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
+    <Card className="min-w-0 rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
       <div className="flex flex-col gap-2 items-end">
         <Link
           href={instanceHref}
-          className="flex w-full flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex w-full min-w-0 flex-col gap-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={t('card.openInstanceAria')}
         >
-          <p className="text-lg font-bold leading-none text-muted-foreground">
-            {startTime} - {endTime}
+          <p className="flex w-full min-w-0 items-center justify-between gap-1 text-base font-bold leading-none text-muted-foreground">
+            <span className="min-w-0 tabular-nums">
+              {startTime} - {endTime}
+            </span>
+            {instance.master.rrule && (
+              <ActionTooltip label={formatRrulePattern(instance.master.rrule)}>
+                <span className="inline-flex shrink-0 text-muted-foreground">
+                  <RepeatIcon className="size-3.5" />
+                </span>
+              </ActionTooltip>
+            )}
           </p>
           <p className="line-clamp-2 text-lg text-card-foreground">
-            {instance.master.title}
+            {instance.overrideTitle ?? instance.master.title}
           </p>
         </Link>
 
@@ -151,20 +172,26 @@ export function ShiftCard({
               <Button
                 size="icon-sm"
                 variant={buttonVariant}
-                aria-label={t('card.inviteAria')}
+                tooltip={t('card.inviteAria')}
               >
                 <UserPlus className="size-4" />
               </Button>
             </Link>
           )}
         </div>
+
+        {instance.master.visibility === ShiftVisibility.InvitedMembers && (
+          <span className="flex w-full items-center gap-1 text-sm text-muted-foreground">
+            <LockKeyhole className="size-3" />
+            {t('visibility.INVITED_MEMBERS')}
+          </span>
+        )}
       </div>
 
       <VolunteeringShiftCardVolunteers
         volunteers={cardVolunteers}
         phase="before"
         sectionLabel={t('card.invited')}
-        emptyMessage={t('card.noVolunteers')}
       />
     </Card>
   );

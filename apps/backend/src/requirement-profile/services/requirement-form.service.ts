@@ -5,10 +5,16 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  BadRequestGraphQLError,
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { patch } from '../../shared/patch';
 import { CreateRequirementFormInput } from '../inputs/create-requirement-form.input';
 import { UpdateRequirementFormInput } from '../inputs/update-requirement-form.input';
@@ -25,6 +31,7 @@ export class RequirementFormService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly requiredFormService: RequiredFormService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<RequirementFormEntity | undefined> {
@@ -63,6 +70,31 @@ export class RequirementFormService {
     });
   }
 
+  /**
+   * Multi-tenancy guard: block refs may only point at blocks owned by the
+   * form's organization — the ids are client-supplied.
+   */
+  private async verifyBlocksInOrg(
+    blockIds: string[],
+    organizationId: string,
+  ): Promise<void> {
+    if (blockIds.length === 0) {
+      return;
+    }
+    const blocks = await this.db.query.formBlocks.findMany({
+      where: { id: { in: blockIds } },
+      columns: { id: true, organizationId: true },
+    });
+    if (
+      blocks.length !== new Set(blockIds).size ||
+      blocks.some((block) => block.organizationId !== organizationId)
+    ) {
+      throw new BadRequestGraphQLError(
+        'One or more blocks do not belong to this organization',
+      );
+    }
+  }
+
   async findAll(
     organizationId: string,
     pagination: PaginationInput,
@@ -87,6 +119,13 @@ export class RequirementFormService {
   ): Promise<RequirementFormEntity> {
     await isUnitInOrg(this.db, organizationUnitId, input.organizationId);
 
+    if (input.blockRefs?.length) {
+      await this.verifyBlocksInOrg(
+        input.blockRefs.map((ref) => ref.blockId),
+        input.organizationId,
+      );
+    }
+
     if (organizationUnitId) {
       const duplicate = await this.db.query.requirementForms.findFirst({
         where: { organizationUnitId, name: input.name },
@@ -101,7 +140,7 @@ export class RequirementFormService {
 
     const slug = this.generateSlug(input.name);
 
-    return this.db.transaction(async (tx) => {
+    const form = await this.db.transaction(async (tx) => {
       const formInsert: RequirementFormInsert = {
         organizationId: input.organizationId,
         organizationUnitId: organizationUnitId,
@@ -114,7 +153,7 @@ export class RequirementFormService {
         updatedBy: userId,
       };
 
-      const [form] = await tx
+      const [created] = await tx
         .insert(schema.requirementForms)
         .values(formInsert)
         .returning();
@@ -122,7 +161,7 @@ export class RequirementFormService {
       if (input.blockRefs && input.blockRefs.length > 0) {
         await tx.insert(schema.requirementFormBlockRefs).values(
           input.blockRefs.map((ref, index) => ({
-            formId: form.id,
+            formId: created.id,
             blockId: ref.blockId,
             fieldOrder: ref.order ?? index,
             required: ref.required,
@@ -130,8 +169,20 @@ export class RequirementFormService {
         );
       }
 
-      return form;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_FORM_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: form.organizationId,
+        organization_unit_id: form.organizationUnitId ?? undefined,
+      },
+    });
+
+    return form;
   }
 
   async update(
@@ -146,6 +197,17 @@ export class RequirementFormService {
     }
 
     await isUnitInOrg(this.db, organizationUnitId, existing.organizationId);
+
+    if (input.blockRefs !== undefined && !input.blockRefs?.length) {
+      throw new BadRequestGraphQLError('Form must contain at least one block');
+    }
+
+    if (input.blockRefs) {
+      await this.verifyBlocksInOrg(
+        input.blockRefs.map((ref) => ref.blockId),
+        existing.organizationId,
+      );
+    }
 
     if (
       input.name &&
@@ -166,7 +228,7 @@ export class RequirementFormService {
       }
     }
 
-    return this.db.transaction(async (tx) => {
+    const updated = await this.db.transaction(async (tx) => {
       const hasSubmissions = await tx.query.formSubmissions.findFirst({
         where: { formId: id },
         columns: { id: true },
@@ -179,7 +241,7 @@ export class RequirementFormService {
       }
 
       const { settings, blockRefs, ...rest } = input;
-      const [updated] = await tx
+      const [form] = await tx
         .update(schema.requirementForms)
         .set({
           ...patch(rest, { ignoreNull: ['name'] }),
@@ -192,7 +254,7 @@ export class RequirementFormService {
         .where(eq(schema.requirementForms.id, id))
         .returning();
 
-      if (!updated) {
+      if (!form) {
         throw new NotFoundGraphQLError('Form not found');
       }
 
@@ -213,13 +275,26 @@ export class RequirementFormService {
         }
       }
 
-      return updated;
+      return form;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_FORM_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: updated.organizationId,
+        organization_unit_id: updated.organizationUnitId ?? undefined,
+      },
+    });
+
+    return updated;
   }
 
   async delete(
     id: string,
     organizationUnitId: string,
+    userId: string,
   ): Promise<RequirementFormEntity> {
     const existing = await this.findById(id);
     if (!existing) {
@@ -237,7 +312,7 @@ export class RequirementFormService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const deleted = await this.db.transaction(async (tx) => {
       const hasSubmissions = await tx.query.formSubmissions.findFirst({
         where: { formId: id },
         columns: { id: true },
@@ -249,17 +324,29 @@ export class RequirementFormService {
         );
       }
 
-      const [deleted] = await tx
+      const [form] = await tx
         .delete(schema.requirementForms)
         .where(eq(schema.requirementForms.id, id))
         .returning();
 
-      if (!deleted) {
+      if (!form) {
         throw new NotFoundGraphQLError('Form not found');
       }
 
-      return deleted;
+      return form;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_FORM_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: deleted.organizationId,
+        organization_unit_id: deleted.organizationUnitId ?? undefined,
+      },
+    });
+
+    return deleted;
   }
 
   async regenerateShareToken(
@@ -287,6 +374,17 @@ export class RequirementFormService {
     if (!updated) {
       throw new NotFoundGraphQLError('Form not found');
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.REQUIREMENT_FORM_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: updated.organizationId,
+        organization_unit_id: updated.organizationUnitId ?? undefined,
+        updated_field: 'share_token',
+      },
+    });
 
     return updated;
   }

@@ -30,6 +30,8 @@ export interface DayGroup<T> {
 
 interface DayTimelineViewProps<T> {
   title: string;
+  /** Rendered once, right after the header title/back row and before the day strip. */
+  headerContent?: ReactNode;
   isLoading: boolean;
   days: DayStripDay[];
   groups: DayGroup<T>[];
@@ -52,6 +54,7 @@ interface DayTimelineViewProps<T> {
 
 export function DayTimelineView<T>({
   title,
+  headerContent,
   isLoading,
   days,
   groups,
@@ -175,13 +178,14 @@ export function DayTimelineView<T>({
       <div ref={headerRef} className="sticky top-0 z-30 bg-muted">
         <div className="mx-auto w-full max-w-4xl">
           <DetailPageHeader
-            className="bg-transparent px-6"
+            className="bg-transparent"
             title={title}
             onBack={router.back}
             backLabel={ct('back')}
           />
+          {headerContent && <div className="px-4 pb-0">{headerContent}</div>}
           {(isLoading || hasContent) && (
-            <div className="px-6 pb-3">
+            <div className={cn('px-4 pb-3', headerContent && 'pt-2')}>
               {isLoading ? (
                 <DayStripSkeleton />
               ) : (
@@ -203,7 +207,7 @@ export function DayTimelineView<T>({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-4xl px-6 py-4">
+      <div className="mx-auto w-full max-w-4xl px-4 py-4">
         {isLoading ? (
           loading
         ) : !hasContent ? (

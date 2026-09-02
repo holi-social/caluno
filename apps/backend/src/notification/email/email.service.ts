@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import { maskEmail } from '../../utils';
 
 export interface EmailSendOptions {
   to: string;
@@ -16,34 +18,87 @@ interface ScalewayConfig {
   fromName?: string;
 }
 
+interface SmtpConfig {
+  host: string;
+  port: number;
+  fromEmail: string;
+  fromName?: string;
+}
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly scaleway: ScalewayConfig | null;
+  private readonly scaleway: ScalewayConfig | null = null;
+  private readonly smtp: SmtpConfig | null = null;
+  private transporter: nodemailer.Transporter | null = null;
+  /**
+   * Dev fallback: when no mailer is configured, emails are logged instead of
+   * sent. The full HTML (recipient names, OTPs, reset links) is only included
+   * when explicitly enabled outside production/staging.
+   */
+  private readonly logEmailContent =
+    process.env.EMAIL_LOG_CONTENT === '1' &&
+    process.env.NODE_ENV !== 'production' &&
+    process.env.NODE_ENV !== 'staging';
 
   constructor(private readonly configService: ConfigService) {
     const secretKey = this.configService.get<string>('TEM_SECRET_KEY');
+    const smtpHost = this.configService.get<string>('SMTP_HOST');
+    const smtpPort = this.configService.get<string>('SMTP_PORT');
 
-    if (!secretKey) {
-      this.scaleway = null;
-      return;
+    if (secretKey) {
+      this.scaleway = {
+        secretKey,
+        projectId: this.configService.getOrThrow<string>('PROJECT_ID'),
+        region: this.configService.getOrThrow<string>('TEM_REGION'),
+        fromEmail: 'noreply@caluno.org',
+        fromName: 'Caluno',
+      };
+    } else if (smtpHost && smtpPort) {
+      this.smtp = {
+        host: smtpHost,
+        port: parseInt(smtpPort, 10),
+        fromEmail: 'noreply@caluno.org',
+        fromName: 'Caluno',
+      };
+      this.transporter = nodemailer.createTransport({
+        host: this.smtp.host,
+        port: this.smtp.port,
+        ignoreTLS: true,
+      });
     }
-
-    this.scaleway = {
-      secretKey,
-      projectId: this.configService.getOrThrow<string>('PROJECT_ID'),
-      region: this.configService.getOrThrow<string>('TEM_REGION'),
-      fromEmail: 'noreply@holi.social', // TODO: Change this to the actual email address
-      fromName: 'Clippy', // TODO: Change this to the actual name
-    };
   }
 
   async send(options: EmailSendOptions): Promise<void> {
-    const maskedTo = this.maskEmail(options.to);
+    const maskedTo = maskEmail(options.to);
+
+    if (this.transporter && this.smtp) {
+      try {
+        await this.transporter.sendMail({
+          from: `"${this.smtp.fromName}" <${this.smtp.fromEmail}>`,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text ?? this.htmlToText(options.html),
+        });
+        this.logger.debug(`Email sent to ${maskedTo} via SMTP`);
+        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Failed to send email to ${maskedTo} via SMTP: ${message}`,
+        );
+        throw new Error('Failed to send email');
+      }
+    }
 
     if (!this.scaleway) {
       this.logger.log(
-        `[Email:LOG] to=${maskedTo} subject="${options.subject}"\n${options.html}`,
+        `[Email:LOG] to=${maskedTo} subject="${options.subject}"${
+          this.logEmailContent
+            ? `\n${options.html}`
+            : ' (content omitted; set EMAIL_LOG_CONTENT=1 outside production to log)'
+        }`,
       );
       return;
     }
@@ -86,21 +141,6 @@ export class EmailService {
     }
 
     this.logger.debug(`Email sent to ${maskedTo}`);
-  }
-
-  private maskEmail(email: string): string {
-    const [local, domain] = email.split('@');
-    if (!domain) {
-      return '***';
-    }
-    const maskedLocal =
-      local.length <= 2 ? `${local[0] ?? ''}***` : `${local.slice(0, 2)}***`;
-
-    const dotIndex = domain.lastIndexOf('.');
-    const maskedDomain =
-      dotIndex === -1 ? '***' : `***${domain.slice(dotIndex)}`;
-
-    return `${maskedLocal}@${maskedDomain}`;
   }
 
   private htmlToText(html: string): string {

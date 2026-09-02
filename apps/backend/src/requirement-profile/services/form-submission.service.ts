@@ -5,19 +5,28 @@ import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
   BadRequestGraphQLError,
+  ConflictGraphQLError,
   ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
 import type { PaginationInput } from '../../graphql/pagination.input';
-import { SYSTEM_PROFILE_KEYS } from '../constants';
 import {
-  FieldType,
-  FormSubmissionStatus,
-  RequiredFormTargetType,
-} from '../enums';
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+  type PostHogSurface,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
+import { SYSTEM_PROFILE_KEYS } from '../constants';
+import { FieldType, RequiredFormTargetType } from '../enums';
 import { SubmitFormInput } from '../inputs/submit-form.input';
+import { validateSystemKeyValue } from '../profile-validation';
 import type { FormSubmissionEntity } from '../schemas/form-submission.schema';
-import { RequiredFormService } from './required-form.service';
+import { isUnitInOrg } from './is-unit-in-org';
+import { parseMultiChoiceValue } from './multi-choice-value';
+import {
+  RequiredFormService,
+  type RequiredFormTarget,
+} from './required-form.service';
 import { UserProfileService } from './user-profile.service';
 
 @Injectable()
@@ -27,17 +36,8 @@ export class FormSubmissionService {
     private readonly db: Database,
     private readonly userProfileService: UserProfileService,
     private readonly requiredFormService: RequiredFormService,
+    private readonly postHogService: PostHogService,
   ) {}
-
-  async findOrganizationUnitIdByFormId(
-    formId: string,
-  ): Promise<string | undefined> {
-    const form = await this.db.query.requirementForms.findFirst({
-      where: { id: formId },
-      columns: { organizationUnitId: true },
-    });
-    return form?.organizationUnitId ?? undefined;
-  }
 
   async findById(id: string): Promise<FormSubmissionEntity | undefined> {
     return this.db.query.formSubmissions.findFirst({
@@ -75,6 +75,23 @@ export class FormSubmissionService {
       },
       with: { values: true },
     });
+  }
+
+  async findMySubmission(
+    userId: string,
+    id: string,
+  ): Promise<FormSubmissionEntity | null> {
+    const submission = await this.db.query.formSubmissions.findFirst({
+      where: { id, userId },
+      with: {
+        form: {
+          with: { blockRefs: { with: { block: { with: { fields: true } } } } },
+        },
+        values: true,
+      },
+    });
+
+    return submission ?? null;
   }
 
   async findValuesBySubmissionId(submissionId: string) {
@@ -116,23 +133,24 @@ export class FormSubmissionService {
       .select({ submission: schema.formSubmissions })
       .from(schema.formSubmissions)
       .innerJoin(
-        schema.requirementForms,
-        eq(schema.formSubmissions.formId, schema.requirementForms.id),
+        schema.formSubmissionShares,
+        eq(schema.formSubmissionShares.submissionId, schema.formSubmissions.id),
       )
       .where(
         and(
           eq(schema.formSubmissions.userId, userId),
-          eq(schema.requirementForms.organizationUnitId, orgUnitId),
+          eq(schema.formSubmissionShares.organizationUnitId, orgUnitId),
         ),
       )
       .orderBy(asc(schema.formSubmissions.submittedAt));
-    return rows.map((r) => r.submission);
+    return rows.map((row) => row.submission);
   }
 
   async submit(
     token: string,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
     const form = await this.db.query.requirementForms.findFirst({
       where: { shareToken: token },
@@ -142,24 +160,26 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId);
+    await isUnitInOrg(this.db, organizationUnitId, form.organizationId);
+
+    return this.submitToForm(form, input, userId, organizationUnitId, {
+      surface: POSTHOG_SURFACE.PUBLIC,
+    });
   }
 
   async submitRequiredForm(
-    organizationUnitId: string,
+    target: RequiredFormTarget,
     formId: string,
     input: SubmitFormInput,
     userId: string,
   ): Promise<FormSubmissionEntity> {
-    const requiredForms = await this.requiredFormService.getRequiredForms({
-      targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
-      targetId: organizationUnitId,
-    });
+    const requiredForms =
+      await this.requiredFormService.getRequiredForms(target);
     const isRequired = requiredForms.some((item) => item.form.id === formId);
 
     if (!isRequired) {
       throw new ForbiddenGraphQLError(
-        'This form is not required for the organization unit',
+        'This form is not required for the target',
       );
     }
 
@@ -171,25 +191,91 @@ export class FormSubmissionService {
       throw new NotFoundGraphQLError('Form not found');
     }
 
-    return this.submitToForm(form, input, userId);
+    const organizationUnitId =
+      await this.resolveTargetOrganizationUnitId(target);
+    return this.submitToForm(form, input, userId, organizationUnitId, {
+      surface: POSTHOG_SURFACE.VOLUNTEERING,
+      targetType: target.targetType.toLowerCase(),
+    });
+  }
+
+  async shareSubmissionsWithOrgUnit(
+    userId: string,
+    target: RequiredFormTarget,
+  ): Promise<void> {
+    const requiredForms =
+      await this.requiredFormService.getRequiredForms(target);
+    if (requiredForms.length === 0) return;
+
+    const formIds = requiredForms.map((item) => item.form.id);
+    const submissions = await this.db.query.formSubmissions.findMany({
+      where: { userId, formId: { in: formIds } },
+      columns: { id: true },
+    });
+    if (submissions.length === 0) return;
+
+    const organizationUnitId =
+      await this.resolveTargetOrganizationUnitId(target);
+    for (const submission of submissions) {
+      await this.shareWithOrgUnit(submission.id, organizationUnitId);
+    }
+  }
+
+  private async resolveTargetOrganizationUnitId(
+    target: RequiredFormTarget,
+  ): Promise<string> {
+    switch (target.targetType) {
+      case RequiredFormTargetType.ORGANIZATION_UNIT:
+        return target.targetId;
+      case RequiredFormTargetType.EVENT: {
+        const event = await this.db.query.events.findFirst({
+          where: { id: target.targetId },
+          columns: { organizationUnitId: true },
+        });
+        if (!event) throw new NotFoundGraphQLError('Event not found');
+        return event.organizationUnitId;
+      }
+      case RequiredFormTargetType.SHIFT: {
+        const shift = await this.db.query.shifts.findFirst({
+          where: { id: target.targetId },
+          columns: { organizationUnitId: true },
+        });
+        if (!shift) throw new NotFoundGraphQLError('Shift not found');
+        return shift.organizationUnitId;
+      }
+      case RequiredFormTargetType.SHIFT_INSTANCE: {
+        const instance = await this.db.query.shiftInstances.findFirst({
+          where: { id: target.targetId },
+          columns: { masterId: true },
+        });
+        if (!instance) {
+          throw new NotFoundGraphQLError('Shift instance not found');
+        }
+        const shift = await this.db.query.shifts.findFirst({
+          where: { id: instance.masterId },
+          columns: { organizationUnitId: true },
+        });
+        if (!shift) throw new NotFoundGraphQLError('Shift not found');
+        return shift.organizationUnitId;
+      }
+      default:
+        throw new ConflictGraphQLError(
+          `Unsupported required-form target: ${target.targetType}`,
+        );
+    }
   }
 
   private async submitToForm(
     form: schema.RequirementFormEntity,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
+    captureContext: { surface: PostHogSurface; targetType?: string },
   ): Promise<FormSubmissionEntity> {
     const existing = await this.findByUserAndForm(userId, form.id);
     if (existing) {
-      if (existing.status !== FormSubmissionStatus.REJECTED) {
-        throw new BadRequestGraphQLError(
-          'You have already submitted this form',
-        );
-      }
-      // Previous submission was rejected — delete it so the user can re-submit
-      await this.db
-        .delete(schema.formSubmissions)
-        .where(eq(schema.formSubmissions.id, existing.id));
+      await this.shareWithOrgUnit(existing.id, organizationUnitId);
+      return existing;
     }
 
     // Load block refs and fields
@@ -271,7 +357,11 @@ export class FormSubmissionService {
       const isCheckboxType =
         fieldInfo?.type === FieldType.CHECKBOX ||
         fieldInfo?.type === FieldType.DOCUMENT_ACKNOWLEDGEMENT;
-      const missing = isCheckboxType ? value !== 'true' : !value;
+      const missing = isCheckboxType
+        ? value !== 'true'
+        : fieldInfo?.type === FieldType.MULTI_CHOICE
+          ? parseMultiChoiceValue(value ?? '').length === 0
+          : !value;
       if (missing) {
         throw new BadRequestGraphQLError(`Field "${label}" is required`);
       }
@@ -321,7 +411,6 @@ export class FormSubmissionService {
         .values({
           formId: form.id,
           userId,
-          status: FormSubmissionStatus.SUBMITTED,
           submittedAt: new Date(),
         })
         .returning();
@@ -338,33 +427,34 @@ export class FormSubmissionService {
         );
       }
 
+      await this.shareWithOrgUnit(created.id, organizationUnitId, tx);
+
       return created;
+    });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FORM_SUBMISSION_SUBMIT,
+      userId,
+      properties: {
+        surface: captureContext.surface,
+        organization_id: form.organizationId,
+        organization_unit_id: form.organizationUnitId ?? undefined,
+        target_type: captureContext.targetType,
+      },
     });
 
     return submission;
   }
 
-  async rejectByUserAndOrgUnit(
-    userId: string,
+  private async shareWithOrgUnit(
+    submissionId: string,
     organizationUnitId: string,
+    tx: Database = this.db,
   ): Promise<void> {
-    const forms = await this.db.query.requirementForms.findMany({
-      where: { organizationUnitId },
-      columns: { id: true },
-    });
-    if (forms.length === 0) return;
-
-    const formIds = forms.map((f) => f.id);
-    await this.db
-      .update(schema.formSubmissions)
-      .set({ status: FormSubmissionStatus.REJECTED })
-      .where(
-        and(
-          eq(schema.formSubmissions.userId, userId),
-          eq(schema.formSubmissions.status, FormSubmissionStatus.SUBMITTED),
-          inArray(schema.formSubmissions.formId, formIds),
-        ),
-      );
+    await tx
+      .insert(schema.formSubmissionShares)
+      .values({ submissionId, organizationUnitId })
+      .onConflictDoNothing();
   }
 
   private validateFieldValue(
@@ -400,12 +490,6 @@ export class FormSubmissionService {
         if (rawValue.length > 20)
           throw new BadRequestGraphQLError(
             `"${label}": must be 20 characters or fewer`,
-          );
-        break;
-      case FieldType.IBAN:
-        if (rawValue.length > 34)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 34 characters or fewer`,
           );
         break;
       case FieldType.TEXTAREA:
@@ -445,9 +529,9 @@ export class FormSubmissionService {
       }
       case FieldType.MULTI_CHOICE: {
         const valid = new Set((options ?? []).map((o) => o.value));
-        const invalid = rawValue
-          .split(',')
-          .filter((v) => valid.size > 0 && !valid.has(v));
+        const invalid = parseMultiChoiceValue(rawValue).filter(
+          (v) => valid.size > 0 && !valid.has(v),
+        );
         if (invalid.length > 0)
           throw new BadRequestGraphQLError(`"${label}": invalid option(s)`);
         break;
@@ -470,69 +554,7 @@ export class FormSubmissionService {
     label: string,
     minAge: number | null,
   ): void {
-    switch (systemKey) {
-      case 'name':
-      case 'lastname':
-      case 'preferred-name':
-      case 'city':
-        if (value.length > 100)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 100 characters or fewer`,
-          );
-        if (!/^[\p{L}\p{M}'\- ]+$/u.test(value))
-          throw new BadRequestGraphQLError(
-            `"${label}": contains invalid characters`,
-          );
-        break;
-      case 'email':
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || value.length > 254)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be a valid email address`,
-          );
-        break;
-      case 'phone':
-        if (!/^\+?[\d\s\-().]{7,20}$/.test(value))
-          throw new BadRequestGraphQLError(
-            `"${label}": must be a valid phone number`,
-          );
-        break;
-      case 'address':
-        if (value.length > 200)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 200 characters or fewer`,
-          );
-        break;
-      case 'zip':
-        if (!/^[A-Z0-9\- ]{3,10}$/i.test(value))
-          throw new BadRequestGraphQLError(
-            `"${label}": must be a valid postal code`,
-          );
-        break;
-      case 'gender':
-        if (value.length > 50)
-          throw new BadRequestGraphQLError(
-            `"${label}": must be 50 characters or fewer`,
-          );
-        break;
-      case 'birth-date':
-        if (minAge !== null && minAge !== undefined) {
-          const birth = new Date(value);
-          const today = new Date();
-          let age = today.getFullYear() - birth.getFullYear();
-          if (
-            today.getMonth() < birth.getMonth() ||
-            (today.getMonth() === birth.getMonth() &&
-              today.getDate() < birth.getDate())
-          ) {
-            age--;
-          }
-          if (age < minAge)
-            throw new BadRequestGraphQLError(
-              `You must be at least ${minAge} years old`,
-            );
-        }
-        break;
-    }
+    validateSystemKeyValue(value, systemKey, label, minAge);
   }
 
   private parseValue(rawValue: string, fieldType: string): unknown {
@@ -543,7 +565,7 @@ export class FormSubmissionService {
       return rawValue === 'true';
     }
     if (fieldType === FieldType.MULTI_CHOICE) {
-      return rawValue ? rawValue.split(',') : [];
+      return parseMultiChoiceValue(rawValue);
     }
     if (fieldType === FieldType.NUMBERS) {
       const num = Number(rawValue);

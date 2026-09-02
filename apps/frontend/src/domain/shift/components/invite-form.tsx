@@ -1,30 +1,19 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-  Input,
-  Separator,
-} from '@repo/ui';
-import { Share2 } from 'lucide-react';
+import { ShiftVisibility } from '@repo/data';
+import { Checkbox, FieldDescription, FieldLabel, Separator } from '@repo/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
-import { useSession } from '@/lib/auth';
-import { copyToClipboard } from '@/lib/clipboard';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
-import { shiftShareUrl } from '../share';
+import { setSuccessDialogCreatedShift } from '../success-dialog';
+import ShareLinkButton from './share-link-button';
+import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 import { TransferList } from './transfer-list';
 
 type Member = {
@@ -38,14 +27,15 @@ type Member = {
 interface InviteShiftFormProps {
   title: string;
   description: string;
+  orgUId: string;
   shiftId: string;
   instanceId: string;
+  isCreationFlow?: boolean;
   shift: {
     title: string;
-    minVolunteers: number | null | undefined;
-    maxVolunteers: number | null | undefined;
     isRecurring: boolean;
     recurrenceDays: RecurrenceDayValue[];
+    visibility: ShiftVisibility;
   };
   selectedInstance: {
     actualStartsAt: string | Date;
@@ -53,10 +43,6 @@ interface InviteShiftFormProps {
   };
   availableMembers: Member[];
   invitedMembers: Member[];
-  mutateStaffing: (data: {
-    minVolunteers: number | null;
-    maxVolunteers: number | null;
-  }) => Promise<{ serverError?: string }>;
   mutateVolunteers: (data: {
     memberIds: string[];
     inviteToAllInstances?: boolean;
@@ -68,48 +54,41 @@ export function InviteShiftForm({
   description,
   shiftId,
   instanceId,
+  isCreationFlow = false,
   shift,
   selectedInstance,
   availableMembers,
   invitedMembers,
-  mutateStaffing,
   mutateVolunteers,
 }: InviteShiftFormProps) {
   const router = useRouter();
-  const session = useSession();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const t = useTranslations('Shift');
-  const tCommon = useTranslations('Common');
   const locale = useLocale();
   const formatWithOptions = (date: Date, options: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(locale, options).format(date);
 
   const { open, setOpen } = useFormSheet();
 
-  const schema = inviteShiftFormSchema({
-    minMaxVolunteers: t('validation.minMaxVolunteers'),
-  });
+  const schema = inviteShiftFormSchema();
 
   const form = useForm<InviteShiftFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      minVolunteers: shift.minVolunteers ?? null,
-      maxVolunteers: shift.maxVolunteers ?? null,
       invitedMemberIds: invitedMembers.map((m) => m.id),
       inviteAllInstances: false,
     },
   });
 
-  const currentUserId = session.data?.user?.id;
-  const allMembers = availableMembers.filter((m) => m.id !== currentUserId);
+  const isOpenShift = shift.visibility === ShiftVisibility.AllMembers;
   const statusById = new Map(
     invitedMembers.map((m) => [m.id, m.inviteStatus] as const),
   );
 
   const watchedIds = form.watch('invitedMemberIds');
   const invitedForList: Member[] = watchedIds.map((id) => {
-    const fromAll = allMembers.find((m) => m.id === id);
+    const fromAll = availableMembers.find((m) => m.id === id);
     if (fromAll) {
       return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
     }
@@ -129,17 +108,6 @@ export function InviteShiftForm({
   const instanceStartDate = new Date(selectedInstance.actualStartsAt);
   const instanceEndDate = new Date(selectedInstance.actualEndsAt);
 
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
-    month: 'long',
-    day: 'numeric',
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  };
-
   const formattedDays = shift.isRecurring
     ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(
         shift.recurrenceDays.map((day) => t(`recurrence.weekDay.${day}`)),
@@ -150,21 +118,19 @@ export function InviteShiftForm({
     setServerError(undefined);
 
     startTransition(async () => {
-      const staffingResult = await mutateStaffing({
-        minVolunteers: data.minVolunteers ?? null,
-        maxVolunteers: data.maxVolunteers ?? null,
-      });
-      if (staffingResult?.serverError) {
-        setServerError(staffingResult.serverError);
-        return;
-      }
-
       const volunteersResult = await mutateVolunteers({
         memberIds: data.invitedMemberIds,
         inviteToAllInstances: data.inviteAllInstances,
       });
       if (volunteersResult?.serverError) {
         setServerError(volunteersResult.serverError);
+        return;
+      }
+
+      if (isCreationFlow) {
+        setSuccessDialogCreatedShift({ shiftId, instanceId });
+        await setOpen(false);
+        router.refresh();
         return;
       }
 
@@ -191,101 +157,44 @@ export function InviteShiftForm({
             <p className="text-sm text-muted-foreground">
               {t('inviteForm.managingLabel')}
             </p>
-            <Card>
-              <CardContent className="flex justify-between items-start gap-4">
-                <div>
-                  <p className="text-lg font-semibold">
-                    {formatWithOptions(instanceStartDate, dateOptions)}
-                  </p>
-                  <p className="text-muted-foreground">{shift.title}</p>
-                </div>
-                <p className="text-lg font-semibold whitespace-nowrap">
-                  {formatWithOptions(instanceStartDate, timeOptions)} -{' '}
-                  {formatWithOptions(instanceEndDate, timeOptions)}
-                </p>
-              </CardContent>
+            <ShiftInstanceSummaryCard
+              title={shift.title}
+              startsAt={instanceStartDate}
+              endsAt={instanceEndDate}
+            >
               {shift.isRecurring && (
-                <>
-                  <Separator />
-                  <CardContent>
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={inviteAllCheckboxId}
-                        checked={form.watch('inviteAllInstances')}
-                        onCheckedChange={(checked) =>
-                          form.setValue(
-                            'inviteAllInstances',
-                            checked === true,
-                            {
-                              shouldValidate: true,
-                            },
-                          )
-                        }
-                        disabled={pending}
-                      />
-                      <div className="grid gap-1">
-                        <FieldLabel
-                          htmlFor={inviteAllCheckboxId}
-                          className="font-normal"
-                        >
-                          {t('inviteForm.inviteAllLabel')}
-                        </FieldLabel>
-                        <FieldDescription>
-                          {t('inviteForm.inviteAllDescription', {
-                            startDate: formatWithOptions(instanceStartDate, {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            }),
-                            days: formattedDays,
-                          })}
-                        </FieldDescription>
-                      </div>
-                    </div>
-                  </CardContent>
-                </>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id={inviteAllCheckboxId}
+                    checked={form.watch('inviteAllInstances')}
+                    onCheckedChange={(checked) =>
+                      form.setValue('inviteAllInstances', checked === true, {
+                        shouldValidate: true,
+                      })
+                    }
+                    disabled={pending}
+                  />
+                  <div className="grid gap-1">
+                    <FieldLabel
+                      htmlFor={inviteAllCheckboxId}
+                      className="font-normal"
+                    >
+                      {t('inviteForm.inviteAllLabel')}
+                    </FieldLabel>
+                    <FieldDescription>
+                      {t('inviteForm.inviteAllDescription', {
+                        startDate: formatWithOptions(instanceStartDate, {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        }),
+                        days: formattedDays,
+                      })}
+                    </FieldDescription>
+                  </div>
+                </div>
               )}
-            </Card>
-          </div>
-
-          <div className="flex gap-3">
-            <Field className="flex-1">
-              <FieldLabel htmlFor="minVolunteers">
-                {t('inviteForm.minVolunteersLabel')}
-              </FieldLabel>
-              <Input
-                id="minVolunteers"
-                type="number"
-                min={1}
-                placeholder={t('inviteForm.minVolunteersPlaceholder')}
-                disabled={pending}
-                {...form.register('minVolunteers', {
-                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-                })}
-              />
-              <FieldDescription>
-                {t('inviteForm.minVolunteersDescription')}
-              </FieldDescription>
-            </Field>
-            <Field className="flex-1">
-              <FieldLabel htmlFor="maxVolunteers">
-                {t('inviteForm.maxVolunteersLabel')}
-              </FieldLabel>
-              <Input
-                id="maxVolunteers"
-                type="number"
-                min={1}
-                placeholder={t('inviteForm.maxVolunteersPlaceholder')}
-                disabled={pending}
-                {...form.register('maxVolunteers', {
-                  setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
-                })}
-              />
-              <FieldDescription>
-                {t('inviteForm.maxVolunteersDescription')}
-              </FieldDescription>
-              <FieldError errors={[form.formState.errors.maxVolunteers]} />
-            </Field>
+            </ShiftInstanceSummaryCard>
           </div>
 
           <Separator />
@@ -294,24 +203,17 @@ export function InviteShiftForm({
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <p className="shrink-0 text-xl font-bold">{t('inviteForm.title')}</p>
           <TransferList
-            available={allMembers}
+            available={availableMembers}
             invited={invitedForList}
             onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full shrink-0"
-            onClick={() =>
-              copyToClipboard(
-                shiftShareUrl(shiftId, instanceId),
-                tCommon('linkCopied'),
-              )
-            }
-          >
-            <Share2 className="size-4 mr-2" />
-            {t('inviteForm.copyInviteLink')}
-          </Button>
+          {isOpenShift && (
+            <ShareLinkButton
+              shiftId={shiftId}
+              instanceId={instanceId}
+              className="w-full shrink-0"
+            />
+          )}
         </div>
       </div>
     </FormSheet>

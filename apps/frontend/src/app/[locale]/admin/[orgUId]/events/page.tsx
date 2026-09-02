@@ -1,7 +1,7 @@
 import { PermissionKey } from '@repo/data';
 import { getTranslations } from 'next-intl/server';
 import { CreateEventButton } from '@/domain/event/components/create-event-button';
-import { EventsTable } from '@/domain/event/components/events-table';
+import { EventCardGrid } from '@/domain/event/components/event-card-grid';
 import { getDataClient } from '@/lib/data-client';
 import { checkPermission } from '@/lib/permissions-server';
 
@@ -29,7 +29,7 @@ export default async function EventsPage({ params }: EventsPageProps) {
         {canEdit && <CreateEventButton orgUId={orgUId} />}
       </div>
 
-      <EventsTable events={events} orgUId={orgUId} canEdit={canEdit} />
+      <EventCardGrid events={events} orgUId={orgUId} canEdit={canEdit} />
     </div>
   );
 }

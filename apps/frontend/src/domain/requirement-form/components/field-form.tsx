@@ -14,9 +14,10 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
+import { Plus, Save, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { OptionsEditor } from './options-editor';
 
 // Field types that have a fixed, unambiguous system key
@@ -77,6 +78,7 @@ export function FieldForm({
     { label: t('zipCode'), value: 'zip' },
     { label: t('city'), value: 'city' },
     { label: t('birthDate'), value: 'birth-date' },
+    { label: t('iban'), value: 'iban' },
   ];
 
   const [fieldType, setFieldType] = useState(initial?.type ?? '');
@@ -307,9 +309,11 @@ export function FieldForm({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
+          <X />
           {tCommon('cancel')}
         </Button>
         <Button onClick={commit} disabled={!canSubmit}>
+          {isEdit ? <Save /> : <Plus />}
           {isEdit ? t('save') : t('add')}
         </Button>
       </div>

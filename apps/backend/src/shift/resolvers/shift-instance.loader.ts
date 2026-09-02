@@ -35,13 +35,13 @@ export class ShiftInstanceLoader {
     return shiftIds.map((id) => byShiftId.get(id) ?? []);
   });
 
-  // Keyed by `${instanceId}::${userId}` so the loader stays stateless — the
+  // Keyed by `${instanceId}:${userId}` so the loader stays stateless — the
   // current user is otherwise not a DataLoader key.
   public readonly isCheckedInByKey = new DataLoader<string, boolean>(
     async (keys) => {
       const parsed = keys.map((key) => {
-        const sep = key.lastIndexOf('::');
-        return { instanceId: key.slice(0, sep), userId: key.slice(sep + 2) };
+        const [instanceId, userId] = key.split(':');
+        return { instanceId, userId };
       });
 
       const instancesByUser = new Map<string, string[]>();
@@ -58,7 +58,7 @@ export class ShiftInstanceLoader {
           instanceIds,
         );
         for (const entry of entries) {
-          openKeys.add(`${entry.shiftInstanceId}::${userId}`);
+          openKeys.add(`${entry.shiftInstanceId}:${userId}`);
         }
       }
 
@@ -66,14 +66,14 @@ export class ShiftInstanceLoader {
     },
   );
 
-  // Keyed by `${instanceId}::${userId}`; null when the user has no direct invite.
+  // Keyed by `${instanceId}:${userId}`; null when the user has no direct invite.
   public readonly myInviteStatusByKey = new DataLoader<
     string,
     ShiftInviteStatus | null
   >(async (keys) => {
     const parsed = keys.map((key) => {
-      const sep = key.lastIndexOf('::');
-      return { instanceId: key.slice(0, sep), userId: key.slice(sep + 2) };
+      const [instanceId, userId] = key.split(':');
+      return { instanceId, userId };
     });
 
     const instancesByUser = new Map<string, string[]>();
@@ -90,10 +90,56 @@ export class ShiftInstanceLoader {
         instanceIds,
       );
       for (const row of rows) {
-        statusByKey.set(`${row.shiftInstanceId}::${userId}`, row.status);
+        statusByKey.set(`${row.shiftInstanceId}:${userId}`, row.status);
       }
     }
 
     return keys.map((key) => statusByKey.get(key) ?? null);
   });
+
+  // Keyed by `${instanceId}:${userId}`; null when the user has no direct invite.
+  public readonly myInvitedAtByKey = new DataLoader<string, Date | null>(
+    async (keys) => {
+      const parsed = keys.map((key) => {
+        const [instanceId, userId] = key.split(':');
+        return { instanceId, userId };
+      });
+
+      const instancesByUser = new Map<string, string[]>();
+      for (const { instanceId, userId } of parsed) {
+        const list = instancesByUser.get(userId) ?? [];
+        list.push(instanceId);
+        instancesByUser.set(userId, list);
+      }
+
+      const createdAtByKey = new Map<string, Date>();
+      for (const [userId, instanceIds] of instancesByUser) {
+        const rows = await this.shiftService.findInviteStatusesForUser(
+          userId,
+          instanceIds,
+        );
+        for (const row of rows) {
+          createdAtByKey.set(`${row.shiftInstanceId}:${userId}`, row.createdAt);
+        }
+      }
+
+      return keys.map((key) => createdAtByKey.get(key) ?? null);
+    },
+  );
+
+  // Keyed by `${instanceId}:${userId}`; true when the instance is stored in the
+  // user's pending membership request metadata as an intended shift instance.
+  public readonly isIntendingToJoinByKey = new DataLoader<string, boolean>(
+    async (keys) => {
+      const parsed = keys.map((key) => {
+        const [instanceId, userId] = key.split(':');
+        return { instanceId, userId };
+      });
+
+      const intendedKeys =
+        await this.shiftService.findIntendedInstanceIdsForUsers(parsed);
+
+      return keys.map((key) => intendedKeys.has(key));
+    },
+  );
 }

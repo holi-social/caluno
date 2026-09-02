@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Locale } from '../graphql/locale';
 import { UserLocaleService } from '../i18n/user-locale.service';
 import { UserService } from '../user/user.service';
+import { maskEmail } from '../utils';
 import { EmailService } from './email/email.service';
 import type { NotificationEventPayloadMap } from './notification-event-map';
 import { NotificationEvent } from './notification-events';
@@ -28,14 +29,41 @@ type MembershipRequestedInput =
 type MembershipApprovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_APPROVED];
 
+type MembershipLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_LEFT];
+
+type MembershipRemovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_REMOVED];
+
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
 
 type ShiftInstanceInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED];
 
+type ShiftInstanceCancelledInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_CANCELLED];
+
+type ShiftInstanceSeriesCancelledInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED];
+
 type ShiftInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
+
+type EventInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_INVITED];
+
+type EventJoinedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_JOINED];
+
+type EventCancelledInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
+
+type DocumentAwaitingSignatureInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_AWAITING_SIGNATURE];
+
+type DocumentDeclinedByOrgInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_DECLINED_BY_ORG];
 
 @Injectable()
 export class NotificationService {
@@ -110,7 +138,7 @@ export class NotificationService {
           });
         } catch (error) {
           this.logger.error(
-            `Failed to send email for ${recipient.email}: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to send email for ${maskEmail(recipient.email)}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
       }),
@@ -129,6 +157,14 @@ export class NotificationService {
     this.emitter.emit(NotificationEvent.MEMBERSHIP_APPROVED, input);
   }
 
+  notifyMembershipLeft(input: MembershipLeftInput): void {
+    this.emitter.emit(NotificationEvent.MEMBERSHIP_LEFT, input);
+  }
+
+  notifyMembershipRemoved(input: MembershipRemovedInput): void {
+    this.emitter.emit(NotificationEvent.MEMBERSHIP_REMOVED, input);
+  }
+
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
   }
@@ -137,7 +173,37 @@ export class NotificationService {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_INVITED, input);
   }
 
+  notifyShiftInstanceCancelled(input: ShiftInstanceCancelledInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_CANCELLED, input);
+  }
+
+  notifyShiftInstanceSeriesCancelled(
+    input: ShiftInstanceSeriesCancelledInput,
+  ): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED, input);
+  }
+
   notifyShiftInvited(input: ShiftInvitedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INVITED, input);
+  }
+
+  notifyEventInvited(input: EventInvitedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_INVITED, input);
+  }
+
+  notifyEventJoined(input: EventJoinedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_JOINED, input);
+  }
+
+  notifyEventCancelled(input: EventCancelledInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
+  }
+
+  notifyDocumentAwaitingSignature(input: DocumentAwaitingSignatureInput): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_AWAITING_SIGNATURE, input);
+  }
+
+  notifyDocumentDeclinedByOrg(input: DocumentDeclinedByOrgInput): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_DECLINED_BY_ORG, input);
   }
 }

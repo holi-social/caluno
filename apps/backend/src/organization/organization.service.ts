@@ -5,6 +5,7 @@ import {
   DEFAULT_OWNER_ROLE_NAME,
   MEMBER_DEFAULT_PERMISSIONS,
   PERMISSIONS,
+  type Permission,
 } from '../auth/constants';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
@@ -14,13 +15,20 @@ import {
   OrganizationUnitEntity,
   OrganizationUnitTypeEntity,
 } from '../database/schema';
+import { NotFoundGraphQLError } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils';
 import type { CreateOrganizationInput } from './inputs/create-organization.input';
+import type { UpdateOrganizationInput } from './inputs/update-organization.input';
 import { OrganizationMapper } from './mappers/organization.mapper';
 import { type Organization } from './models/organization.model';
 import { OrganizationTree } from './models/organization-tree.model';
@@ -45,6 +53,7 @@ export class OrganizationService {
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly notificationService: NotificationService,
     private readonly fileService: FileService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findById(id: string): Promise<OrganizationEntity | undefined> {
@@ -170,6 +179,33 @@ export class OrganizationService {
     });
 
     return this.expandToChildOrgUnits(administrableMemberships);
+  }
+
+  async findUnitsWithPermission(
+    userId: string,
+    permissionKey: Permission,
+  ): Promise<OrganizationUnitEntity[]> {
+    const membershipsWithPermission = await this.db.query.memberships.findMany({
+      where: {
+        userId,
+        roles: {
+          role: {
+            permissions: {
+              permission: {
+                key: permissionKey,
+              },
+            },
+          },
+        },
+      },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    return this.expandToChildOrgUnits(membershipsWithPermission);
   }
 
   private async expandToChildOrgUnits(
@@ -470,7 +506,61 @@ export class OrganizationService {
       userId,
     });
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organization.id,
+        organization_unit_id: rootUnit.id,
+      },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_JOIN,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organization.id,
+        organization_unit_id: rootUnit.id,
+        source: 'organization_create',
+      },
+    });
+
     return this.mapper.toModelOrThrow(organization);
+  }
+
+  async update(
+    organizationId: string,
+    input: UpdateOrganizationInput,
+  ): Promise<Organization> {
+    const { logoFileId, ...profileInput } = input;
+    const logoUrl = logoFileId
+      ? await this.resolveLogoUrl(logoFileId)
+      : (profileInput.logoUrl ?? null);
+
+    const [updated] = await this.db
+      .update(schema.organizations)
+      .set({ ...profileInput, logoUrl })
+      .where(eq(schema.organizations.id, organizationId))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError(
+        `Organization with ID ${organizationId} not found`,
+      );
+    }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UPDATE,
+      userId: organizationId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        source: 'organization_update',
+      },
+    });
+
+    return this.mapper.toModelOrThrow(updated);
   }
 
   private async resolveLogoUrl(logoFileId: string): Promise<string> {

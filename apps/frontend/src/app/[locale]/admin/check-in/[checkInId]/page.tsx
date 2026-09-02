@@ -12,7 +12,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import {
   getLastVisitedOrgServer,
-  getMyAdministrableOrgUnits,
+  getMyCheckInOrgUnits,
 } from '@/lib/org-context-server';
 
 type CheckInPageProps = {
@@ -23,15 +23,17 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
   const { checkInId } = await params;
   const t = await getTranslations('Shift.checkIn');
 
-  const lastVisitedOrganizationId = await getLastVisitedOrgServer();
+  const organizations = await getMyCheckInOrgUnits();
 
-  if (lastVisitedOrganizationId) {
+  const lastVisitedOrganizationId = await getLastVisitedOrgServer();
+  if (
+    lastVisitedOrganizationId &&
+    organizations.some((org) => org.id === lastVisitedOrganizationId)
+  ) {
     return redirect(
       `/admin/${lastVisitedOrganizationId}/check-in/${checkInId}/decide`,
     );
   }
-
-  const organizations = await getMyAdministrableOrgUnits();
 
   if (organizations.length === 1) {
     return redirect(
@@ -54,7 +56,7 @@ export default async function CheckInPage({ params }: CheckInPageProps) {
               className="flex gap-4 items-center text-xl"
             >
               {o.name}
-              <Button type="button" size="icon-sm">
+              <Button type="button" size="icon-sm" tooltip={t('checkIn')}>
                 <LogIn />
               </Button>
             </Link>

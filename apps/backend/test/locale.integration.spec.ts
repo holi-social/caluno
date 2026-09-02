@@ -43,7 +43,7 @@ describe('Locale integration', () => {
     });
 
     expect(getMeResponse.errors).toBeUndefined();
-    expect(getMeResponse.data?.me.locale).toBe('en');
+    expect(getMeResponse.data?.me.locale).toBe('de');
 
     const updateLocaleResponse = await graphqlRequestRequiringData<{
       updateMyLocale: { id: string; locale: string };

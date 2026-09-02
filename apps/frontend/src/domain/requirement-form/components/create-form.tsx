@@ -9,6 +9,7 @@ import {
   Input,
   Textarea,
 } from '@repo/ui';
+import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -100,9 +101,11 @@ export function CreateForm({ orgUId, organizationId }: CreateFormProps) {
           disabled={isPending}
           onClick={() => router.push(`/admin/${orgUId}/requirement-forms`)}
         >
+          <X />
           {t('cancel')}
         </Button>
         <Button type="submit" disabled={isPending}>
+          <Plus />
           {isPending ? t('creating') : t('create')}
         </Button>
       </div>

@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { Database } from '../../src/database/database.module';
 import * as schema from '../../src/database/schema';
-import { FormSubmissionStatus } from '../../src/requirement-profile/enums';
 
 export const createRequirementForm = async (
   db: Database,
@@ -74,7 +73,6 @@ export const createFormSubmission = async (
   args: {
     formId: string;
     userId: string;
-    status?: 'submitted' | 'rejected';
   },
 ) => {
   const [submission] = await db
@@ -82,10 +80,6 @@ export const createFormSubmission = async (
     .values({
       formId: args.formId,
       userId: args.userId,
-      status:
-        args.status === 'rejected'
-          ? FormSubmissionStatus.REJECTED
-          : FormSubmissionStatus.SUBMITTED,
       submittedAt: new Date(),
     })
     .returning();
@@ -115,6 +109,54 @@ export const setRequiredForms = async (
       await tx.insert(schema.organizationUnitRequiredForms).values(
         args.formIds.map((formId, index) => ({
           organizationUnitId: args.organizationUnitId,
+          formId,
+          order: index,
+        })),
+      );
+    }
+  });
+};
+
+export const setEventRequiredForms = async (
+  db: Database,
+  args: {
+    eventId: string;
+    formIds: string[];
+  },
+) => {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.eventRequiredForms)
+      .where(eq(schema.eventRequiredForms.eventId, args.eventId));
+
+    if (args.formIds.length > 0) {
+      await tx.insert(schema.eventRequiredForms).values(
+        args.formIds.map((formId, index) => ({
+          eventId: args.eventId,
+          formId,
+          order: index,
+        })),
+      );
+    }
+  });
+};
+
+export const setShiftRequiredForms = async (
+  db: Database,
+  args: {
+    shiftId: string;
+    formIds: string[];
+  },
+) => {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(schema.shiftRequiredForms)
+      .where(eq(schema.shiftRequiredForms.shiftId, args.shiftId));
+
+    if (args.formIds.length > 0) {
+      await tx.insert(schema.shiftRequiredForms).values(
+        args.formIds.map((formId, index) => ({
+          shiftId: args.shiftId,
           formId,
           order: index,
         })),

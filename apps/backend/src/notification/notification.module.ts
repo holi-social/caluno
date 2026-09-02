@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from '../user/user.module';
 import { EmailService } from './email/email.service';
+import { DocumentListener } from './listeners/document.listener';
+import { EventListener } from './listeners/event.listener';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
 import { ShiftListener } from './listeners/shift.listener';
@@ -17,6 +19,8 @@ import { TypedNotificationEmitter } from './typed-notification-emitter.service';
     OrganizationListener,
     MembershipListener,
     ShiftListener,
+    EventListener,
+    DocumentListener,
   ],
   exports: [NotificationService, EmailService],
 })

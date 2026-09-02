@@ -19,7 +19,16 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
-import { FileText, Lock, Plus, Save, Trash2, UserCircle2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  FileText,
+  Lock,
+  Plus,
+  Save,
+  Trash2,
+  UserCircle2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import {
@@ -32,8 +41,9 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { toast } from 'sonner';
-import { FileUpload } from '@/domain/storage/components/file-upload';
+import { FileUpload } from '@/components/storage/file-upload';
 import { saveBlock } from '../actions';
+import { SYSTEM_PROFILE_FIELDS } from '../system-profile-fields';
 import { OptionsEditor } from './options-editor';
 
 interface BlockFormFieldInput {
@@ -84,68 +94,10 @@ export function BlockForm({
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
   const [profilePickerOpen, setProfilePickerOpen] = useState(false);
 
-  const systemPresets = [
-    {
-      key: 'name',
-      label: tField('firstName'),
-      type: FieldType.Name,
-      required: true,
-    },
-    {
-      key: 'lastname',
-      label: tField('lastName'),
-      type: FieldType.Lastname,
-      required: true,
-    },
-    {
-      key: 'preferred-name',
-      label: tField('preferredName'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'email',
-      label: tField('email'),
-      type: FieldType.Email,
-      required: true,
-    },
-    {
-      key: 'phone',
-      label: tField('phone'),
-      type: FieldType.Phone,
-      required: false,
-    },
-    {
-      key: 'address',
-      label: tField('address'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'zip',
-      label: tField('zipCode'),
-      type: FieldType.Zip,
-      required: false,
-    },
-    {
-      key: 'city',
-      label: tField('city'),
-      type: FieldType.Text,
-      required: false,
-    },
-    {
-      key: 'birth-date',
-      label: tField('birthDate'),
-      type: FieldType.Date,
-      required: false,
-    },
-    {
-      key: 'gender',
-      label: tField('gender'),
-      type: FieldType.Text,
-      required: false,
-    },
-  ] as const;
+  const systemPresets = SYSTEM_PROFILE_FIELDS.map((field) => ({
+    ...field,
+    label: tField(field.labelKey),
+  }));
 
   const customFieldTypes = [
     { value: FieldType.Text, label: tField('shortText') },
@@ -175,7 +127,7 @@ export function BlockForm({
     [FieldType.Name]: tField('firstName'),
     [FieldType.Lastname]: tField('lastName'),
     [FieldType.Zip]: tField('zipCode'),
-    [FieldType.Iban]: 'IBAN',
+    [FieldType.Iban]: tField('iban'),
   };
 
   const {
@@ -352,15 +304,6 @@ export function BlockForm({
             disabled={readOnly}
           />
         </Field>
-
-        <Field>
-          <FieldLabel>{t('iconLabel')}</FieldLabel>
-          <Input
-            {...register('icon')}
-            placeholder={t('iconPlaceholder')}
-            disabled={readOnly}
-          />
-        </Field>
       </div>
 
       {/* Fields */}
@@ -436,6 +379,7 @@ export function BlockForm({
 
               {/* Profile field picker */}
               <Popover
+                modal
                 open={profilePickerOpen}
                 onOpenChange={setProfilePickerOpen}
               >
@@ -558,6 +502,7 @@ function FieldCard({
   const t = useTranslations('RequirementForm.block');
   const tField = useTranslations('RequirementForm.fieldForm');
   const tValidation = useTranslations('RequirementForm.validation');
+  const tCommon = useTranslations('Common');
   const showOptions =
     fieldType === FieldType.SingleChoice || fieldType === FieldType.MultiChoice;
   const isDocument = fieldType === FieldType.DocumentAcknowledgement;
@@ -605,26 +550,29 @@ function FieldCard({
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                tooltip={tCommon('moveUp')}
                 disabled={!canMoveUp}
                 onClick={onMoveUp}
               >
-                ↑
+                <ArrowUp className="size-4" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
+                tooltip={tCommon('moveDown')}
                 disabled={!canMoveDown}
                 onClick={onMoveDown}
               >
-                ↓
+                <ArrowDown className="size-4" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-destructive size-8"
+                tooltip={tCommon('delete')}
                 onClick={onRemove}
               >
                 <Trash2 className="size-4" />

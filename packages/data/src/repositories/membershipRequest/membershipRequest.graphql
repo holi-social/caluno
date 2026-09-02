@@ -58,6 +58,12 @@ mutation CancelMembershipRequest($id: ID!, $organizationUnitId: ID!) {
   }
 }
 
+mutation RemoveMembershipRequest($id: ID!) {
+  removeMembershipRequest(id: $id) {
+    id
+  }
+}
+
 query GetMembershipRequests(
   $status: MembershipRequestStatus
   $limit: Int!
@@ -94,25 +100,36 @@ query GetMembershipRequestCount($status: MembershipRequestStatus) {
   membershipRequestCount(status: $status)
 }
 
-query GetMyMembershipRequests(
-  $status: MembershipRequestStatus
-  $limit: Int!
-  $offset: Int!
-) {
-  myMembershipRequests(status: $status, limit: $limit, offset: $offset) {
+query GetMyMembershipRequests($limit: Int!, $offset: Int!) {
+  myMembershipRequests(limit: $limit, offset: $offset) {
     items {
       id
       organizationUnit {
         id
         name
+        logoUrl
+        type {
+          icon
+        }
+        parent {
+          id
+        }
+        organization {
+          name
+        }
       }
       user {
         id
         name
         email
       }
+      contact {
+        id
+        name
+      }
       status
       reviewedAt
+      rejectionReason
       createdAt
     }
   }

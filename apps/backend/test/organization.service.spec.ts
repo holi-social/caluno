@@ -8,6 +8,8 @@ import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationMapper } from '../src/organization/mappers/organization.mapper';
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
+import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services';
 import { createUser } from './factories';
 import {
@@ -78,6 +80,7 @@ describe('OrganizationService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -370,6 +373,69 @@ describe('OrganizationService', () => {
       const ids = await administrableIds(organizationService, user.id);
 
       expect(ids).toEqual(new Set([adminChild.id]));
+    });
+  });
+});
+
+describe('OrganizationUnitService', () => {
+  let db: Database;
+  let organizationUnitService: OrganizationUnitService;
+
+  beforeAll(async () => {
+    await ensureTestDatabase();
+    const moduleRef = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
+    }).compile();
+    db = moduleRef.get<Database>(DATABASE_CONNECTION);
+
+    organizationUnitService = new OrganizationUnitService(
+      db,
+      {
+        assertUploadedFileForPurpose: async () => ({}),
+        resolvePublicUrlForUploadedFile: async () =>
+          'https://example.com/logo.png',
+      } as never,
+      new OrganizationUnitDataService(db),
+      { capture: () => {} } as never,
+    );
+
+    registerTestResourceCleanup(async () => {
+      await moduleRef.close();
+    });
+  });
+
+  describe('update', () => {
+    it('keeps the existing slug when the unit name is updated', async () => {
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Slug Stability Org ${crypto.randomUUID()}`,
+      );
+      const root = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const child = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'child',
+        parentId: root.id,
+      });
+      const originalSlug = child.slug;
+
+      const updated = await organizationUnitService.update(
+        child.id,
+        {
+          organizationId: organization.id,
+          name: 'Renamed Child',
+          typeId: type.id,
+          parentId: root.id,
+        },
+        (await createUser(db)).id,
+      );
+
+      expect(updated.slug).toBe(originalSlug);
+      expect(updated.name).toBe('Renamed Child');
     });
   });
 });
