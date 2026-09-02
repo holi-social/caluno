@@ -9,9 +9,11 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
-import { PERMISSIONS } from '../src/auth/constants';
+import { DEFAULT_MEMBER_ROLE_NAME, PERMISSIONS } from '../src/auth/constants';
 import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
+import * as schema from '../src/database/schema';
+import { MembershipLifecycleMutationResolver } from '../src/membership-lifecycle/membership-lifecycle-mutation.resolver';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import { ShiftMutationResolver } from '../src/shift/resolvers/shift-mutation.resolver';
 import { TimeTrackingMutationResolver } from '../src/time-tracking/resolvers/time-tracking-mutation.resolver';
@@ -503,6 +505,16 @@ describe('check-in readiness/submit mutation permissions', () => {
       ),
     ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
   });
+
+  it("gates checkInApproveMembershipRequest on check-in:manage (distinct from approveMembershipRequest's volunteer:edit)", () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        MembershipLifecycleMutationResolver.prototype
+          .checkInApproveMembershipRequest,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
 });
 
 describe('checkInInviteToShiftInstance mutation', () => {
@@ -694,5 +706,100 @@ describe('checkInInviteToOrganization mutation', () => {
     });
     expect(membership).toBeUndefined();
     expect(request).toBeUndefined();
+  });
+});
+
+describe('checkInApproveMembershipRequest mutation', () => {
+  const CHECK_IN_APPROVE_MEMBERSHIP_REQUEST = `
+    mutation CheckInApproveMembershipRequest($requestId: ID!) {
+      checkInApproveMembershipRequest(requestId: $requestId) {
+        id
+        status
+      }
+    }
+  `;
+
+  let app: INestApplication;
+  let db: Database;
+  let callerUserId: string;
+  let unitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    callerUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `ApproveRequest ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Approve request unit',
+    });
+    unitId = unit.id;
+
+    // Create the default member role for this organization, needed by approveMembershipRequest
+    const [memberRole] = await db
+      .insert(schema.roles)
+      .values({
+        name: DEFAULT_MEMBER_ROLE_NAME,
+        isInternal: true,
+        organizationId: org.organization.id,
+      })
+      .returning();
+    if (!memberRole) throw new Error('Failed to create default member role');
+
+    // Caller holds ONLY check-in:manage — not volunteer:edit — proving the
+    // new mutation does not depend on the existing approveMembershipRequest's
+    // permission.
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+
+    const role = await createRole(db, { organizationId: org.organization.id });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const membership = await addMembership(db, callerUserId, unit.id);
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(callerUserId);
+  });
+
+  it('approves the request and creates a membership for a caller without volunteer:edit', async () => {
+    const volunteer = await createUser(db);
+    const request = await createMembershipRequest(db, {
+      userId: volunteer.id,
+      organizationUnitId: unitId,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      checkInApproveMembershipRequest: { id: string; status: string };
+    }>(
+      app,
+      {
+        query: CHECK_IN_APPROVE_MEMBERSHIP_REQUEST,
+        variables: { requestId: request.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInApproveMembershipRequest',
+    );
+
+    expect(data.checkInApproveMembershipRequest.status).toBe('ACCEPTED');
+
+    const membership = await db.query.memberships.findFirst({
+      where: { userId: volunteer.id, organizationUnitId: unitId },
+    });
+    expect(membership).toBeTruthy();
   });
 });
