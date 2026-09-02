@@ -59,7 +59,9 @@ export function AcceptMembershipSheet({
         <Button
           type="button"
           className="w-full"
-          disabled={hasMissingForm || approveMutation.isPending}
+          disabled={
+            !membershipRequestId || hasMissingForm || approveMutation.isPending
+          }
           onClick={handleAccept}
         >
           {t('acceptMembershipButton')}

@@ -395,7 +395,7 @@ export class TimeTrackingService {
     }
 
     this.notificationService.notifyOrganizationUnitInvited({
-      organizationUnitId: organizationUnit.id,
+      organizationUnitId,
       organizationUnitName: organizationUnit.name,
       userId: volunteerId,
     });
