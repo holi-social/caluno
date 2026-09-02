@@ -2608,9 +2608,76 @@ export class ShiftService {
         startsAt: instance.actualStartsAt,
         endsAt: instance.actualEndsAt,
       });
+
+      void this.loadAndEmitShiftInstanceVolunteerLeftNotification(
+        shift,
+        instance,
+        userId,
+        organizationUnit.name,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to emit shift instance left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceVolunteerLeftNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+    organizationUnitName: string,
+  ): Promise<void> {
+    try {
+      const [volunteer, shiftManagers, [capacity]] = await Promise.all([
+        this.userService.findById(userId),
+        this.authService.findUsersWithPermission(
+          shift.organizationUnitId,
+          PERMISSIONS.SHIFT_EDIT,
+        ),
+        this.db
+          .select({ current: count() })
+          .from(schema.shiftInstanceInvites)
+          .where(
+            and(
+              eq(schema.shiftInstanceInvites.instanceId, instance.id),
+              inArray(schema.shiftInstanceInvites.status, [
+                ...PARTICIPATING_SHIFT_INVITE_STATUSES,
+              ]),
+            ),
+          ),
+      ]);
+
+      if (!volunteer) {
+        return;
+      }
+
+      const recipientUserIds = shiftManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceVolunteerLeft({
+        organizationUnitId: shift.organizationUnitId,
+        organizationUnitName,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        volunteerUserId: userId,
+        volunteerName: volunteer.name,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        signedUpCount: capacity?.current ?? 0,
+        minVolunteers:
+          instance.overrideMinVolunteers ?? shift.minVolunteers ?? null,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance volunteer left notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -2639,9 +2706,89 @@ export class ShiftService {
         userId,
         fromDate,
       });
+
+      void this.loadAndEmitShiftSeriesVolunteerLeftNotification(
+        shift,
+        fromDate,
+        userId,
+        organizationUnit.name,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to emit shift series left notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftSeriesVolunteerLeftNotification(
+    shift: ShiftEntity,
+    fromDate: Date,
+    userId: string,
+    organizationUnitName: string,
+  ): Promise<void> {
+    try {
+      const [volunteer, shiftManagers, instanceIds] = await Promise.all([
+        this.userService.findById(userId),
+        this.authService.findUsersWithPermission(
+          shift.organizationUnitId,
+          PERMISSIONS.SHIFT_EDIT,
+        ),
+        this.db.query.shiftInstances
+          .findMany({
+            where: {
+              masterId: shift.id,
+              isCancelled: false,
+              actualStartsAt: { gte: fromDate },
+            },
+            columns: { id: true },
+          })
+          .then((rows) => rows.map((row) => row.id)),
+      ]);
+
+      if (!volunteer) {
+        return;
+      }
+
+      const recipientUserIds = shiftManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      const signedUpCount =
+        instanceIds.length === 0
+          ? 0
+          : await this.db
+              .select({ current: count() })
+              .from(schema.shiftInstanceInvites)
+              .where(
+                and(
+                  inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
+                  inArray(schema.shiftInstanceInvites.status, [
+                    ...PARTICIPATING_SHIFT_INVITE_STATUSES,
+                  ]),
+                ),
+              )
+              .then(([row]) => row?.current ?? 0);
+
+      this.notificationService.notifyShiftSeriesVolunteerLeft({
+        organizationUnitId: shift.organizationUnitId,
+        organizationUnitName,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        volunteerUserId: userId,
+        volunteerName: volunteer.name,
+        recipientUserIds,
+        fromDate,
+        signedUpCount,
+        minVolunteers: shift.minVolunteers ?? null,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift series volunteer left notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

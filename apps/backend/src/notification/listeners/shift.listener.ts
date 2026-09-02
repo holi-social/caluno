@@ -9,9 +9,11 @@ import { shiftInstanceJoinedTemplate } from '../email/templates/shift-instance-j
 import { shiftInstanceLeftTemplate } from '../email/templates/shift-instance-left.template';
 import { shiftInstanceRemovedTemplate } from '../email/templates/shift-instance-removed.template';
 import { shiftInstanceSeriesCancelledTemplate } from '../email/templates/shift-instance-series-cancelled.template';
+import { shiftInstanceVolunteerLeftTemplate } from '../email/templates/shift-instance-volunteer-left.template';
 import { shiftInvitedTemplate } from '../email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from '../email/templates/shift-series-left.template';
 import { shiftSeriesRemovedTemplate } from '../email/templates/shift-series-removed.template';
+import { shiftSeriesVolunteerLeftTemplate } from '../email/templates/shift-series-volunteer-left.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
@@ -317,6 +319,69 @@ export class ShiftListener {
             recipientFirstName: recipient.firstName,
             fromDate: payload.fromDate,
             changes: payload.changes,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT)
+  async handleShiftInstanceVolunteerLeft(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceVolunteerLeftTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            volunteerName: payload.volunteerName,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
+            signedUpCount: payload.signedUpCount,
+            minVolunteers: payload.minVolunteers,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT)
+  async handleShiftSeriesVolunteerLeft(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftSeriesVolunteerLeftTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            volunteerName: payload.volunteerName,
+            recipientFirstName: recipient.firstName,
+            fromDate: payload.fromDate,
+            signedUpCount: payload.signedUpCount,
+            minVolunteers: payload.minVolunteers,
           },
           templateContext,
         );

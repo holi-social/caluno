@@ -253,6 +253,22 @@
     "subject": "Du hast {shiftTitle} verlassen",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceVolunteerLeft": {
+    "coverage": "Jetzt sind {signedUp} von {minVolunteers} Freiwilligen angemeldet.",
+    "coverageNoMin": "Jetzt sind {signedUp} Freiwillige angemeldet.",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailVolunteer": "Freiwillige:r",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, {volunteerName} hat einen Einsatz verlassen, den du verwaltest.",
+    "heading": "Freiwillige:r hat einen Einsatz verlassen",
+    "note": "Möglicherweise musst du Ersatz finden.",
+    "previewText": "{volunteerName} hat {shiftTitle} bei {organizationName} verlassen.",
+    "subject": "{volunteerName} hat {shiftTitle} verlassen",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftSeriesLeft": {
     "bodyMessage": "Du hast deine Anmeldungen für die Einsatzserie '{shiftTitle}' ab {fromDate} abgesagt.",
     "detailFrom": "Ab",
@@ -265,6 +281,21 @@
     "note": "Ein:e Koordinator:in wurde informiert, damit die Lücken besetzt werden können.",
     "previewText": "Du hast deine Anmeldungen für {shiftTitle} bei {organizationName} ab {fromDate} abgesagt.",
     "subject": "Du hast {shiftTitle} verlassen"
+  },
+  "shiftSeriesVolunteerLeft": {
+    "coverage": "Jetzt sind {signedUp} von {minVolunteers} Freiwilligen angemeldet.",
+    "coverageNoMin": "Jetzt sind {signedUp} Freiwillige angemeldet.",
+    "detailFrom": "Ab",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, {volunteerName} hat eine Einsatzserie verlassen, die du verwaltest.",
+    "heading": "Freiwillige:r hat eine Einsatzserie verlassen",
+    "note": "Möglicherweise musst du für die verbleibenden Termine Ersatz finden.",
+    "previewText": "{volunteerName} hat {shiftTitle} bei {organizationName} verlassen.",
+    "subject": "{volunteerName} hat {shiftTitle} verlassen"
   },
   "shiftDetailsChanged": {
     "field": {
