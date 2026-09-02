@@ -177,6 +177,26 @@ export class MembershipService {
     return JoinStatus.NONE;
   }
 
+  /**
+   * The volunteer's open (PENDING) membership request against this exact
+   * unit, if any — used by the check-in readiness gate, which needs the
+   * request's own id rather than the derived `getMembershipState` enum.
+   */
+  async findPendingMembershipRequest(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<{ id: string } | null> {
+    const request = await this.db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { id: true },
+    });
+    return request ?? null;
+  }
+
   async getPendingOrganizationUnitIds(userId: string): Promise<string[]> {
     const requests = await this.db.query.membershipRequests.findMany({
       where: {

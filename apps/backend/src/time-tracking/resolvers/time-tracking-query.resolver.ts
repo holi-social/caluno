@@ -1,4 +1,4 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
@@ -8,6 +8,7 @@ import { OrganizationUnitMapper } from '../../organization/mappers/organization-
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
 import { CheckInContext } from '../models/check-in-context.model';
+import { CheckInReadiness } from '../models/check-in-readiness.model';
 import {
   TimeEntry,
   TimeEntryPaginatedResponse,
@@ -52,6 +53,20 @@ export class TimeTrackingQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Query(() => CheckInReadiness)
+  async checkInReadiness(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<CheckInReadiness> {
+    return this.timeTrackingService.getCheckInReadiness(
+      volunteerId,
+      shiftInstanceId,
+      context.organizationUnitId,
+    );
   }
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
