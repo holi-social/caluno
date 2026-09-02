@@ -70,7 +70,6 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
           shiftInstanceId: 'si-1',
           volunteerId: 'volunteer-1',
           reimbursementTypeId: 'override-type',
-          isPaid: true,
         },
       ]),
     });
@@ -107,16 +106,18 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     expect(insertValues).toHaveBeenCalledWith(
       expect.objectContaining({
         reimbursementTypeId: 'override-type',
-        isPaid: true,
       }),
     );
+    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
   });
 
   it('falls back to the master shift type when the instance has no override', async () => {
     const insertValues = jest.fn().mockReturnValue({
-      returning: jest.fn().mockResolvedValue([
-        { id: 'te-2', shiftInstanceId: 'si-2', volunteerId: 'volunteer-1' },
-      ]),
+      returning: jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'te-2', shiftInstanceId: 'si-2', volunteerId: 'volunteer-1' },
+        ]),
     });
     const db = {
       query: {
@@ -124,7 +125,10 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
           findFirst: jest.fn().mockResolvedValue({
             id: 'si-2',
             overrideReimbursementTypeId: null,
-            master: { organizationUnitId: 'ou-1', reimbursementTypeId: 'master-type' },
+            master: {
+              organizationUnitId: 'ou-1',
+              reimbursementTypeId: 'master-type',
+            },
           }),
         },
       },
@@ -146,15 +150,18 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     await service.addTimeEntry('ou-1', input, 'admin-1');
 
     expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ reimbursementTypeId: 'master-type', isPaid: true }),
+      expect.objectContaining({ reimbursementTypeId: 'master-type' }),
     );
+    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
   });
 
-  it('stays type-less and unpaid for a shift with no reimbursement type', async () => {
+  it('stays type-less for a shift with no reimbursement type', async () => {
     const insertValues = jest.fn().mockReturnValue({
-      returning: jest.fn().mockResolvedValue([
-        { id: 'te-3', shiftInstanceId: 'si-3', volunteerId: 'volunteer-1' },
-      ]),
+      returning: jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'te-3', shiftInstanceId: 'si-3', volunteerId: 'volunteer-1' },
+        ]),
     });
     const db = {
       query: {
@@ -184,15 +191,18 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     await service.addTimeEntry('ou-1', input, 'admin-1');
 
     expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ reimbursementTypeId: null, isPaid: false }),
+      expect.objectContaining({ reimbursementTypeId: null }),
     );
+    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
   });
 
   it('stays type-less for a shiftless entry (no shiftInstanceId)', async () => {
     const insertValues = jest.fn().mockReturnValue({
-      returning: jest.fn().mockResolvedValue([
-        { id: 'te-4', shiftInstanceId: null, volunteerId: 'volunteer-1' },
-      ]),
+      returning: jest
+        .fn()
+        .mockResolvedValue([
+          { id: 'te-4', shiftInstanceId: null, volunteerId: 'volunteer-1' },
+        ]),
     });
     const db = {
       query: { shiftInstances: { findFirst: jest.fn() } },
@@ -215,7 +225,8 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
 
     expect(db.query.shiftInstances.findFirst).not.toHaveBeenCalled();
     expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ reimbursementTypeId: null, isPaid: false }),
+      expect.objectContaining({ reimbursementTypeId: null }),
     );
+    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
   });
 });

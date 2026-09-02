@@ -60,7 +60,6 @@ export class TimeTrackingService {
           endedAt: input.endedAt ?? null,
           notes: input.notes,
           reimbursementTypeId,
-          isPaid: reimbursementTypeId !== null,
         })
         .returning();
       if (!options?.skipCapture) {

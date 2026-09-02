@@ -1553,6 +1553,18 @@ export class ShiftService {
           ? await this.resolveImageUrl(input.imageFileId)
           : null;
 
+    const typeChanged =
+      input.reimbursementTypeId !== undefined &&
+      input.reimbursementTypeId !== shift.reimbursementTypeId;
+
+    if (typeChanged) {
+      await this.snapshotPastInstanceTypes(
+        tx,
+        shift.id,
+        shift.reimbursementTypeId,
+      );
+    }
+
     const [updatedShift] = await tx
       .update(schema.shifts)
       .set({
@@ -1564,6 +1576,9 @@ export class ShiftService {
         maxVolunteers: input.maxVolunteers ?? null,
         ...(input.visibility ? { visibility: input.visibility } : {}),
         ...(imageUrl !== undefined ? { imageUrl } : {}),
+        ...(input.reimbursementTypeId !== undefined
+          ? { reimbursementTypeId: input.reimbursementTypeId }
+          : {}),
         rrule: newRrule,
         originalStartsAt: newOriginalStartsAt,
         durationMinutes,
@@ -1645,7 +1660,7 @@ export class ShiftService {
           overrideInstructions: null,
           overrideMinVolunteers: null,
           overrideMaxVolunteers: null,
-          overrideReimbursementTypeId: input.reimbursementTypeId ?? null,
+          overrideReimbursementTypeId: null,
           isException: false,
         })
         .where(
@@ -1667,7 +1682,7 @@ export class ShiftService {
           overrideInstructions: null,
           overrideMinVolunteers: null,
           overrideMaxVolunteers: null,
-          overrideReimbursementTypeId: input.reimbursementTypeId ?? null,
+          overrideReimbursementTypeId: null,
           isException: false,
           actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
           actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
@@ -1693,6 +1708,32 @@ export class ShiftService {
     }
 
     return refreshedInstance;
+  }
+
+  /**
+   * When a shift's effective reimbursement type is about to change, freeze
+   * the OLD type onto any already-occurred instance that doesn't already
+   * have its own override, so past instances keep reflecting the type that
+   * was actually in effect when they happened instead of silently picking
+   * up the new master value.
+   */
+  private async snapshotPastInstanceTypes(
+    tx: Database,
+    shiftId: string,
+    previousReimbursementTypeId: string | null,
+  ): Promise<void> {
+    if (!previousReimbursementTypeId) return;
+
+    await tx
+      .update(schema.shiftInstances)
+      .set({ overrideReimbursementTypeId: previousReimbursementTypeId })
+      .where(
+        and(
+          eq(schema.shiftInstances.masterId, shiftId),
+          isNull(schema.shiftInstances.overrideReimbursementTypeId),
+          lt(schema.shiftInstances.actualEndsAt, new Date()),
+        ),
+      );
   }
 
   private rrulePatternsEqual(a: string | null, b: string | null): boolean {
@@ -2166,17 +2207,15 @@ export class ShiftService {
         shiftInput.reimbursementTypeId !== undefined &&
         shiftInput.reimbursementTypeId !== shift.reimbursementTypeId;
 
-      if (typeChanged && shift.reimbursementTypeId) {
-        await tx
-          .update(schema.shiftInstances)
-          .set({ overrideReimbursementTypeId: shift.reimbursementTypeId })
-          .where(
-            and(
-              eq(schema.shiftInstances.masterId, id),
-              isNull(schema.shiftInstances.overrideReimbursementTypeId),
-              lt(schema.shiftInstances.actualEndsAt, new Date()),
-            ),
-          );
+      // When a shift previously had no type and gets one for the first
+      // time, `shift.reimbursementTypeId` is null here, so no snapshot is
+      // taken — there's nothing meaningful to preserve in a nullable
+      // override column ("no type" and "inherit from master" aren't
+      // distinguishable). Already-occurred instances will start reflecting
+      // the newly-set master type if a new time entry is ever created
+      // against them later. Known, accepted limitation.
+      if (typeChanged) {
+        await this.snapshotPastInstanceTypes(tx, id, shift.reimbursementTypeId);
       }
 
       if (hasValuesToUpdate) {

@@ -2,22 +2,25 @@ import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { eq } from 'drizzle-orm';
+import { InvoiceService } from '../src/accounting/services/invoice.service';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
-import { InvoiceService } from '../src/accounting/services/invoice.service';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification';
 import { OrganizationService } from '../src/organization/organization.service';
 import { PostHogService } from '../src/shared/observability/posthog.service';
-import { ShiftService } from '../src/shift/shift.service';
 import { ShiftVisibility } from '../src/shift/enums';
-import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
+import { ShiftService } from '../src/shift/shift.service';
 import { AddTimeEntryInput } from '../src/time-tracking/inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from '../src/time-tracking/inputs/close-time-enty-input';
+import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
 import { createReimbursementType } from './factories/accounting.factory';
-import { createOrganizationWithType, createUnit } from './factories/org.factory';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import { createUser } from './factories/user.factory';
 import {
   ensureTestDatabase,
