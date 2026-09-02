@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it, mock } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asc, eq, inArray } from 'drizzle-orm';
+import { ReimbursementTypeKey } from '../src/accounting/enums';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
@@ -259,6 +260,75 @@ describe('ShiftService', () => {
       });
 
       expect(updated?.slug).toBe(originalSlug);
+    });
+  });
+
+  describe('update — reimbursement type override', () => {
+    it('sets an override reimbursement type on a single future instance', async () => {
+      const shiftType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const overrideType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+        reimbursementTypeId: shiftType.id,
+      });
+      const instance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: startsAt,
+        actualEndsAt: endsAt,
+      });
+
+      const updated = await shiftService.updateShiftInstance(
+        instance.id,
+        {
+          title: 'Coaching (override)',
+          startsAt,
+          endsAt,
+          reimbursementTypeId: overrideType.id,
+        } as never,
+        organizationUnitId,
+      );
+
+      expect(updated.overrideReimbursementTypeId).toBe(overrideType.id);
+    });
+
+    it('rejects a reimbursement type change on a past instance', async () => {
+      const shiftType = await createReimbursementType(db);
+      const startsAt = daysAgo(2, 8);
+      const endsAt = daysAgo(2, 10);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: shiftType.id,
+      });
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: startsAt,
+        actualEndsAt: endsAt,
+      });
+
+      await expect(
+        shiftService.updateShiftInstance(
+          pastInstance.id,
+          {
+            title: 'late edit',
+            startsAt,
+            endsAt,
+            reimbursementTypeId: shiftType.id,
+          } as never,
+          organizationUnitId,
+        ),
+      ).rejects.toThrow(ConflictGraphQLError);
     });
   });
 
