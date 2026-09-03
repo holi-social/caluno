@@ -6,13 +6,13 @@ import {
   CardContent,
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@repo/ui';
-import { Check } from 'lucide-react';
+import { Check, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { UserCard } from '@/components/user-card';
 import {
   clearCheckInSuccessPayload,
   getCheckInSuccessPayload,
@@ -37,24 +37,29 @@ export function CheckInSuccessDialog() {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg pt-16">
         <DialogHeader className="items-center text-center">
-          <div className="flex size-20 items-center justify-center rounded-full bg-primary/10">
-            <Check className="size-9 text-primary" strokeWidth={3} />
+          <div className="flex size-20 items-center justify-center rounded-full bg-success">
+            <Check className="size-9 text-success-foreground" strokeWidth={3} />
           </div>
           <DialogTitle className="text-2xl font-bold">
             {t('successDialogTitle')}
           </DialogTitle>
-          <DialogDescription className="text-center max-w-sm">
-            {t('successDialogBody', { volunteerName: payload.volunteerName })}
-          </DialogDescription>
         </DialogHeader>
+
+        <UserCard
+          user={{ name: payload.volunteerName, image: payload.volunteerImage }}
+          size="lg"
+          hideEmail
+        />
 
         {payload.shiftTitle && (
           <Card className="shadow-none bg-muted">
             <CardContent className="space-y-1">
               <p className="font-bold">{payload.shiftTitle}</p>
               {payload.timeRange && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Clock className="size-4 shrink-0" />
                   {payload.timeRange}
+                  {payload.dateLabel && `, ${payload.dateLabel}`}
                 </p>
               )}
             </CardContent>

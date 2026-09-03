@@ -127,9 +127,8 @@
     "selectShiftPlaceholder": "Schicht wählen",
     "shiftSearchPlaceholder": "Schichtname",
     "shiftSheetTitle": "Schicht wählen",
-    "successDialogBody": "{volunteerName} ist eingecheckt.",
     "successDialogCloseButton": "Fertig",
-    "successDialogTitle": "Eingecheckt",
+    "successDialogTitle": "Erfolgreich eingecheckt",
     "today": "Heute"
   },
   "Common": {
