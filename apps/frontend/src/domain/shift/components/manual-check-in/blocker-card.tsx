@@ -30,9 +30,9 @@ export function BlockerCard({
   doneLabel,
 }: BlockerCardProps) {
   return (
-    <Card className="border-orange-200 bg-orange-50">
+    <Card>
       <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           {icon}
         </div>
         <div className="space-y-1">
