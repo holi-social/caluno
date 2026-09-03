@@ -12,6 +12,7 @@ import type { INestApplication } from '@nestjs/common';
 import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
+import { MembershipService } from '../src/membership/membership.service';
 import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
 import { createShift, createUser } from './factories';
 import {
@@ -163,6 +164,135 @@ describe('TimeTrackingService.getCheckInContext', () => {
     );
 
     expect(result).toBeNull();
+  });
+
+  it('checks eligibility across multiple manageable units, ancestor-inclusive', async () => {
+    const org = await createOrganizationWithType(
+      db,
+      `Batch ${crypto.randomUUID()}`,
+    );
+    const parentUnit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Parent Unit',
+    });
+    const childUnit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Child Unit',
+      parentId: parentUnit.id,
+    });
+    // Volunteer is a member of the PARENT only — eligibility on the child
+    // comes from the ancestor walk.
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, parentUnit.id);
+
+    // Caller needs check-in:manage on the Batch org to manage its units.
+    const batchPermission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!batchPermission) {
+      throw new Error('CHECK_IN_MANAGE permission not seeded');
+    }
+    const batchRole = await createRole(db, {
+      organizationId: org.organization.id,
+    });
+    await grantPermissionToRole(db, {
+      roleId: batchRole.id,
+      permissionId: batchPermission.id,
+    });
+    const batchMembership = await addMembership(db, testUserId, parentUnit.id);
+    await assignRoleToMembership(db, {
+      membershipId: batchMembership.id,
+      roleId: batchRole.id,
+    });
+
+    // A second org (only one root per org is allowed, so the "stranger"
+    // unit lives here): caller manages it, volunteer is not a member.
+    const otherOrg = await createOrganizationWithType(
+      db,
+      `BatchOther ${crypto.randomUUID()}`,
+    );
+    const strangerUnit = await createUnit(db, {
+      organizationId: otherOrg.organization.id,
+      typeId: otherOrg.type.id,
+      name: 'Stranger Unit',
+    });
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) {
+      throw new Error('CHECK_IN_MANAGE permission not seeded');
+    }
+    const strangerRole = await createRole(db, {
+      organizationId: otherOrg.organization.id,
+    });
+    await grantPermissionToRole(db, {
+      roleId: strangerRole.id,
+      permissionId: permission.id,
+    });
+    const strangerMembership = await addMembership(
+      db,
+      testUserId,
+      strangerUnit.id,
+    );
+    await assignRoleToMembership(db, {
+      membershipId: strangerMembership.id,
+      roleId: strangerRole.id,
+    });
+
+    const result = await service.getCheckInContext(
+      testUserId,
+      volunteer.checkInId,
+    );
+
+    const eligibleIds = result?.eligibleOrganizationUnits.map((u) => u.id);
+    expect(eligibleIds).toContain(childUnit.id);
+    expect(eligibleIds).not.toContain(strangerUnit.id);
+  });
+
+  it('filterUnitsWhereMemberOrAncestor returns only member-or-descendant units', async () => {
+    const membershipService = app.get(MembershipService);
+    const org = await createOrganizationWithType(
+      db,
+      `Filter ${crypto.randomUUID()}`,
+    );
+    const parentUnit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Filter Parent',
+    });
+    const childUnit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Filter Child',
+      parentId: parentUnit.id,
+    });
+    // Second org: only one root per org is allowed, and a sibling under
+    // parentUnit would be eligible via the ancestor walk — so the
+    // ineligible unit lives in its own org.
+    const otherOrg = await createOrganizationWithType(
+      db,
+      `FilterOther ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrg.organization.id,
+      typeId: otherOrg.type.id,
+      name: 'Filter Other',
+    });
+
+    const user = await createUser(db);
+    await addMembership(db, user.id, parentUnit.id);
+
+    const result = await membershipService.filterUnitsWhereMemberOrAncestor(
+      user.id,
+      [parentUnit.id, childUnit.id, otherUnit.id, 'does-not-exist'],
+    );
+
+    expect([...result].sort()).toEqual([childUnit.id, parentUnit.id].sort());
+    expect(
+      await membershipService.filterUnitsWhereMemberOrAncestor(user.id, []),
+    ).toEqual(new Set());
   });
 });
 
