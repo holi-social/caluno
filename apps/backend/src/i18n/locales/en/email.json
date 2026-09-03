@@ -21,6 +21,35 @@
     "subject": "{eventTitle} has been cancelled",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventRemoved": {
+    "detailEvent": "Event",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because an admin removed you from an event on {brandName}.",
+    "greeting": "Hi {firstName}, you've been removed from an event.",
+    "heading": "You've been removed from an event",
+    "note": "This event is no longer on your schedule. Contact the organization if you believe this was a mistake.",
+    "previewText": "You've been removed from {eventTitle} at {organizationName}.",
+    "subject": "You've been removed from {eventTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "eventDetailsChanged": {
+    "field": {
+      "startsAt": "Start",
+      "endsAt": "End",
+      "location": "Location",
+      "description": "Description",
+      "title": "Title"
+    },
+    "footerNote": "You're receiving this because an event you're signed up for on {brandName} has changed.",
+    "greeting": "Hi {firstName}, the event '{eventTitle}' at {organizationName} has changed.",
+    "heading": "Event details changed",
+    "note": "You are still signed up for this event — no need to accept again.",
+    "previewText": "Details for {eventTitle} at {organizationName} have changed.",
+    "subject": "Details changed for {eventTitle}",
+    "updated": "updated"
+  },
   "eventInvited": {
     "buttonLabel": "View event",
     "detailEvent": "Event",
@@ -94,6 +123,16 @@
     "note": "Pending requests stay open until an admin approves or rejects them.",
     "previewText": "{requesterName} wants to join {organizationName}.",
     "subject": "New membership request for {organizationName}"
+  },
+  "membershipRejected": {
+    "footerNote": "You're receiving this because your membership request for {organizationName} was rejected on {brandName}.",
+    "greetingAfter": "was rejected.",
+    "greetingBefore": "Hi {firstName}, your membership request for",
+    "heading": "Your membership request was rejected",
+    "outro": "Contact the organization if you believe this was a mistake.",
+    "previewText": "Your membership request for {organizationName} was rejected.",
+    "reasonLabel": "Reason given:",
+    "subject": "Your membership request for {organizationName} was rejected"
   },
   "organizationCreated": {
     "buttonLabel": "Open {organizationName}",
@@ -174,6 +213,110 @@
     "note": "These shifts no longer require volunteers. No action is needed on your part.",
     "previewText": "{shiftTitle} at {organizationName} — upcoming shifts cancelled from {fromDate}.",
     "subject": "{shiftTitle}: upcoming shifts cancelled"
+  },
+  "shiftInstanceRemoved": {
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because an admin removed you from a shift on {brandName}.",
+    "greeting": "Hi {firstName}, you've been removed from a shift.",
+    "heading": "You've been removed from a shift",
+    "note": "This shift is no longer on your schedule. Contact the organization if you believe this was a mistake.",
+    "previewText": "You've been removed from {shiftTitle} at {organizationName}.",
+    "subject": "You've been removed from {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesRemoved": {
+    "bodyMessage": "You've been removed from the '{shiftTitle}' series starting {fromDate}.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "footerNote": "You're receiving this because an admin removed you from a shift series on {brandName}.",
+    "greeting": "Hi {firstName}, you've been removed from a shift series.",
+    "heading": "You've been removed from a shift series",
+    "note": "These shifts are no longer on your schedule. Contact the organization if you believe this was a mistake.",
+    "previewText": "You've been removed from {shiftTitle} at {organizationName} starting {fromDate}.",
+    "subject": "You've been removed from {shiftTitle}"
+  },
+  "shiftInstanceLeft": {
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you cancelled your signup for a shift on {brandName}.",
+    "greeting": "Hi {firstName}, you've cancelled your signup for a shift.",
+    "heading": "You've left a shift",
+    "note": "A coordinator has been informed so they can fill the gap.",
+    "previewText": "You've cancelled your signup for {shiftTitle} at {organizationName}.",
+    "subject": "You've left {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftInstanceVolunteerLeft": {
+    "buttonLabel": "View shift schedule",
+    "coverage": "Now signed up: {signedUp} of {minVolunteers}.",
+    "coverageNoMin": "Now signed up: {signedUp}.",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailVolunteer": "Volunteer",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you can manage shifts on {brandName}.",
+    "greeting": "Hi {firstName}, {volunteerName} left a shift you manage.",
+    "heading": "A volunteer left a shift",
+    "note": "You may need to find a replacement.",
+    "previewText": "{volunteerName} left {shiftTitle} at {organizationName}.",
+    "subject": "{volunteerName} left {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesLeft": {
+    "bodyMessage": "You've cancelled your signups for the '{shiftTitle}' series starting {fromDate}.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "footerNote": "You're receiving this because you cancelled your signups for a shift series on {brandName}.",
+    "greeting": "Hi {firstName}, you've cancelled your signups for a shift series.",
+    "heading": "You've left a shift series",
+    "note": "A coordinator has been informed so they can fill the gaps.",
+    "previewText": "You've cancelled your signups for {shiftTitle} at {organizationName} starting {fromDate}.",
+    "subject": "You've left {shiftTitle}"
+  },
+  "shiftSeriesVolunteerLeft": {
+    "buttonLabel": "View shift schedule",
+    "coverage": "Now signed up: {signedUp} of {minVolunteers}.",
+    "coverageNoMin": "Now signed up: {signedUp}.",
+    "detailFrom": "From",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage shifts on {brandName}.",
+    "greeting": "Hi {firstName}, {volunteerName} left a shift series you manage.",
+    "heading": "A volunteer left a shift series",
+    "note": "You may need to find replacements for the remaining occurrences.",
+    "previewText": "{volunteerName} left {shiftTitle} at {organizationName}.",
+    "subject": "{volunteerName} left {shiftTitle}"
+  },
+  "shiftDetailsChanged": {
+    "field": {
+      "startsAt": "Start",
+      "endsAt": "End",
+      "location": "Location",
+      "instructions": "Instructions",
+      "title": "Title"
+    },
+    "footerNote": "You're receiving this because a shift you're signed up for on {brandName} has changed.",
+    "greeting": "Hi {firstName}, the shift '{shiftTitle}' at {organizationName} has changed.",
+    "heading": "Shift details changed",
+    "note": "You are still signed up for this shift — no need to accept again.",
+    "previewText": "Details for {shiftTitle} at {organizationName} have changed.",
+    "seriesGreeting": "Hi {firstName}, the shift series '{shiftTitle}' at {organizationName} has changed.",
+    "seriesHeading": "Shift series details changed",
+    "seriesRange": "This change applies to shifts from {fromDate} onward.",
+    "subject": "Details changed for {shiftTitle}",
+    "updated": "updated"
   },
   "shiftInvited": {
     "buttonLabel": "View shift",

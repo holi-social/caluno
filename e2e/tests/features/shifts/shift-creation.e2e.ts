@@ -1,17 +1,17 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { buildShiftDataset } from '../../../fixtures/shift-dataset';
+import { buildShifts } from '../../../fixtures/shift';
 import { OrgPage } from '../../../pages/org/OrgPage';
 import { ShiftsPage } from '../../../pages/shifts/ShiftsPage';
 import { signUpVerifyAndLogin } from '../../../utils/auth';
 
 // Auth + one org per worker (storageState). Covers form structure, validation, and
-// creating a shift dataset persisted to .auth/shifts-dataset.json for later reuse.
+// creating shifts persisted to .auth/shifts-dataset.json for later reuse.
 
 const authFile = '.auth/shifts-user.json';
 const datasetFile = '.auth/shifts-dataset.json';
 const runId = `${Date.now()}`;
-const dataset = buildShiftDataset(runId);
+const shiftFixtures = buildShifts(runId);
 let orgUId = '';
 
 test.describe('Shift creation', () => {
@@ -27,6 +27,7 @@ test.describe('Shift creation', () => {
     const org = new OrgPage(page);
     await org.gotoCreate();
     orgUId = await org.createOrganization(`E2E Org ${Date.now()}`);
+    mkdirSync('.auth', { recursive: true });
     await context.storageState({ path: authFile });
     await context.close();
   });
@@ -34,7 +35,6 @@ test.describe('Shift creation', () => {
   test.beforeEach(async ({ page }) => {
     shifts = new ShiftsPage(page);
     await shifts.goto(orgUId);
-    await shifts.expectLoaded();
     await shifts.openCreateForm();
   });
 
@@ -134,17 +134,19 @@ test.describe('Shift creation', () => {
     });
   });
 
-  // Create the shift dataset and persist it (with ids) for the All Shifts suite.
+  // Create the shifts and persist them (with ids) for the All Shifts suite.
   test.describe('successful creation', () => {
-    const created: Array<ShiftSpecWithId> = [];
+    const created: Array<CreatedShift> = [];
 
-    for (const spec of dataset) {
-      test(`creates shift — Open ${spec.openShift ? 'ON' : 'OFF'} ${spec.startTime}-${spec.endTime}`, async () => {
-        const id = await shifts.createShiftFromSpec(spec);
+    for (const shift of shiftFixtures) {
+      const kind =
+        shift.recurrence === 'Does not repeat' ? 'non-recurring' : 'recurring';
+      test(`creates a ${kind} shift (Open ${shift.openShift ? 'ON' : 'OFF'})`, async () => {
+        const id = await shifts.createShift(shift);
 
-        await shifts.expectShiftCreated();
+        await shifts.expectCreatedShift(shift);
         expect(id, 'created shift should have an id').not.toBe('');
-        created.push({ ...spec, id });
+        created.push({ ...shift, id });
       });
     }
 
@@ -158,4 +160,4 @@ test.describe('Shift creation', () => {
   });
 });
 
-type ShiftSpecWithId = (typeof dataset)[number] & { id: string };
+type CreatedShift = (typeof shiftFixtures)[number] & { id: string };
