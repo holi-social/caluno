@@ -112,6 +112,15 @@ export class TimeEntryRepository extends BaseRepository {
     return data.checkInVolunteer;
   }
 
+  /**
+   * No header override: this runs from a server action whose
+   * `getDataClient({ orgUId })` already scopes every request on this client.
+   */
+  async checkOutVolunteer(timeEntryId: string): Promise<{ id: string }> {
+    const data = await this.sdk.CheckOutVolunteer({ timeEntryId });
+    return data.checkOutVolunteer;
+  }
+
   async checkInInviteToOrganization(
     organizationUnitId: string,
     volunteerId: string,

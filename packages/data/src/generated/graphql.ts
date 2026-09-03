@@ -665,6 +665,7 @@ export type Mutation = {
   checkInInviteToShiftInstance: ShiftInstance;
   checkInVolunteer: TimeEntry;
   checkOut: TimeEntry;
+  checkOutVolunteer: TimeEntry;
   closeTimeEntry: TimeEntry;
   createContract: Contract;
   createDocumentTemplate: DocumentTemplate;
@@ -788,6 +789,11 @@ export type MutationCheckInVolunteerArgs = {
 
 export type MutationCheckOutArgs = {
   shiftInstanceId: Scalars['ID']['input'];
+};
+
+
+export type MutationCheckOutVolunteerArgs = {
+  timeEntryId: Scalars['ID']['input'];
 };
 
 
@@ -3861,6 +3867,13 @@ export type CheckInInviteToOrganizationMutationVariables = Exact<{
 
 
 export type CheckInInviteToOrganizationMutation = { __typename?: 'Mutation', checkInInviteToOrganization: boolean };
+
+export type CheckOutVolunteerMutationVariables = Exact<{
+  timeEntryId: Scalars['ID']['input'];
+}>;
+
+
+export type CheckOutVolunteerMutation = { __typename?: 'Mutation', checkOutVolunteer: { __typename?: 'TimeEntry', id: string } };
 
 export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -7137,6 +7150,13 @@ export const CheckInInviteToOrganizationDocument = gql`
   checkInInviteToOrganization(volunteerId: $volunteerId)
 }
     `;
+export const CheckOutVolunteerDocument = gql`
+    mutation CheckOutVolunteer($timeEntryId: ID!) {
+  checkOutVolunteer(timeEntryId: $timeEntryId) {
+    id
+  }
+}
+    `;
 export const GetMeDocument = gql`
     query GetMe {
   me {
@@ -7718,6 +7738,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     CheckInInviteToOrganization(variables: CheckInInviteToOrganizationMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckInInviteToOrganizationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CheckInInviteToOrganizationMutation>({ document: CheckInInviteToOrganizationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckInInviteToOrganization', 'mutation', variables);
+    },
+    CheckOutVolunteer(variables: CheckOutVolunteerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckOutVolunteerMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CheckOutVolunteerMutation>({ document: CheckOutVolunteerDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckOutVolunteer', 'mutation', variables);
     },
     GetMe(variables?: GetMeQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetMeQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetMeQuery>({ document: GetMeDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetMe', 'query', variables);
