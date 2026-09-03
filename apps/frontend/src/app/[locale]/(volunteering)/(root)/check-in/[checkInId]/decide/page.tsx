@@ -1,5 +1,18 @@
-import { Button, Card, CardContent, Separator } from '@repo/ui';
-import { Building2, Calendar, LogIn, ScanQrCode } from 'lucide-react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@repo/ui';
+import {
+  Building2,
+  Calendar,
+  ChevronRight,
+  LogIn,
+  ScanQrCode,
+} from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { UserCard } from '@/components/user-card';
@@ -50,49 +63,56 @@ export default async function VolunteeringDecidePage({
     <div className="max-w-2xl px-4 py-8 space-y-6">
       <UserCard user={context.volunteer} size="lg" />
 
-      {context.openTimeEntries.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">{t('openEntriesTitle')}</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('openEntriesTitle')}</CardTitle>
+          <CardDescription>{t('openEntriesDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {context.openTimeEntries.map((entry) => (
             <Link
               key={entry.id}
               href={`/check-in/${checkInId}/check-out?entryId=${entry.id}`}
-              className="block"
+              className="flex items-center gap-2 rounded-lg border p-4 hover:bg-accent"
             >
-              <Card>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <Building2 className="size-4 text-muted-foreground" />
-                      {entry.organizationUnit.name}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Calendar className="size-4 text-muted-foreground" />
-                      {entry.shiftInstance
-                        ? (entry.shiftInstance.overrideTitle ??
-                          entry.shiftInstance.master.title)
-                        : tShiftCheckIn('generalCheckIn')}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <ScanQrCode className="size-4 text-muted-foreground" />
-                      {tShiftCheckIn('checkedInAt', {
-                        time: formatDateTime(new Date(entry.startedAt)),
-                      })}
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+              <ul className="flex-1 space-y-2">
+                <li className="flex items-center gap-2">
+                  <Building2 className="size-4 text-muted-foreground" />
+                  {entry.organizationUnit.name}
+                </li>
+                <li className="flex items-center gap-2">
+                  <Calendar className="size-4 text-muted-foreground" />
+                  {entry.shiftInstance
+                    ? (entry.shiftInstance.overrideTitle ??
+                      entry.shiftInstance.master.title)
+                    : tShiftCheckIn('generalCheckIn')}
+                </li>
+                <li className="flex items-center gap-2">
+                  <ScanQrCode className="size-4 text-muted-foreground" />
+                  {tShiftCheckIn('checkedInAt', {
+                    time: formatDateTime(new Date(entry.startedAt)),
+                  })}
+                </li>
+              </ul>
+              <ChevronRight className="size-4 text-muted-foreground" />
             </Link>
           ))}
-          <Separator />
-        </div>
-      )}
+        </CardContent>
+      </Card>
 
-      <Button asChild size="lg" className="w-full">
-        <Link href={checkInHref}>
-          <LogIn /> {t('checkInButton')}
-        </Link>
-      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('checkInSectionTitle')}</CardTitle>
+          <CardDescription>{t('checkInSectionDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild size="lg" className="w-full">
+            <Link href={checkInHref}>
+              <LogIn /> {t('checkInButton')}
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
