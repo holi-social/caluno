@@ -88,6 +88,19 @@ describe('session-caching auth wrapper', () => {
     expect(getSession).toHaveBeenCalledTimes(1);
   });
 
+  it('re-attempts getSession after a rejection instead of caching it', async () => {
+    const { wrapped, getSession } = newWrapper();
+    getSession.mockRejectedValueOnce(new Error('transient failure'));
+
+    await expect(
+      wrapped.api.getSession({ headers: new Headers() }),
+    ).rejects.toThrow('transient failure');
+    const second = await wrapped.api.getSession({ headers: new Headers() });
+
+    expect(second).toEqual(session);
+    expect(getSession).toHaveBeenCalledTimes(2);
+  });
+
   it('caches independently per wrapper instance', async () => {
     const first = newWrapper();
     const second = newWrapper();
