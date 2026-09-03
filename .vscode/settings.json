@@ -1,4 +1,5 @@
 {
+  "npm.autoDetect": "off",
   "editor.defaultFormatter": "biomejs.biome",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
