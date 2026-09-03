@@ -114,7 +114,7 @@ export function isParticipatingShiftInviteStatus(
 }
 
 /** Pending or participating — currently "on" the shift/event roster. */
-export const ACTIVE_SHIFT_INVITE_STATUSES = [
+export const ACTIVE_SHIFT_INVITE_STATUSES: readonly ShiftInviteStatus[] = [
   ShiftInviteStatus.ADMIN_INVITED,
   ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
   ShiftInviteStatus.WAITLIST_JOINED,
