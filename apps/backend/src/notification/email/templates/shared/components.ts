@@ -163,7 +163,7 @@ export interface ButtonOptions {
 export function button(options: ButtonOptions): string {
   const { href, label, padding = '0 0 24px' } = options;
 
-  return `<mj-button href="${href}" background-color="${colors.greenDark}" color="${colors.onBrand}" font-size="16px" font-weight="600" border-radius="8px" inner-padding="14px 28px" align="left" padding="${padding}">${label}</mj-button>`;
+  return `<mj-button href="${href}" background-color="${colors.primary}" color="${colors.onBrand}" font-size="16px" font-weight="600" border-radius="8px" inner-padding="14px 28px" align="left" padding="${padding}">${label}</mj-button>`;
 }
 
 /** Horizontal rule. */
@@ -178,7 +178,7 @@ export function orderedListItem(
   options: { last?: boolean } = {},
 ): string {
   const padding = options.last ? '0' : '0 0 12px';
-  const marker = `<span style="color:${colors.green};font-weight:700">${index}.</span>`;
+  const marker = `<span style="color:${colors.primary};font-weight:700">${index}.</span>`;
   return text(`${marker}&nbsp;&nbsp;${content}`, { padding });
 }
 
