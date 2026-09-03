@@ -129,7 +129,7 @@ function ApprovedTab({ orgUId }: { orgUId: string }) {
                     <UserRound />
                   </Button>
                   <Link
-                    href={`/admin/${orgUId}/check-in/${membership.user.checkInId}/check-in`}
+                    href={`/check-in/${membership.user.checkInId}/check-in?orgUId=${orgUId}`}
                     aria-label={t('action.checkInAria')}
                   >
                     <Button

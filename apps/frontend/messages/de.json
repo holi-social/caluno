@@ -1100,7 +1100,6 @@
     },
     "checkIn": {
       "checkIn": "Einchecken",
-      "checkInTitle": "Einchecken",
       "checkInWithShift": "Stattdessen eine Schicht wählen",
       "checkInWithoutShift": "Ohne Schicht einchecken",
       "checkOut": "Auschecken",
@@ -1110,25 +1109,12 @@
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "generalCheckIn": "Allgemeines Check-in",
-      "invalidCheckin": {
-        "blocked": {
-          "description": "Freiwillige:r darf nicht einchecken. Bitte ihn oder Sie, sich für Hilfe an die Zentrale zu wenden.",
-          "title": "Check-in verweigert"
-        },
-        "notMember": {
-          "description": "Freiwillige:r gehört nicht zu dieser Organisationseinheit.",
-          "title": "Check-in verweigert"
-        }
-      },
       "noShiftSelected": "Kein Einsatz ausgewählt",
       "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
       "selectOrgTitle": "Einchecken",
       "successNext": "Weiter",
-      "tryAgain": "Versuche es erneut",
       "volunteerCheckedIn": "Freiwillige:r eingecheckt",
-      "volunteerCheckedOut": "Freiwillige:r ausgecheckt",
-      "volunteerNotFoundDescription": "Es gibt niemanden, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Person suchst, um sie einzuchecken.",
-      "volunteerNotFoundTitle": "Freiwillige:r nicht gefunden"
+      "volunteerCheckedOut": "Freiwillige:r ausgecheckt"
     },
     "detail": {
       "createdByLabel": "Erstellt von",
