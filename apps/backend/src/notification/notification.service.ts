@@ -35,6 +35,9 @@ type MembershipLeftInput =
 type MembershipRemovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_REMOVED];
 
+type MembershipRejectedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.MEMBERSHIP_REJECTED];
+
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
 
@@ -47,6 +50,27 @@ type ShiftInstanceCancelledInput =
 type ShiftInstanceSeriesCancelledInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED];
 
+type ShiftInstanceRemovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_REMOVED];
+
+type ShiftSeriesRemovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_REMOVED];
+
+type ShiftInstanceLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_LEFT];
+
+type ShiftSeriesLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_LEFT];
+
+type ShiftInstanceVolunteerLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT];
+
+type ShiftSeriesVolunteerLeftInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT];
+
+type ShiftDetailsChangedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_DETAILS_CHANGED];
+
 type ShiftInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INVITED];
 
@@ -58,6 +82,12 @@ type EventJoinedInput =
 
 type EventCancelledInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
+
+type EventRemovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_REMOVED];
+
+type EventDetailsChangedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.EVENT_DETAILS_CHANGED];
 
 type DocumentAwaitingSignatureInput =
   NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_AWAITING_SIGNATURE];
@@ -165,6 +195,10 @@ export class NotificationService {
     this.emitter.emit(NotificationEvent.MEMBERSHIP_REMOVED, input);
   }
 
+  notifyMembershipRejected(input: MembershipRejectedInput): void {
+    this.emitter.emit(NotificationEvent.MEMBERSHIP_REJECTED, input);
+  }
+
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
   }
@@ -183,6 +217,36 @@ export class NotificationService {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED, input);
   }
 
+  notifyShiftInstanceRemoved(input: ShiftInstanceRemovedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_REMOVED, input);
+  }
+
+  notifyShiftSeriesRemoved(input: ShiftSeriesRemovedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_SERIES_REMOVED, input);
+  }
+
+  notifyShiftInstanceLeft(input: ShiftInstanceLeftInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_LEFT, input);
+  }
+
+  notifyShiftSeriesLeft(input: ShiftSeriesLeftInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_SERIES_LEFT, input);
+  }
+
+  notifyShiftInstanceVolunteerLeft(
+    input: ShiftInstanceVolunteerLeftInput,
+  ): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT, input);
+  }
+
+  notifyShiftSeriesVolunteerLeft(input: ShiftSeriesVolunteerLeftInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT, input);
+  }
+
+  notifyShiftDetailsChanged(input: ShiftDetailsChangedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_DETAILS_CHANGED, input);
+  }
+
   notifyShiftInvited(input: ShiftInvitedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INVITED, input);
   }
@@ -197,6 +261,14 @@ export class NotificationService {
 
   notifyEventCancelled(input: EventCancelledInput): void {
     this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
+  }
+
+  notifyEventRemoved(input: EventRemovedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_REMOVED, input);
+  }
+
+  notifyEventDetailsChanged(input: EventDetailsChangedInput): void {
+    this.emitter.emit(NotificationEvent.EVENT_DETAILS_CHANGED, input);
   }
 
   notifyDocumentAwaitingSignature(input: DocumentAwaitingSignatureInput): void {
