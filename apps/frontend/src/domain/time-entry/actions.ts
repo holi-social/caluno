@@ -10,6 +10,7 @@ import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import {
   serverCheckInVolunteerSchema,
+  serverCheckOutVolunteerSchema,
   serverCloseTimeEntrySchema,
   serverDeleteTimeEntrySchema,
   serverTimeEntrySchema,
@@ -86,4 +87,13 @@ export const checkInVolunteer = actionClient
       parsedInput.volunteerId,
       parsedInput.shiftInstanceId,
     );
+  });
+
+export const checkOutVolunteer = actionClient
+  .inputSchema(serverCheckOutVolunteerSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+    return await data.timeEntry.checkOutVolunteer(parsedInput.timeEntryId);
   });
