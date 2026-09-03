@@ -45,6 +45,10 @@ export async function EditShiftInstancePageContent({
           instance.overrideMinVolunteers ?? shift.minVolunteers ?? undefined,
         maxVolunteers:
           instance.overrideMaxVolunteers ?? shift.maxVolunteers ?? undefined,
+        reimbursementTypeId:
+          instance.overrideReimbursementTypeId ??
+          shift.reimbursementTypeId ??
+          undefined,
         openShift: shift.visibility === ShiftVisibility.AllMembers,
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,

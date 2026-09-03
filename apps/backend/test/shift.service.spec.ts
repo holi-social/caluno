@@ -3,15 +3,19 @@ import { beforeAll, describe, expect, it, mock } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asc, eq, inArray } from 'drizzle-orm';
+import { ReimbursementTypeKey } from '../src/accounting/enums';
+import { AccountingOrgAccessService } from '../src/accounting/services/accounting-org-access.service';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
 import { ConflictGraphQLError } from '../src/graphql/errors/conflict.error';
+import { ForbiddenGraphQLError } from '../src/graphql/errors/forbidden.error';
 import { NotFoundGraphQLError } from '../src/graphql/errors/not-found.error';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
+import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
 import { POSTHOG_EVENT } from '../src/shared/observability/posthog.events';
 import { PostHogService } from '../src/shared/observability/posthog.service';
@@ -25,6 +29,11 @@ import {
   createShiftInstance,
   createUser,
 } from './factories';
+import { createReimbursementType } from './factories/accounting.factory';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -56,6 +65,17 @@ describe('ShiftService', () => {
 
     capture = mock(() => {});
 
+    const organizationUnitService = new OrganizationUnitService(
+      db,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    const accountingOrgAccessService = new AccountingOrgAccessService(
+      db,
+      organizationUnitService,
+    );
+
     shiftService = new ShiftService(
       db,
       {} as AuthService,
@@ -71,6 +91,7 @@ describe('ShiftService', () => {
       {} as never,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture } as unknown as PostHogService,
+      accountingOrgAccessService,
     );
 
     userId = (await createUser(db)).id;
@@ -104,6 +125,11 @@ describe('ShiftService', () => {
       .returning();
 
     organizationUnitId = rootUnit.id;
+
+    await db
+      .update(schema.organizations)
+      .set({ accountingEnabled: true })
+      .where(eq(schema.organizations.id, organization.id));
 
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
@@ -258,6 +284,348 @@ describe('ShiftService', () => {
       });
 
       expect(updated?.slug).toBe(originalSlug);
+    });
+  });
+
+  describe('update — reimbursement type override', () => {
+    it('syncs a new reimbursement type to the master for a non-recurring shift with only one instance', async () => {
+      // A non-recurring shift (rrule: null) always routes through
+      // `updateShiftInstanceSeries` (the instance IS the shift), which syncs
+      // `reimbursementTypeId` to the master row and leaves the instance's
+      // own override cleared, so it keeps falling back to the master.
+      const shiftType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const overrideType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+        reimbursementTypeId: shiftType.id,
+      });
+      const instance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: startsAt,
+        actualEndsAt: endsAt,
+      });
+
+      const updated = await shiftService.updateShiftInstance(
+        instance.id,
+        {
+          title: 'Coaching (override)',
+          startsAt,
+          endsAt,
+          reimbursementTypeId: overrideType.id,
+        } as never,
+        organizationUnitId,
+      );
+
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+
+      expect(updated.overrideReimbursementTypeId).toBeNull();
+      expect(refreshedShift?.reimbursementTypeId).toBe(overrideType.id);
+    });
+
+    it('rejects a reimbursement type change on a past instance', async () => {
+      const shiftType = await createReimbursementType(db);
+      const startsAt = daysAgo(2, 8);
+      const endsAt = daysAgo(2, 10);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: shiftType.id,
+      });
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: startsAt,
+        actualEndsAt: endsAt,
+      });
+
+      await expect(
+        shiftService.updateShiftInstance(
+          pastInstance.id,
+          {
+            title: 'late edit',
+            startsAt,
+            endsAt,
+            reimbursementTypeId: shiftType.id,
+          } as never,
+          organizationUnitId,
+        ),
+      ).rejects.toThrow(ConflictGraphQLError);
+    });
+  });
+
+  describe('update — reimbursement type change only affects the future', () => {
+    it('freezes already-occurred instances on their old type when the master type changes', async () => {
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: oldType.id,
+      });
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: daysAgo(2, 8),
+        actualEndsAt: daysAgo(2, 10),
+      });
+      const futureInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date(Date.now() + 300000),
+        actualEndsAt: new Date(Date.now() + 400000),
+      });
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: shift.title,
+        startsAt: shift.originalStartsAt,
+        endsAt: new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        ),
+        visibility: shift.visibility,
+        reimbursementTypeId: newType.id,
+      } as never);
+
+      const [refreshedPast] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstance.id));
+      const [refreshedFuture] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, futureInstance.id));
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+
+      expect(refreshedPast?.overrideReimbursementTypeId).toBe(oldType.id);
+      expect(refreshedFuture?.overrideReimbursementTypeId).toBeNull();
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+    });
+
+    it('does not overwrite an instance that already has its own override', async () => {
+      // createReimbursementType upserts on `key`, and there are only two
+      // keys in the enum (EHRENAMT/UEBUNGSLEITER) — so this test can only
+      // ever have two distinct type rows to work with, not three. That's
+      // still enough: pre-set the past instance's override to `oldType`
+      // (distinct from the `newType` the master is about to change to), and
+      // assert it stays `oldType` — if the `isNull(overrideReimbursementTypeId)`
+      // guard were missing and the snapshot ran unconditionally, this
+      // instance's override would get stomped to `newType` instead.
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: oldType.id,
+      });
+      const pastInstanceWithOwnOverride = await createShiftInstance(
+        db,
+        shift.id,
+        {
+          actualStartsAt: daysAgo(2, 8),
+          actualEndsAt: daysAgo(2, 10),
+          overrideReimbursementTypeId: oldType.id,
+        },
+      );
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: shift.title,
+        startsAt: shift.originalStartsAt,
+        endsAt: new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        ),
+        visibility: shift.visibility,
+        reimbursementTypeId: newType.id,
+      } as never);
+
+      const [refreshed] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstanceWithOwnOverride.id));
+
+      expect(refreshed?.overrideReimbursementTypeId).toBe(oldType.id);
+    });
+  });
+
+  describe('updateShiftInstanceSeries — reimbursement type sync', () => {
+    it('syncs the new type to the master, snapshots past instances, and leaves future instances falling back', async () => {
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: DAILY_RRULE,
+        reimbursementTypeId: oldType.id,
+      });
+
+      // createShift only expands instances from `startsAt` onward, so add an
+      // already-occurred instance by hand — this is the one that must get
+      // snapshotted onto the old type before the master row changes.
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: daysAgo(2, 8),
+        actualEndsAt: daysAgo(2, 10),
+      });
+
+      const [futureInstance] = await getInstances(shift.id).then((rows) =>
+        rows.filter((r) => r.id !== pastInstance.id),
+      );
+      if (!futureInstance) {
+        throw new Error('Expected createShift to expand a future instance');
+      }
+
+      await shiftService.updateShiftInstance(
+        futureInstance.id,
+        {
+          title: shift.title,
+          startsAt: futureInstance.actualStartsAt,
+          endsAt: futureInstance.actualEndsAt,
+          visibility: shift.visibility,
+          reimbursementTypeId: newType.id,
+        } as never,
+        organizationUnitId,
+        { applyToAllFuture: true },
+      );
+
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+      const [refreshedPast] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstance.id));
+      const [refreshedFuture] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, futureInstance.id));
+
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+      expect(refreshedPast?.overrideReimbursementTypeId).toBe(oldType.id);
+      expect(refreshedFuture?.overrideReimbursementTypeId).toBeNull();
+    });
+
+    it('keeps an already-ended, same-day instance frozen on its OLD type even when a bulk time-only edit pushes the whole day past', async () => {
+      // Regression test for a snapshot-then-wipe ordering bug: the override-
+      // reset block below (the time-only path, taken here since neither the
+      // recurrence pattern nor the edited occurrence's date change) matches
+      // every instance with `actualStartsAt >= fromDate` (start of the
+      // edited occurrence's day) and, in this branch, also rewrites every
+      // matched row's actualStartsAt/actualEndsAt to the new time-of-day —
+      // so two same-day rows necessarily converge on the same instant after
+      // the edit. Snapshotting past instances onto the OLD type BEFORE this
+      // reset (the pre-fix order) would have that reset immediately wipe the
+      // freeze right back to null for every row it touches, silently letting
+      // them inherit the NEW master type. Snapshotting AFTER (the fix)
+      // catches them once their post-edit actualEndsAt is settled.
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: DAILY_RRULE,
+        reimbursementTypeId: oldType.id,
+      });
+
+      const [editedInstance] = await getInstances(shift.id);
+      if (!editedInstance) {
+        throw new Error('Expected createShift to expand an instance');
+      }
+
+      // A second, already-ended occurrence on the SAME calendar day as
+      // `editedInstance` — not something `expandShift` would organically
+      // produce for a plain daily rrule, but a stand-in for any already-
+      // occurred same-day row (e.g. a manually added exception) that the
+      // bulk edit below sweeps over.
+      const earlierToday = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+        actualEndsAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        occurrenceIndex: 2,
+      });
+
+      // Edit to a time-of-day that's already passed today (a few minutes
+      // ago), same calendar day as `editedInstance`. Both rows land on
+      // `date_trunc('day', <their own date>) + this time-of-day` once the
+      // reset runs — deliberately close to "now" rather than near midnight,
+      // so the rewrite can't drift onto a different calendar day than
+      // intended by any local/UTC day-boundary mismatch. An already-passed
+      // time-of-day keeps that shared final instant in the past for both,
+      // so both are legitimately "already ended" once the edit lands and
+      // must both come out frozen onto the OLD type rather than silently
+      // falling back to the new one.
+      const editedStartsAt = new Date(Date.now() - 5 * 60 * 1000);
+      const editedEndsAt = new Date(Date.now() - 4 * 60 * 1000);
+
+      await shiftService.updateShiftInstance(
+        editedInstance.id,
+        {
+          title: shift.title,
+          startsAt: editedStartsAt,
+          endsAt: editedEndsAt,
+          visibility: shift.visibility,
+          reimbursementTypeId: newType.id,
+        } as never,
+        organizationUnitId,
+        { applyToAllFuture: true },
+      );
+
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+      const [refreshedEarlierToday] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, earlierToday.id));
+      const [refreshedEdited] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, editedInstance.id));
+
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+      expect(refreshedEarlierToday?.overrideReimbursementTypeId).toBe(
+        oldType.id,
+      );
+      expect(refreshedEdited?.overrideReimbursementTypeId).toBe(oldType.id);
     });
   });
 
@@ -1671,6 +2039,164 @@ describe('ShiftService', () => {
           notificationService.notifyShiftInstanceSeriesCancelled,
         ).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('create — reimbursement type', () => {
+    it('persists the reimbursement type on the created shift', async () => {
+      const reimbursementType = await createReimbursementType(db);
+
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Coaching session',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        reimbursementTypeId: reimbursementType.id,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBe(reimbursementType.id);
+    });
+
+    it('leaves the shift type-less when not provided', async () => {
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Setup crew',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBeNull();
+    });
+  });
+
+  describe('reimbursement type requires accountingEnabled', () => {
+    it('rejects creating a shift with a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      await expect(
+        shiftService.create(userId, disabledUnit.id, {
+          title: 'Disabled org shift',
+          startsAt: new Date(Date.now() + 100000),
+          endsAt: new Date(Date.now() + 200000),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+          reimbursementTypeId: reimbursementType.id,
+        } as never),
+      ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+
+    it('allows creating a shift with a reimbursement type on the enabled shared test org', async () => {
+      const reimbursementType = await createReimbursementType(db);
+
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Enabled org shift',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        reimbursementTypeId: reimbursementType.id,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBe(reimbursementType.id);
+    });
+
+    it('does not gate a shift creation that never sets a reimbursement type, even on a disabled org', async () => {
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting No-Type Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'No type, disabled org',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBeNull();
+    });
+
+    it('rejects updating a shift to set a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Update Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'Disabled org shift to update',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      await expect(
+        shiftService.update(userId, shift.id, disabledUnit.id, {
+          reimbursementTypeId: reimbursementType.id,
+        } as never),
+      ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+
+    it('rejects updating a shift instance to set a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Instance Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'Disabled org shift instance',
+        startsAt,
+        endsAt,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+      const [instance] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.masterId, shift.id));
+      if (!instance) {
+        throw new Error('Expected shift creation to expand an instance');
+      }
+
+      await expect(
+        shiftService.updateShiftInstance(
+          instance.id,
+          {
+            title: shift.title,
+            startsAt,
+            endsAt,
+            reimbursementTypeId: reimbursementType.id,
+          } as never,
+          disabledUnit.id,
+        ),
+      ).rejects.toThrow(ForbiddenGraphQLError);
     });
   });
 });
