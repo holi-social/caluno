@@ -1045,6 +1045,7 @@ export class ShiftService {
         invites: {
           columns: {
             userId: true;
+            status: true;
           };
         };
         master: true;
@@ -1060,10 +1061,15 @@ export class ShiftService {
     const maxVolunteers =
       shiftInstance.overrideMaxVolunteers ?? shiftInstance.master.maxVolunteers;
 
-    if (
-      maxVolunteers &&
-      shiftInstance.invites.length + memberIds.length > maxVolunteers
-    ) {
+    // Only active (pending or participating) invites occupy capacity —
+    // REJECTED/CANCELLED rows must not block re-invites. Stale rows for the
+    // members being (re)added are still represented by memberIds.length here,
+    // since they resurrect to active below.
+    const activeInviteCount = shiftInstance.invites.filter((inv) =>
+      ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status),
+    ).length;
+
+    if (maxVolunteers && activeInviteCount + memberIds.length > maxVolunteers) {
       throw new ConflictGraphQLError(
         `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
       );
@@ -1140,9 +1146,8 @@ export class ShiftService {
     // Only active (pending or participating) invites count as "currently
     // invited" — REJECTED/CANCELLED rows must not block re-invites or
     // trigger removals.
-    const activeStatuses: readonly string[] = ACTIVE_SHIFT_INVITE_STATUSES;
     const currentInstanceInviteUserIds = currentShiftInstance.invites
-      .filter((inv) => activeStatuses.includes(inv.status))
+      .filter((inv) => ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status))
       .map((inv) => inv.userId);
     const { userIdsToAdd, userIdsToRemove } = this.getUserIdDifferences(
       currentInstanceInviteUserIds,
@@ -1281,16 +1286,20 @@ export class ShiftService {
             instance.overrideMaxVolunteers ?? shift.maxVolunteers;
           const invitedUserIds = new Set(
             instance.invites
-              .filter((invite) => activeStatuses.includes(invite.status))
+              .filter((invite) =>
+                ACTIVE_SHIFT_INVITE_STATUSES.includes(invite.status),
+              )
               .map((invite) => invite.userId),
           );
           const membersToAdd = userIdsToAdd.filter(
             (id) => !invitedUserIds.has(id),
           );
-          if (
-            capacity &&
-            membersToAdd.length + instance.invites.length > capacity
-          ) {
+          // Only active invites occupy capacity — REJECTED/CANCELLED rows
+          // must not block re-invites on future instances.
+          const activeInviteCount = instance.invites.filter((invite) =>
+            ACTIVE_SHIFT_INVITE_STATUSES.includes(invite.status),
+          ).length;
+          if (capacity && membersToAdd.length + activeInviteCount > capacity) {
             throw new ConflictGraphQLError(
               `Cannot invite members: instance would exceed capacity of ${capacity}`,
             );
