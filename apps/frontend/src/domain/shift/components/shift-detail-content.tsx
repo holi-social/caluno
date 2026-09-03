@@ -1,16 +1,14 @@
-import {
-  JoinStatus,
-  type PublicShiftInstance,
-  type ShiftVisibility,
-} from '@repo/data';
+import type { JoinStatus, ShiftVisibility } from '@repo/data';
 import type { RequiredForm } from '@repo/data/react';
 import { CalendarIcon, ClockIcon, MapPinIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Suspense } from 'react';
 import { useRecurrenceLabel } from '@/domain/home/lib/recurrence-label';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { ShiftActionCard } from './shift-action-card';
+import { ShiftActionCardSkeleton } from './shift-detail-skeleton';
+import { ShiftInstancesSidebar } from './shift-instances-sidebar';
 
-interface Shift {
+export type Shift = {
   id: string;
   organizationUnitId: string;
   title: string;
@@ -26,11 +24,10 @@ interface Shift {
     myMembershipState: JoinStatus;
     requiredForms?: Array<{ form: RequiredForm; order: number }> | null;
   } | null;
-}
+};
 
 interface ShiftDetailContentProps {
   shift: Shift;
-  instances: PublicShiftInstance[];
   isAuthenticated: boolean;
   autoJoin?: boolean;
   preselectedInstanceId?: string;
@@ -38,7 +35,6 @@ interface ShiftDetailContentProps {
 
 export function ShiftDetailContent({
   shift,
-  instances,
   isAuthenticated,
   autoJoin,
   preselectedInstanceId,
@@ -50,34 +46,18 @@ export function ShiftDetailContent({
   const start = new Date(shift.originalStartsAt);
   const end = new Date(start.getTime() + shift.durationMinutes * 60000);
 
-  const orderedInstances = preselectedInstanceId
-    ? [
-        ...instances.filter((i) => i.id === preselectedInstanceId),
-        ...instances.filter((i) => i.id !== preselectedInstanceId),
-      ]
-    : instances;
-
   return (
     <div className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-20">
       <div className="flex flex-col md:flex-row md:gap-12">
         <aside className="order-1 min-w-0 md:order-2 md:w-[392px] md:shrink-0">
-          <ShiftActionCard
-            shiftId={shift.id}
-            organizationUnitId={shift.organizationUnitId}
-            instances={orderedInstances}
-            visibility={shift.visibility}
-            isAuthenticated={isAuthenticated}
-            autoJoin={autoJoin}
-            preselectedInstanceId={preselectedInstanceId}
-            masterMaxVolunteers={shift.maxVolunteers}
-            membershipState={
-              shift.organizationUnit?.myMembershipState ?? JoinStatus.None
-            }
-            shiftRequiredForms={shift.requiredForms?.map((ref) => ref.form)}
-            organizationUnitRequiredForms={shift.organizationUnit?.requiredForms?.map(
-              (ref) => ref.form,
-            )}
-          />
+          <Suspense fallback={<ShiftActionCardSkeleton />}>
+            <ShiftInstancesSidebar
+              shift={shift}
+              isAuthenticated={isAuthenticated}
+              autoJoin={autoJoin}
+              preselectedInstanceId={preselectedInstanceId}
+            />
+          </Suspense>
         </aside>
 
         <div className="order-2 mt-6 min-w-0 md:order-1 md:mt-0 md:max-w-[680px] md:flex-1">

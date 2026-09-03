@@ -11,13 +11,19 @@ e2e/
 │   ├── AuthPage.ts        # shared base: base URL, email/password fields
 │   ├── LoginPage.ts
 │   ├── SignupPage.ts
+│   ├── VerifyEmailPage.ts
 │   ├── org/OrgPage.ts
 │   └── shifts/ShiftsPage.ts
+├── fixtures/
+│   └── shift.ts           # reusable shift specs for the creation suite
 ├── utils/
+│   ├── auth.ts            # signUpVerifyAndLogin helper
+│   ├── mailbox.ts         # Mailpit client: reads verification codes
 │   ├── session.ts         # signUpAndLogin helper
 │   └── test-data.ts       # password + unique email generator
 ├── tests/
-│   └── flow.e2e.ts        # the end-to-end journey
+│   ├── flow.e2e.ts        # the end-to-end journey (smoke)
+│   └── features/          # focused suites (auth, org, shifts)
 └── playwright.config.ts
 ```
 
@@ -38,9 +44,22 @@ Target another environment with `E2E_BASE_URL=https://... bun playwright test`
 
 ### Email verification
 
-The smoke flow reads the verification code from a [Mailinator](https://www.mailinator.com)
-**public** inbox, driven through the Mailinator website (`pages/MailinatorPage.ts`).
-No account, API token, or extra configuration is required.
+Staging sends all mail to a shared [Mailpit](https://mailpit.axllent.org) sink
+(a catch-all SMTP server with a REST API). The suite reads the verification code
+from it via `utils/mailbox.ts` — signup uses a unique `@example.com` recipient
+per run and polls Mailpit for the matching message.
+
+The mailbox is behind basic auth. Defaults target staging; override with env vars:
+
+```bash
+MAILBOX_URL=https://staging.mailbox.caluno.org \
+MAILBOX_USER=mailpit \
+MAILBOX_PASSWORD=... \
+bun playwright test
+```
+
+Prefer supplying `MAILBOX_PASSWORD` via a CI secret rather than relying on the
+committed default.
 
 ## Conventions
 
