@@ -90,15 +90,10 @@ export class TimeTrackingMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
     @Session() session: UserSession,
   ): Promise<TimeEntry> {
-    const input = new AddTimeEntryInput();
-    input.volunteerId = volunteerId;
-    input.shiftInstanceId = shiftInstanceId ?? null;
-    input.startedAt = new Date();
-    input.endedAt = null;
-
-    const entity = await this.timeTrackingService.addTimeEntry(
+    const entity = await this.timeTrackingService.checkInVolunteer(
       context.organizationUnitId,
-      input,
+      volunteerId,
+      shiftInstanceId ?? null,
       session.user.id,
     );
     return this.entryMapper.toModelOrThrow(entity);
