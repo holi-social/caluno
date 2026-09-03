@@ -68,10 +68,10 @@ export function isParticipatingShiftInviteStatus(
 }
 
 /** Statuses that count as "currently invited" — pending or participating. */
-export const ACTIVE_SHIFT_INVITE_STATUSES = [
+export const ACTIVE_SHIFT_INVITE_STATUSES: readonly ShiftInviteStatus[] = [
   ShiftInviteStatus.INVITED,
   ...PARTICIPATING_SHIFT_INVITE_STATUSES,
-] as const;
+];
 
 export const ACTIVE_EVENT_INVITE_STATUSES = [
   EventInviteStatus.INVITED,

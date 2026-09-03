@@ -1065,9 +1065,8 @@ export class ShiftService {
     // REJECTED/CANCELLED rows must not block re-invites. Stale rows for the
     // members being (re)added are still represented by memberIds.length here,
     // since they resurrect to active below.
-    const activeStatuses: readonly string[] = ACTIVE_SHIFT_INVITE_STATUSES;
     const activeInviteCount = shiftInstance.invites.filter((inv) =>
-      activeStatuses.includes(inv.status),
+      ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status),
     ).length;
 
     if (maxVolunteers && activeInviteCount + memberIds.length > maxVolunteers) {
@@ -1147,9 +1146,8 @@ export class ShiftService {
     // Only active (pending or participating) invites count as "currently
     // invited" — REJECTED/CANCELLED rows must not block re-invites or
     // trigger removals.
-    const activeStatuses: readonly string[] = ACTIVE_SHIFT_INVITE_STATUSES;
     const currentInstanceInviteUserIds = currentShiftInstance.invites
-      .filter((inv) => activeStatuses.includes(inv.status))
+      .filter((inv) => ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status))
       .map((inv) => inv.userId);
     const { userIdsToAdd, userIdsToRemove } = this.getUserIdDifferences(
       currentInstanceInviteUserIds,
@@ -1288,7 +1286,9 @@ export class ShiftService {
             instance.overrideMaxVolunteers ?? shift.maxVolunteers;
           const invitedUserIds = new Set(
             instance.invites
-              .filter((invite) => activeStatuses.includes(invite.status))
+              .filter((invite) =>
+                ACTIVE_SHIFT_INVITE_STATUSES.includes(invite.status),
+              )
               .map((invite) => invite.userId),
           );
           const membersToAdd = userIdsToAdd.filter(
@@ -1297,7 +1297,7 @@ export class ShiftService {
           // Only active invites occupy capacity — REJECTED/CANCELLED rows
           // must not block re-invites on future instances.
           const activeInviteCount = instance.invites.filter((invite) =>
-            activeStatuses.includes(invite.status),
+            ACTIVE_SHIFT_INVITE_STATUSES.includes(invite.status),
           ).length;
           if (capacity && membersToAdd.length + activeInviteCount > capacity) {
             throw new ConflictGraphQLError(
