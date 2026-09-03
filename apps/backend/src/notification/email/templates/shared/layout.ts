@@ -1,4 +1,5 @@
 import mjml2html from 'mjml';
+import { emailBrandLogo } from './logo';
 import { emailTheme } from './theme';
 
 const { colors, fontStack, brandName, supportEmail } = emailTheme;
@@ -17,7 +18,7 @@ export interface RenderEmailOptions {
 
 /**
  * Wraps template-specific body content in the shared email shell (head config,
- * branded wordmark header, footer) and compiles it to HTML.
+ * branded logo header, footer) and compiles it to HTML.
  *
  * @throws if MJML reports compilation errors.
  */
@@ -30,19 +31,20 @@ export async function renderEmail(
     <mjml>
       <mj-head>
         <mj-preview>${previewText}</mj-preview>
+        <mj-font name="Geologica" href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;700&display=swap" />
         <mj-attributes>
           <mj-all font-family="${fontStack}" />
           <mj-text font-size="16px" line-height="1.6" color="${colors.ink}" />
         </mj-attributes>
         <mj-style>
-          a { color: ${colors.greenDark}; }
+          a { color: ${colors.primaryText}; }
         </mj-style>
       </mj-head>
       <mj-body background-color="${colors.bg}" width="600px">
         <mj-section padding="32px 0 16px">
           <mj-column>
-            <mj-text align="center" font-size="20px" font-weight="700" letter-spacing="-0.01em" color="${colors.green}" padding="0">
-              ${brandName}
+            <mj-text align="center" padding="0">
+              ${emailBrandLogo(colors.ink, brandName)}
             </mj-text>
           </mj-column>
         </mj-section>

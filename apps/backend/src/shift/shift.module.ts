@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AccountingOrgAccessService } from '../accounting/services/accounting-org-access.service';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
@@ -39,6 +40,7 @@ import { ShiftService } from './shift.service';
   ],
   providers: [
     ShiftService,
+    AccountingOrgAccessService,
     ShiftQueryResolver,
     ShiftMapper,
     ShiftInstanceInviteMapper,
