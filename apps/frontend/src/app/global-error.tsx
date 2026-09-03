@@ -22,9 +22,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
           <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
             <p className="font-medium">Something went wrong</p>
             {error.digest && (
-              <p className="text-xs mt-1 opacity-70">
-                ID: {error.digest}
-              </p>
+              <p className="text-xs mt-1 opacity-70">ID: {error.digest}</p>
             )}
           </div>
           <Button onClick={reset}>Try again</Button>
