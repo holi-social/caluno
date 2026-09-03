@@ -22,6 +22,7 @@ export type CreateShiftOptions = {
   maxVolunteers?: number | null;
   minVolunteers?: number | null;
   eventId?: string | null;
+  reimbursementTypeId?: string | null;
 };
 
 /**
@@ -57,6 +58,7 @@ export const createShift = async (
       maxVolunteers: options.maxVolunteers ?? null,
       minVolunteers: options.minVolunteers ?? null,
       eventId: options.eventId ?? null,
+      reimbursementTypeId: options.reimbursementTypeId ?? null,
       rrule,
       originalStartsAt: startsAt,
       durationMinutes,
