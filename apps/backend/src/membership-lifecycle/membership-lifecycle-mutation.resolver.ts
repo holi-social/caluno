@@ -51,12 +51,13 @@ export class MembershipLifecycleMutationResolver {
   async checkInApproveMembershipRequest(
     @Args('requestId', { type: () => ID }) requestId: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<MembershipRequest> {
     const entity =
       await this.membershipLifecycleOrchestrator.approveMembershipRequest(
         requestId,
         context.organizationUnitId,
-        context.user.id,
+        session.user.id,
       );
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
