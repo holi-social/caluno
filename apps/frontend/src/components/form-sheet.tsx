@@ -35,6 +35,8 @@ export const useFormSheet = (openedByNavigation = true) => {
   const sheetPath = useRef(pathname);
   const [open, setOpenState] = useState(true);
 
+  // HACK: If you close the sheet, soft-navigate away and then soft-navigate back you will arrive at the correct url
+  // but the sheet will still be closed from previously closing it. This forces it open again, on returning.
   useEffect(() => {
     if (pathname === sheetPath.current) {
       setOpenState(true);
