@@ -1231,6 +1231,9 @@
       "noRecurrence": "Einmalig",
       "openShiftDescription": "Der Einsatz ist für deine Freiwilligen auf der Plattform sichtbar. Jeder deiner Freiwilligen kann sich für diesen Einsatz anmelden.",
       "openShiftLabel": "Offener Einsatz",
+      "reimbursementTypeDescription": "Freiwilligenzeit für diesen Einsatz wird für einen Stundennachweis unter dieser Pauschale berücksichtigt",
+      "reimbursementTypeLabel": "Erstattungsfähige Pauschale",
+      "reimbursementTypeNone": "Nicht erstattungsfähig",
       "recurring": "Wiederholung festlegen",
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },

@@ -228,6 +228,7 @@ input CreateShiftInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!
@@ -1196,6 +1197,7 @@ type Shift {
   organizationUnit: OrganizationUnit!
   organizationUnitId: ID!
   originalStartsAt: DateTime!
+  reimbursementTypeId: ID
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
   rrule: String
@@ -1224,6 +1226,7 @@ type ShiftInstance {
   overrideLocation: String
   overrideMaxVolunteers: Int
   overrideMinVolunteers: Int
+  overrideReimbursementTypeId: ID
   overrideTitle: String
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
@@ -1436,6 +1439,7 @@ input UpdateShiftInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime
@@ -1450,6 +1454,7 @@ input UpdateShiftInstanceInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!

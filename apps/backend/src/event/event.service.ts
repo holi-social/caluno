@@ -16,6 +16,7 @@ import type { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import type { MembershipRequestEntity } from '../membership/schemas/membership-request.schema';
 import { NotificationService } from '../notification/notification.service';
+import type { ChangedField } from '../notification/payloads/shift-details-changed.payload';
 import { OrganizationService } from '../organization/organization.service';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
@@ -451,6 +452,8 @@ export class EventService {
 
       return event;
     });
+
+    void this.loadAndEmitEventDetailsChangedNotification(event, existingEvent);
 
     if (actorUserId) {
       this.postHogService.capture({
@@ -985,6 +988,10 @@ export class EventService {
       void this.loadAndEmitEventInvitedNotification(event, [userId]);
     }
 
+    if (status === EventInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {
+      void this.loadAndEmitEventRemovedNotification(event, userId);
+    }
+
     const source = actorUserId === userId ? 'self' : 'admin';
     const organizationId = await this.resolveOrganizationId(
       event.organizationUnitId,
@@ -1236,6 +1243,161 @@ export class EventService {
     } catch (error) {
       this.logger.error(
         `Failed to emit event joined notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private buildEventChangedFields(
+    previous: {
+      title: string;
+      startsAt: Date;
+      endsAt: Date;
+      location: string | null;
+      description: string | null;
+    },
+    next: {
+      title: string;
+      startsAt: Date;
+      endsAt: Date;
+      location: string | null;
+      description: string | null;
+    },
+  ): ChangedField[] {
+    const changes: ChangedField[] = [];
+
+    if (previous.title !== next.title) {
+      changes.push({ field: 'title', kind: 'text', text: next.title });
+    }
+    if (previous.startsAt.getTime() !== next.startsAt.getTime()) {
+      changes.push({
+        field: 'startsAt',
+        kind: 'date',
+        previous: previous.startsAt.toISOString(),
+        current: next.startsAt.toISOString(),
+      });
+    }
+    if (previous.endsAt.getTime() !== next.endsAt.getTime()) {
+      changes.push({
+        field: 'endsAt',
+        kind: 'date',
+        previous: previous.endsAt.toISOString(),
+        current: next.endsAt.toISOString(),
+      });
+    }
+    if ((previous.location ?? null) !== (next.location ?? null)) {
+      changes.push({
+        field: 'location',
+        kind: 'value',
+        previous: previous.location,
+        current: next.location,
+      });
+    }
+    if ((previous.description ?? null) !== (next.description ?? null)) {
+      changes.push({
+        field: 'description',
+        kind: 'text',
+        text: next.description,
+      });
+    }
+
+    return changes;
+  }
+
+  private async loadAndEmitEventDetailsChangedNotification(
+    event: EventEntity,
+    previousEvent: EventEntity,
+  ): Promise<void> {
+    const changes = this.buildEventChangedFields(
+      {
+        title: previousEvent.title,
+        startsAt: previousEvent.startsAt,
+        endsAt: previousEvent.endsAt,
+        location: previousEvent.location ?? null,
+        description: previousEvent.description ?? null,
+      },
+      {
+        title: event.title,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        location: event.location ?? null,
+        description: event.description ?? null,
+      },
+    );
+
+    if (changes.length === 0) {
+      return;
+    }
+
+    try {
+      const [organizationUnit, activeInvites] = await Promise.all([
+        this.db.query.organizationUnits.findFirst({
+          where: { id: event.organizationUnitId },
+          columns: { id: true, name: true },
+        }),
+        this.db.query.eventInvites.findMany({
+          where: {
+            eventId: event.id,
+            status: { in: [...ACTIVE_EVENT_INVITE_STATUSES] },
+          },
+          columns: { userId: true },
+        }),
+      ]);
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const now = new Date();
+      const recipientUserIds = activeInvites
+        .filter(() => event.endsAt.getTime() >= now.getTime())
+        .map((invite) => invite.userId);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyEventDetailsChanged({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        eventId: event.id,
+        eventTitle: event.title,
+        recipientUserIds,
+        changes,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit event details changed notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitEventRemovedNotification(
+    event: EventEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: event.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyEventRemoved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        eventId: event.id,
+        eventTitle: event.title,
+        eventLocation: event.location,
+        userId,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit event removed notification: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
