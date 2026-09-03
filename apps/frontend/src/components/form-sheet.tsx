@@ -13,8 +13,8 @@ import {
   useIsMobile,
 } from '@repo/ui';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { wait } from '@/lib/wait';
 
 type Props = React.PropsWithChildren & {
@@ -31,7 +31,15 @@ type Props = React.PropsWithChildren & {
 
 export const useFormSheet = (openedByNavigation = true) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const sheetPath = useRef(pathname);
   const [open, setOpenState] = useState(true);
+
+  useEffect(() => {
+    if (pathname === sheetPath.current) {
+      setOpenState(true);
+    }
+  }, [pathname]);
 
   const setOpen = async (opening: boolean, onClose?: () => void) => {
     setOpenState(opening);
