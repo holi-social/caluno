@@ -3703,7 +3703,10 @@ export class ShiftService {
       );
     }
 
-    if (status === ShiftInviteStatus.CANCELLED && actorUserId === userId) {
+    if (
+      status === ShiftInviteStatus.VOLUNTEER_CANCELLED &&
+      actorUserId === userId
+    ) {
       void this.loadAndEmitShiftSeriesLeftNotification(
         shift,
         new Date(),
@@ -3922,7 +3925,10 @@ export class ShiftService {
       );
     }
 
-    if (status === ShiftInviteStatus.CANCELLED && actorUserId === userId) {
+    if (
+      status === ShiftInviteStatus.VOLUNTEER_CANCELLED &&
+      actorUserId === userId
+    ) {
       void this.loadAndEmitShiftInstanceLeftNotification(
         instance.master,
         instance,

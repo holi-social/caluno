@@ -697,27 +697,27 @@ export class EventService {
     });
 
     if (existingInvite) {
-      if (existingInvite.status === EventInviteStatus.JOINED) {
-        return event;
-      }
-
       if (
+        existingInvite.status === EventInviteStatus.JOINED ||
         existingInvite.status === EventInviteStatus.AWAITING_ADMIN_APPROVAL ||
-        existingInvite.status === EventInviteStatus.WAITLIST_JOINED
+        existingInvite.status === EventInviteStatus.WAITLIST_JOINED ||
+        existingInvite.status === EventInviteStatus.ADMIN_REJECTED
       ) {
         return event;
       }
 
       if (
         existingInvite.status === EventInviteStatus.VOLUNTEER_CANCELLED ||
-        existingInvite.status === EventInviteStatus.VOLUNTEER_REJECTED
+        existingInvite.status === EventInviteStatus.VOLUNTEER_REJECTED ||
+        existingInvite.status === EventInviteStatus.ADMIN_INVITED
       ) {
         const targetStatus = resolveVolunteerJoinTargetStatus({
           joinRequiresApproval: event.joinRequiresApproval,
           hasAvailableSeat: true,
           allowWaitlist: false,
           considerApproval:
-            existingInvite.status === EventInviteStatus.VOLUNTEER_REJECTED,
+            existingInvite.status === EventInviteStatus.VOLUNTEER_REJECTED ||
+            existingInvite.status === EventInviteStatus.ADMIN_INVITED,
         }) as EventInviteStatus;
 
         if (!canTransitionInviteStatus(existingInvite.status, targetStatus)) {
