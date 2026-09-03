@@ -1,17 +1,12 @@
 'use server';
 
-import type {
-  AddTimeEntryInput,
-  CloseTimeEntryInput,
-  UpdateTimeEntryInput,
-} from '@repo/data';
+import type { AddTimeEntryInput, UpdateTimeEntryInput } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import {
   serverCheckInVolunteerSchema,
   serverCheckOutVolunteerSchema,
-  serverCloseTimeEntrySchema,
   serverDeleteTimeEntrySchema,
   serverTimeEntrySchema,
 } from './schemas';
@@ -32,21 +27,6 @@ export const createTimeEntry = actionClient
     };
 
     return await data.timeEntry.add(input);
-  });
-
-export const closeTimeEntry = actionClient
-  .inputSchema(serverCloseTimeEntrySchema)
-  .action(async ({ parsedInput }) => {
-    const data = await getDataClient({
-      orgUId: parsedInput.organizationUnitId,
-    });
-
-    const input: CloseTimeEntryInput = {
-      endedAt: parsedInput.endedAt.toISOString(),
-      notes: parsedInput.notes,
-    };
-
-    return await data.timeEntry.close(parsedInput.id, input);
   });
 
 export const updateTimeEntry = actionClient

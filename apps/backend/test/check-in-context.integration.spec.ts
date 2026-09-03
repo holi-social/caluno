@@ -106,7 +106,7 @@ describe('TimeTrackingService.getCheckInContext', () => {
     ]);
   });
 
-  it('excludes units where the caller has check-in:manage but the volunteer is not a member', async () => {
+  it('returns null when the volunteer is not a member of any caller-manageable unit', async () => {
     // Second org where the CALLER has check-in:manage but the volunteer is
     // NOT a member.
     const other = await createOrganizationWithType(
@@ -218,18 +218,12 @@ describe('TimeTrackingService.getCheckInContext', () => {
       typeId: otherOrg.type.id,
       name: 'Stranger Unit',
     });
-    const permission = await db.query.permissions.findFirst({
-      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
-    });
-    if (!permission) {
-      throw new Error('CHECK_IN_MANAGE permission not seeded');
-    }
     const strangerRole = await createRole(db, {
       organizationId: otherOrg.organization.id,
     });
     await grantPermissionToRole(db, {
       roleId: strangerRole.id,
-      permissionId: permission.id,
+      permissionId: batchPermission.id,
     });
     const strangerMembership = await addMembership(
       db,
