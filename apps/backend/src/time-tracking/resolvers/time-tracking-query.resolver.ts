@@ -121,7 +121,8 @@ export class TimeTrackingQueryResolver {
 
   // Cross-org-unit check-in context: intentionally NOT @Permissions()-gated
   // (like checkIn/checkOut); the service intersects the caller's
-  // check-in:manage units with the volunteer's memberships.
+  // check-in:manage units with the volunteer's memberships and returns null
+  // when that intersection is empty.
   @Query(() => CheckInContext, { nullable: true })
   async checkInContext(
     @Args('checkInId') checkInId: string,
