@@ -1,5 +1,10 @@
 import { NotificationEvent } from './notification-events';
+import type { EventCancelledPayload } from './payloads/event-cancelled.payload';
+import type { EventInvitedPayload } from './payloads/event-invited.payload';
+import type { EventJoinedPayload } from './payloads/event-joined.payload';
 import type { MembershipApprovedPayload } from './payloads/membership-approved.payload';
+import type { MembershipLeftPayload } from './payloads/membership-left.payload';
+import type { MembershipRemovedPayload } from './payloads/membership-removed.payload';
 import type { MembershipRequestedPayload } from './payloads/membership-requested.payload';
 import type { OrganizationCreatedPayload } from './payloads/organization-created.payload';
 import type { ShiftInstanceCancelledPayload } from './payloads/shift-instance-cancelled.payload';
@@ -12,9 +17,14 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.ORGANIZATION_CREATED]: OrganizationCreatedPayload;
   [NotificationEvent.MEMBERSHIP_REQUESTED]: MembershipRequestedPayload;
   [NotificationEvent.MEMBERSHIP_APPROVED]: MembershipApprovedPayload;
+  [NotificationEvent.MEMBERSHIP_LEFT]: MembershipLeftPayload;
+  [NotificationEvent.MEMBERSHIP_REMOVED]: MembershipRemovedPayload;
   [NotificationEvent.SHIFT_INSTANCE_JOINED]: ShiftInstanceJoinedPayload;
   [NotificationEvent.SHIFT_INSTANCE_INVITED]: ShiftInstanceInvitedPayload;
   [NotificationEvent.SHIFT_INSTANCE_CANCELLED]: ShiftInstanceCancelledPayload;
   [NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED]: ShiftInstanceSeriesCancelledPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
+  [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
+  [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;
+  [NotificationEvent.EVENT_CANCELLED]: EventCancelledPayload;
 }

@@ -8,6 +8,46 @@
     "previewText": "Dein {brandName}-Bestätigungscode ist {otp}.",
     "subject": "Dein {brandName}-Bestätigungscode"
   },
+  "eventCancelled": {
+    "detailEvent": "Event",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Event, zu dem du eingeladen warst, auf {brandName} abgesagt wurde.",
+    "greeting": "Hallo {firstName}, ein Event, zu dem du eingeladen warst, wurde abgesagt.",
+    "heading": "Event abgesagt",
+    "note": "Für dieses Event werden keine Freiwilligen mehr benötigt. Du musst nichts weiter tun.",
+    "previewText": "{eventTitle} bei {organizationName} wurde abgesagt.",
+    "subject": "{eventTitle} wurde abgesagt",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "eventInvited": {
+    "buttonLabel": "Event ansehen",
+    "detailEvent": "Event",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du zu einem Event auf {brandName} eingeladen wurdest.",
+    "greeting": "Hallo {firstName}, du bist zu einem Event eingeladen.",
+    "heading": "Du bist zu einem Event eingeladen",
+    "note": "Öffne das Event, um die Details zu sehen.",
+    "previewText": "Du bist zu {eventTitle} bei {organizationName} eingeladen.",
+    "subject": "Du bist zu {eventTitle} eingeladen",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "eventJoined": {
+    "buttonLabel": "Events ansehen",
+    "detailEvent": "Event",
+    "detailOrganization": "Organisation",
+    "detailStarts": "Beginn",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Events auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, eine freiwillige Person ist einem Event beigetreten, das du verwaltest.",
+    "heading": "Jemand ist einem Event beigetreten",
+    "note": "Die Teilnehmerliste ist bereits aktualisiert.",
+    "previewText": "{volunteerName} ist {eventTitle} bei {organizationName} am {startsAt} beigetreten.",
+    "subject": "{eventTitle}: {volunteerName} ist beigetreten"
+  },
   "membershipApproved": {
     "buttonLabel": "{organizationName} öffnen",
     "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} genehmigt wurde.",
@@ -23,6 +63,26 @@
     "step3Detail": "melde dich für einen Einsatz an – fertig.",
     "step3Title": "Anmelden",
     "subject": "Willkommen bei {organizationName}"
+  },
+  "membershipLeft": {
+    "buttonLabel": "Freiwillige ansehen",
+    "detailOrganization": "Organisation",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Freiwillige auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, eine:r Freiwillige:r hat eine Organisation verlassen, die du verwaltest.",
+    "heading": "Freiwillige:r hat verlassen",
+    "note": "Die Person erscheint nicht mehr in der Liste der Freigegebenen für diese Organisation.",
+    "previewText": "{volunteerName} hat {organizationName} verlassen.",
+    "subject": "{volunteerName} hat {organizationName} verlassen"
+  },
+  "membershipRemoved": {
+    "footerNote": "Du erhältst diese E-Mail, weil ein:e Admin deine Mitgliedschaft bei {organizationName} auf {brandName} beendet hat.",
+    "greetingAfter": "ist beendet. Dein Profil und Mitgliedschaften in anderen Organisationen bleiben bestehen.",
+    "greetingBefore": "Hallo {firstName}, deine Mitgliedschaft bei",
+    "heading": "Deine Mitgliedschaft ist beendet",
+    "note": "Du kannst Caluno weiter für andere Organisationen nutzen, denen du angehörst.",
+    "previewText": "Deine Mitgliedschaft bei {organizationName} ist beendet.",
+    "subject": "Deine Mitgliedschaft bei {organizationName} ist beendet"
   },
   "membershipRequested": {
     "buttonLabel": "Anfrage prüfen",

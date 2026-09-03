@@ -59,6 +59,7 @@ const SUPERVISOR_PERMISSIONS = [
   PERMISSIONS.SHIFT_VIEW,
   PERMISSIONS.SHIFT_EDIT,
   PERMISSIONS.VOLUNTEER_VIEW,
+  PERMISSIONS.CHECK_IN_MANAGE,
 ] as const;
 
 type Database = NodePgDatabase<typeof relations>;
@@ -714,6 +715,7 @@ const ensureTimeEntries = async (
     communitySupport: { startsAt: Date; instanceId: string };
     foodDistribution: { startsAt: Date; instanceId: string };
   },
+  organizationUnitId: string,
 ): Promise<void> => {
   const instanceIds = [
     shiftInstances.communitySupport.instanceId,
@@ -736,6 +738,7 @@ const ensureTimeEntries = async (
     if (member.email === 'testing+supervisor@caluno.org') {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(shiftInstances.communitySupport.startsAt, 0.5),
         endedAt: addHours(shiftInstances.communitySupport.startsAt, 3.5),
@@ -743,6 +746,7 @@ const ensureTimeEntries = async (
       });
       entries.push({
         shiftInstanceId: shiftInstances.foodDistribution.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(shiftInstances.foodDistribution.startsAt, 0),
         endedAt: addHours(shiftInstances.foodDistribution.startsAt, 3),
@@ -754,6 +758,7 @@ const ensureTimeEntries = async (
     const closedHours = 2 + (memberNumber % 3);
     entries.push({
       shiftInstanceId: shiftInstances.communitySupport.instanceId,
+      organizationUnitId,
       volunteerId: member.id,
       startedAt: addHours(
         shiftInstances.communitySupport.startsAt,
@@ -769,6 +774,7 @@ const ensureTimeEntries = async (
     if (memberNumber % 2 === 0) {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(
           shiftInstances.communitySupport.startsAt,
@@ -785,6 +791,7 @@ const ensureTimeEntries = async (
     if (memberNumber <= 6) {
       entries.push({
         shiftInstanceId: shiftInstances.foodDistribution.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(
           shiftInstances.foodDistribution.startsAt,
@@ -801,6 +808,7 @@ const ensureTimeEntries = async (
     if (memberNumber <= 3) {
       entries.push({
         shiftInstanceId: shiftInstances.communitySupport.instanceId,
+        organizationUnitId,
         volunteerId: member.id,
         startedAt: addHours(
           shiftInstances.communitySupport.startsAt,
@@ -1823,16 +1831,21 @@ async function seedFixtures() {
     });
   }
 
-  await ensureTimeEntries(db, [supervisor, ...members], {
-    communitySupport: {
-      startsAt: communitySupport.instanceStartsAt,
-      instanceId: communitySupport.instanceId,
+  await ensureTimeEntries(
+    db,
+    [supervisor, ...members],
+    {
+      communitySupport: {
+        startsAt: communitySupport.instanceStartsAt,
+        instanceId: communitySupport.instanceId,
+      },
+      foodDistribution: {
+        startsAt: foodDistribution.instanceStartsAt,
+        instanceId: foodDistribution.instanceId,
+      },
     },
-    foodDistribution: {
-      startsAt: foodDistribution.instanceStartsAt,
-      instanceId: foodDistribution.instanceId,
-    },
-  });
+    org.rootUnitId,
+  );
 
   console.log(`Created Playground organization (${org.organizationId})`);
   console.log(`Root unit: ${org.rootUnitId}`);
@@ -1868,6 +1881,13 @@ async function seedFixtures() {
       `  self-joined → /shifts/${selfJoinedShift.shiftId} (SELF_JOINED, no Cancel)`,
     ].join('\n'),
   );
+
+  // No admin UI to toggle accountingEnabled yet — this script never runs in production.
+  const enabledOrgs = await db
+    .update(schema.organizations)
+    .set({ accountingEnabled: true })
+    .returning({ id: schema.organizations.id });
+  console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
 
   await pool.end();
 }

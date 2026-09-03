@@ -8,6 +8,46 @@
     "previewText": "Your {brandName} verification code is {otp}.",
     "subject": "Your {brandName} verification code"
   },
+  "eventCancelled": {
+    "detailEvent": "Event",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because an event you were invited to on {brandName} was cancelled.",
+    "greeting": "Hi {firstName}, an event you were invited to has been cancelled.",
+    "heading": "Event cancelled",
+    "note": "This event no longer requires volunteers. No action is needed on your part.",
+    "previewText": "{eventTitle} at {organizationName} has been cancelled.",
+    "subject": "{eventTitle} has been cancelled",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "eventInvited": {
+    "buttonLabel": "View event",
+    "detailEvent": "Event",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you were invited to an event on {brandName}.",
+    "greeting": "Hi {firstName}, you're invited to an event.",
+    "heading": "You're invited to an event",
+    "note": "Open the event to see the details.",
+    "previewText": "You're invited to {eventTitle} at {organizationName}.",
+    "subject": "You're invited to {eventTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "eventJoined": {
+    "buttonLabel": "View events",
+    "detailEvent": "Event",
+    "detailOrganization": "Organization",
+    "detailStarts": "Starts",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage events on {brandName}.",
+    "greeting": "Hi {firstName}, a volunteer joined an event you manage.",
+    "heading": "Someone joined an event",
+    "note": "The participant list is already updated.",
+    "previewText": "{volunteerName} joined {eventTitle} in {organizationName} on {startsAt}.",
+    "subject": "{eventTitle}: {volunteerName} joined"
+  },
   "membershipApproved": {
     "buttonLabel": "Open {organizationName}",
     "footerNote": "You're receiving this because your membership request for {organizationName} was approved on {brandName}.",
@@ -23,6 +63,26 @@
     "step3Detail": "sign up for a shift and you're all set.",
     "step3Title": "Sign up",
     "subject": "Welcome to {organizationName}"
+  },
+  "membershipLeft": {
+    "buttonLabel": "View volunteers",
+    "detailOrganization": "Organization",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage volunteers on {brandName}.",
+    "greeting": "Hi {firstName}, a volunteer left an organisation you manage.",
+    "heading": "A volunteer left",
+    "note": "They no longer appear on the Approved list for this organisation.",
+    "previewText": "{volunteerName} left {organizationName}.",
+    "subject": "{volunteerName} left {organizationName}"
+  },
+  "membershipRemoved": {
+    "footerNote": "You're receiving this because an admin ended your membership in {organizationName} on {brandName}.",
+    "greetingAfter": "has ended. Your profile and any other organization memberships are unchanged.",
+    "greetingBefore": "Hi {firstName}, your membership in",
+    "heading": "Your membership has ended",
+    "note": "You can still use Caluno with any other organizations you belong to.",
+    "previewText": "Your membership in {organizationName} has ended.",
+    "subject": "Your membership in {organizationName} has ended"
   },
   "membershipRequested": {
     "buttonLabel": "Review request",

@@ -56,7 +56,7 @@ export const updateTimeEntry = actionClient
     });
 
     const input: UpdateTimeEntryInput = {
-      shiftInstanceId: parsedInput.shiftInstanceId,
+      shiftInstanceId: parsedInput.shiftInstanceId ?? null,
       startedAt: parsedInput.startedAt.toISOString(),
       endedAt: parsedInput.endedAt?.toISOString() ?? null,
       notes: parsedInput.notes || null,

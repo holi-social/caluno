@@ -55,10 +55,12 @@ export class FormBlockMutationResolver {
   async deleteFormBlock(
     @Args('id') id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<FormBlock> {
     const item = await this.formBlockService.delete(
       id,
       context.organizationUnitId,
+      session.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }
@@ -69,11 +71,13 @@ export class FormBlockMutationResolver {
     @Args('blockId') blockId: string,
     @Args('input') input: CreateFormBlockFieldInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<FormBlock> {
     const item = await this.formBlockService.createField(
       blockId,
       context.organizationUnitId,
       input,
+      session.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }
@@ -84,11 +88,13 @@ export class FormBlockMutationResolver {
     @Args('fieldId') fieldId: string,
     @Args('input') input: UpdateFormBlockFieldInput,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<FormBlock> {
     const item = await this.formBlockService.updateField(
       fieldId,
       context.organizationUnitId,
       input,
+      session.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }
@@ -98,10 +104,12 @@ export class FormBlockMutationResolver {
   async deleteFormBlockField(
     @Args('fieldId') fieldId: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<FormBlock> {
     const item = await this.formBlockService.deleteField(
       fieldId,
       context.organizationUnitId,
+      session.user.id,
     );
     return this.formBlockMapper.toModelOrThrow(item);
   }

@@ -64,3 +64,13 @@ export function formatLocaleList(
 ): string {
   return new Intl.ListFormat(formattingLocale(locale), { type }).format(items);
 }
+
+// gives the date in YYYY-MM-DD format
+export function numericCalendarDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: DEFAULT_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}

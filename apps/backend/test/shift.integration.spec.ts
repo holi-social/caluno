@@ -53,6 +53,35 @@ import { getGraphqlTestContext } from './helpers/graphql-test-context';
 applyBunAuthMocks(mock.module);
 setDefaultTimeout(20_000);
 
+/** A Date for `targetDay` (0=Sun..6=Sat) at `hour`:00, local time, but always
+ * at least `weeksOut` whole weeks after `base` so the result is guaranteed to
+ * stay in the future regardless of when the suite runs. Tests that exercise a
+ * recurring weekly series anchor on these so their occurrences never drift
+ * into the past and start tripping the "past or completed" guard. */
+const futureWeekday = (
+  base: Date,
+  weeksOut: number,
+  targetDay: number,
+  hour: number,
+): Date => {
+  const date = new Date(base);
+  date.setDate(date.getDate() + weeksOut * 7);
+  while (date.getDay() !== targetDay) {
+    date.setDate(date.getDate() + 1);
+  }
+  date.setHours(hour, 0, 0, 0);
+  return date;
+};
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/** Formats a Date as an RRULE UNTIL value (UTC digits, as the DB stores
+ * tz-less timestamps via toISOString). */
+const rruleUntil = (date: Date): string =>
+  `${date.getUTCFullYear()}${pad2(date.getUTCMonth() + 1)}${pad2(
+    date.getUTCDate(),
+  )}T000000Z`;
+
 describe('ShiftService.findById', () => {
   let app: INestApplication;
   let db: Database;
@@ -1161,6 +1190,7 @@ describe('Volunteer home fields and check-in', () => {
 
     await db.insert(schema.timeEntries).values({
       shiftInstanceId: instanceId ?? '',
+      organizationUnitId,
       volunteerId: testUserId,
       startedAt: new Date(),
     });
@@ -4024,14 +4054,20 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
   });
 
   it('moves surviving instances in place when weekdays and time change together', async () => {
-    // Weekly Wed+Thu at 09:00, starting on a Wednesday well in the future so
-    // nothing is filtered out as past.
-    const seriesStart = new Date(2026, 8, 2, 9, 0, 0, 0); // Wed 2026-09-02
+    // Weekly Wed+Thu at 09:00, anchored on a clearly-future Wednesday (so
+    // nothing is filtered out as past) with ~5 weeks of occurrences left so
+    // the later WE,FR edit has both days to work with.
+    const seriesStart = futureWeekday(new Date(), 5, 3, 9); // Wednesdays
+    const seriesEnd = new Date(
+      seriesStart.getTime() + 5 * 7 * 24 * 60 * 60 * 1000,
+    );
+    const seriesEndAt = new Date(seriesStart);
+    seriesEndAt.setHours(11, 0, 0, 0);
     const shift = await createShift(db, {
       organizationUnitId,
       startsAt: seriesStart,
-      endsAt: new Date(2026, 8, 2, 11, 0, 0, 0),
-      rrule: 'FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=20261001T000000Z',
+      endsAt: seriesEndAt,
+      rrule: `FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=${rruleUntil(seriesEnd)}`,
     });
 
     const instancesBefore = await db.query.shiftInstances.findMany({
@@ -4053,8 +4089,10 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
     });
 
     // Change BOTH: drop Thursday for Friday, and move 09:00 -> 14:00.
-    const newStart = new Date(2026, 8, 2, 14, 0, 0, 0);
-    const newEnd = new Date(2026, 8, 2, 16, 0, 0, 0);
+    const newStart = new Date(seriesStart);
+    newStart.setHours(14, 0, 0, 0);
+    const newEnd = new Date(seriesStart);
+    newEnd.setHours(16, 0, 0, 0);
 
     const updated = await shiftService.updateShiftInstance(
       firstWednesday.id,
@@ -4062,7 +4100,7 @@ describe('ShiftService.updateShiftInstance applyToAllFuture', () => {
         title: shift.title,
         startsAt: newStart,
         endsAt: newEnd,
-        rrule: 'FREQ=WEEKLY;BYDAY=WE,FR;UNTIL=20261001T000000Z',
+        rrule: `FREQ=WEEKLY;BYDAY=WE,FR;UNTIL=${rruleUntil(seriesEnd)}`,
       },
       organizationUnitId,
       { applyToAllFuture: true },
@@ -4301,13 +4339,15 @@ describe('ShiftService.updateShiftInstance — one-off syncs to master', () => {
   });
 
   it('leaves the master unchanged when editing one instance of a recurring shift', async () => {
-    const startsAt = new Date(2026, 8, 2, 9, 0, 0, 0); // Wed 2026-09-02, future
-    const endsAt = new Date(2026, 8, 2, 11, 0, 0, 0);
+    const startsAt = futureWeekday(new Date(), 4, 3, 9); // a clearly-future Wed
+    const endsAt = new Date(startsAt);
+    endsAt.setHours(11, 0, 0, 0);
+    const until = new Date(startsAt.getTime() + 4 * 7 * 24 * 60 * 60 * 1000);
     const shift = await createShift(db, {
       organizationUnitId,
       startsAt,
       endsAt,
-      rrule: 'FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=20261001T000000Z',
+      rrule: `FREQ=WEEKLY;BYDAY=WE,TH;UNTIL=${rruleUntil(until)}`,
       minVolunteers: 2,
       maxVolunteers: 5,
       title: 'Litre pack',
