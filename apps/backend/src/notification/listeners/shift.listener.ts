@@ -342,6 +342,7 @@ export class ShiftListener {
         );
         return shiftInstanceVolunteerLeftTemplate(
           {
+            organizationUnitId: payload.organizationUnitId,
             organizationUnitName: payload.organizationUnitName,
             shiftTitle: payload.shiftTitle,
             shiftLocation: payload.shiftLocation,
@@ -374,6 +375,7 @@ export class ShiftListener {
         );
         return shiftSeriesVolunteerLeftTemplate(
           {
+            organizationUnitId: payload.organizationUnitId,
             organizationUnitName: payload.organizationUnitName,
             shiftTitle: payload.shiftTitle,
             shiftLocation: payload.shiftLocation,

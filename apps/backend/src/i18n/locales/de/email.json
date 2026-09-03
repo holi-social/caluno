@@ -29,7 +29,7 @@
     "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einem Event entfernt hat.",
     "greeting": "Hallo {firstName}, du wurdest von einem Event entfernt.",
     "heading": "Du wurdest von einem Event entfernt",
-    "note": "Dieses Event steht nicht mehr in deinem Zeitplan.",
+    "note": "Dieses Event steht nicht mehr in deinem Zeitplan. Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
     "previewText": "Du wurdest von {eventTitle} bei {organizationName} entfernt.",
     "subject": "Du wurdest von {eventTitle} entfernt",
     "whenRange": "{date} · {timeRange}"
@@ -126,12 +126,12 @@
   },
   "membershipRejected": {
     "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} abgelehnt wurde.",
-    "greetingAfter": "wurde nicht genehmigt.",
+    "greetingAfter": "wurde abgelehnt.",
     "greetingBefore": "Hallo {firstName}, deine Mitgliedschaftsanfrage für",
     "heading": "Deine Mitgliedschaftsanfrage wurde abgelehnt",
-    "outro": "Du kannst die Organisation kontaktieren, wenn du Fragen zu dieser Entscheidung hast.",
+    "outro": "Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
     "previewText": "Deine Mitgliedschaftsanfrage für {organizationName} wurde abgelehnt.",
-    "reasonLabel": "Begründung:",
+    "reasonLabel": "Genannter Grund:",
     "subject": "Deine Mitgliedschaftsanfrage für {organizationName} wurde abgelehnt"
   },
   "organizationCreated": {
@@ -222,7 +222,7 @@
     "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einem Einsatz entfernt hat.",
     "greeting": "Hallo {firstName}, du wurdest von einem Einsatz entfernt.",
     "heading": "Du wurdest von einem Einsatz entfernt",
-    "note": "Dieser Einsatz steht nicht mehr in deinem Zeitplan.",
+    "note": "Dieser Einsatz steht nicht mehr in deinem Zeitplan. Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
     "previewText": "Du wurdest von {shiftTitle} bei {organizationName} entfernt.",
     "subject": "Du wurdest von {shiftTitle} entfernt",
     "whenRange": "{date} · {timeRange}"
@@ -236,7 +236,7 @@
     "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einer Einsatzserie entfernt hat.",
     "greeting": "Hallo {firstName}, du wurdest von einer Einsatzserie entfernt.",
     "heading": "Du wurdest von einer Einsatzserie entfernt",
-    "note": "Diese Einsätze stehen nicht mehr in deinem Zeitplan.",
+    "note": "Diese Einsätze stehen nicht mehr in deinem Zeitplan. Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
     "previewText": "Du wurdest von {shiftTitle} bei {organizationName} ab {fromDate} entfernt.",
     "subject": "Du wurdest von {shiftTitle} entfernt"
   },
@@ -246,7 +246,7 @@
     "detailShift": "Einsatz",
     "detailWhen": "Wann",
     "footerNote": "Du erhältst diese E-Mail, weil du deine Anmeldung für einen Einsatz auf {brandName} abgesagt hast.",
-    "greeting": "Hallo {firstName}, deine Einsatz-Anmeldung wurde abgesagt.",
+    "greeting": "Hallo {firstName}, du hast deine Anmeldung für einen Einsatz abgesagt.",
     "heading": "Du hast einen Einsatz verlassen",
     "note": "Ein:e Koordinator:in wurde informiert, damit die Lücke besetzt werden kann.",
     "previewText": "Du hast deine Anmeldung für {shiftTitle} bei {organizationName} abgesagt.",
@@ -254,8 +254,9 @@
     "whenRange": "{date} · {timeRange}"
   },
   "shiftInstanceVolunteerLeft": {
-    "coverage": "Jetzt sind {signedUp} von {minVolunteers} Freiwilligen angemeldet.",
-    "coverageNoMin": "Jetzt sind {signedUp} Freiwillige angemeldet.",
+    "buttonLabel": "Einsatzplan ansehen",
+    "coverage": "Jetzt angemeldet: {signedUp} von {minVolunteers}.",
+    "coverageNoMin": "Jetzt angemeldet: {signedUp}.",
     "detailLocation": "Ort",
     "detailOrganization": "Organisation",
     "detailShift": "Einsatz",
@@ -276,15 +277,16 @@
     "detailOrganization": "Organisation",
     "detailShift": "Einsatz",
     "footerNote": "Du erhältst diese E-Mail, weil du deine Anmeldungen für eine Einsatzserie auf {brandName} abgesagt hast.",
-    "greeting": "Hallo {firstName}, deine Anmeldungen für eine Einsatzserie wurden abgesagt.",
+    "greeting": "Hallo {firstName}, du hast deine Anmeldungen für eine Einsatzserie abgesagt.",
     "heading": "Du hast eine Einsatzserie verlassen",
     "note": "Ein:e Koordinator:in wurde informiert, damit die Lücken besetzt werden können.",
     "previewText": "Du hast deine Anmeldungen für {shiftTitle} bei {organizationName} ab {fromDate} abgesagt.",
     "subject": "Du hast {shiftTitle} verlassen"
   },
   "shiftSeriesVolunteerLeft": {
-    "coverage": "Jetzt sind {signedUp} von {minVolunteers} Freiwilligen angemeldet.",
-    "coverageNoMin": "Jetzt sind {signedUp} Freiwillige angemeldet.",
+    "buttonLabel": "Einsatzplan ansehen",
+    "coverage": "Jetzt angemeldet: {signedUp} von {minVolunteers}.",
+    "coverageNoMin": "Jetzt angemeldet: {signedUp}.",
     "detailFrom": "Ab",
     "detailLocation": "Ort",
     "detailOrganization": "Organisation",

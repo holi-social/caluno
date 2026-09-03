@@ -1,5 +1,6 @@
 import type { EmailTemplateContext } from '../../../i18n/email-translate';
 import {
+  button,
   card,
   type DetailTableRow,
   detailTable,
@@ -10,10 +11,12 @@ import {
   note,
   paragraph,
   renderEmail,
+  shiftsAdminUrl,
   strong,
 } from './shared';
 
 export interface ShiftInstanceVolunteerLeftTemplateData {
+  organizationUnitId: string;
   organizationUnitName: string;
   shiftTitle: string;
   shiftLocation?: string | null;
@@ -47,6 +50,7 @@ export async function shiftInstanceVolunteerLeftTemplate(
   const firstName = escapeHtml(data.recipientFirstName);
   const volunteerName = escapeHtml(data.volunteerName);
   const brandName = emailTheme.brandName;
+  const shiftsUrl = shiftsAdminUrl(data.organizationUnitId);
 
   const rows: DetailTableRow[] = [
     {
@@ -94,9 +98,10 @@ export async function shiftInstanceVolunteerLeftTemplate(
     )}
     ${detailTable(rows)}
     ${paragraph(`${strong(coverageLine(data, context))}`, {
-      padding: '0 0 8px',
+      padding: '0 0 16px',
     })}
-    ${divider('0 0 16px')}
+    ${button({ href: shiftsUrl, label: t('shiftInstanceVolunteerLeft.buttonLabel') })}
+    ${divider()}
     ${note(t('shiftInstanceVolunteerLeft.note'))}
   `);
 

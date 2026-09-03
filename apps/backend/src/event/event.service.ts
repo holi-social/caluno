@@ -1209,7 +1209,7 @@ export class EventService {
     if (previous.startsAt.getTime() !== next.startsAt.getTime()) {
       changes.push({
         field: 'startsAt',
-        kind: 'value',
+        kind: 'date',
         previous: previous.startsAt.toISOString(),
         current: next.startsAt.toISOString(),
       });
@@ -1217,7 +1217,7 @@ export class EventService {
     if (previous.endsAt.getTime() !== next.endsAt.getTime()) {
       changes.push({
         field: 'endsAt',
-        kind: 'value',
+        kind: 'date',
         previous: previous.endsAt.toISOString(),
         current: next.endsAt.toISOString(),
       });
