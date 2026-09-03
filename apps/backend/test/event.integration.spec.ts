@@ -8,10 +8,12 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { EventInviteStatus } from '../src/event/enums';
+import { EventService } from '../src/event/event.service';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
@@ -1859,5 +1861,113 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     } finally {
       setAuthMockUserId(originalUserId);
     }
+  });
+});
+
+describe('EventService.joinEvent — existing invite statuses', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let eventService: EventService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    eventService = app.get(EventService);
+  });
+
+  async function seedJoinScenario(
+    initialStatus: EventInviteStatus,
+    joinRequiresApproval = false,
+  ) {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const event = await createEvent(db, { organizationUnitId });
+    if (joinRequiresApproval) {
+      await db
+        .update(schema.events)
+        .set({ joinRequiresApproval: true })
+        .where(eq(schema.events.id, event.id));
+    }
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: user.id,
+      status: initialStatus,
+    });
+    return { user, event };
+  }
+
+  async function getInviteStatus(
+    eventId: string,
+    userId: string,
+  ): Promise<EventInviteStatus | undefined> {
+    const invite = await db.query.eventInvites.findFirst({
+      where: { eventId, userId },
+    });
+    return invite?.status;
+  }
+
+  function registerJoinEventStatusCases(
+    cases: ReadonlyArray<readonly [EventInviteStatus, EventInviteStatus]>,
+    joinRequiresApproval: boolean,
+  ) {
+    for (const [initialStatus, expectedStatus] of cases) {
+      it(`from ${initialStatus} resolves to ${expectedStatus} after joinEvent`, async () => {
+        const { user, event } = await seedJoinScenario(
+          initialStatus,
+          joinRequiresApproval,
+        );
+
+        await eventService.joinEvent(user.id, event.id, {
+          formsAlreadySatisfied: true,
+        });
+
+        expect(await getInviteStatus(event.id, user.id)).toBe(expectedStatus);
+      });
+    }
+  }
+
+  describe('when joinRequiresApproval is false', () => {
+    registerJoinEventStatusCases(
+      [
+        [EventInviteStatus.ADMIN_INVITED, EventInviteStatus.JOINED],
+        [EventInviteStatus.VOLUNTEER_REJECTED, EventInviteStatus.JOINED],
+        [EventInviteStatus.VOLUNTEER_CANCELLED, EventInviteStatus.JOINED],
+        [EventInviteStatus.JOINED, EventInviteStatus.JOINED],
+        [
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [EventInviteStatus.WAITLIST_JOINED, EventInviteStatus.WAITLIST_JOINED],
+        [EventInviteStatus.ADMIN_REJECTED, EventInviteStatus.ADMIN_REJECTED],
+      ],
+      false,
+    );
+  });
+
+  describe('when joinRequiresApproval is true', () => {
+    registerJoinEventStatusCases(
+      [
+        [
+          EventInviteStatus.ADMIN_INVITED,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [
+          EventInviteStatus.VOLUNTEER_REJECTED,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [EventInviteStatus.VOLUNTEER_CANCELLED, EventInviteStatus.JOINED],
+        [EventInviteStatus.JOINED, EventInviteStatus.JOINED],
+        [
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [EventInviteStatus.WAITLIST_JOINED, EventInviteStatus.WAITLIST_JOINED],
+        [EventInviteStatus.ADMIN_REJECTED, EventInviteStatus.ADMIN_REJECTED],
+      ],
+      true,
+    );
   });
 });

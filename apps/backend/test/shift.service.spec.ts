@@ -1171,7 +1171,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('does not throw a spurious capacity error when re-inviting to all future instances after a decline', async () => {
@@ -1232,7 +1232,7 @@ describe('ShiftService', () => {
           userId: user.id,
         },
       });
-      expect(anchorInvite?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(anchorInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
 
       const resurrectedFuture = await db.query.shiftInstanceInvites.findFirst({
         where: {
@@ -1240,7 +1240,7 @@ describe('ShiftService', () => {
           userId: user.id,
         },
       });
-      expect(resurrectedFuture?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(resurrectedFuture?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('returns pending invitees via findVolunteers when active statuses are requested', async () => {
