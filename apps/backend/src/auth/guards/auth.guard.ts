@@ -21,7 +21,10 @@ const withSessionCache = (
   wrapper.api.getSession = (
     ...args: Parameters<typeof auth.api.getSession>
   ): Promise<UserSession | null> => {
-    cachedSession ??= auth.api.getSession(...args);
+    cachedSession ??= auth.api.getSession(...args).catch((error) => {
+      cachedSession = undefined;
+      throw error;
+    });
     return cachedSession;
   };
 
