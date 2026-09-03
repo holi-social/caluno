@@ -48,7 +48,7 @@ export function ShiftInstanceStepper({
     : undefined;
 
   return (
-    <div className="rounded-xl bg-muted px-3 py-1">
+    <div className="rounded-xl bg-muted px-3 py-1 shadow-sm">
       {orgUnits.length > 1 && (
         <>
           <StepperRow
