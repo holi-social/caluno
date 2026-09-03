@@ -128,6 +128,21 @@ export class TimeTrackingMutationResolver {
   }
 
   @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Mutation(() => TimeEntry)
+  async checkOutVolunteer(
+    @Args('timeEntryId', { type: () => ID }) timeEntryId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
+  ): Promise<TimeEntry> {
+    const entity = await this.timeTrackingService.checkOutVolunteer(
+      timeEntryId,
+      context.organizationUnitId,
+      session.user.id,
+    );
+    return this.entryMapper.toModelOrThrow(entity);
+  }
+
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
   @Mutation(() => Boolean)
   async checkInInviteToOrganization(
     @Args('volunteerId', { type: () => ID }) volunteerId: string,

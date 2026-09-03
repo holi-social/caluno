@@ -589,6 +589,15 @@ describe('check-in readiness/submit mutation permissions', () => {
     ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
   });
 
+  it('gates checkOutVolunteer on check-in:manage', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        TimeTrackingMutationResolver.prototype.checkOutVolunteer,
+      ),
+    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+  });
+
   it("gates checkInApproveMembershipRequest on check-in:manage (distinct from approveMembershipRequest's volunteer:edit)", () => {
     expect(
       Reflect.getMetadata(
@@ -884,5 +893,133 @@ describe('checkInApproveMembershipRequest mutation', () => {
       where: { userId: volunteer.id, organizationUnitId: unitId },
     });
     expect(membership).toBeTruthy();
+  });
+});
+
+describe('checkOutVolunteer mutation', () => {
+  const CHECK_OUT_VOLUNTEER = `
+    mutation CheckOutVolunteer($timeEntryId: ID!) {
+      checkOutVolunteer(timeEntryId: $timeEntryId) {
+        id
+        endedAt
+      }
+    }
+  `;
+
+  let app: INestApplication;
+  let db: Database;
+  let callerUserId: string;
+  let unitId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    callerUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `CheckOut ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Check-out unit',
+    });
+    unitId = unit.id;
+
+    // Caller holds ONLY check-in:manage — the whole point of this mutation is
+    // that shift:edit is not required.
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+
+    const role = await createRole(db, { organizationId: org.organization.id });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const membership = await addMembership(db, callerUserId, unit.id);
+    await assignRoleToMembership(db, {
+      membershipId: membership.id,
+      roleId: role.id,
+    });
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(callerUserId);
+  });
+
+  const insertEntry = async (
+    volunteerId: string,
+    entryUnitId: string,
+    endedAt: Date | null = null,
+  ) => {
+    const [entry] = await db
+      .insert(schema.timeEntries)
+      .values({
+        volunteerId,
+        organizationUnitId: entryUnitId,
+        startedAt: new Date(),
+        endedAt,
+      })
+      .returning();
+    return entry;
+  };
+
+  it('closes an open entry for a caller holding only check-in:manage', async () => {
+    const volunteer = await createUser(db);
+    const entry = await insertEntry(volunteer.id, unitId);
+
+    const data = await graphqlRequestRequiringData<{
+      checkOutVolunteer: { id: string; endedAt: string };
+    }>(
+      app,
+      {
+        query: CHECK_OUT_VOLUNTEER,
+        variables: { timeEntryId: entry.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkOutVolunteer',
+    );
+
+    expect(data.checkOutVolunteer.id).toBe(entry.id);
+    expect(data.checkOutVolunteer.endedAt).toBeTruthy();
+  });
+
+  it('returns not found for an entry in a different org unit', async () => {
+    const otherOrg = await createOrganizationWithType(
+      db,
+      `CheckOutOther ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrg.organization.id,
+      typeId: otherOrg.type.id,
+      name: 'Other check-out unit',
+    });
+    const volunteer = await createUser(db);
+    const entry = await insertEntry(volunteer.id, otherUnit.id);
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_OUT_VOLUNTEER,
+      variables: { timeEntryId: entry.id },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe('Time entry not found');
+  });
+
+  it('rejects an already-closed entry', async () => {
+    const volunteer = await createUser(db);
+    const entry = await insertEntry(volunteer.id, unitId, new Date());
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_OUT_VOLUNTEER,
+      variables: { timeEntryId: entry.id },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe('Time entry is already closed');
   });
 });
