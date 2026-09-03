@@ -1,5 +1,20 @@
 import { Skeleton } from '@repo/ui';
 
+export function OrgListSkeleton() {
+  return (
+    <div>
+      <div className="flex items-center justify-between border-b border-border pb-4">
+        <Skeleton className="h-8 w-48" />
+      </div>
+      <div className="mt-4 flex flex-col gap-2">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    </div>
+  );
+}
+
 export function OrgDetailSkeleton() {
   return (
     <div className="relative flex min-h-screen flex-col">
