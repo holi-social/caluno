@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test';
-import { resolveCheckInReadiness } from '../check-in-readiness';
+import {
+  alreadyCheckedInDecideHref,
+  resolveCheckInReadiness,
+} from '../check-in-readiness';
 
 describe('resolveCheckInReadiness', () => {
   it('returns notMember when not a member and no open request', () => {
@@ -92,5 +95,13 @@ describe('resolveCheckInReadiness', () => {
         isParticipating: false,
       }),
     ).toBe('alreadyCheckedIn');
+  });
+});
+
+describe('alreadyCheckedInDecideHref', () => {
+  it('points at the decide page, which lists open entries with check-out links', () => {
+    expect(alreadyCheckedInDecideHref('abc-123')).toBe(
+      '/check-in/abc-123/decide',
+    );
   });
 });

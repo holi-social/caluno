@@ -3,13 +3,15 @@
 import { Building2, Clock, LogOut, UserX } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import type { CheckInReadinessState } from '../../check-in-readiness';
+import {
+  alreadyCheckedInDecideHref,
+  type CheckInReadinessState,
+} from '../../check-in-readiness';
 import { BlockerCard } from './blocker-card';
 import { ReadyBanner } from './ready-banner';
 
 type CheckInReadinessCardProps = {
   state: CheckInReadinessState;
-  orgUnitId: string;
   checkInId: string;
   onInviteToOrg: () => void;
   onOpenAcceptMembership: () => void;
@@ -22,7 +24,6 @@ type CheckInReadinessCardProps = {
 
 export function CheckInReadinessCard({
   state,
-  orgUnitId,
   checkInId,
   onInviteToOrg,
   onOpenAcceptMembership,
@@ -46,9 +47,7 @@ export function CheckInReadinessCard({
         title={t('alreadyCheckedInTitle')}
         description={t('alreadyCheckedInDescription')}
         buttonLabel={t('alreadyCheckedInButton')}
-        onAction={() =>
-          router.push(`/admin/${orgUnitId}/check-in/${checkInId}/check-out`)
-        }
+        onAction={() => router.push(alreadyCheckedInDecideHref(checkInId))}
       />
     );
   }

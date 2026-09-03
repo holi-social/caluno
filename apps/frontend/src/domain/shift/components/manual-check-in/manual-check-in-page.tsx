@@ -223,7 +223,6 @@ export function ManualCheckInPage({
         {selection.shiftInstanceId && readinessState && (
           <CheckInReadinessCard
             state={readinessState}
-            orgUnitId={selection.orgUnitId}
             checkInId={checkInId}
             onInviteToOrg={handleInviteToOrg}
             onOpenAcceptMembership={() => setOpenSheet('acceptMembership')}

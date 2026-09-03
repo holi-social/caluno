@@ -34,3 +34,12 @@ export function resolveCheckInReadiness(
   }
   return 'ready';
 }
+
+/**
+ * The already-checked-in blocker links to the decide page, which lists the
+ * volunteer's open entries with per-entry check-out links (the check-out
+ * page itself requires an entryId this state doesn't have).
+ */
+export function alreadyCheckedInDecideHref(checkInId: string): string {
+  return `/check-in/${checkInId}/decide`;
+}
