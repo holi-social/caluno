@@ -54,10 +54,9 @@ export default async function VolunteeringDecidePage({
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">{t('openEntriesTitle')}</h2>
           {context.openTimeEntries.map((entry) => (
-            // TEMP-CHECKIN-MIGRATION: links to the legacy admin check-out page.
             <Link
               key={entry.id}
-              href={`/admin/${entry.organizationUnit.id}/check-in/${checkInId}/check-out`}
+              href={`/check-in/${checkInId}/check-out?entryId=${entry.id}`}
               className="block"
             >
               <Card>
