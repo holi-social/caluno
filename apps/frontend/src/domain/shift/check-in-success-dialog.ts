@@ -2,8 +2,10 @@ const CHECK_IN_SUCCESS_DIALOG = 'check_in_success_dialog';
 
 export type CheckInSuccessPayload = {
   volunteerName: string;
+  volunteerImage: string | null;
   shiftTitle: string | null;
   timeRange: string | null;
+  dateLabel: string | null;
 };
 
 export const getCheckInSuccessPayload = (): CheckInSuccessPayload | null => {

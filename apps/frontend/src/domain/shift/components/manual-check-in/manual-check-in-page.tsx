@@ -56,7 +56,7 @@ export function ManualCheckInPage({
   const t = useTranslations('CheckIn');
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { formatTimeRange } = useFormatting();
+  const { formatDate, formatTimeRange } = useFormatting();
 
   const [selection, setSelection] = useState<CheckInSelection>(() => ({
     orgUnitId: initialOrgUnitId,
@@ -163,14 +163,26 @@ export function ManualCheckInPage({
         return;
       }
 
+      const startsAt = selection.selectedInstance
+        ? new Date(selection.selectedInstance.actualStartsAt)
+        : null;
+      const isToday =
+        !!startsAt && startsAt.toDateString() === new Date().toDateString();
+
       setCheckInSuccessPayload({
         volunteerName: volunteer.name,
+        volunteerImage: volunteer.image ?? null,
         shiftTitle: selection.selectedInstance?.title ?? null,
         timeRange: selection.selectedInstance
           ? formatTimeRange(
               selection.selectedInstance.actualStartsAt,
               selection.selectedInstance.actualEndsAt,
             )
+          : null,
+        dateLabel: startsAt
+          ? isToday
+            ? t('today')
+            : formatDate(startsAt)
           : null,
       });
       router.push('/check-in');

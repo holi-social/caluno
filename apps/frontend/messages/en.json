@@ -127,9 +127,8 @@
     "selectShiftPlaceholder": "Select the shift",
     "shiftSearchPlaceholder": "Shift name",
     "shiftSheetTitle": "Select shift",
-    "successDialogBody": "{volunteerName} is checked in.",
     "successDialogCloseButton": "Done",
-    "successDialogTitle": "Checked in",
+    "successDialogTitle": "Successfully checked in",
     "today": "Today"
   },
   "Common": {
