@@ -145,11 +145,12 @@ describe('TimeTrackingService.getCheckInContext', () => {
       volunteer.checkInId,
     );
 
-    expect(result?.openTimeEntries).toEqual([]);
-    expect(result?.eligibleOrganizationUnits).toEqual([]);
+    // No overlap between the caller's check-in:manage units and the
+    // volunteer's memberships: null, not empty lists.
+    expect(result).toBeNull();
   });
 
-  it('returns empty lists for a caller without any check-in:manage permission', async () => {
+  it('returns null for a caller without any check-in:manage permission', async () => {
     const volunteer = await createUser(db);
     await addMembership(db, volunteer.id, organizationUnitId);
     await insertOpenEntry(volunteer.id, organizationUnitId);
@@ -161,9 +162,7 @@ describe('TimeTrackingService.getCheckInContext', () => {
       volunteer.checkInId,
     );
 
-    expect(result?.volunteer.id).toBe(volunteer.id);
-    expect(result?.eligibleOrganizationUnits).toEqual([]);
-    expect(result?.openTimeEntries).toEqual([]);
+    expect(result).toBeNull();
   });
 });
 
@@ -310,6 +309,33 @@ describe('checkInContext query', () => {
           }
         `,
         variables: { checkInId: 'doesnotexist' },
+      },
+      'checkInContext',
+    );
+
+    expect(data.checkInContext).toBeNull();
+  });
+
+  it('returns null for a caller with no check-in:manage overlap', async () => {
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
+
+    const outsider = await createUser(db); // no memberships anywhere
+    setAuthMockUserId(outsider.id);
+
+    const data = await graphqlRequestRequiringData<{
+      checkInContext: null;
+    }>(
+      app,
+      {
+        query: `
+          query CheckInContext($checkInId: String!) {
+            checkInContext(checkInId: $checkInId) {
+              volunteer { id }
+            }
+          }
+        `,
+        variables: { checkInId: volunteer.checkInId },
       },
       'checkInContext',
     );

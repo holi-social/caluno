@@ -345,6 +345,8 @@ export class TimeTrackingService {
    * Intentionally not scoped by ctx.organizationUnitId: eligibility is the
    * intersection of the caller's check-in:manage units and the volunteer's
    * memberships, enforced here (mirrors the ungated checkIn/checkOut mutations).
+   * Returns null when that intersection is empty, so the query never leaks
+   * the volunteer's identity to callers with no legitimate relationship.
    */
   async getCheckInContext(
     callerUserId: string,
@@ -377,22 +379,26 @@ export class TimeTrackingService {
     }
     eligibleUnits.sort((a, b) => a.name.localeCompare(b.name));
 
-    const openTimeEntries =
-      eligibleUnits.length === 0
-        ? []
-        : await this.db.query.timeEntries.findMany({
-            where: {
-              volunteerId: volunteer.id,
-              organizationUnitId: { in: eligibleUnits.map((unit) => unit.id) },
-              endedAt: { isNull: true },
-            },
-            // Eager-load shiftInstance: the TimeEntry.shiftInstance field
-            // resolver falls back to ShiftService.findInstanceById, which is
-            // scoped to ctx.organizationUnitId — unavailable/wrong for this
-            // cross-unit (and often headerless) query.
-            with: { shiftInstance: true },
-            orderBy: { startedAt: 'asc' },
-          });
+    // No overlap between the caller's check-in:manage units and the
+    // volunteer's memberships: the caller has no legitimate relationship to
+    // this QR code, so don't leak the volunteer's identity.
+    if (eligibleUnits.length === 0) {
+      return null;
+    }
+
+    const openTimeEntries = await this.db.query.timeEntries.findMany({
+      where: {
+        volunteerId: volunteer.id,
+        organizationUnitId: { in: eligibleUnits.map((unit) => unit.id) },
+        endedAt: { isNull: true },
+      },
+      // Eager-load shiftInstance: the TimeEntry.shiftInstance field
+      // resolver falls back to ShiftService.findInstanceById, which is
+      // scoped to ctx.organizationUnitId — unavailable/wrong for this
+      // cross-unit (and often headerless) query.
+      with: { shiftInstance: true },
+      orderBy: { startedAt: 'asc' },
+    });
 
     return {
       volunteer,
