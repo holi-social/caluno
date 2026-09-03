@@ -214,5 +214,31 @@
     },
     "scheduleRecurring": "{days}, {timeRange}",
     "subject": "Du bist zu {shiftTitle} eingeladen"
+  },
+  "documentAwaitingSignature": {
+    "heading": "Ein Dokument wartet auf deine Unterschrift",
+    "greeting": "Hallo {firstName},",
+    "from": "von {organizationName} wartet auf deine Unterschrift.",
+    "detail": "Du kannst das Dokument lesen und herunterladen, bevor du unterschreibst — Unterschreiben ist ein einziger Tipp.",
+    "buttonLabel": "Zu meinen Dokumenten",
+    "note": "Das Dokument erscheint auch unter „Deine Dokumente“ in deinem Profil.",
+    "subject": "{documentName} von {organizationName} wartet auf deine Unterschrift",
+    "previewText": "{documentName} von {organizationName} wartet auf deine Unterschrift.",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Dokument von {organizationName} deine Unterschrift auf {brandName} benötigt."
+  },
+  "documentDeclinedByOrg": {
+    "heading": "Ein Dokument wurde abgelehnt",
+    "greeting": "Hallo {firstName},",
+    "from": "von {organizationName} wurde abgelehnt.",
+    "reasonLabel": "Genannter Grund:",
+    "buttonLabel": "Zu meinen Dokumenten",
+    "note": "Das Dokument kann nicht mehr unterschrieben werden. Die Organisation kann ein neues Dokument ausstellen.",
+    "subject": "{documentName} von {organizationName} wurde abgelehnt",
+    "previewText": "{documentName} von {organizationName} wurde abgelehnt.",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Dokument von {organizationName} auf {brandName} abgelehnt wurde."
+  },
+  "documentNames": {
+    "agreement": "Zusatzvereinbarung",
+    "timesheet": "Stundennachweis"
   }
 }

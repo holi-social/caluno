@@ -64,6 +64,14 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
     remotePatterns: storageImagePatterns(),
   },
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
 };
 
 export default withSentryConfig(withNextIntl(nextConfig), {

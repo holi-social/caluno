@@ -47,6 +47,8 @@ type Contract {
   downloadUrl: String
   id: ID!
   isNonCompliant: Boolean!
+  missingOrgProfileFields: [String!]!
+  missingProfileFields: [String!]!
   periodEnd: DateTime!
   periodStart: DateTime!
   reimbursementType: ReimbursementType!
@@ -157,6 +159,7 @@ input CreateInvoiceInput {
 
 input CreateOrganizationInput {
   address: String
+  city: String
   contactEmail: String
   description: String
   logoFileId: String
@@ -165,12 +168,15 @@ input CreateOrganizationInput {
   parentId: String
   phone: String
   websiteUrl: String
+  zipCode: String
 }
 
 input CreateOrganizationUnitInput {
   address: String
+  city: String
   contactEmail: String
   description: String
+  legalRep: String
   logoFileId: String
   name: String!
   organizationId: String!
@@ -178,6 +184,7 @@ input CreateOrganizationUnitInput {
   phone: String
   typeId: String!
   websiteUrl: String
+  zipCode: String
 }
 
 input CreateRequirementFormInput {
@@ -233,6 +240,7 @@ input CreateShiftInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!
@@ -470,6 +478,8 @@ type Invoice {
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
   isNonCompliant: Boolean!
+  missingOrgProfileFields: [String!]!
+  missingProfileFields: [String!]!
   paidAt: DateTime
   paidByUser: User
   periodEnd: DateTime!
@@ -676,6 +686,7 @@ type Mutation {
   updateMyImage(input: UpdateMyImageInput!): User!
   updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementForm(id: String!, input: UpdateRequirementFormInput!): RequirementForm!
@@ -690,9 +701,25 @@ type Mutation {
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
+type MyDocumentSummary {
+  pending: Int!
+  total: Int!
+}
+
+type MyDocumentsGroup {
+  contracts: [Contract!]!
+  invoices: [Invoice!]!
+  logoUrl: String
+  membershipId: ID!
+  organizationName: String!
+  organizationUnitId: ID!
+  organizationUnitName: String!
+}
+
 type Organization {
   accountingEnabled: Boolean!
   address: String
+  city: String
   contactEmail: String
   createdAt: DateTime!
   description: String
@@ -705,6 +732,7 @@ type Organization {
   units: [OrganizationUnit!]!
   updatedAt: DateTime
   websiteUrl: String
+  zipCode: String
 }
 
 type OrganizationPaginatedResponse {
@@ -719,11 +747,13 @@ type OrganizationTree {
 type OrganizationUnit {
   address: String
   children: [OrganizationUnit!]!
+  city: String
   contactEmail: String
   coverUrl: String
   deletedAt: DateTime
   description: String
   id: ID!
+  legalRep: String
   logoUrl: String
   memberCount: Int!
   myMembershipState: JoinStatus!
@@ -738,6 +768,7 @@ type OrganizationUnit {
   slug: String!
   type: OrganizationUnitType!
   websiteUrl: String
+  zipCode: String
 }
 
 type OrganizationUnitPaginatedResponse {
@@ -852,6 +883,8 @@ type Query {
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myCheckInAdministrableOrganizationUnits: [OrganizationUnit!]!
   myContracts(filter: ContractFilterInput): [Contract!]!
+  myDocumentSummary: MyDocumentSummary!
+  myDocuments: [MyDocumentsGroup!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
@@ -910,6 +943,7 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
+  volunteersNeedingTimesheets(periodEnd: DateTime, periodStart: DateTime): [VolunteerNeedsTimesheet!]!
   weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
   yearlyUsage(reimbursementTypeId: ID!, year: Int!): YearlyUsage!
 }
@@ -1181,6 +1215,7 @@ type Shift {
   organizationUnit: OrganizationUnit!
   organizationUnitId: ID!
   originalStartsAt: DateTime!
+  reimbursementTypeId: ID
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
   rrule: String
@@ -1209,6 +1244,7 @@ type ShiftInstance {
   overrideLocation: String
   overrideMaxVolunteers: Int
   overrideMinVolunteers: Int
+  overrideReimbursementTypeId: ID
   overrideTitle: String
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
@@ -1346,10 +1382,24 @@ input UpdateMyImageInput {
   imageFileId: String
 }
 
-input UpdateOrganizationUnitInput {
+input UpdateOrganizationInput {
   address: String
+  city: String
   contactEmail: String
   description: String
+  logoFileId: String
+  logoUrl: String
+  phone: String
+  websiteUrl: String
+  zipCode: String
+}
+
+input UpdateOrganizationUnitInput {
+  address: String
+  city: String
+  contactEmail: String
+  description: String
+  legalRep: String
   logoFileId: String
   name: String
   organizationId: String!
@@ -1358,6 +1408,7 @@ input UpdateOrganizationUnitInput {
   requiredMembershipRequirementProfileId: String
   typeId: String
   websiteUrl: String
+  zipCode: String
 }
 
 input UpdateRequirementFormInput {
@@ -1403,6 +1454,7 @@ input UpdateShiftInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime
@@ -1417,6 +1469,7 @@ input UpdateShiftInstanceInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!
@@ -1457,6 +1510,12 @@ type UserRequirementStatus {
   name: String!
   requirementId: ID!
   status: RequirementFulfillmentStatus!
+}
+
+type VolunteerNeedsTimesheet {
+  eligibleHours: Float!
+  reimbursementType: ReimbursementType!
+  volunteer: User!
 }
 
 type VolunteerYearlyUsage {

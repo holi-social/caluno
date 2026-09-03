@@ -1,7 +1,8 @@
 import { hashPassword } from 'better-auth/crypto';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { DocumentKind, SigneeType } from '../accounting/enums';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
   DEFAULT_OWNER_ROLE_NAME,
@@ -360,6 +361,9 @@ const ensurePlaygroundOrganization = async (
         slug: ORG_SLUG,
         contactEmail: 'testing@caluno.org',
         description: 'Local development playground organization',
+        address: 'Hauptstraße 1',
+        city: 'Berlin',
+        zipCode: '10115',
       })
       .returning();
 
@@ -392,7 +396,10 @@ const ensurePlaygroundOrganization = async (
         contactEmail: organization.contactEmail,
         description: organization.description,
         coverUrl: ORG_COVER_IMAGE_URL,
-        address: 'Hauptstraße 1, 10115 Berlin',
+        address: 'Hauptstraße 1',
+        city: 'Berlin',
+        zipCode: '10115',
+        legalRep: 'Max Mustermann',
       })
       .returning();
 
@@ -966,6 +973,7 @@ const ensureBankingInformationForm = async (
         blockId: block.id,
         type: FieldType.IBAN,
         label: 'IBAN',
+        systemKey: 'iban',
         required: true,
         fieldOrder: 0,
       },
@@ -973,6 +981,7 @@ const ensureBankingInformationForm = async (
         blockId: block.id,
         type: FieldType.TEXT,
         label: 'BIC',
+        systemKey: 'bic',
         required: true,
         fieldOrder: 1,
       },
@@ -1084,6 +1093,177 @@ const ensureCodeOfConductForm = async (
   return form;
 };
 
+/**
+ * Seeds default contract + invoice document templates for an org (both
+ * Pauschale reimbursement types) with the standard volunteer →
+ * permission-holder signee chain. Runs on every `db:fixtures` (bootstrap and
+ * staging) for every accounting-enabled organization, so a freshly provisioned
+ * org never hits "No contract template configured for reimbursement type …" —
+ * the coordinator can create documents out of the box and customize the
+ * templates in the builder afterwards.
+ *
+ * The body is a minimal but renderable contract/invoice template. Existing
+ * org-default templates are left untouched so an org's hand-built templates
+ * win.
+ */
+const ensureAccountingDocumentTemplates = async (
+  db: Database,
+  organizationId: string,
+): Promise<void> => {
+  const accountingManagePermission = await db.query.permissions.findFirst({
+    where: { key: PERMISSIONS.ACCOUNTING_MANAGE },
+  });
+
+  const reimbursementTypes = await db.query.reimbursementTypes.findMany();
+
+  const contractBody = {
+    header: {
+      titleLines: ['Zusatzvereinbarung zur', 'Aufwandsentschädigung'],
+      orgIdentityLine: {
+        id: 'header-org-identity',
+        text: '{orgName} {orgAddress}',
+        fields: [
+          {
+            id: 'header-org-name',
+            value: { kind: 'bound', source: 'org_name' },
+          },
+          {
+            id: 'header-org-address',
+            value: { kind: 'bound', source: 'org_address' },
+          },
+        ],
+        enabled: true,
+      },
+    },
+    blocks: [
+      {
+        id: 'payout',
+        kind: 'text',
+        title: 'Auszahlung',
+        lines: [
+          {
+            id: 'iban-line',
+            text: 'IBAN: {volunteerIban}',
+            fields: [
+              {
+                id: 'iban-field',
+                value: { kind: 'bound', source: 'volunteer_iban' },
+              },
+            ],
+            enabled: true,
+          },
+          {
+            id: 'bic-line',
+            text: 'BIC: {volunteerBic}',
+            fields: [
+              {
+                id: 'bic-field',
+                value: { kind: 'bound', source: 'volunteer_bic' },
+              },
+            ],
+            enabled: true,
+          },
+        ],
+        enabled: true,
+      },
+    ],
+    footer: {
+      closingLine: {
+        id: 'closing',
+        text: 'Vielen Dank',
+        fields: [],
+        enabled: true,
+      },
+    },
+  };
+
+  const invoiceBody = {
+    header: {
+      titleLines: ['Stundennachweis'],
+      orgIdentityLine: {
+        id: 'header-org-identity',
+        text: '{orgName} {orgAddress}',
+        fields: [
+          {
+            id: 'header-org-name',
+            value: { kind: 'bound', source: 'org_name' },
+          },
+          {
+            id: 'header-org-address',
+            value: { kind: 'bound', source: 'org_address' },
+          },
+        ],
+        enabled: true,
+      },
+    },
+    blocks: [],
+    footer: {
+      closingLine: {
+        id: 'closing',
+        text: 'Vielen Dank',
+        fields: [],
+        enabled: true,
+      },
+    },
+  };
+
+  const signees = (permissionId: string | undefined) => [
+    { order: 0, signeeType: SigneeType.VOLUNTEER, requiredPermissionId: null },
+    ...(permissionId
+      ? [
+          {
+            order: 1,
+            signeeType: SigneeType.PERMISSION_HOLDER,
+            requiredPermissionId: permissionId,
+          },
+        ]
+      : []),
+  ];
+
+  for (const type of reimbursementTypes) {
+    for (const kind of [DocumentKind.CONTRACT, DocumentKind.INVOICE]) {
+      // A template exists already (org-default for this type+kind) — leave it.
+      const existing = await db.query.documentTemplates.findFirst({
+        where: {
+          organizationId,
+          organizationUnitId: { isNull: true },
+          reimbursementTypeId: type.id,
+          kind,
+          isDeleted: false,
+        },
+      });
+      if (existing) continue;
+
+      const [template] = await db
+        .insert(schema.documentTemplates)
+        .values({
+          organizationId,
+          organizationUnitId: null,
+          reimbursementTypeId: type.id,
+          kind,
+          body: kind === DocumentKind.CONTRACT ? contractBody : invoiceBody,
+          isDeleted: false,
+        })
+        .returning();
+
+      if (!template) {
+        throw new Error(
+          `Failed to create ${kind} template for reimbursement type ${type.key}`,
+        );
+      }
+
+      await db.insert(schema.templateSignees).values(
+        signees(accountingManagePermission?.id).map((signee) => ({
+          documentTemplateId: template.id,
+          order: signee.order,
+          signeeType: signee.signeeType,
+          requiredPermissionId: signee.requiredPermissionId,
+        })),
+      );
+    }
+  }
+};
+
 async function seedFixtures() {
   const pool = new Pool({
     host: process.env.DB_HOST,
@@ -1172,6 +1352,29 @@ async function seedFixtures() {
     email: 'testing+rejected01@caluno.org',
     name: 'Rejected Applicant',
   });
+
+  // The document signing chain requires the volunteer's bank/personal profile
+  // fields before a contract/invoice can be signed (otherwise the rendered
+  // PDF comes out with gaps). Seed a complete profile for the members so the
+  // fixture accounts can sign documents out of the box.
+  for (const [index, member] of members.entries()) {
+    const existing = await db.query.userProfiles.findFirst({
+      where: { userId: member.id },
+    });
+    if (!existing) {
+      await db.insert(schema.userProfiles).values({
+        userId: member.id,
+        data: {
+          // A valid German IBAN (mod-97 checksum). Same account for the
+          // fixture members so it round-trips the validator.
+          iban: 'DE89 3704 0044 0532 0130 00',
+          bic: 'COBADEFFXXX',
+          address: `Musterstraße ${index + 1}`,
+          'birth-date': '1990-08-02',
+        },
+      });
+    }
+  }
 
   const ensureMembershipRequest = async (
     userId: string,
@@ -1888,6 +2091,37 @@ async function seedFixtures() {
     .set({ accountingEnabled: true })
     .returning({ id: schema.organizations.id });
   console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
+
+  // Backfill missing unit postal fields so accounting documents have an org
+  // address/city/zip to render (a document with "—" in the footer is a hard
+  // dead-end the org can't fix without an edit form). The document renders the
+  // UNIT's profile, so patch the org's root unit. Only fills gaps.
+  for (const enabledOrg of enabledOrgs) {
+    const rootUnit = await db.query.organizationUnits.findFirst({
+      where: { organizationId: enabledOrg.id, parentId: { isNull: true } },
+    });
+    if (!rootUnit) continue;
+    const patch: Partial<typeof schema.organizationUnits.$inferInsert> = {};
+    if (!rootUnit.address) patch.address = 'Hauptstraße 1';
+    if (!rootUnit.city) patch.city = 'Berlin';
+    if (!rootUnit.zipCode) patch.zipCode = '10115';
+    if (!rootUnit.legalRep) patch.legalRep = 'Max Mustermann';
+    if (Object.keys(patch).length > 0) {
+      await db
+        .update(schema.organizationUnits)
+        .set(patch)
+        .where(eq(schema.organizationUnits.id, rootUnit.id));
+    }
+  }
+
+  // Give every accounting-enabled org default contract + invoice templates so
+  // documents can be created out of the box on a fresh provision.
+  for (const enabledOrg of enabledOrgs) {
+    await ensureAccountingDocumentTemplates(db, enabledOrg.id);
+  }
+  console.log(
+    `Seeded default accounting document templates on ${enabledOrgs.length} organization(s).`,
+  );
 
   await pool.end();
 }

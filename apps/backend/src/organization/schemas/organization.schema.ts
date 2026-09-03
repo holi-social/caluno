@@ -19,6 +19,8 @@ export const organizations = snakeCase.table(
     phone: text('phone'),
     description: text('description'),
     address: text('address'),
+    city: text('city'),
+    zipCode: text('zip_code'),
     accountingEnabled: boolean('accounting_enabled').notNull().default(false),
     deletedAt: timestamp('deleted_at'),
     ...timestampColumns,
