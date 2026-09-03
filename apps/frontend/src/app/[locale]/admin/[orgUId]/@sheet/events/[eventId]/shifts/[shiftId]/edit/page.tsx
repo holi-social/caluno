@@ -55,6 +55,7 @@ export default async function EditEventShiftPage({
         imageFileId: shift.imageUrl ?? undefined,
         minVolunteers: shift.minVolunteers ?? undefined,
         maxVolunteers: shift.maxVolunteers ?? undefined,
+        reimbursementTypeId: shift.reimbursementTypeId ?? undefined,
       }}
     />
   );
