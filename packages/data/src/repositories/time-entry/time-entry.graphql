@@ -240,3 +240,9 @@ mutation CheckInVolunteer($volunteerId: ID!, $shiftInstanceId: ID) {
 mutation CheckInInviteToOrganization($volunteerId: ID!) {
   checkInInviteToOrganization(volunteerId: $volunteerId)
 }
+
+mutation CheckOutVolunteer($timeEntryId: ID!) {
+  checkOutVolunteer(timeEntryId: $timeEntryId) {
+    id
+  }
+}

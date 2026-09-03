@@ -625,6 +625,7 @@ type Mutation {
   checkInInviteToShiftInstance(shiftInstanceId: ID!, volunteerId: ID!): ShiftInstance!
   checkInVolunteer(shiftInstanceId: ID, volunteerId: ID!): TimeEntry!
   checkOut(shiftInstanceId: ID!): TimeEntry!
+  checkOutVolunteer(timeEntryId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createContract(input: CreateContractInput!): Contract!
   createDocumentTemplate(input: CreateDocumentTemplateInput!): DocumentTemplate!
