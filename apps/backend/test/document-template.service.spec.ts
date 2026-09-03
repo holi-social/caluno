@@ -309,7 +309,8 @@ describe('DocumentTemplateService', () => {
         where: { id: contract.id },
       });
       expect(
-        (untouched?.resolvedBody as { header: { title: string } }).header.title,
+        (untouched?.resolvedBody as { header: { title: string } })?.header
+          ?.title,
       ).toBe('v1');
     });
   });
