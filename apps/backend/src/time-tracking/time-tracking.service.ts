@@ -639,6 +639,40 @@ export class TimeTrackingService {
 
     return timeEntry;
   }
+
+  /**
+   * Manager-initiated check-out (manual check-in flow). Unlike the volunteer
+   * self-service checkOut, this is keyed by time entry and scoped to the
+   * caller's org unit from the request header; the resolver gates it on
+   * check-in:manage (shift:edit is NOT required).
+   */
+  async checkOutVolunteer(
+    timeEntryId: string,
+    organizationUnitId: string,
+    actorUserId: string,
+  ): Promise<TimeEntryEntity> {
+    const entry = await this.db.query.timeEntries.findFirst({
+      where: { id: timeEntryId },
+    });
+
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
+      throw new NotFoundGraphQLError('Time entry not found');
+    }
+    if (entry.endedAt) {
+      throw new ConflictGraphQLError('Time entry is already closed');
+    }
+
+    const input = new CloseTimeEntryInput();
+    input.endedAt = new Date();
+    input.notes = null;
+
+    return this.closeTimeEntry(
+      timeEntryId,
+      organizationUnitId,
+      input,
+      actorUserId,
+    );
+  }
 }
 
 // Self check-in window (relative to the shift instance's actual start/end).
