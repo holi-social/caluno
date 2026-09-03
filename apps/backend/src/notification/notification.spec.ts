@@ -1267,12 +1267,14 @@ describe('NotificationModule', () => {
     };
     userService.findById.mockResolvedValue(user);
 
+    const startsAtPrevious = new Date('2026-07-10T09:00:00.000Z');
+    const startsAtCurrent = new Date('2026-07-10T10:00:00.000Z');
     const changes = [
       {
         field: 'startsAt',
-        kind: 'value' as const,
-        previous: '9:00',
-        current: '10:00',
+        kind: 'date' as const,
+        previous: startsAtPrevious.toISOString(),
+        current: startsAtCurrent.toISOString(),
       },
       {
         field: 'location',
@@ -1310,7 +1312,11 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
-    expect(expected.html).toContain('9:00 → 10:00');
+    expect(expected.html).toContain(
+      `${formatLocaleDateTime(startsAtPrevious, 'en')} → ${formatLocaleDateTime(startsAtCurrent, 'en')}`,
+    );
+    expect(expected.html).not.toContain(startsAtPrevious.toISOString());
+    expect(expected.html).not.toContain(startsAtCurrent.toISOString());
     expect(expected.html).toContain('Main hall → Side hall');
     expect(expected.html).toContain('Bring gloves.');
   });
@@ -1323,8 +1329,16 @@ describe('NotificationModule', () => {
     };
     userService.findById.mockResolvedValue(user);
 
+    const endsAtPrevious = new Date('2026-09-01T17:00:00.000Z');
+    const endsAtCurrent = new Date('2026-09-01T18:00:00.000Z');
     const changes = [
       { field: 'title', kind: 'text' as const, text: 'Community Fair 2' },
+      {
+        field: 'endsAt',
+        kind: 'date' as const,
+        previous: endsAtPrevious.toISOString(),
+        current: endsAtCurrent.toISOString(),
+      },
       {
         field: 'location',
         kind: 'value' as const,
@@ -1359,6 +1373,11 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
+    expect(expected.html).toContain(
+      `${formatLocaleDateTime(endsAtPrevious, 'en')} → ${formatLocaleDateTime(endsAtCurrent, 'en')}`,
+    );
+    expect(expected.html).not.toContain(endsAtPrevious.toISOString());
+    expect(expected.html).not.toContain(endsAtCurrent.toISOString());
     expect(expected.html).toContain('Main hall → Side hall');
     expect(expected.html).toContain('Community Fair 2');
   });
@@ -1396,6 +1415,7 @@ describe('NotificationModule', () => {
     };
     const expected = await shiftInstanceVolunteerLeftTemplate(
       {
+        organizationUnitId: payload.organizationUnitId,
         organizationUnitName: payload.organizationUnitName,
         shiftTitle: payload.shiftTitle,
         shiftLocation: payload.shiftLocation,
@@ -1419,6 +1439,9 @@ describe('NotificationModule', () => {
       html: expected.html,
     });
     expect(expected.html).toContain('2 of 3');
+    expect(expected.html).toContain(
+      `/admin/${payload.organizationUnitId}/shifts`,
+    );
   });
 
   it('sends shift series volunteer left email to managers with coverage', async () => {
@@ -1452,6 +1475,7 @@ describe('NotificationModule', () => {
     };
     const expected = await shiftSeriesVolunteerLeftTemplate(
       {
+        organizationUnitId: payload.organizationUnitId,
         organizationUnitName: payload.organizationUnitName,
         shiftTitle: payload.shiftTitle,
         shiftLocation: payload.shiftLocation,
@@ -1474,5 +1498,8 @@ describe('NotificationModule', () => {
       html: expected.html,
     });
     expect(expected.html).toContain('5 of 6');
+    expect(expected.html).toContain(
+      `/admin/${payload.organizationUnitId}/shifts`,
+    );
   });
 });

@@ -21,13 +21,23 @@ export interface ShiftDetailsChangedTemplateData {
 
 function renderChange(
   change: ChangedField,
-  { t }: EmailTemplateContext,
+  { t, formatDateTime }: EmailTemplateContext,
 ): string {
   const label = t(`shiftDetailsChanged.field.${change.field}`);
 
   if (change.kind === 'text') {
     const text = change.text ? escapeHtml(change.text) : '';
-    return `${escapeHtml(label)}: ${t('shiftDetailsChanged.updated')} — ${text}`;
+    return `${escapeHtml(label)} ${t('shiftDetailsChanged.updated')}: ${text}`;
+  }
+
+  if (change.kind === 'date') {
+    const previous = change.previous
+      ? escapeHtml(formatDateTime(new Date(change.previous)))
+      : '—';
+    const current = change.current
+      ? escapeHtml(formatDateTime(new Date(change.current)))
+      : '—';
+    return `${escapeHtml(label)}: ${previous} → ${current}`;
   }
 
   const previous = change.previous ? escapeHtml(change.previous) : '—';
