@@ -473,6 +473,37 @@ export class TimeTrackingService {
   }
 
   /**
+   * Manager-initiated check-in (manual check-in flow). The only server-side
+   * readiness gate is membership (ancestor-inclusive): a time entry for a
+   * non-member corrupts org-scoped timesheet/accounting data. Shift-invite
+   * participation stays UI-only guidance so managers can still check in
+   * walk-in members.
+   */
+  async checkInVolunteer(
+    organizationUnitId: string,
+    volunteerId: string,
+    shiftInstanceId: string | null,
+    actorUserId: string,
+  ): Promise<TimeEntryEntity> {
+    const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+      volunteerId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      throw new ForbiddenGraphQLError('Volunteer is not a member of this unit');
+    }
+
+    const input = new AddTimeEntryInput();
+    input.volunteerId = volunteerId;
+    input.shiftInstanceId = shiftInstanceId;
+    input.startedAt = new Date();
+    input.endedAt = null;
+    input.notes = null;
+
+    return this.addTimeEntry(organizationUnitId, input, actorUserId);
+  }
+
+  /**
    * Resolves a shift instance a volunteer may self-track, after verifying it
    * exists (not cancelled) and the user is a member of its org unit.
    */

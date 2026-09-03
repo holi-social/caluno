@@ -421,6 +421,7 @@ describe('checkInVolunteer mutation', () => {
 
   it('creates an open time entry for a caller holding only check-in:manage', async () => {
     const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
 
     const data = await graphqlRequestRequiringData<{
       checkInVolunteer: { id: string };
@@ -439,6 +440,7 @@ describe('checkInVolunteer mutation', () => {
 
   it('rejects a second check-in while one is already open', async () => {
     const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
 
     await graphqlRequestRequiringData(
       app,
@@ -457,6 +459,87 @@ describe('checkInVolunteer mutation', () => {
     });
 
     expect(response.errors?.[0]?.message).toBe('Already checked in');
+  });
+
+  it('rejects a volunteer who is not a member of the unit', async () => {
+    const volunteer = await createUser(db); // no membership anywhere
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_VOLUNTEER,
+      variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe(
+      'Volunteer is not a member of this unit',
+    );
+  });
+
+  // Self-contained org: root = membership ancestor, child = managed unit.
+  // (A second root in the existing org would violate
+  // uq_organization_units_organization_id_is_root_true.)
+  it('accepts a volunteer whose membership is on an ancestor unit', async () => {
+    const org = await createOrganizationWithType(
+      db,
+      `Ancestor ${crypto.randomUUID()}`,
+    );
+    const parentUnit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Ancestor Parent',
+    });
+    const childUnit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Ancestor Child',
+      parentId: parentUnit.id,
+    });
+
+    // Caller holds check-in:manage on the child unit.
+    const permission = await db.query.permissions.findFirst({
+      where: { key: PERMISSIONS.CHECK_IN_MANAGE },
+    });
+    if (!permission) throw new Error('CHECK_IN_MANAGE permission not seeded');
+    const role = await createRole(db, {
+      organizationId: org.organization.id,
+    });
+    await grantPermissionToRole(db, {
+      roleId: role.id,
+      permissionId: permission.id,
+    });
+    const callerMembership = await addMembership(
+      db,
+      callerUserId,
+      childUnit.id,
+    );
+    await assignRoleToMembership(db, {
+      membershipId: callerMembership.id,
+      roleId: role.id,
+    });
+
+    const shift = await createShift(db, { organizationUnitId: childUnit.id });
+    const childInstance = await createShiftInstance(db, shift.id);
+
+    // Volunteer is a member of the PARENT only.
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, parentUnit.id);
+
+    const data = await graphqlRequestRequiringData<{
+      checkInVolunteer: { id: string };
+    }>(
+      app,
+      {
+        query: CHECK_IN_VOLUNTEER,
+        variables: {
+          volunteerId: volunteer.id,
+          shiftInstanceId: childInstance.id,
+        },
+        headers: { 'x-organization-unit-id': childUnit.id },
+      },
+      'checkInVolunteer',
+    );
+
+    expect(data.checkInVolunteer.id).toBeTruthy();
   });
 });
 
