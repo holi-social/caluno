@@ -1231,6 +1231,9 @@
       "noRecurrence": "No recurrence",
       "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
       "openShiftLabel": "Open shift",
+      "reimbursementTypeDescription": "Volunteer time on this shift will be eligible for a timesheet under this Pauschale",
+      "reimbursementTypeLabel": "Reimbursable Pauschale",
+      "reimbursementTypeNone": "Not reimbursable",
       "recurring": "Recurring shift",
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
