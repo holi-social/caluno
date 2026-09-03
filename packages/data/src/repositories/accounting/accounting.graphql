@@ -1,0 +1,483 @@
+query GetReimbursementTypes {
+  reimbursementTypes {
+    id
+    key
+    legalReference
+    yearlyLimitCents
+    platformDefaultRateCents
+  }
+}
+
+query GetEffectiveRates($organizationUnitId: ID) {
+  effectiveRates(organizationUnitId: $organizationUnitId) {
+    reimbursementType {
+      id
+      key
+      legalReference
+      yearlyLimitCents
+      platformDefaultRateCents
+    }
+    hourlyRateCents
+    isOverride
+    organizationUnitId
+  }
+}
+
+mutation SetReimbursementRate(
+  $reimbursementTypeId: ID!
+  $hourlyRateCents: Int!
+  $organizationUnitId: ID
+) {
+  setReimbursementRate(
+    reimbursementTypeId: $reimbursementTypeId
+    hourlyRateCents: $hourlyRateCents
+    organizationUnitId: $organizationUnitId
+  ) {
+    id
+    hourlyRateCents
+  }
+}
+
+query GetYearlyUsage($reimbursementTypeId: ID!, $year: Int!) {
+  yearlyUsage(reimbursementTypeId: $reimbursementTypeId, year: $year) {
+    usedCents
+    limitCents
+    remainingCents
+  }
+}
+
+query GetRosterYearlyUsage($organizationUnitId: ID!, $year: Int!) {
+  rosterYearlyUsage(organizationUnitId: $organizationUnitId, year: $year) {
+    volunteer {
+      id
+      name
+      image
+    }
+    usageByType {
+      reimbursementType {
+        id
+        key
+      }
+      usedCents
+      limitCents
+      remainingCents
+    }
+  }
+}
+
+fragment ContractSummaryFields on Contract {
+  id
+  contractStatus
+  periodStart
+  periodEnd
+  isNonCompliant
+  declineReason
+  declinedAt
+  declinedAtSigneeType
+  renewDate
+  downloadUrl
+  createdAt
+  updatedAt
+  volunteer {
+    id
+    name
+    image
+  }
+  reimbursementType {
+    id
+    key
+  }
+  documentTemplate {
+    id
+    kind
+  }
+  signatures {
+    id
+    order
+    signeeType
+    signedAt
+    signedByUser {
+      id
+      name
+    }
+    requiredPermission {
+      id
+      key
+    }
+  }
+  statusChanges {
+    id
+    type
+    occurredAt
+    actorUser {
+      id
+      name
+    }
+  }
+}
+
+query GetContracts($filter: ContractFilterInput) {
+  contracts(filter: $filter) {
+    ...ContractSummaryFields
+  }
+}
+
+query GetMyContracts($filter: ContractFilterInput) {
+  myContracts(filter: $filter) {
+    ...ContractSummaryFields
+  }
+}
+
+query GetContract($id: ID!) {
+  contract(id: $id) {
+    ...ContractSummaryFields
+    resolvedBody
+  }
+}
+
+query GetPendingContractSignee($contractId: ID!) {
+  pendingContractSignee(contractId: $contractId) {
+    signeeType
+    userId
+    permissionKey
+    eligibleUserIds
+  }
+}
+
+mutation CreateContract($input: CreateContractInput!) {
+  createContract(input: $input) {
+    ...ContractSummaryFields
+  }
+}
+
+mutation SignContract($contractId: ID!) {
+  signContract(contractId: $contractId) {
+    ...ContractSummaryFields
+  }
+}
+
+mutation DeclineContract($contractId: ID!, $reason: String!) {
+  declineContract(contractId: $contractId, reason: $reason) {
+    ...ContractSummaryFields
+  }
+}
+
+fragment InvoiceSummaryFields on Invoice {
+  id
+  invoiceStatus
+  periodStart
+  periodEnd
+  totalAmountCents
+  totalHours
+  isNonCompliant
+  declineReason
+  declinedAt
+  declinedAtSigneeType
+  downloadUrl
+  createdAt
+  updatedAt
+  volunteer {
+    id
+    name
+    image
+  }
+  reimbursementType {
+    id
+    key
+  }
+  documentTemplate {
+    id
+    kind
+  }
+  signatures {
+    id
+    order
+    signeeType
+    signedAt
+    signedByUser {
+      id
+      name
+    }
+    requiredPermission {
+      id
+      key
+    }
+  }
+  statusChanges {
+    id
+    type
+    occurredAt
+    actorUser {
+      id
+      name
+    }
+  }
+}
+
+query GetInvoices($filter: InvoiceFilterInput) {
+  invoices(filter: $filter) {
+    ...InvoiceSummaryFields
+  }
+}
+
+query GetMyInvoices($filter: InvoiceFilterInput) {
+  myInvoices(filter: $filter) {
+    ...InvoiceSummaryFields
+  }
+}
+
+query GetInvoice($id: ID!) {
+  invoice(id: $id) {
+    ...InvoiceSummaryFields
+    resolvedBody
+    invoiceTimeEntries {
+      id
+      timeEntry {
+        id
+        startedAt
+        endedAt
+        notes
+        shiftInstance {
+          id
+          master {
+            title
+          }
+        }
+      }
+    }
+  }
+}
+
+query GetPendingInvoiceSignee($invoiceId: ID!) {
+  pendingInvoiceSignee(invoiceId: $invoiceId) {
+    signeeType
+    userId
+    permissionKey
+    eligibleUserIds
+  }
+}
+
+query GetEligibleTimeEntriesForInvoice(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $periodStart: DateTime
+  $periodEnd: DateTime
+) {
+  eligibleTimeEntriesForInvoice(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    periodStart: $periodStart
+    periodEnd: $periodEnd
+  ) {
+    id
+    startedAt
+    endedAt
+    notes
+    shiftInstance {
+      id
+      master {
+        title
+      }
+    }
+  }
+}
+
+mutation CreateInvoice($input: CreateInvoiceInput!) {
+  createInvoice(input: $input) {
+    ...InvoiceSummaryFields
+  }
+}
+
+mutation SignInvoice($invoiceId: ID!) {
+  signInvoice(invoiceId: $invoiceId) {
+    ...InvoiceSummaryFields
+  }
+}
+
+mutation DeclineInvoice($invoiceId: ID!, $reason: String!) {
+  declineInvoice(invoiceId: $invoiceId, reason: $reason) {
+    ...InvoiceSummaryFields
+  }
+}
+
+fragment DocumentTemplateSummaryFields on DocumentTemplate {
+  id
+  kind
+  invoiceNumberFormat
+  renewalCadence
+  isDeleted
+  lastEditedAt
+  lastEditedByUser {
+    id
+    name
+  }
+  reimbursementType {
+    id
+    key
+  }
+  organizationUnit {
+    id
+    name
+  }
+  signees {
+    id
+    order
+    signeeType
+    requiredPermission {
+      id
+      key
+    }
+  }
+}
+
+query GetDocumentTemplates {
+  documentTemplates {
+    ...DocumentTemplateSummaryFields
+  }
+}
+
+query GetDocumentTemplate($id: ID!) {
+  documentTemplate(id: $id) {
+    ...DocumentTemplateSummaryFields
+    body
+  }
+}
+
+query GetActiveDocumentTemplate(
+  $kind: DocumentKind!
+  $reimbursementTypeId: ID!
+  $organizationUnitId: ID
+) {
+  activeDocumentTemplate(
+    kind: $kind
+    reimbursementTypeId: $reimbursementTypeId
+    organizationUnitId: $organizationUnitId
+  ) {
+    ...DocumentTemplateSummaryFields
+    body
+  }
+}
+
+mutation CreateDocumentTemplate($input: CreateDocumentTemplateInput!) {
+  createDocumentTemplate(input: $input) {
+    ...DocumentTemplateSummaryFields
+  }
+}
+
+mutation UpdateDocumentTemplate(
+  $id: ID!
+  $input: UpdateDocumentTemplateInput!
+) {
+  updateDocumentTemplate(id: $id, input: $input) {
+    ...DocumentTemplateSummaryFields
+  }
+}
+
+mutation DeleteDocumentTemplate($id: ID!) {
+  deleteDocumentTemplate(id: $id)
+}
+
+query GetBundleDownloadStatus($volunteerId: ID!, $reimbursementTypeId: ID!) {
+  bundleDownloadStatus(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    downloadedAt
+    downloadedByUser {
+      id
+      name
+    }
+  }
+}
+
+mutation RecordBundleDownload(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $invoiceIds: [ID!]
+) {
+  recordBundleDownload(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    invoiceIds: $invoiceIds
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    downloadedAt
+    downloadedByUser {
+      id
+      name
+    }
+  }
+}
+
+query GetManualBaseline(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $year: Int!
+) {
+  manualBaseline(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    year
+    amountCents
+    updatedAt
+    updatedByUser {
+      id
+      name
+    }
+  }
+}
+
+mutation SetManualBaseline(
+  $volunteerId: ID!
+  $reimbursementTypeId: ID!
+  $year: Int!
+  $amountCents: Int!
+) {
+  setManualBaseline(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+    amountCents: $amountCents
+  ) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+    year
+    amountCents
+    updatedAt
+    updatedByUser {
+      id
+      name
+    }
+  }
+}

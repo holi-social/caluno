@@ -35,6 +35,10 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       from: r.documentTemplates.organizationId,
       to: r.organizations.id,
     }),
+    organizationUnit: r.one.organizationUnits({
+      from: r.documentTemplates.organizationUnitId,
+      to: r.organizationUnits.id,
+    }),
     reimbursementType: r.one.reimbursementTypes({
       from: r.documentTemplates.reimbursementTypeId,
       to: r.reimbursementTypes.id,
@@ -87,9 +91,9 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       from: r.contracts.id,
       to: r.contractSignatures.contractId,
     }),
-    events: r.many.contractEvents({
+    statusChanges: r.many.contractStatusChanges({
       from: r.contracts.id,
-      to: r.contractEvents.contractId,
+      to: r.contractStatusChanges.contractId,
     }),
   },
   invoices: {
@@ -113,9 +117,9 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       from: r.invoices.id,
       to: r.invoiceSignatures.invoiceId,
     }),
-    events: r.many.invoiceEvents({
+    statusChanges: r.many.invoiceStatusChanges({
       from: r.invoices.id,
-      to: r.invoiceEvents.invoiceId,
+      to: r.invoiceStatusChanges.invoiceId,
     }),
     invoiceTimeEntries: r.many.invoiceTimeEntries({
       from: r.invoices.id,
@@ -150,23 +154,23 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       to: r.users.id,
     }),
   },
-  contractEvents: {
+  contractStatusChanges: {
     contract: r.one.contracts({
-      from: r.contractEvents.contractId,
+      from: r.contractStatusChanges.contractId,
       to: r.contracts.id,
     }),
     actorUser: r.one.users({
-      from: r.contractEvents.actorUserId,
+      from: r.contractStatusChanges.actorUserId,
       to: r.users.id,
     }),
   },
-  invoiceEvents: {
+  invoiceStatusChanges: {
     invoice: r.one.invoices({
-      from: r.invoiceEvents.invoiceId,
+      from: r.invoiceStatusChanges.invoiceId,
       to: r.invoices.id,
     }),
     actorUser: r.one.users({
-      from: r.invoiceEvents.actorUserId,
+      from: r.invoiceStatusChanges.actorUserId,
       to: r.users.id,
     }),
   },
@@ -178,6 +182,38 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
     timeEntry: r.one.timeEntries({
       from: r.invoiceTimeEntries.timeEntryId,
       to: r.timeEntries.id,
+    }),
+  },
+  reimbursementBundleDownloads: {
+    volunteer: r.one.users({
+      from: r.reimbursementBundleDownloads.volunteerId,
+      to: r.users.id,
+    }),
+    reimbursementType: r.one.reimbursementTypes({
+      from: r.reimbursementBundleDownloads.reimbursementTypeId,
+      to: r.reimbursementTypes.id,
+    }),
+    downloadedByUser: r.one.users({
+      from: r.reimbursementBundleDownloads.downloadedByUserId,
+      to: r.users.id,
+    }),
+  },
+  reimbursementManualBaselines: {
+    organization: r.one.organizations({
+      from: r.reimbursementManualBaselines.organizationId,
+      to: r.organizations.id,
+    }),
+    volunteer: r.one.users({
+      from: r.reimbursementManualBaselines.volunteerId,
+      to: r.users.id,
+    }),
+    reimbursementType: r.one.reimbursementTypes({
+      from: r.reimbursementManualBaselines.reimbursementTypeId,
+      to: r.reimbursementTypes.id,
+    }),
+    updatedByUser: r.one.users({
+      from: r.reimbursementManualBaselines.updatedByUserId,
+      to: r.users.id,
     }),
   },
 }));

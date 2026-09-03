@@ -2,8 +2,8 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { GraphQLJSON } from 'graphql-scalars';
 import { User } from '../../user/models/user.model';
 import { ContractStatus, SigneeType } from '../enums';
-import { ContractEvent } from './contract-event.model';
 import { ContractSignature } from './contract-signature.model';
+import { ContractStatusChange } from './contract-status-change.model';
 import { DocumentTemplate } from './document-template.model';
 import { ReimbursementType } from './reimbursement-type.model';
 
@@ -51,11 +51,14 @@ export class Contract {
   @Field(() => SigneeType, { nullable: true })
   declinedAtSigneeType?: SigneeType | null;
 
+  @Field(() => String, { nullable: true })
+  downloadUrl?: string | null;
+
   @Field(() => [ContractSignature])
   signatures!: ContractSignature[];
 
-  @Field(() => [ContractEvent])
-  events!: ContractEvent[];
+  @Field(() => [ContractStatusChange])
+  statusChanges!: ContractStatusChange[];
 
   @Field(() => Date)
   createdAt!: Date;

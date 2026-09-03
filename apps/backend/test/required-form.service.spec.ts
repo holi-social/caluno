@@ -30,6 +30,7 @@ import { RequirementFormService } from '../src/requirement-profile/services/requ
 import { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
 import { UserProfileService } from '../src/requirement-profile/services/user-profile.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { ShiftInviteStatus } from '../src/shift/enums';
 import {
   cancelShiftInstance,
@@ -85,16 +86,22 @@ describe('RequiredFormService', () => {
     }).compile();
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
-    requiredFormService = new RequiredFormService(db);
-    const userProfileService = new UserProfileService(db);
+    requiredFormService = new RequiredFormService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
+    const userProfileService = new UserProfileService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
     formSubmissionService = new FormSubmissionService(
       db,
       userProfileService,
       requiredFormService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     requirementFormService = new RequirementFormService(
       db,
       requiredFormService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     const authServiceMock = {
@@ -111,6 +118,8 @@ describe('RequiredFormService', () => {
       authServiceMock,
       notificationServiceMock,
       requiredFormService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -224,31 +233,6 @@ describe('RequiredFormService', () => {
 
       expect(statuses[0]?.submitted).toBe(false);
       expect(statuses[0]?.submissionId).toBeNull();
-    });
-
-    it('does not count REJECTED submissions as satisfied', async () => {
-      const { user, unit } = await setupOrg();
-      const { form } = await createRequirementForm(db, {
-        organizationId: unit.organizationId,
-        organizationUnitId: unit.id,
-        createdById: user.id,
-      });
-      await setRequiredForms(db, {
-        organizationUnitId: unit.id,
-        formIds: [form.id],
-      });
-      await createFormSubmission(db, {
-        formId: form.id,
-        userId: user.id,
-        status: 'rejected',
-      });
-
-      const statuses = await requiredFormService.getRequiredFormStatuses(
-        user.id,
-        orgUnitTarget(unit.id),
-      );
-
-      expect(statuses[0]?.submitted).toBe(false);
     });
   });
 
@@ -618,6 +602,54 @@ describe('RequiredFormService', () => {
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
+
+    it('throws when an org-unit form has no blocks', async () => {
+      const { user, unit } = await setupOrg();
+      const [emptyForm] = await db
+        .insert(schema.requirementForms)
+        .values({
+          organizationId: unit.organizationId,
+          organizationUnitId: unit.id,
+          slug: 'empty-form',
+          name: 'Empty Form',
+          shareToken: crypto.randomUUID(),
+          createdBy: user.id,
+          updatedBy: user.id,
+        })
+        .returning();
+      if (!emptyForm) throw new Error('Failed to create empty form');
+
+      await expect(
+        requiredFormService.setRequiredForms(orgUnitTarget(unit.id), [
+          emptyForm.id,
+        ]),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
+
+    it('throws when a shift form has no blocks', async () => {
+      const { user, unit } = await setupOrg();
+      const shift = await createShift(db, { organizationUnitId: unit.id });
+      const [emptyForm] = await db
+        .insert(schema.requirementForms)
+        .values({
+          organizationId: unit.organizationId,
+          organizationUnitId: unit.id,
+          slug: 'empty-form',
+          name: 'Empty Form',
+          shareToken: crypto.randomUUID(),
+          createdBy: user.id,
+          updatedBy: user.id,
+        })
+        .returning();
+      if (!emptyForm) throw new Error('Failed to create empty form');
+
+      await expect(
+        requiredFormService.setRequiredForms(
+          { targetType: RequiredFormTargetType.SHIFT, targetId: shift.id },
+          [emptyForm.id],
+        ),
+      ).rejects.toBeInstanceOf(BadRequestGraphQLError);
+    });
   });
 
   describe('isFormRequiredByAnyTarget', () => {
@@ -920,7 +952,7 @@ describe('RequiredFormService', () => {
       });
 
       await expect(
-        requirementFormService.delete(form.id, unit.id),
+        requirementFormService.delete(form.id, unit.id, user.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
     });
 
@@ -938,7 +970,7 @@ describe('RequiredFormService', () => {
       });
 
       await expect(
-        requirementFormService.delete(form.id, unit.id),
+        requirementFormService.delete(form.id, unit.id, user.id),
       ).rejects.toBeInstanceOf(ConflictGraphQLError);
     });
   });
@@ -954,7 +986,9 @@ describe('RequiredFormService', () => {
         imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule],
       }).compile();
       db = moduleRef.get<Database>(DATABASE_CONNECTION);
-      service = new RequiredFormService(db);
+      service = new RequiredFormService(db, {
+        capture: () => {},
+      } as unknown as PostHogService);
 
       registerTestResourceCleanup(async () => {
         await moduleRef.close();

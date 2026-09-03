@@ -61,10 +61,12 @@ export class OrganizationUnitMutationResolver {
   async updateOrganizationUnit(
     @Args('id') id: string,
     @Args('input') input: UpdateOrganizationUnitInput,
+    @Session() session: UserSession,
   ): Promise<OrganizationUnit> {
     const organizationUnit = await this.organizationUnitService.update(
       id,
       input,
+      session.user.id,
     );
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
@@ -73,8 +75,12 @@ export class OrganizationUnitMutationResolver {
   @Mutation(() => OrganizationUnit)
   async deleteOrganizationUnit(
     @Args('id') id: string,
+    @Session() session: UserSession,
   ): Promise<OrganizationUnit> {
-    const organizationUnit = await this.organizationUnitService.delete(id);
+    const organizationUnit = await this.organizationUnitService.delete(
+      id,
+      session.user.id,
+    );
     return this.organizationUnitMapper.toModelOrThrow(organizationUnit);
   }
 
@@ -95,6 +101,7 @@ export class OrganizationUnitMutationResolver {
         targetId: organizationUnitId,
       },
       formIds,
+      session.user.id,
     );
 
     return this.requiredFormRefMapper.toArray(requiredForms);

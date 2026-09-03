@@ -235,7 +235,8 @@ User "1" -- "*" Event : "created by <"
 Shift "*" -- "0..1" Event : "is part of >"
 
 ' --- Time Tracking ---
-ShiftInstance "1" -- "*" TimeEntry : "logged against >"
+ShiftInstance "0..1" -- "*" TimeEntry : "logged against >"
+OrgUnit "1" -- "*" TimeEntry : "belongs to <"
 User "1" -- "*" TimeEntry : "clocked by >"
 
 @enduml

@@ -28,6 +28,7 @@ export default async function UpdateShiftPage({
       orgUId={orgUId}
       mutate={updateShift.bind(null, orgUId, shift.id)}
       initialRequiredFormIds={shift.requiredForms.map((ref) => ref.form.id)}
+      imagePreviewUrl={shift.imageUrl}
       initialValues={{
         name: shift.title,
         instructions: shift.instructions ?? undefined,
@@ -37,7 +38,6 @@ export default async function UpdateShiftPage({
         openShift: shift.visibility === ShiftVisibility.AllMembers,
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
-        imageFileId: shift.imageUrl ?? undefined,
         minVolunteers: shift.minVolunteers ?? undefined,
         maxVolunteers: shift.maxVolunteers ?? undefined,
       }}

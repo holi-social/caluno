@@ -55,3 +55,16 @@ export function useLeaveMembership() {
     },
   });
 }
+
+export function useRemoveMembership() {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRepository(sdk);
+
+  return useMutation({
+    mutationFn: (membershipId: string) => repository.remove(membershipId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+    },
+  });
+}

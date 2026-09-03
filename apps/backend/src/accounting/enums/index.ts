@@ -33,7 +33,7 @@ export enum InvoiceStatus {
   DECLINED = 'DECLINED',
 }
 
-export enum DocumentEventType {
+export enum DocumentStatusChange {
   CREATED = 'CREATED',
   SIGNED = 'SIGNED',
   COUNTERSIGNED = 'COUNTERSIGNED',

@@ -27,6 +27,7 @@ export type PublicForm = NonNullable<
 interface VolunteerFormProps {
   form: PublicForm;
   token: string;
+  organizationUnitId: string;
   isMember?: boolean;
   orgName?: string;
   profileData?: Record<string, string>;
@@ -35,6 +36,7 @@ interface VolunteerFormProps {
 export function VolunteerForm({
   form,
   token,
+  organizationUnitId,
   isMember = true,
   orgName,
   profileData = {},
@@ -136,6 +138,7 @@ export function VolunteerForm({
     try {
       const result = await submitForm({
         token,
+        organizationUnitId,
         values: submissionValues,
       });
 

@@ -3,8 +3,8 @@ import { GraphQLJSON } from 'graphql-scalars';
 import { User } from '../../user/models/user.model';
 import { InvoiceStatus, SigneeType } from '../enums';
 import { DocumentTemplate } from './document-template.model';
-import { InvoiceEvent } from './invoice-event.model';
 import { InvoiceSignature } from './invoice-signature.model';
+import { InvoiceStatusChange } from './invoice-status-change.model';
 import { InvoiceTimeEntry } from './invoice-time-entry.model';
 import { ReimbursementType } from './reimbursement-type.model';
 
@@ -50,16 +50,25 @@ export class Invoice {
   declinedByUser?: User | null;
 
   @Field(() => Date, { nullable: true })
+  paidAt?: Date | null;
+
+  @Field(() => User, { nullable: true })
+  paidByUser?: User | null;
+
+  @Field(() => Date, { nullable: true })
   declinedAt?: Date | null;
 
   @Field(() => SigneeType, { nullable: true })
   declinedAtSigneeType?: SigneeType | null;
 
+  @Field(() => String, { nullable: true })
+  downloadUrl?: string | null;
+
   @Field(() => [InvoiceSignature])
   signatures!: InvoiceSignature[];
 
-  @Field(() => [InvoiceEvent])
-  events!: InvoiceEvent[];
+  @Field(() => [InvoiceStatusChange])
+  statusChanges!: InvoiceStatusChange[];
 
   @Field(() => [InvoiceTimeEntry])
   invoiceTimeEntries!: InvoiceTimeEntry[];

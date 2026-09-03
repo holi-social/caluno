@@ -7,7 +7,7 @@
     "lint": "turbo run format-and-lint",
     "format": "turbo run format-and-lint:fix",
     "check-types": "turbo run check-types",
-    "check": "turbo run all-checks; bun test",
+    "check": "turbo run all-checks && bun test",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write",
     "format-and-lint:staged": "biome check --staged --write",
@@ -20,12 +20,14 @@
     "db:generate": "bun run --cwd apps/backend db:generate",
     "db:seed": "bun run --cwd apps/backend db:seed",
     "codegen": "turbo run codegen",
-    "setup:hooks": "bash .ai/scripts/install-hooks.sh"
+    "setup:hooks": "bash .githooks/install-hooks.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
+    "@svgr/webpack": "^8.1.0",
     "turbo": "^2.9.9",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vite-plugin-svgr": "^5.2.0"
   },
   "engines": {
     "node": ">=18"

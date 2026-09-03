@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -11,6 +11,11 @@ import {
 } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { ShiftService } from '../shift/shift.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
@@ -27,13 +32,62 @@ export class TimeTrackingService {
     private readonly db: Database,
     readonly _membershipService: MembershipService,
     private readonly shiftService: ShiftService,
+    private readonly postHogService: PostHogService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
     input: AddTimeEntryInput,
+    _actorUserId: string,
+    options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
+    if (input.shiftInstanceId) {
+      await this.assertShiftInstanceInOrgUnit(
+        input.shiftInstanceId,
+        organizationUnitId,
+      );
+    }
+
+    try {
+      const [timeEntry] = await this.db
+        .insert(schema.timeEntries)
+        .values({
+          shiftInstanceId: input.shiftInstanceId ?? null,
+          organizationUnitId,
+          volunteerId: input.volunteerId,
+          startedAt: input.startedAt,
+          endedAt: input.endedAt ?? null,
+          notes: input.notes,
+        })
+        .returning();
+      if (!options?.skipCapture) {
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.TIME_ENTRY_CREATE,
+          userId: timeEntry.volunteerId,
+          properties: {
+            surface: POSTHOG_SURFACE.BACKOFFICE,
+            organization_unit_id: organizationUnitId,
+            shift_instance_id: timeEntry.shiftInstanceId ?? undefined,
+          },
+        });
+      }
+      return timeEntry;
+    } catch (error) {
+      if (
+        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+      ) {
+        throw new ConflictGraphQLError('Already checked in');
+      }
+      throw error;
+    }
+  }
+
+  private async assertShiftInstanceInOrgUnit(
+    shiftInstanceId: string,
+    organizationUnitId: string,
+  ): Promise<void> {
     const instance = await this.db.query.shiftInstances.findFirst({
-      where: { id: input.shiftInstanceId },
+      where: { id: shiftInstanceId },
       with: { master: true },
     });
 
@@ -45,37 +99,20 @@ export class TimeTrackingService {
         'Shift instance does not exist in this organization',
       );
     }
-
-    try {
-      const [timeEntry] = await this.db
-        .insert(schema.timeEntries)
-        .values({
-          shiftInstanceId: input.shiftInstanceId,
-          volunteerId: input.volunteerId,
-          startedAt: input.startedAt,
-          notes: input.notes,
-        })
-        .returning();
-      return timeEntry;
-    } catch (error) {
-      if (isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT)) {
-        throw new ConflictGraphQLError('Already checked in');
-      }
-      throw error;
-    }
   }
 
   async closeTimeEntry(
     id: string,
     organizationUnitId: string,
     input: CloseTimeEntryInput,
+    _actorUserId: string,
+    options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -85,6 +122,18 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.id, id))
       .returning();
 
+    if (!options?.skipCapture) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.TIME_ENTRY_END,
+        userId: timeEntry.volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_unit_id: organizationUnitId,
+          shift_instance_id: timeEntry.shiftInstanceId ?? undefined,
+        },
+      });
+    }
+
     return timeEntry;
   }
 
@@ -92,35 +141,62 @@ export class TimeTrackingService {
     id: string,
     organizationUnitId: string,
     input: UpdateTimeEntryInput,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
-    const [timeEntry] = await this.db
-      .update(schema.timeEntries)
-      .set(input)
-      .where(eq(schema.timeEntries.id, id))
-      .returning();
+    if (input.shiftInstanceId) {
+      await this.assertShiftInstanceInOrgUnit(
+        input.shiftInstanceId,
+        organizationUnitId,
+      );
+    }
 
-    return timeEntry;
+    try {
+      const [timeEntry] = await this.db
+        .update(schema.timeEntries)
+        .set(input)
+        .where(eq(schema.timeEntries.id, id))
+        .returning();
+
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.TIME_ENTRY_UPDATE,
+        userId: timeEntry.volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_unit_id: organizationUnitId,
+          shift_instance_id: timeEntry.shiftInstanceId ?? undefined,
+        },
+      });
+
+      return timeEntry;
+    } catch (error) {
+      if (
+        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+      ) {
+        throw new ConflictGraphQLError('Already checked in');
+      }
+      throw error;
+    }
   }
 
   async deleteTimeEntry(
     organizationUnitId: string,
     id: string,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } } },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -128,6 +204,17 @@ export class TimeTrackingService {
       .delete(schema.timeEntries)
       .where(eq(schema.timeEntries.id, id))
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.TIME_ENTRY_DELETE,
+      userId: deletedTimeEntry.volunteerId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: organizationUnitId,
+        shift_instance_id: deletedTimeEntry.shiftInstanceId ?? undefined,
+      },
+    });
+
     return deletedTimeEntry;
   }
 
@@ -137,10 +224,9 @@ export class TimeTrackingService {
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
-      with: { shiftInstance: { with: { master: true } }, volunteer: true },
     });
 
-    if (!existsInOrgUnit(organizationUnitId, entry)) {
+    if (!entry || entry.organizationUnitId !== organizationUnitId) {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
@@ -151,25 +237,19 @@ export class TimeTrackingService {
     organizationUnitId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const timeEntries = await this.db.query.timeEntries.findMany({
-      with: { shiftInstance: { with: { master: true } } },
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { organizationUnitId },
       orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
 
-    const filteredTimeEntries = timeEntries.filter(
-      (entry) =>
-        entry.shiftInstance?.master?.organizationUnitId === organizationUnitId,
-    );
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(eq(schema.timeEntries.organizationUnitId, organizationUnitId));
 
-    const paginated = filteredTimeEntries.slice(
-      pagination.offset,
-      pagination.offset + pagination.limit,
-    );
-
-    return {
-      entries: paginated as TimeEntryEntity[],
-      total: filteredTimeEntries.length,
-    };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 
   async findByUser(
@@ -177,22 +257,24 @@ export class TimeTrackingService {
     userId: string,
     pagination: PaginationInput,
   ): Promise<{ entries: TimeEntryEntity[]; total: number }> {
-    const allEntries = await this.db.query.timeEntries.findMany({
-      where: { volunteerId: userId },
-      with: { shiftInstance: { with: { master: true } } },
+    const entries = await this.db.query.timeEntries.findMany({
+      where: { organizationUnitId, volunteerId: userId },
       orderBy: { startedAt: 'desc' },
+      limit: pagination.limit,
+      offset: pagination.offset,
     });
 
-    const filtered = allEntries.filter(
-      (e) => e.shiftInstance?.master?.organizationUnitId === organizationUnitId,
-    );
+    const [{ total }] = await this.db
+      .select({ total: count() })
+      .from(schema.timeEntries)
+      .where(
+        and(
+          eq(schema.timeEntries.organizationUnitId, organizationUnitId),
+          eq(schema.timeEntries.volunteerId, userId),
+        ),
+      );
 
-    const paginated = filtered.slice(
-      pagination.offset,
-      pagination.offset + pagination.limit,
-    );
-
-    return { entries: paginated as TimeEntryEntity[], total: filtered.length };
+    return { entries: entries as TimeEntryEntity[], total };
   }
 
   async findMyTime(
@@ -294,7 +376,24 @@ export class TimeTrackingService {
     input.endedAt = null;
     input.notes = null;
 
-    return this.addTimeEntry(instance.master.organizationUnitId, input);
+    const timeEntry = await this.addTimeEntry(
+      instance.master.organizationUnitId,
+      input,
+      userId,
+      { skipCapture: true },
+    );
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_CHECK_IN,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_unit_id: instance.master.organizationUnitId,
+        shift_instance_id: shiftInstanceId,
+      },
+    });
+
+    return timeEntry;
   }
 
   async checkOut(
@@ -318,11 +417,25 @@ export class TimeTrackingService {
     closeInput.endedAt = new Date();
     closeInput.notes = null;
 
-    return this.closeTimeEntry(
+    const timeEntry = await this.closeTimeEntry(
       entry.id,
       instance.master.organizationUnitId,
       closeInput,
+      userId,
+      { skipCapture: true },
     );
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_CHECK_OUT,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_unit_id: instance.master.organizationUnitId,
+        shift_instance_id: shiftInstanceId,
+      },
+    });
+
+    return timeEntry;
   }
 }
 
@@ -332,6 +445,9 @@ const CHECK_IN_CLOSES_AFTER_MS = 60 * 60 * 1000; // 1h after end
 
 const UNIQUE_OPEN_ENTRY_CONSTRAINT =
   'uq_time_entries_open_per_instance_volunteer';
+
+const UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT =
+  'uq_time_entries_open_shiftless_per_org_volunteer';
 
 // Drizzle wraps postgres errors, so the driver error lives on `error.cause`.
 // '23505' is the Postgres unique-violation SQLSTATE.
@@ -351,18 +467,5 @@ const isConstraintViolation = (
     driverError.code === '23505' &&
     'constraint' in driverError &&
     driverError.constraint === constraintName
-  );
-};
-
-const existsInOrgUnit = (
-  organizationUnitId: string,
-  entry?: {
-    shiftInstance: { master: { organizationUnitId: string } | null } | null;
-  },
-): entry is {
-  shiftInstance: { master: { organizationUnitId: string } };
-} => {
-  return !!(
-    entry?.shiftInstance?.master?.organizationUnitId === organizationUnitId
   );
 };

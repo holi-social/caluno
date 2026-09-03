@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '../lib/utils';
 import { Button } from './base/button';
-import { Logo } from './logo';
+import { LogoLettermark } from './logo-lettermark';
 
 export interface CobrandingProps {
   /** URL of the organization logo. */
@@ -40,7 +40,7 @@ export function Cobranding({
           <div className={cn('w-px bg-border', isBig ? 'h-6' : 'h-5')} />
         </>
       ) : null}
-      {ourLogo ?? <Logo width={isBig ? 42 : 38} className="opacity-40" />}
+      {ourLogo ?? <LogoLettermark width={isBig ? 42 : 38} />}
     </>
   );
 

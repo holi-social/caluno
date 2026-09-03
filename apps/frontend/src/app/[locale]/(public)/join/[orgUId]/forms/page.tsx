@@ -1,7 +1,6 @@
 import { JoinStatus } from '@repo/data';
 import { getTranslations } from 'next-intl/server';
 import { OrgPageHeader } from '@/domain/org-unit/components/org-page-header';
-import type { RequiredFormItem } from '@/domain/requirement-form/components/required-form-renderer';
 import { buildSubmittedFormIds } from '@/domain/requirement-form/resolve-required-forms';
 import { redirect } from '@/i18n/navigation';
 import { getSession } from '@/lib/auth-server';
@@ -33,13 +32,11 @@ export default async function JoinFormsPage({
 
   const data = await getDataClient();
 
-  const [orgUnit, userProfile, submissionsResult, joinResult] =
-    await Promise.all([
-      data.organizationUnit.findById(orgUId),
-      data.requirementForm.getMyUserProfile(),
-      data.requirementForm.findMyFormSubmissions(orgUId),
-      data.membershipRequest.join(orgUId).catch(() => null),
-    ]);
+  const [orgUnit, userProfile, joinResult] = await Promise.all([
+    data.organizationUnit.findById(orgUId),
+    data.requirementForm.getMyUserProfile(),
+    data.membershipRequest.join(orgUId).catch(() => null),
+  ]);
 
   if (!orgUnit) {
     redirect({ href: '/', locale });
@@ -53,9 +50,12 @@ export default async function JoinFormsPage({
     });
   }
 
+  const mySubmissions =
+    await data.requirementForm.findMyFormSubmissions(orgUId);
+
   const profileData = (userProfile?.data ?? {}) as Record<string, string>;
 
-  const submittedFormIds = buildSubmittedFormIds(submissionsResult);
+  const submittedFormIds = buildSubmittedFormIds(mySubmissions);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -64,7 +64,7 @@ export default async function JoinFormsPage({
         <JoinFormsClient
           orgUId={orgUId}
           orgName={orgUnit.name}
-          requiredForms={orgUnit.requiredForms as RequiredFormItem[]}
+          requiredForms={orgUnit.requiredForms}
           profileData={profileData}
           initialSubmittedFormIds={submittedFormIds}
           redirectTo={redirectTo}
