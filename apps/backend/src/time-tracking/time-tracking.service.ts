@@ -367,16 +367,15 @@ export class TimeTrackingService {
         PERMISSIONS.CHECK_IN_MANAGE,
       );
 
-    const eligibleUnits: schema.OrganizationUnitEntity[] = [];
-    for (const unit of manageableUnits) {
-      const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+    // Batched: one round of queries for all units, not two per unit.
+    const eligibleUnitIds =
+      await this._membershipService.filterUnitsWhereMemberOrAncestor(
         volunteer.id,
-        unit.id,
+        manageableUnits.map((unit) => unit.id),
       );
-      if (isMember) {
-        eligibleUnits.push(unit);
-      }
-    }
+    const eligibleUnits = manageableUnits.filter((unit) =>
+      eligibleUnitIds.has(unit.id),
+    );
     eligibleUnits.sort((a, b) => a.name.localeCompare(b.name));
 
     // No overlap between the caller's check-in:manage units and the

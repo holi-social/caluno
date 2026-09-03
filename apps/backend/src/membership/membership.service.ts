@@ -29,6 +29,9 @@ import {
   type MembershipRequestMetadata,
 } from './schemas/membership-request.schema';
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Injectable()
 export class MembershipService {
   private readonly logger = new Logger(MembershipService.name);
@@ -344,6 +347,86 @@ export class MembershipService {
     }
 
     return false;
+  }
+
+  /**
+   * Batched variant of {@link isMemberOfUnitOrAncestor}: returns the subset of
+   * `unitIds` where the user holds a membership on the unit itself or on any
+   * of its ancestors within the same organization. Runs a constant number of
+   * queries regardless of `unitIds.length` — use this instead of looping the
+   * single-unit method.
+   */
+  async filterUnitsWhereMemberOrAncestor(
+    userId: string,
+    unitIds: string[],
+  ): Promise<Set<string>> {
+    // Non-UUID strings can never match a uuid column; drop them so the
+    // `in` filter below never hits a cast error.
+    const validUnitIds = unitIds.filter((id) => UUID_RE.test(id));
+    if (validUnitIds.length === 0) return new Set();
+
+    const requestedUnits = await this.db.query.organizationUnits.findMany({
+      where: { id: { in: validUnitIds } },
+      columns: { id: true, organizationId: true },
+    });
+    if (requestedUnits.length === 0) return new Set();
+
+    const userMemberships = await this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    // Member unit ids grouped by organization.
+    const memberUnitIdsByOrg = new Map<string, Set<string>>();
+    for (const membership of userMemberships) {
+      const unit = membership.organizationUnit;
+      if (!unit?.organizationId) continue;
+      const set = memberUnitIdsByOrg.get(unit.organizationId) ?? new Set();
+      set.add(unit.id);
+      memberUnitIdsByOrg.set(unit.organizationId, set);
+    }
+
+    const organizationIds = [
+      ...new Set(
+        requestedUnits
+          .map((unit) => unit.organizationId)
+          .filter((id): id is string => !!id),
+      ),
+    ];
+    if (organizationIds.length === 0) return new Set();
+
+    const orgUnits = await this.db.query.organizationUnits.findMany({
+      where: { organizationId: { in: organizationIds } },
+      columns: { id: true, parentId: true },
+    });
+    const parentByUnitId = new Map<string, string | null>();
+    for (const unit of orgUnits) {
+      parentByUnitId.set(unit.id, unit.parentId);
+    }
+
+    const eligible = new Set<string>();
+    for (const unit of requestedUnits) {
+      const memberUnitIds = unit.organizationId
+        ? memberUnitIdsByOrg.get(unit.organizationId)
+        : undefined;
+      if (!memberUnitIds || memberUnitIds.size === 0) continue;
+
+      // Walk upward; first member-owned ancestor wins.
+      let currentUnitId: string | null = unit.id;
+      while (currentUnitId) {
+        if (memberUnitIds.has(currentUnitId)) {
+          eligible.add(unit.id);
+          break;
+        }
+        currentUnitId = parentByUnitId.get(currentUnitId) ?? null;
+      }
+    }
+
+    return eligible;
   }
 
   private async notifyMembershipRequested(
