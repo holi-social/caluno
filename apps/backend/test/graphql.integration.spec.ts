@@ -39,6 +39,7 @@ describe('GraphQL API Integration', () => {
   it('creates and retrieves requirement profile and submission', async () => {
     const requirementTypes = ['DOCUMENT', 'CHECK', 'DATE', 'TEXT'] as const;
     const createdRequirements: Array<{ id: string; type: string }> = [];
+    const orgUnitHeaders = { 'x-organization-unit-id': organizationUnitId };
 
     for (const type of requirementTypes) {
       const createRequirementData = await graphqlRequestRequiringData<{
@@ -54,7 +55,6 @@ describe('GraphQL API Integration', () => {
             }
           }
         `,
-          headers: { 'x-organization-unit-id': organizationUnitId },
           variables: {
             input: {
               organizationId,
@@ -64,6 +64,7 @@ describe('GraphQL API Integration', () => {
               mandatory: true,
             },
           },
+          headers: orgUnitHeaders,
         },
         'createRequirement',
       );
@@ -97,7 +98,6 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
-        headers: { 'x-organization-unit-id': organizationUnitId },
         variables: {
           input: {
             organizationId,
@@ -106,6 +106,7 @@ describe('GraphQL API Integration', () => {
             requirementIds: createdRequirements.map((item) => item.id),
           },
         },
+        headers: orgUnitHeaders,
       },
       'createRequirementProfile',
     );
@@ -132,8 +133,8 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
-      headers: { 'x-organization-unit-id': organizationUnitId },
       variables: { id: profileId },
+      headers: orgUnitHeaders,
     });
 
     expect(getProfileResponse.errors).toBeUndefined();
@@ -182,7 +183,6 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
-          headers: { 'x-organization-unit-id': organizationUnitId },
           variables: {
             input: {
               profileId,
@@ -208,6 +208,7 @@ describe('GraphQL API Integration', () => {
               ],
             },
           },
+          headers: orgUnitHeaders,
         },
         'createRequirementProfileSubmission',
       );
@@ -264,8 +265,8 @@ describe('GraphQL API Integration', () => {
           }
         }
       `,
-      headers: { 'x-organization-unit-id': organizationUnitId },
       variables: { id: submissionId },
+      headers: orgUnitHeaders,
     });
 
     expect(getSubmissionResponse.errors).toBeUndefined();

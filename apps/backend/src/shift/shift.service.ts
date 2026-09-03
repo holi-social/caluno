@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, count, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
+import { AccountingOrgAccessService } from '../accounting/services/accounting-org-access.service';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
 import type { Database } from '../database/database.module';
@@ -87,6 +88,7 @@ export class ShiftService {
     private readonly requiredFormService: RequiredFormService,
     private readonly formSubmissionService: FormSubmissionService,
     private readonly postHogService: PostHogService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   async findById(id: string): Promise<ShiftEntity> {
@@ -882,6 +884,12 @@ export class ShiftService {
       );
     }
 
+    if (shiftInput.reimbursementTypeId) {
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        organizationUnitId,
+      );
+    }
+
     const shift = await this.db.transaction(async (tx) => {
       const [shift] = await tx
         .insert(schema.shifts)
@@ -900,6 +908,7 @@ export class ShiftService {
           originalStartsAt: shiftInput.startsAt,
           durationMinutes,
           eventId: eventId ?? null,
+          reimbursementTypeId: shiftInput.reimbursementTypeId ?? null,
         })
         .returning();
 
@@ -1046,6 +1055,7 @@ export class ShiftService {
         invites: {
           columns: {
             userId: true;
+            status: true;
           };
         };
         master: true;
@@ -1061,10 +1071,15 @@ export class ShiftService {
     const maxVolunteers =
       shiftInstance.overrideMaxVolunteers ?? shiftInstance.master.maxVolunteers;
 
-    if (
-      maxVolunteers &&
-      shiftInstance.invites.length + memberIds.length > maxVolunteers
-    ) {
+    // Only active (pending or participating) invites occupy capacity —
+    // REJECTED/CANCELLED rows must not block re-invites. Stale rows for the
+    // members being (re)added are still represented by memberIds.length here,
+    // since they resurrect to active below.
+    const activeInviteCount = shiftInstance.invites.filter((inv) =>
+      ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status),
+    ).length;
+
+    if (maxVolunteers && activeInviteCount + memberIds.length > maxVolunteers) {
       throw new ConflictGraphQLError(
         `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
       );
@@ -1141,9 +1156,8 @@ export class ShiftService {
     // Only active (pending or participating) invites count as "currently
     // invited" — REJECTED/CANCELLED rows must not block re-invites or
     // trigger removals.
-    const activeStatuses: readonly string[] = ACTIVE_SHIFT_INVITE_STATUSES;
     const currentInstanceInviteUserIds = currentShiftInstance.invites
-      .filter((inv) => activeStatuses.includes(inv.status))
+      .filter((inv) => ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status))
       .map((inv) => inv.userId);
     const { userIdsToAdd, userIdsToRemove } = this.getUserIdDifferences(
       currentInstanceInviteUserIds,
@@ -1282,16 +1296,20 @@ export class ShiftService {
             instance.overrideMaxVolunteers ?? shift.maxVolunteers;
           const invitedUserIds = new Set(
             instance.invites
-              .filter((invite) => activeStatuses.includes(invite.status))
+              .filter((invite) =>
+                ACTIVE_SHIFT_INVITE_STATUSES.includes(invite.status),
+              )
               .map((invite) => invite.userId),
           );
           const membersToAdd = userIdsToAdd.filter(
             (id) => !invitedUserIds.has(id),
           );
-          if (
-            capacity &&
-            membersToAdd.length + instance.invites.length > capacity
-          ) {
+          // Only active invites occupy capacity — REJECTED/CANCELLED rows
+          // must not block re-invites on future instances.
+          const activeInviteCount = instance.invites.filter((invite) =>
+            ACTIVE_SHIFT_INVITE_STATUSES.includes(invite.status),
+          ).length;
+          if (capacity && membersToAdd.length + activeInviteCount > capacity) {
             throw new ConflictGraphQLError(
               `Cannot invite members: instance would exceed capacity of ${capacity}`,
             );
@@ -1396,6 +1414,12 @@ export class ShiftService {
     organizationUnitId: string,
     options: { applyToAllFuture?: boolean; actorUserId?: string } = {},
   ): Promise<ShiftInstanceEntity> {
+    if (input.reimbursementTypeId) {
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        organizationUnitId,
+      );
+    }
+
     const before = await this.db.query.shiftInstances.findFirst({
       where: { id: instanceId },
       with: { master: true },
@@ -1524,6 +1548,7 @@ export class ShiftService {
         overrideInstructions: input.instructions ?? null,
         overrideMinVolunteers: input.minVolunteers ?? null,
         overrideMaxVolunteers: input.maxVolunteers ?? null,
+        overrideReimbursementTypeId: input.reimbursementTypeId ?? null,
         actualStartsAt: input.startsAt,
         actualEndsAt: input.endsAt,
         isException: true,
@@ -1605,6 +1630,10 @@ export class ShiftService {
           ? await this.resolveImageUrl(input.imageFileId)
           : null;
 
+    const typeChanged =
+      input.reimbursementTypeId !== undefined &&
+      input.reimbursementTypeId !== shift.reimbursementTypeId;
+
     const [updatedShift] = await tx
       .update(schema.shifts)
       .set({
@@ -1616,6 +1645,9 @@ export class ShiftService {
         maxVolunteers: input.maxVolunteers ?? null,
         ...(input.visibility ? { visibility: input.visibility } : {}),
         ...(imageUrl !== undefined ? { imageUrl } : {}),
+        ...(input.reimbursementTypeId !== undefined
+          ? { reimbursementTypeId: input.reimbursementTypeId }
+          : {}),
         rrule: newRrule,
         originalStartsAt: newOriginalStartsAt,
         durationMinutes,
@@ -1697,6 +1729,7 @@ export class ShiftService {
           overrideInstructions: null,
           overrideMinVolunteers: null,
           overrideMaxVolunteers: null,
+          overrideReimbursementTypeId: null,
           isException: false,
         })
         .where(
@@ -1718,6 +1751,7 @@ export class ShiftService {
           overrideInstructions: null,
           overrideMinVolunteers: null,
           overrideMaxVolunteers: null,
+          overrideReimbursementTypeId: null,
           isException: false,
           actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
           actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
@@ -1729,6 +1763,21 @@ export class ShiftService {
             eq(schema.shiftInstances.isCancelled, false),
           ),
         );
+    }
+
+    // Runs after the override-reset blocks above (not before): those blocks
+    // clear overrideReimbursementTypeId for every instance whose
+    // actualStartsAt >= fromDate, which on a multi-occurrence day can include
+    // an instance that has already ended. Snapshotting first would have that
+    // reset immediately wipe the freeze this call just wrote. Idempotent —
+    // only touches instances with overrideReimbursementTypeId IS NULL and
+    // actualEndsAt < now() — so running it last is safe and closes the gap.
+    if (typeChanged) {
+      await this.snapshotPastInstanceTypes(
+        tx,
+        shift.id,
+        shift.reimbursementTypeId,
+      );
     }
 
     const [refreshedInstance] = await tx
@@ -1743,6 +1792,32 @@ export class ShiftService {
     }
 
     return refreshedInstance;
+  }
+
+  /**
+   * When a shift's effective reimbursement type is about to change, freeze
+   * the OLD type onto any already-occurred instance that doesn't already
+   * have its own override, so past instances keep reflecting the type that
+   * was actually in effect when they happened instead of silently picking
+   * up the new master value.
+   */
+  private async snapshotPastInstanceTypes(
+    tx: Database,
+    shiftId: string,
+    previousReimbursementTypeId: string | null,
+  ): Promise<void> {
+    if (!previousReimbursementTypeId) return;
+
+    await tx
+      .update(schema.shiftInstances)
+      .set({ overrideReimbursementTypeId: previousReimbursementTypeId })
+      .where(
+        and(
+          eq(schema.shiftInstances.masterId, shiftId),
+          isNull(schema.shiftInstances.overrideReimbursementTypeId),
+          lt(schema.shiftInstances.actualEndsAt, new Date()),
+        ),
+      );
   }
 
   private rrulePatternsEqual(a: string | null, b: string | null): boolean {
@@ -2174,6 +2249,12 @@ export class ShiftService {
       ...shiftInput
     } = input;
 
+    if (shiftInput.reimbursementTypeId) {
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        organizationUnitId,
+      );
+    }
+
     const { shift, previousShift } = await this.db.transaction(async (tx) => {
       let shift = await tx.query.shifts.findFirst({
         where: { id, organizationUnitId },
@@ -2213,6 +2294,21 @@ export class ShiftService {
         Object.keys(shiftInput).length > 0 ||
         inputEventId !== undefined ||
         imageFileId !== undefined;
+
+      const typeChanged =
+        shiftInput.reimbursementTypeId !== undefined &&
+        shiftInput.reimbursementTypeId !== shift.reimbursementTypeId;
+
+      // When a shift previously had no type and gets one for the first
+      // time, `shift.reimbursementTypeId` is null here, so no snapshot is
+      // taken — there's nothing meaningful to preserve in a nullable
+      // override column ("no type" and "inherit from master" aren't
+      // distinguishable). Already-occurred instances will start reflecting
+      // the newly-set master type if a new time entry is ever created
+      // against them later. Known, accepted limitation.
+      if (typeChanged) {
+        await this.snapshotPastInstanceTypes(tx, id, shift.reimbursementTypeId);
+      }
 
       if (hasValuesToUpdate) {
         const durationMinutes =
