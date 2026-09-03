@@ -88,3 +88,8 @@ export const serverCheckInVolunteerSchema = z.object({
   volunteerId: z.string().min(1, 'Volunteer is required'),
   shiftInstanceId: z.string().nullable(),
 });
+
+export const serverCheckOutVolunteerSchema = z.object({
+  timeEntryId: z.string().min(1, 'Time Entry ID is required'),
+  organizationUnitId: z.string().min(1, 'Organization unit ID is required'),
+});
