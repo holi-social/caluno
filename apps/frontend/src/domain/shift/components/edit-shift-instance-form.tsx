@@ -2,8 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  useCurrentOrg,
   useOrganizationUnit,
   useQueryClient,
+  useReimbursementTypes,
   useRequirementForms,
 } from '@repo/data/react';
 import {
@@ -17,6 +19,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Switch,
   Textarea,
 } from '@repo/ui';
@@ -32,12 +39,15 @@ import {
 } from '@/components/required-forms-fields';
 import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
+import { pauschaleForReimbursementTypeKey } from '../../accounting/lib/reimbursement-type-mapping';
 import {
   type EditShiftInstanceFormValues,
   editShiftInstanceFormSchema,
 } from '../schemas';
 import { RecurrenceSelect } from './recurrence-select';
 import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
+
+const NO_REIMBURSEMENT_TYPE = 'none';
 
 interface EditShiftInstanceFormProps {
   orgUId: string;
@@ -62,6 +72,9 @@ export const EditShiftInstanceForm = ({
   const t = useTranslations('Shift');
   const tUpload = useTranslations('Storage.upload');
   const tForms = useTranslations('Shift.detail.requiredForms');
+  const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
+  const { accountingEnabled } = useCurrentOrg();
+  const { data: reimbursementTypes } = useReimbursementTypes();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const [requiredFormIds, setRequiredFormIds] = useState(
@@ -365,6 +378,45 @@ export const EditShiftInstanceForm = ({
           <FieldError errors={[errors.maxVolunteers]} />
         </Field>
       </div>
+
+      {accountingEnabled && (
+        <Field>
+          <FieldLabel htmlFor="reimbursementTypeId">
+            {t('form.reimbursementTypeLabel')}
+          </FieldLabel>
+          <Select
+            value={watch('reimbursementTypeId') ?? NO_REIMBURSEMENT_TYPE}
+            onValueChange={(value) =>
+              setValue(
+                'reimbursementTypeId',
+                value === NO_REIMBURSEMENT_TYPE ? null : value,
+              )
+            }
+            disabled={pending}
+          >
+            <SelectTrigger id="reimbursementTypeId" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_REIMBURSEMENT_TYPE}>
+                {t('form.reimbursementTypeNone')}
+              </SelectItem>
+              {(reimbursementTypes ?? []).map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {tPauschale(
+                    pauschaleForReimbursementTypeKey(type.key) === 'ehrenamt'
+                      ? 'typeEP'
+                      : 'typeUL',
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldDescription>
+            {t('form.reimbursementTypeDescription')}
+          </FieldDescription>
+        </Field>
+      )}
 
       {(isOneTimeShift || applyToAllFuture) && (
         <div className="rounded-xl border p-5 space-y-5">
