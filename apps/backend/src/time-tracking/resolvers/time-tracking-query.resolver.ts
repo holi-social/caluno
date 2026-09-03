@@ -1,10 +1,19 @@
-import { Args, Context, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { RequiredFormWithStatus } from '../../membership/models/required-form-with-status.model';
+import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
+import { RequiredFormTargetType } from '../../requirement-profile/enums';
+import { RequirementForm } from '../../requirement-profile/models/requirement-form.model';
+import { RequiredFormService } from '../../requirement-profile/services/required-form.service';
+import { UserMapper } from '../../user/mappers/user.mapper';
 import { TimeEntryMapper } from '../mappers/time-entry.mapper';
+import { CheckInContext } from '../models/check-in-context.model';
+import { CheckInReadiness } from '../models/check-in-readiness.model';
 import {
   TimeEntry,
   TimeEntryPaginatedResponse,
@@ -16,6 +25,9 @@ export class TimeTrackingQueryResolver {
   constructor(
     private readonly timeTrackingService: TimeTrackingService,
     private readonly timeEntryMapper: TimeEntryMapper,
+    private readonly userMapper: UserMapper,
+    private readonly organizationUnitMapper: OrganizationUnitMapper,
+    private readonly requiredFormService: RequiredFormService,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -49,6 +61,44 @@ export class TimeTrackingQueryResolver {
     });
   }
 
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Query(() => CheckInReadiness)
+  async checkInReadiness(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<CheckInReadiness> {
+    return this.timeTrackingService.getCheckInReadiness(
+      volunteerId,
+      shiftInstanceId,
+      context.organizationUnitId,
+    );
+  }
+
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Query(() => [RequiredFormWithStatus])
+  async checkInVolunteerRequiredForms(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<RequiredFormWithStatus[]> {
+    const statuses = await this.requiredFormService.getRequiredFormStatuses(
+      volunteerId,
+      {
+        targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+        targetId: context.organizationUnitId,
+      },
+    );
+
+    return statuses.map((s) => ({
+      form: plainToInstance(RequirementForm, s.form),
+      order: s.order,
+      submitted: s.submitted,
+      submissionId: s.submissionId,
+      targetType: s.targetType,
+      targetId: s.targetId,
+    }));
+  }
+
   @Permissions(PERMISSIONS.SHIFT_VIEW)
   @Query(() => TimeEntryPaginatedResponse)
   async timeEntriesByUser(
@@ -67,6 +117,31 @@ export class TimeTrackingQueryResolver {
       limit: pagination.limit,
       offset: pagination.offset,
     });
+  }
+
+  // Cross-org-unit check-in context: intentionally NOT @Permissions()-gated
+  // (like checkIn/checkOut); the service intersects the caller's
+  // check-in:manage units with the volunteer's memberships.
+  @Query(() => CheckInContext, { nullable: true })
+  async checkInContext(
+    @Args('checkInId') checkInId: string,
+    @Session() session: UserSession,
+  ): Promise<CheckInContext | null> {
+    const context = await this.timeTrackingService.getCheckInContext(
+      session.user.id,
+      checkInId,
+    );
+    if (!context) {
+      return null;
+    }
+
+    return {
+      volunteer: this.userMapper.toModelOrThrow(context.volunteer),
+      eligibleOrganizationUnits: this.organizationUnitMapper.toArray(
+        context.eligibleOrganizationUnits,
+      ),
+      openTimeEntries: this.timeEntryMapper.toArray(context.openTimeEntries),
+    };
   }
 
   @Query(() => TimeEntryPaginatedResponse)

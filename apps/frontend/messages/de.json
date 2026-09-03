@@ -87,10 +87,52 @@
     }
   },
   "CheckIn": {
+    "acceptMembershipButton": "Mitgliedschaft akzeptieren",
+    "acceptMembershipError": "Mitgliedschaft konnte nicht akzeptiert werden. Bitte erneut versuchen.",
+    "acceptMembershipSheetTitle": "Mitgliedschaft prüfen",
+    "alreadyCheckedInButton": "Zum Check-out",
+    "alreadyCheckedInDescription": "Diese Person ist für diese Schicht bereits eingecheckt.",
+    "alreadyCheckedInTitle": "Bereits eingecheckt",
+    "checkInButton": "Einchecken",
+    "checkInRunningTitle": "Checkin läuft",
+    "checkInSectionDescription": "Checke diese Person für eine neue Schicht ein, ohne die offenen Einträge zu schließen.",
+    "checkInSectionTitle": "Neuer Check-in",
+    "dateSheetTitle": "Datum wählen",
+    "foundOnOtherDays": "An anderen Tagen gefunden",
+    "inviteSentConfirmation": "Einladung gesendet",
     "manualCheckin": "Manuelles Einchecken",
     "myQrCodeTab": "Mein QR-Code",
+    "noShiftsFound": "Keine Schichten gefunden",
+    "noVolunteersFound": "Keine Freiwilligen gefunden",
+    "notInShiftButton": "Zur Schicht einladen",
+    "notInShiftDescription": "Diese Person ist dieser Schicht noch nicht beigetreten.",
+    "notInShiftError": "Freiwillige konnte nicht zur Schicht eingeladen werden. Bitte erneut versuchen.",
+    "notInShiftTitle": "Nicht Teil dieser Schicht",
+    "notMemberButton": "Zur Organisation einladen",
+    "notMemberDescription": "Diese Person ist noch kein Mitglied dieser Organisation.",
+    "notMemberError": "Freiwillige konnte nicht zur Organisation eingeladen werden. Bitte erneut versuchen.",
+    "notMemberTitle": "Nicht in deiner Organisation",
+    "openEntriesDescription": "Diese Person ist noch eingecheckt. Wähle einen Eintrag, um sie auszuchecken.",
+    "openEntriesTitle": "Offene Check-ins",
+    "orgUnitRowLabel": "Organisationseinheit",
+    "orgUnitSheetTitle": "Organisationseinheit wählen",
+    "pendingMembershipDescription": "Diese Person hat um Mitgliedschaft gebeten. Akzeptiere die Anfrage, um fortzufahren.",
+    "pendingMembershipTitle": "Wartet auf Beitritt zur Organisation",
     "qrScannerTab": "QR-Scanner",
-    "scanACode": "Code scannen"
+    "readyBannerTitle": "Bereit zum Check-in",
+    "requiredFormMissing": "Fehlt",
+    "requiredFormSubmitted": "Eingereicht",
+    "saveSelection": "Auswahl speichern",
+    "scanACode": "Code scannen",
+    "searchVolunteerPlaceholder": "Freiwillige:n suchen",
+    "selectDatePlaceholder": "Datum wählen",
+    "selectOrgUnit": "Organisationseinheit auswählen",
+    "selectShiftPlaceholder": "Schicht wählen",
+    "shiftSearchPlaceholder": "Schichtname",
+    "shiftSheetTitle": "Schicht wählen",
+    "successDialogCloseButton": "Fertig",
+    "successDialogTitle": "Erfolgreich eingecheckt",
+    "today": "Heute"
   },
   "Common": {
     "avatarAlt": "Avatar von {name}",
@@ -1142,7 +1184,6 @@
     },
     "checkIn": {
       "checkIn": "Einchecken",
-      "checkInTitle": "Einchecken",
       "checkInWithShift": "Stattdessen eine Schicht wählen",
       "checkInWithoutShift": "Ohne Schicht einchecken",
       "checkOut": "Auschecken",
@@ -1152,29 +1193,12 @@
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "generalCheckIn": "Allgemeines Check-in",
-      "invalidCheckin": {
-        "blocked": {
-          "description": "Freiwillige:r darf nicht einchecken. Bitte ihn oder Sie, sich für Hilfe an die Zentrale zu wenden.",
-          "title": "Check-in verweigert"
-        },
-        "notMember": {
-          "description": "Freiwillige:r gehört nicht zu dieser Organisationseinheit.",
-          "title": "Check-in verweigert"
-        }
-      },
       "noShiftSelected": "Kein Einsatz ausgewählt",
       "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
       "selectOrgTitle": "Einchecken",
       "successNext": "Weiter",
-      "tryAgain": "Versuche es erneut",
       "volunteerCheckedIn": "Freiwillige:r eingecheckt",
-      "volunteerCheckedOut": "Freiwillige:r ausgecheckt",
-      "volunteerNotFoundDescription": "Es gibt niemanden, der zu dieser QR-ID passt. Die QR-ID wurde möglicherweise neu generiert und ist daher nicht mehr gültig. <tryAgain>Versuche es erneut</tryAgain>, indem du die QR-ID manuell eingibst oder nach der Person suchst, um sie einzuchecken.",
-      "volunteerNotFoundTitle": "Freiwillige:r nicht gefunden"
-    },
-    "checkInSelector": {
-      "empty": "Keine Freiwilligen gefunden",
-      "placeholder": "Freiwillige:n auswählen"
+      "volunteerCheckedOut": "Freiwillige:r ausgecheckt"
     },
     "detail": {
       "createdByLabel": "Erstellt von",

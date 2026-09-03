@@ -1098,6 +1098,52 @@ export class ShiftService {
     await this.createInvitesForInstances(tx, [shiftInstance.id], members);
   }
 
+  /**
+   * Creates a single INVITED invite for one volunteer, without touching any
+   * other invite on the instance — unlike `updateMembersForShiftInstance`,
+   * which replaces the whole member list. Used by the check-in flow's
+   * "invite to shift" blocker action.
+   */
+  async inviteVolunteerToShiftInstance(
+    shiftInstanceId: string,
+    volunteerId: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        id: shiftInstanceId,
+        master: { organizationUnitId, isDeleted: false },
+        isCancelled: false,
+      },
+      with: {
+        invites: { columns: { userId: true, status: true } },
+        master: true,
+      },
+    });
+    if (!instance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${shiftInstanceId} not found`,
+      );
+    }
+
+    await this.db.transaction((tx) =>
+      this.inviteMembersToShiftInstance(
+        tx,
+        instance,
+        [volunteerId],
+        ShiftInviteStatus.INVITED,
+      ),
+    );
+
+    void this.loadAndEmitShiftInstanceInvitedNotification(
+      instance.master,
+      instance,
+      [volunteerId],
+    );
+
+    return instance;
+  }
+
   async uninviteMembersFromShiftInstance(
     tx: Database,
     instanceId: string,
@@ -2440,7 +2486,7 @@ export class ShiftService {
     });
   }
 
-  async findShiftsForWeek(
+  async findInstancesForOrgUnitInRange(
     organizationUnitId: string,
     startsAfter: Date | null,
     endsBefore: Date | null,
@@ -2470,6 +2516,27 @@ export class ShiftService {
       },
       with: { master: true },
       orderBy: { actualStartsAt: 'asc' },
+    });
+  }
+
+  /**
+   * Shifts in the org unit whose title matches `search`. Used by the check-in
+   * shift picker, which searches shift names rather than instances — so this
+   * takes no date range.
+   */
+  async findShiftsByTitle(
+    organizationUnitId: string,
+    search: string | null,
+    limit = 20,
+  ): Promise<ShiftEntity[]> {
+    return this.db.query.shifts.findMany({
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(search ? { title: { ilike: `%${search}%` } } : {}),
+      },
+      orderBy: { title: 'asc' },
+      limit,
     });
   }
 

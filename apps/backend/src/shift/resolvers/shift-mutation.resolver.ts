@@ -326,4 +326,19 @@ export class ShiftMutationResolver {
     );
     return this.shiftInstanceInviteMapper.toModelOrThrow(invite);
   }
+
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Mutation(() => ShiftInstance)
+  async checkInInviteToShiftInstance(
+    @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance> {
+    const instance = await this.shiftService.inviteVolunteerToShiftInstance(
+      shiftInstanceId,
+      volunteerId,
+      context.organizationUnitId,
+    );
+    return this.shiftInstanceMapper.toModelOrThrow(instance);
+  }
 }

@@ -61,6 +61,11 @@ export function eventsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/events`;
 }
 
+/** Public deep link to an organization unit's join page. */
+export function publicOrganizationUnitUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/orgs/${encodeURIComponent(organizationUnitId)}`;
+}
+
 /**
  * Deep link to the volunteer's profile — its "Your organizations" section
  * links into each membership, whose page holds "Your documents". There is no

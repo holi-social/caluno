@@ -9,6 +9,7 @@ import type { MembershipLeftPayload } from './payloads/membership-left.payload';
 import type { MembershipRemovedPayload } from './payloads/membership-removed.payload';
 import type { MembershipRequestedPayload } from './payloads/membership-requested.payload';
 import type { OrganizationCreatedPayload } from './payloads/organization-created.payload';
+import type { OrganizationUnitInvitedPayload } from './payloads/organization-unit-invited.payload';
 import type { ShiftInstanceCancelledPayload } from './payloads/shift-instance-cancelled.payload';
 import type { ShiftInstanceInvitedPayload } from './payloads/shift-instance-invited.payload';
 import type { ShiftInstanceJoinedPayload } from './payloads/shift-instance-joined.payload';
@@ -26,6 +27,7 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_INSTANCE_CANCELLED]: ShiftInstanceCancelledPayload;
   [NotificationEvent.SHIFT_INSTANCE_SERIES_CANCELLED]: ShiftInstanceSeriesCancelledPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
+  [NotificationEvent.ORGANIZATION_UNIT_INVITED]: OrganizationUnitInvitedPayload;
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
   [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;
   [NotificationEvent.EVENT_CANCELLED]: EventCancelledPayload;

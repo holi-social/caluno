@@ -37,8 +37,11 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
     const service = new TimeTrackingService(
       db as never,
       {} as never,
-      {} as never,
+      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
       { capture } as unknown as PostHogService,
+      {} as never,
+      {} as never,
+      {} as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-1',
@@ -91,8 +94,11 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     const service = new TimeTrackingService(
       db as never,
       {} as never,
-      {} as never,
+      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
       { capture: jest.fn() } as unknown as PostHogService,
+      {} as never,
+      {} as never,
+      {} as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-1',
@@ -137,8 +143,11 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     const service = new TimeTrackingService(
       db as never,
       {} as never,
-      {} as never,
+      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
       { capture: jest.fn() } as unknown as PostHogService,
+      {} as never,
+      {} as never,
+      {} as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-2',
@@ -178,8 +187,11 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     const service = new TimeTrackingService(
       db as never,
       {} as never,
-      {} as never,
+      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
       { capture: jest.fn() } as unknown as PostHogService,
+      {} as never,
+      {} as never,
+      {} as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-3',
@@ -211,8 +223,11 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     const service = new TimeTrackingService(
       db as never,
       {} as never,
-      {} as never,
+      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
       { capture: jest.fn() } as unknown as PostHogService,
+      {} as never,
+      {} as never,
+      {} as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: null,

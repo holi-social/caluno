@@ -37,6 +37,14 @@ export class MembershipRequestRepository extends BaseRepository {
     return data.approveMembershipRequest;
   }
 
+  async checkInApprove(requestId: string, organizationUnitId: string) {
+    const data = await this.sdk.CheckInApproveMembershipRequest(
+      { requestId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return data.checkInApproveMembershipRequest;
+  }
+
   async reject(
     id: string,
     organizationUnitId: string,

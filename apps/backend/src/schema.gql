@@ -17,6 +17,20 @@ type BundleDownloadStatus {
   volunteer: User!
 }
 
+type CheckInContext {
+  eligibleOrganizationUnits: [OrganizationUnit!]!
+  openTimeEntries: [TimeEntry!]!
+  volunteer: User!
+}
+
+type CheckInReadiness {
+  hasOpenTimeEntry: Boolean!
+  isMember: Boolean!
+  isParticipating: Boolean!
+  openMembershipRequestId: ID
+  shiftInviteStatus: ShiftInviteStatus
+}
+
 input CloseTimeEntryInput {
   endedAt: DateTime!
   notes: String
@@ -606,6 +620,10 @@ type Mutation {
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   checkIn(shiftInstanceId: ID!): TimeEntry!
+  checkInApproveMembershipRequest(requestId: ID!): MembershipRequest!
+  checkInInviteToOrganization(volunteerId: ID!): Boolean!
+  checkInInviteToShiftInstance(shiftInstanceId: ID!, volunteerId: ID!): ShiftInstance!
+  checkInVolunteer(shiftInstanceId: ID, volunteerId: ID!): TimeEntry!
   checkOut(shiftInstanceId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createContract(input: CreateContractInput!): Contract!
@@ -831,6 +849,11 @@ type Query {
   availableEvents(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): EventPaginatedResponse!
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   bundleDownloadStatus(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus
+  checkInContext(checkInId: String!): CheckInContext
+  checkInReadiness(shiftInstanceId: ID!, volunteerId: ID!): CheckInReadiness!
+  checkInShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
+  checkInShifts(search: String): [Shift!]!
+  checkInVolunteerRequiredForms(volunteerId: ID!): [RequiredFormWithStatus!]!
   contract(id: ID!): Contract!
   contracts(filter: ContractFilterInput): [Contract!]!
   documentTemplate(id: ID!): DocumentTemplate!

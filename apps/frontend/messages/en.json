@@ -87,10 +87,52 @@
     }
   },
   "CheckIn": {
+    "acceptMembershipButton": "Accept membership",
+    "acceptMembershipError": "Couldn't accept membership. Try again.",
+    "acceptMembershipSheetTitle": "Review membership",
+    "alreadyCheckedInButton": "Go to check-out",
+    "alreadyCheckedInDescription": "This volunteer already has an open check-in for this shift.",
+    "alreadyCheckedInTitle": "Already checked in",
+    "checkInButton": "Check in",
+    "checkInRunningTitle": "Checkin running",
+    "checkInSectionDescription": "Check this volunteer in for a new shift without closing the open entries.",
+    "checkInSectionTitle": "New check-in",
+    "dateSheetTitle": "Select date",
+    "foundOnOtherDays": "Found on other days",
+    "inviteSentConfirmation": "Invitation sent",
     "manualCheckin": "Manual checkin",
     "myQrCodeTab": "My QR code",
+    "noShiftsFound": "No shifts found",
+    "noVolunteersFound": "No volunteer found",
+    "notInShiftButton": "Invite to shift",
+    "notInShiftDescription": "This volunteer hasn't joined this shift yet.",
+    "notInShiftError": "Couldn't invite volunteer to shift. Try again.",
+    "notInShiftTitle": "Not part of this shift",
+    "notMemberButton": "Invite to the org",
+    "notMemberDescription": "This volunteer isn't a member of this organisation yet.",
+    "notMemberError": "Couldn't invite volunteer to organisation. Try again.",
+    "notMemberTitle": "Not in your organisation",
+    "openEntriesDescription": "This volunteer is still checked in. Select an entry to check them out.",
+    "openEntriesTitle": "Open check-ins",
+    "orgUnitRowLabel": "Org unit",
+    "orgUnitSheetTitle": "Select org unit",
+    "pendingMembershipDescription": "This volunteer has asked to join. Accept their request to continue.",
+    "pendingMembershipTitle": "Waiting to join the organisation",
     "qrScannerTab": "QR Scanner",
-    "scanACode": "Scan a code"
+    "readyBannerTitle": "Good to go",
+    "requiredFormMissing": "Missing",
+    "requiredFormSubmitted": "Submitted",
+    "saveSelection": "Save selection",
+    "scanACode": "Scan a code",
+    "searchVolunteerPlaceholder": "Search for a volunteer",
+    "selectDatePlaceholder": "Select the date",
+    "selectOrgUnit": "Select org unit",
+    "selectShiftPlaceholder": "Select the shift",
+    "shiftSearchPlaceholder": "Shift name",
+    "shiftSheetTitle": "Select shift",
+    "successDialogCloseButton": "Done",
+    "successDialogTitle": "Successfully checked in",
+    "today": "Today"
   },
   "Common": {
     "avatarAlt": "Avatar of {name}",
@@ -1142,7 +1184,6 @@
     },
     "checkIn": {
       "checkIn": "Check in",
-      "checkInTitle": "Check-in",
       "checkInWithShift": "Choose a shift instead",
       "checkInWithoutShift": "Check in without a shift",
       "checkOut": "Check-out",
@@ -1152,29 +1193,12 @@
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
       "generalCheckIn": "General check-in",
-      "invalidCheckin": {
-        "blocked": {
-          "description": "The volunteer is not permitted to check-in. They must contact headquarters for assistance.",
-          "title": "Check-in denied"
-        },
-        "notMember": {
-          "description": "The volunteer is not a member of this organization unit.",
-          "title": "Check-in denied"
-        }
-      },
       "noShiftSelected": "No shift selected",
       "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
       "selectOrgTitle": "Check-in",
       "successNext": "Next",
-      "tryAgain": "Try again",
       "volunteerCheckedIn": "Volunteer checked in",
-      "volunteerCheckedOut": "Volunteer checked out",
-      "volunteerNotFoundDescription": "There is no volunteer that matches this QR ID. The QR ID may have been re-generated and so this QR ID is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR ID manually or search for the volunteer to check them in.",
-      "volunteerNotFoundTitle": "Volunteer does not exist"
-    },
-    "checkInSelector": {
-      "empty": "No volunteer found",
-      "placeholder": "Select a volunteer"
+      "volunteerCheckedOut": "Volunteer checked out"
     },
     "detail": {
       "createdByLabel": "Created by",

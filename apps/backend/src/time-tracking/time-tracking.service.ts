@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq } from 'drizzle-orm';
+import { PERMISSIONS } from '../auth/constants';
+import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
@@ -11,12 +13,17 @@ import {
 } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import { NotificationService } from '../notification';
+import { OrganizationService } from '../organization/organization.service';
+import { isParticipatingShiftInviteStatus } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
   POSTHOG_SURFACE,
 } from '../shared/observability/posthog.events';
 import { PostHogService } from '../shared/observability/posthog.service';
+import { ShiftInviteStatus } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
+import { UserService } from '../user/user.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
 import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
@@ -33,6 +40,9 @@ export class TimeTrackingService {
     readonly _membershipService: MembershipService,
     private readonly shiftService: ShiftService,
     private readonly postHogService: PostHogService,
+    private readonly organizationService: OrganizationService,
+    private readonly userService: UserService,
+    private readonly notificationService: NotificationService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
@@ -46,6 +56,20 @@ export class TimeTrackingService {
         input.shiftInstanceId,
         organizationUnitId,
       );
+
+      // Fail fast instead of relying on the DB unique-index guard below.
+      // Closed (historical) entries coexist with an open entry, so only
+      // check when the new entry would itself be open.
+      if (!input.endedAt) {
+        const alreadyCheckedIn = await this.shiftService.hasOpenTimeEntry(
+          input.shiftInstanceId,
+          input.volunteerId,
+        );
+        if (alreadyCheckedIn) {
+          throw new ConflictGraphQLError('Already checked in');
+        }
+      }
+
       reimbursementTypeId = context.reimbursementTypeId;
     }
 
@@ -314,6 +338,138 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.volunteerId, userId));
 
     return { entries: entries as TimeEntryEntity[], total };
+  }
+
+  /**
+   * Cross-org-unit check-in context for the volunteering-side decide page.
+   * Intentionally not scoped by ctx.organizationUnitId: eligibility is the
+   * intersection of the caller's check-in:manage units and the volunteer's
+   * memberships, enforced here (mirrors the ungated checkIn/checkOut mutations).
+   */
+  async getCheckInContext(
+    callerUserId: string,
+    checkInId: string,
+  ): Promise<{
+    volunteer: UserEntity;
+    eligibleOrganizationUnits: schema.OrganizationUnitEntity[];
+    openTimeEntries: TimeEntryEntityWithRelations[];
+  } | null> {
+    const volunteer = await this.userService.findByCheckInId(checkInId);
+    if (!volunteer) {
+      return null;
+    }
+
+    const manageableUnits =
+      await this.organizationService.findUnitsWithPermission(
+        callerUserId,
+        PERMISSIONS.CHECK_IN_MANAGE,
+      );
+
+    const eligibleUnits: schema.OrganizationUnitEntity[] = [];
+    for (const unit of manageableUnits) {
+      const isMember = await this._membershipService.isMemberOfUnitOrAncestor(
+        volunteer.id,
+        unit.id,
+      );
+      if (isMember) {
+        eligibleUnits.push(unit);
+      }
+    }
+    eligibleUnits.sort((a, b) => a.name.localeCompare(b.name));
+
+    const openTimeEntries =
+      eligibleUnits.length === 0
+        ? []
+        : await this.db.query.timeEntries.findMany({
+            where: {
+              volunteerId: volunteer.id,
+              organizationUnitId: { in: eligibleUnits.map((unit) => unit.id) },
+              endedAt: { isNull: true },
+            },
+            // Eager-load shiftInstance: the TimeEntry.shiftInstance field
+            // resolver falls back to ShiftService.findInstanceById, which is
+            // scoped to ctx.organizationUnitId — unavailable/wrong for this
+            // cross-unit (and often headerless) query.
+            with: { shiftInstance: true },
+            orderBy: { startedAt: 'asc' },
+          });
+
+    return {
+      volunteer,
+      eligibleOrganizationUnits: eligibleUnits,
+      openTimeEntries,
+    };
+  }
+
+  /**
+   * Emails a public join link — creates no membership and no request itself
+   * (spec decision 5). The recipient's own join is what later unblocks
+   * check-in, via `checkInReadiness`'s `pendingMembership` state.
+   */
+  async inviteVolunteerToOrganization(
+    organizationUnitId: string,
+    volunteerId: string,
+  ): Promise<void> {
+    const organizationUnit = await this.db.query.organizationUnits.findFirst({
+      where: { id: organizationUnitId },
+      columns: { id: true, name: true },
+    });
+    if (!organizationUnit) {
+      throw new NotFoundGraphQLError('Organization unit not found');
+    }
+
+    this.notificationService.notifyOrganizationUnitInvited({
+      organizationUnitId,
+      organizationUnitName: organizationUnit.name,
+      userId: volunteerId,
+    });
+  }
+
+  /**
+   * The four facts the check-in readiness gate needs: unit membership
+   * (ancestor-inclusive, matching `getCheckInContext`'s eligibility check),
+   * an open membership request against the exact unit, the volunteer's
+   * invite status on the specific shift instance, and whether the volunteer
+   * already has an open time entry for that instance.
+   */
+  async getCheckInReadiness(
+    volunteerId: string,
+    shiftInstanceId: string,
+    organizationUnitId: string,
+  ): Promise<{
+    isMember: boolean;
+    openMembershipRequestId: string | null;
+    shiftInviteStatus: ShiftInviteStatus | null;
+    isParticipating: boolean;
+    hasOpenTimeEntry: boolean;
+  }> {
+    const [isMember, pendingRequest, inviteStatuses, hasOpenTimeEntry] =
+      await Promise.all([
+        this._membershipService.isMemberOfUnitOrAncestor(
+          volunteerId,
+          organizationUnitId,
+        ),
+        this._membershipService.findPendingMembershipRequest(
+          volunteerId,
+          organizationUnitId,
+        ),
+        this.shiftService.findInviteStatusesForUser(volunteerId, [
+          shiftInstanceId,
+        ]),
+        this.shiftService.hasOpenTimeEntry(shiftInstanceId, volunteerId),
+      ]);
+
+    const shiftInviteStatus = inviteStatuses[0]?.status ?? null;
+
+    return {
+      isMember,
+      openMembershipRequestId: pendingRequest?.id ?? null,
+      shiftInviteStatus,
+      isParticipating: isParticipatingShiftInviteStatus(
+        shiftInviteStatus ?? undefined,
+      ),
+      hasOpenTimeEntry,
+    };
   }
 
   /**

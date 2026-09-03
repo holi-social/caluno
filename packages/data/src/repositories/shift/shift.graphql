@@ -499,3 +499,38 @@ mutation CheckOut($shiftInstanceId: ID!) {
     id
   }
 }
+
+query GetCheckInShiftInstances(
+  $startsAfter: DateTime!
+  $endsBefore: DateTime!
+) {
+  checkInShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    master {
+      id
+      title
+    }
+  }
+}
+
+query GetCheckInShifts($search: String) {
+  checkInShifts(search: $search) {
+    id
+    title
+  }
+}
+
+mutation CheckInInviteToShiftInstance(
+  $shiftInstanceId: ID!
+  $volunteerId: ID!
+) {
+  checkInInviteToShiftInstance(
+    shiftInstanceId: $shiftInstanceId
+    volunteerId: $volunteerId
+  ) {
+    id
+  }
+}

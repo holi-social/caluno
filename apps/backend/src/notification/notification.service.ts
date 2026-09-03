@@ -59,6 +59,8 @@ type EventJoinedInput =
 type EventCancelledInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
 
+type OrganizationUnitInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.ORGANIZATION_UNIT_INVITED];
 type DocumentAwaitingSignatureInput =
   NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_AWAITING_SIGNATURE];
 
@@ -197,6 +199,10 @@ export class NotificationService {
 
   notifyEventCancelled(input: EventCancelledInput): void {
     this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
+  }
+
+  notifyOrganizationUnitInvited(input: OrganizationUnitInvitedInput): void {
+    this.emitter.emit(NotificationEvent.ORGANIZATION_UNIT_INVITED, input);
   }
 
   notifyDocumentAwaitingSignature(input: DocumentAwaitingSignatureInput): void {
