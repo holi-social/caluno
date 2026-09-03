@@ -253,10 +253,11 @@ describe('publicEvent', () => {
   });
 
   it('looks up a public event by slug', async () => {
+    const slug = `slug-lookup-event-${crypto.randomUUID()}`;
     const event = await createEvent(db, {
       organizationUnitId,
       title: 'Slug Lookup Event',
-      slug: 'slug-lookup-event',
+      slug,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -282,10 +283,11 @@ describe('publicEvent', () => {
   });
 
   it('keeps the existing slug when the event title is updated', async () => {
+    const slug = `original-event-title-${crypto.randomUUID()}`;
     const event = await createEvent(db, {
       organizationUnitId,
       title: 'Original Event Title',
-      slug: 'original-event-title',
+      slug,
     });
 
     const data = await graphqlRequestRequiringData<{

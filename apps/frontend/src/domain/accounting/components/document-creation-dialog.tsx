@@ -35,6 +35,19 @@ interface DocumentCreationDialogProps {
   isSending: boolean;
   onSend: () => void;
   sendDisabled?: boolean;
+  /**
+   * The underlying query error message (e.g. "No contract template
+   * configured …"), shown below `errorDescription` so the coordinator can
+   * actually see what went wrong instead of only the generic copy.
+   */
+  errorMessage?: string;
+  /**
+   * Optional call-to-action shown in the error state (e.g. "Create a
+   * template") alongside the generic retry copy. Callers pass `errorCtaAction`
+   * to render a button that routes the coordinator to the fix.
+   */
+  errorCtaLabel?: string;
+  errorCtaAction?: () => void;
   /** Skip the outer Dialog/header — for a caller that owns its own shell. */
   embedded?: boolean;
 }
@@ -62,6 +75,9 @@ export function DocumentCreationDialog({
   isSending,
   onSend,
   sendDisabled = false,
+  errorMessage,
+  errorCtaLabel,
+  errorCtaAction,
   embedded = false,
 }: DocumentCreationDialogProps) {
   const body = (
@@ -70,7 +86,23 @@ export function DocumentCreationDialog({
         {status === 'error' ? (
           <Alert variant="destructive">
             <AlertTitle>{errorTitle}</AlertTitle>
-            <AlertDescription>{errorDescription}</AlertDescription>
+            <AlertDescription>
+              {errorDescription}
+              {errorMessage && (
+                <p className="mt-2 font-mono text-xs break-words opacity-90">
+                  {errorMessage}
+                </p>
+              )}
+              {errorCtaLabel && errorCtaAction && (
+                <Button
+                  variant="outline"
+                  className="mt-3"
+                  onClick={errorCtaAction}
+                >
+                  {errorCtaLabel}
+                </Button>
+              )}
+            </AlertDescription>
           </Alert>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">

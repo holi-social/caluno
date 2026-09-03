@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Locale } from '../graphql/locale';
 import { UserLocaleService } from '../i18n/user-locale.service';
 import { UserService } from '../user/user.service';
+import { maskEmail } from '../utils';
 import { EmailService } from './email/email.service';
 import type { NotificationEventPayloadMap } from './notification-event-map';
 import { NotificationEvent } from './notification-events';
@@ -60,6 +61,11 @@ type EventCancelledInput =
 
 type OrganizationUnitInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.ORGANIZATION_UNIT_INVITED];
+type DocumentAwaitingSignatureInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_AWAITING_SIGNATURE];
+
+type DocumentDeclinedByOrgInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_DECLINED_BY_ORG];
 
 @Injectable()
 export class NotificationService {
@@ -134,7 +140,7 @@ export class NotificationService {
           });
         } catch (error) {
           this.logger.error(
-            `Failed to send email for ${recipient.email}: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to send email for ${maskEmail(recipient.email)}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
       }),
@@ -197,5 +203,13 @@ export class NotificationService {
 
   notifyOrganizationUnitInvited(input: OrganizationUnitInvitedInput): void {
     this.emitter.emit(NotificationEvent.ORGANIZATION_UNIT_INVITED, input);
+  }
+
+  notifyDocumentAwaitingSignature(input: DocumentAwaitingSignatureInput): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_AWAITING_SIGNATURE, input);
+  }
+
+  notifyDocumentDeclinedByOrg(input: DocumentDeclinedByOrgInput): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_DECLINED_BY_ORG, input);
   }
 }

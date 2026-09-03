@@ -50,8 +50,9 @@ export class TimeTrackingService {
     _actorUserId: string,
     options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
+    let reimbursementTypeId: string | null = null;
     if (input.shiftInstanceId) {
-      await this.assertShiftInstanceInOrgUnit(
+      const context = await this.resolveShiftInstanceContext(
         input.shiftInstanceId,
         organizationUnitId,
       );
@@ -68,6 +69,8 @@ export class TimeTrackingService {
           throw new ConflictGraphQLError('Already checked in');
         }
       }
+
+      reimbursementTypeId = context.reimbursementTypeId;
     }
 
     try {
@@ -80,6 +83,7 @@ export class TimeTrackingService {
           startedAt: input.startedAt,
           endedAt: input.endedAt ?? null,
           notes: input.notes,
+          reimbursementTypeId,
         })
         .returning();
       if (!options?.skipCapture) {
@@ -105,10 +109,10 @@ export class TimeTrackingService {
     }
   }
 
-  private async assertShiftInstanceInOrgUnit(
+  private async resolveShiftInstanceContext(
     shiftInstanceId: string,
     organizationUnitId: string,
-  ): Promise<void> {
+  ): Promise<{ reimbursementTypeId: string | null }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: shiftInstanceId },
       with: { master: true },
@@ -122,6 +126,13 @@ export class TimeTrackingService {
         'Shift instance does not exist in this organization',
       );
     }
+
+    return {
+      reimbursementTypeId:
+        instance.overrideReimbursementTypeId ??
+        instance.master.reimbursementTypeId ??
+        null,
+    };
   }
 
   async closeTimeEntry(
@@ -175,7 +186,7 @@ export class TimeTrackingService {
     }
 
     if (input.shiftInstanceId) {
-      await this.assertShiftInstanceInOrgUnit(
+      await this.resolveShiftInstanceContext(
         input.shiftInstanceId,
         organizationUnitId,
       );

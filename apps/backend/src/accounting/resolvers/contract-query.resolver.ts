@@ -14,7 +14,7 @@ import { ContractFilterInput } from '../inputs/contract-filter.input';
 import { ContractMapper } from '../mappers';
 import { Contract } from '../models/contract.model';
 import { PendingSignee } from '../models/pending-signee.model';
-import { ContractService } from '../services';
+import { AccountingOrgAccessService, ContractService } from '../services';
 
 function toContractFilter(
   filter: ContractFilterInput | null | undefined,
@@ -35,6 +35,7 @@ export class ContractQueryResolver {
     private readonly contractMapper: ContractMapper,
     private readonly authService: AuthService,
     private readonly organizationUnitService: OrganizationUnitService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   @Query(() => Contract)
@@ -55,7 +56,10 @@ export class ContractQueryResolver {
     filter: ContractFilterInput | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<Contract[]> {
-    const organizationId = await this.resolveOrganizationId(context);
+    const organizationId =
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        context.organizationUnitId,
+      );
     const contracts = await this.contractService.findContractsForOrganization(
       organizationId,
       toContractFilter(filter),

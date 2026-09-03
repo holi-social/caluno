@@ -61,11 +61,22 @@ interface PipelineStep {
   state: StepState;
 }
 
-function signeeActorName(signee: Signee, volunteerName: string): string {
+type SheetTranslations = ReturnType<
+  typeof useTranslations<'Accounting.reimbursements.docs.sheet'>
+>;
+
+function signeeActorName(
+  signee: Signee,
+  volunteerName: string,
+  t: SheetTranslations,
+): string {
   if (signee.role === 'volunteer') return volunteerName;
-  // Coordinator / supervisor are org roles; the real actor name comes from
-  // the status-change timeline, not from the static role label.
-  return signee.orgRole.name;
+  // Coordinator / supervisor are org roles: show the human role label, not
+  // the raw permission key the template signee references. The real actor's
+  // name is in the status-change timeline below the pipeline.
+  return signee.role === 'supervisor'
+    ? t('pipeline.superSign')
+    : t('pipeline.coordSign');
 }
 
 function getActiveStepIdx(status: string, signees: Signee[]): number {
@@ -106,7 +117,7 @@ function buildDocSteps(
   signees: Signee[],
   isContract: boolean,
   volunteerName: string,
-  t: ReturnType<typeof useTranslations<'Accounting.reimbursements.docs.sheet'>>,
+  t: SheetTranslations,
 ): PipelineStep[] {
   if (
     doc.status === 'contract-declined' ||
@@ -127,14 +138,14 @@ function buildDocSteps(
         steps.push({
           id: signee.id,
           labelKey: t('pipeline.sign'),
-          actorName: signeeActorName(signee, volunteerName),
+          actorName: signeeActorName(signee, volunteerName, t),
           state: 'done',
         });
       } else if (idx === declinedIdx) {
         steps.push({
           id: `declined-${signee.id}`,
           labelKey: t('pipeline.declined'),
-          actorName: signeeActorName(signee, volunteerName),
+          actorName: signeeActorName(signee, volunteerName, t),
           state: 'declined',
         });
       }
@@ -160,7 +171,7 @@ function buildDocSteps(
     steps.push({
       id: signee.id,
       labelKey: t('pipeline.sign'),
-      actorName: signeeActorName(signee, volunteerName),
+      actorName: signeeActorName(signee, volunteerName, t),
       state:
         idx < activeIdx ? 'done' : idx === activeIdx ? 'active' : 'pending',
     });

@@ -77,6 +77,7 @@ export type TileFilter =
   | 'contract-signing'
   | 'timesheet-generate'
   | 'timesheet-signing'
+  | 'needs-timesheet'
   | 'ready-to-go'
   | null;
 
@@ -90,6 +91,7 @@ const TILE_IDS: Exclude<TileFilter, null>[] = [
   'contract-signing',
   'timesheet-generate',
   'timesheet-signing',
+  'needs-timesheet',
   'ready-to-go',
 ];
 
@@ -126,6 +128,8 @@ export interface BoardVolunteer {
   limits?: Partial<Record<PauschalenType, PauschalenLimit>>;
   /** Maps each pauschale type the volunteer is eligible for to its reimbursement type id. */
   reimbursementTypeIds?: Partial<Record<PauschalenType, string>>;
+  /** True when the volunteer still has eligible (unclaimed, completed, in-period) time entries — i.e. the org still needs to create their timesheet. */
+  needsTimesheet: boolean;
   documents: BoardDocument[];
 }
 
@@ -292,6 +296,9 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
       );
     case 'ready-to-go':
       return status === 'timesheet-ready';
+    default:
+      // 'needs-timesheet' is a volunteer-level flag, not a document status.
+      return false;
   }
 }
 
@@ -300,6 +307,9 @@ function countActionableForTile(
   volunteers: BoardVolunteer[],
   tile: Exclude<TileFilter, null>,
 ): number {
+  if (tile === 'needs-timesheet') {
+    return volunteers.filter((vol) => vol.needsTimesheet).length;
+  }
   return volunteers.reduce(
     (sum, vol) =>
       sum +
@@ -315,6 +325,9 @@ const TILE_DOC_TYPE: Record<Exclude<TileFilter, null>, DocTypeFilter> = {
   'contract-signing': 'contract',
   'timesheet-generate': 'timesheet',
   'timesheet-signing': 'timesheet',
+  // 'needs-timesheet' counts volunteers by their own flag, not documents —
+  // so it never narrows the doc-type dropdown to a single kind.
+  'needs-timesheet': 'all',
   // Ready-to-go is the terminal bundling stage — leave the doc-type filter
   // on "all"; the tile's own row-builder (getReadyToGoDocs) scopes the
   // table to ready timesheets + their contract row, not this dropdown.
@@ -323,6 +336,9 @@ const TILE_DOC_TYPE: Record<Exclude<TileFilter, null>, DocTypeFilter> = {
 
 function countForTile(volunteers: BoardVolunteer[], tile: TileFilter): number {
   if (!tile) return 0;
+  if (tile === 'needs-timesheet') {
+    return volunteers.filter((vol) => vol.needsTimesheet).length;
+  }
   return volunteers.reduce(
     (sum, vol) =>
       sum + vol.documents.filter((d) => matchesTile(d.status, tile)).length,
@@ -347,6 +363,13 @@ function applyFilters(
   range: DateRange | undefined,
 ): BoardVolunteer[] {
   return volunteers.filter((vol) => {
+    if (tile === 'needs-timesheet') {
+      if (!vol.needsTimesheet) return false;
+      if (pauschale !== 'all' && vol.pauschale !== pauschale) return false;
+      if (search && !vol.name.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      return true;
+    }
     if (vol.documents.length === 0) return false;
     if (
       pauschale !== 'all' &&
@@ -540,6 +563,7 @@ export function ReimbursementsBoard({
     'contract-signing': t('tiles.contractSigning'),
     'timesheet-generate': t('tiles.timesheetGenerate'),
     'timesheet-signing': t('tiles.timesheetSigning'),
+    'needs-timesheet': t('tiles.needsTimesheet'),
     'ready-to-go': t('tiles.readyToGo'),
   };
 
@@ -551,12 +575,13 @@ export function ReimbursementsBoard({
   const baseFilteredVols = useMemo(
     () =>
       volunteers.filter((v) => {
-        if (
-          pauschale !== 'all' &&
-          !v.documents.some((d) => (d.pauschale ?? v.pauschale) === pauschale)
-        )
-          return false;
-        return true;
+        if (pauschale === 'all') return true;
+        // A needs-timesheet volunteer may have no document for the type they
+        // need a timesheet for, so match their primary pauschale instead.
+        if (v.needsTimesheet) return v.pauschale === pauschale;
+        return v.documents.some(
+          (d) => (d.pauschale ?? v.pauschale) === pauschale,
+        );
       }),
     [volunteers, pauschale],
   );
@@ -685,7 +710,8 @@ export function ReimbursementsBoard({
                 id === 'contract-generate' ||
                 id === 'timesheet-generate' ||
                 id === 'contract-signing' ||
-                id === 'timesheet-signing'
+                id === 'timesheet-signing' ||
+                id === 'needs-timesheet'
                   ? tileActionableCounts[id]
                   : undefined
               }
@@ -870,7 +896,14 @@ export function ReimbursementsBoard({
 
 // ─── Board skeleton ───────────────────────────────────────────────────────────
 
-const TILE_SKELETON_KEYS = ['tile-1', 'tile-2', 'tile-3', 'tile-4', 'tile-5'];
+const TILE_SKELETON_KEYS = [
+  'tile-1',
+  'tile-2',
+  'tile-3',
+  'tile-4',
+  'tile-5',
+  'tile-6',
+];
 const ROW_SKELETON_KEYS = ['row-1', 'row-2', 'row-3'];
 
 export function ReimbursementsBoardSkeleton() {

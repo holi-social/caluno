@@ -391,6 +391,57 @@
       "fieldColumn": "Feld",
       "noFields": "Dieses Formular hat keine Felder.",
       "submittedOn": "Eingereicht am {date}"
+    },
+    "documents": {
+      "title": "Deine Dokumente",
+      "subtitle": "Vereinbarungen und Stundennachweise für Aufwandsentschädigungen",
+      "names": {
+        "agreement": "Zusatzvereinbarung",
+        "timesheet": "Stundennachweis"
+      },
+      "status": {
+        "awaiting-signature": "Zu unterschreiben",
+        "awaiting-countersignature": "Zu gegenzeichnen",
+        "signed": "Aktiv",
+        "declined": "Abgelehnt"
+      },
+      "figures": "{shifts} Einsätze · {hours} Stunden · {amount}",
+      "lines": {
+        "generated": "Generiert am {date} von {name}",
+        "signedByMe": "Du hast am {date} unterschrieben",
+        "countersignedBy": "{name} hat am {date} gegensigniert",
+        "declinedBy": "{name} hat am {date} abgelehnt"
+      },
+      "actions": {
+        "download": "Herunterladen",
+        "sign": "Unterschreiben",
+        "decline": "Ablehnen"
+      },
+      "missingProfileWarning": "In deinem Profil fehlen Angaben, die dieses Dokument benötigt.",
+      "missingProfileCta": "Profil vervollständigen, um zu unterschreiben",
+      "toasts": {
+        "signed": "{name} unterschrieben.",
+        "signedError": "{name} konnte nicht unterschrieben werden. Bitte erneut versuchen.",
+        "declined": "{name} abgelehnt.",
+        "declinedError": "{name} konnte nicht abgelehnt werden. Bitte erneut versuchen.",
+        "downloadUnavailable": "Das Dokument ist noch nicht zum Herunterladen verfügbar."
+      },
+      "empty": {
+        "title": "Noch keine Dokumente",
+        "description": "Vereinbarungen und Stundennachweise, die diese Organisation für dich erstellt, erscheinen hier."
+      },
+      "declineSheet": {
+        "title": "Dokument ablehnen",
+        "description": "Diese Organisation muss verstehen, warum du dieses {documentName} ablehnst.",
+        "reasonLabel": "Ablehnungsgrund",
+        "reasonPlaceholder": "Erkläre, warum du das Dokument ablehnst…",
+        "submit": "Ablehnen"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar."
+      },
+      "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
   },
   "MembershipRequest": {
@@ -556,7 +607,9 @@
     "volunteers": "Freiwillige",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
-    "accountingSettings": "Einstellungen"
+    "accountingSettings": "Einstellungen",
+    "myDocuments": "Meine Dokumente",
+    "myDocumentsBadge": "{count} Dokumente warten auf deine Unterschrift"
   },
   "OrgDetail": {
     "aboutHeading": "Über uns",
@@ -602,6 +655,12 @@
     "form": {
       "addressLabel": "Adresse",
       "addressPlaceholder": "z. B. Musterstraße 1, Berlin",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "z. B. Berlin",
+      "zipCodeLabel": "Postleitzahl",
+      "zipCodePlaceholder": "z. B. 10115",
+      "legalRepLabel": "Vertretungsberechtigte Person",
+      "legalRepPlaceholder": "z. B. Erika Musterfrau",
       "descriptionLabel": "Beschreibung",
       "descriptionPlaceholder": "Beschreibe diese Organisationseinheit...",
       "emailLabel": "E-Mail",
@@ -688,7 +747,9 @@
         "firstName": "Wie auf deinem Ausweis",
         "iban": "Für Aufwandsentschädigungen",
         "lastName": "Wie auf deinem Ausweis",
-        "preferredName": "Falls du anders angesprochen werden möchtest"
+        "preferredName": "Falls du anders angesprochen werden möchtest",
+        "bic": "Bankleitzahl (BIC) deines Kontos",
+        "taxId": "Deine Steuernummer (für Spendenbescheinigungen)"
       }
     },
     "language": "Sprache",
@@ -895,6 +956,8 @@
       "firstName": "Vorname",
       "gender": "Geschlecht",
       "iban": "IBAN",
+      "bic": "BIC",
+      "taxId": "Steuernummer",
       "infoText": "Infotext",
       "labelLabel": "Bezeichnung",
       "labelPlaceholder": "z. B. Lieblingsfarbe",
@@ -980,6 +1043,7 @@
       "fieldRequired": "{label} ist erforderlich",
       "invalidCharacters": "{label} enthält ungültige Zeichen",
       "invalidIban": "{label} muss eine gültige IBAN sein",
+      "invalidBic": "{label} muss eine gültige BIC sein",
       "invalidOptions": "{label} enthält ungültige Optionen",
       "labelRequired": "Bezeichnung ist erforderlich",
       "maxChars": "{label} darf maximal {maxLen} Zeichen lang sein",
@@ -1074,7 +1138,25 @@
     }
   },
   "Settings": {
-    "title": "Einstellungen"
+    "title": "Einstellungen",
+    "organizationProfile": {
+      "title": "Organisationsprofil",
+      "subtitle": "Aktualisiere die Adresse und Kontaktdaten deiner Organisation.",
+      "addressLabel": "Adresse der Organisation",
+      "addressPlaceholder": "Musterstraße 1",
+      "cityLabel": "Stadt",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postleitzahl",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Kontakt-E-Mail",
+      "contactEmailPlaceholder": "kontakt@organisation.org",
+      "phoneLabel": "Telefon",
+      "phonePlaceholder": "+49 30 12345678",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organisation.org",
+      "saved": "Organisation aktualisiert",
+      "saveFailed": "Organisation konnte nicht aktualisiert werden"
+    }
   },
   "Shift": {
     "action": {
@@ -1173,6 +1255,9 @@
       "noRecurrence": "Einmalig",
       "openShiftDescription": "Der Einsatz ist für deine Freiwilligen auf der Plattform sichtbar. Jeder deiner Freiwilligen kann sich für diesen Einsatz anmelden.",
       "openShiftLabel": "Offener Einsatz",
+      "reimbursementTypeDescription": "Freiwilligenzeit für diesen Einsatz wird für einen Stundennachweis unter dieser Pauschale berücksichtigt",
+      "reimbursementTypeLabel": "Erstattungsfähige Pauschale",
+      "reimbursementTypeNone": "Nicht erstattungsfähig",
       "recurring": "Wiederholung festlegen",
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
@@ -1681,6 +1766,7 @@
         "contractSigning": "Vereinbarungen gegenzeichnen",
         "timesheetGenerate": "Stundennachweise erstellen",
         "timesheetSigning": "Stundennachweise gegenzeichnen",
+        "needsTimesheet": "Stundennachweis fällig",
         "readyToGo": "Bereit zur Abgabe"
       },
       "toolbar": {
@@ -1749,7 +1835,8 @@
             "coordSign": "Koordinator",
             "superSign": "Supervisor",
             "active": "Aktiv",
-            "ready": "Bereit"
+            "ready": "Bereit",
+            "actorOrg": "Organisation"
           },
           "limitSection": "Jahresbudget",
           "invoicesPaidOut": "Ausgezahlt",
@@ -1774,7 +1861,8 @@
             "grossAmount": "Bruttobetrag",
             "rateTooltip": "Standardstundensatz für diese Pauschale. Einsätze können einen eigenen Satz haben.",
             "viewBtn": "Stundennachweise anzeigen"
-          }
+          },
+          "pdfUnavailableNote": "PDF noch nicht verfügbar."
         },
         "statusLabel": {
           "contractGenerate": "Vereinbarung erstellen",
@@ -1842,6 +1930,10 @@
         "sendErrorToast": "Die Vereinbarung konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Profildaten konnten nicht geladen werden",
         "loadError": "Die Profildaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "sendErrorTitle": "Vertrag konnte nicht gesendet werden",
+        "sendError": "Der Vertrag konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
+        "noTemplateCta": "Vertragsvorlage erstellen",
+        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
         "hoursUnitMonth": "Monat",
         "hoursUnitWeek": "Woche",
         "hoursUnitHint": "pro {unit}",
@@ -1862,6 +1954,10 @@
         "sendErrorToast": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Stundennachweisdaten konnten nicht geladen werden",
         "loadError": "Die Stundennachweisdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "sendErrorTitle": "Stundennachweis konnte nicht gesendet werden",
+        "sendError": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
+        "noTemplateCta": "Stundennachweis-Vorlage erstellen",
+        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {
@@ -1888,6 +1984,18 @@
           "signatureSupervisor": "Unterschrift (Organisation)",
           "unsigned": "Noch nicht unterschrieben"
         }
+      },
+      "signToasts": {
+        "contract": "Vereinbarung für {name} gegengezeichnet.",
+        "contractError": "Vereinbarung konnte für {name} nicht gegengezeichnet werden.",
+        "invoice": "Stundennachweis für {name} gegengezeichnet.",
+        "invoiceError": "Stundennachweis konnte für {name} nicht gegengezeichnet werden."
+      },
+      "declineToasts": {
+        "contract": "Vereinbarung für {name} abgelehnt.",
+        "contractError": "Vereinbarung konnte für {name} nicht abgelehnt werden.",
+        "invoice": "Stundennachweis für {name} abgelehnt.",
+        "invoiceError": "Stundennachweis konnte für {name} nicht abgelehnt werden."
       }
     },
     "templates": {
@@ -1910,6 +2018,11 @@
         "saveButton": "Vorlage speichern",
         "saveSuccessToast": "Vorlage gespeichert",
         "saveErrorToast": "Die Vorlage konnte nicht gespeichert werden. Bitte erneut versuchen.",
+        "orgProfile": {
+          "blockedMessage": "In deinen Organisationsdaten fehlen Angaben, die diese Vorlage benötigt. Vervollständige die Organisationsdaten, bevor du speicherst.",
+          "blockedCta": "Organisationsdaten vervollständigen",
+          "blockedAskSomeone": "Bitte jemanden, der die Organisation verwalten kann, die Organisationsdaten zu vervollständigen."
+        },
         "previewScrollRegionLabel": "Dokumentvorschau, scrollbar",
         "preview": {
           "disclaimerBadge": "Vorschau",
@@ -2046,6 +2159,15 @@
           "signees": "{count, plural, =1 {1 Unterschrift} other {# Unterschriften}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "Meine Dokumente",
+    "backLabel": "Zurück",
+    "loadMore": "Mehr laden ({remaining})",
+    "empty": {
+      "title": "Noch keine Dokumente",
+      "description": "Vereinbarungen und Stundennachweise deiner Organisationen erscheinen hier."
     }
   }
 }

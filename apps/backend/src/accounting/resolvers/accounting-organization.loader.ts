@@ -45,4 +45,18 @@ export class AccountingOrganizationLoader {
       ),
     ),
   );
+
+  /** The org's root unit, keyed by organizationId — for templates/documents scoped to the org as a whole rather than a specific unit. */
+  public readonly rootUnitByOrganizationId = new DataLoader<
+    string,
+    OrganizationUnit | null
+  >((organizationIds) =>
+    Promise.all(
+      organizationIds.map(async (organizationId) =>
+        this.organizationUnitMapper.toModel(
+          await this.organizationService.findRootUnit(organizationId),
+        ),
+      ),
+    ),
+  );
 }

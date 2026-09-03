@@ -17,8 +17,11 @@ import type {
   GetPendingContractSigneeQuery,
   GetReimbursementTypesQuery,
   GetRosterYearlyUsageQuery,
+  GetVolunteersNeedingTimesheetsQuery,
   GetYearlyUsageQuery,
   InvoiceFilterInput,
+  MyDocumentSummaryQuery,
+  MyDocumentsQuery,
   RecordBundleDownloadMutation,
   SetManualBaselineMutation,
   UpdateDocumentTemplateInput,
@@ -46,9 +49,17 @@ export type InvoiceSummary = GetInvoicesQuery['invoices'][number];
 export type InvoiceDetail = GetInvoiceQuery['invoice'];
 export type EligibleTimeEntry =
   GetEligibleTimeEntriesForInvoiceQuery['eligibleTimeEntriesForInvoice'][number];
+export type RawVolunteerNeedsTimesheet =
+  GetVolunteersNeedingTimesheetsQuery['volunteersNeedingTimesheets'][number];
 
 export type DocumentTemplateSummary =
   GetDocumentTemplatesQuery['documentTemplates'][number];
+
+/** Cross-org "My documents" — one group per organization. */
+export type MyDocumentsGroupData = MyDocumentsQuery['myDocuments'][number];
+
+/** Dropdown summary — total documents and how many need the signature. */
+export type MyDocumentSummaryData = MyDocumentSummaryQuery['myDocumentSummary'];
 export type DocumentTemplateDetail =
   GetDocumentTemplateQuery['documentTemplate'];
 
@@ -160,6 +171,16 @@ export class AccountingRepository extends BaseRepository {
     return data.myInvoices;
   }
 
+  async findMyDocuments(): Promise<MyDocumentsGroupData[]> {
+    const data = await this.sdk.MyDocuments();
+    return data.myDocuments;
+  }
+
+  async findMyDocumentSummary(): Promise<MyDocumentSummaryData> {
+    const data = await this.sdk.MyDocumentSummary();
+    return data.myDocumentSummary;
+  }
+
   async findInvoiceById(id: string): Promise<InvoiceDetail> {
     const data = await this.sdk.GetInvoice({ id });
     return data.invoice;
@@ -178,6 +199,14 @@ export class AccountingRepository extends BaseRepository {
   }): Promise<EligibleTimeEntry[]> {
     const data = await this.sdk.GetEligibleTimeEntriesForInvoice(input);
     return data.eligibleTimeEntriesForInvoice;
+  }
+
+  async findVolunteersNeedingTimesheets(input: {
+    periodStart?: string;
+    periodEnd?: string;
+  }): Promise<RawVolunteerNeedsTimesheet[]> {
+    const data = await this.sdk.GetVolunteersNeedingTimesheets(input);
+    return data.volunteersNeedingTimesheets;
   }
 
   async createInvoice(input: CreateInvoiceInput): Promise<InvoiceSummary> {
