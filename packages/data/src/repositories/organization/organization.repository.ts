@@ -1,6 +1,7 @@
 import type {
   CreateOrganizationInput,
   GetMyOrganizationUnitsQuery,
+  UpdateOrganizationInput,
 } from '../../generated/graphql';
 import { BaseRepository } from '../base/base.repository';
 
@@ -29,9 +30,10 @@ export class OrganizationRepository extends BaseRepository {
   }
 
   async findVolunteersByUnit(organizationUnitId: string) {
-    const data = await this.sdk.GetOrganizationVolunteersByUnit({
-      id: organizationUnitId,
-    });
+    const data = await this.sdk.GetOrganizationVolunteersByUnit(
+      { id: organizationUnitId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
     return data.members ?? [];
   }
 
@@ -58,6 +60,11 @@ export class OrganizationRepository extends BaseRepository {
     return data.myAdminstableOrganizationUnits;
   }
 
+  async findMyCheckInAdministrableOrganizationUnits() {
+    const data = await this.sdk.GetMyCheckInAdministrableOrganizationUnits();
+    return data.myCheckInAdministrableOrganizationUnits;
+  }
+
   async findAll(options: FindOrganizationsOptions = {}) {
     const { limit = 10, offset = 0 } = options;
     const data = await this.sdk.GetOrganizations({ limit, offset });
@@ -67,6 +74,11 @@ export class OrganizationRepository extends BaseRepository {
   async create(input: CreateOrganizationInput) {
     const data = await this.sdk.CreateOrganization({ input });
     return data.createOrganization;
+  }
+
+  async update(id: string, input: UpdateOrganizationInput) {
+    const data = await this.sdk.UpdateOrganization({ id, input });
+    return data.updateOrganization;
   }
 
   async setRequiredForms(organizationUnitId: string, formIds: string[]) {

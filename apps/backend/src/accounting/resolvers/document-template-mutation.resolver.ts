@@ -2,21 +2,22 @@ import { Args, Context, ID, Mutation, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
-import { NotFoundGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
-import { OrganizationUnitService } from '../../organization/organization-unit.service';
 import { CreateDocumentTemplateInput } from '../inputs/create-document-template.input';
 import { UpdateDocumentTemplateInput } from '../inputs/update-document-template.input';
 import { DocumentTemplateMapper } from '../mappers';
 import { DocumentTemplate } from '../models/document-template.model';
-import { DocumentTemplateService } from '../services';
+import {
+  AccountingOrgAccessService,
+  DocumentTemplateService,
+} from '../services';
 
 @Resolver(() => DocumentTemplate)
 export class DocumentTemplateMutationResolver {
   constructor(
     private readonly documentTemplateService: DocumentTemplateService,
     private readonly documentTemplateMapper: DocumentTemplateMapper,
-    private readonly organizationUnitService: OrganizationUnitService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
   ) {}
 
   @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
@@ -26,7 +27,10 @@ export class DocumentTemplateMutationResolver {
     @Session() session: UserSession,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<DocumentTemplate> {
-    const organizationId = await this.resolveOrganizationId(context);
+    const organizationId =
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        context.organizationUnitId,
+      );
     const template = await this.documentTemplateService.createDocumentTemplate(
       organizationId,
       input,
@@ -43,7 +47,10 @@ export class DocumentTemplateMutationResolver {
     @Session() session: UserSession,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<DocumentTemplate> {
-    const organizationId = await this.resolveOrganizationId(context);
+    const organizationId =
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        context.organizationUnitId,
+      );
     const template = await this.documentTemplateService.updateDocumentTemplate(
       organizationId,
       id,
@@ -58,25 +65,17 @@ export class DocumentTemplateMutationResolver {
   async deleteDocumentTemplate(
     @Args('id', { type: () => ID }) id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<boolean> {
-    const organizationId = await this.resolveOrganizationId(context);
+    const organizationId =
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        context.organizationUnitId,
+      );
     await this.documentTemplateService.deleteDocumentTemplate(
       organizationId,
       id,
+      session.user.id,
     );
     return true;
-  }
-
-  private async resolveOrganizationId(
-    context: AuthenticatedGraphQLContext,
-  ): Promise<string> {
-    const organizationId =
-      await this.organizationUnitService.findOrganizationIdByUnitId(
-        context.organizationUnitId,
-      );
-    if (!organizationId) {
-      throw new NotFoundGraphQLError('Organization not found');
-    }
-    return organizationId;
   }
 }

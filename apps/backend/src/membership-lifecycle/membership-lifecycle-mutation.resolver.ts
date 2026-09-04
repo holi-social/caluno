@@ -73,6 +73,7 @@ export class MembershipLifecycleMutationResolver {
   @Mutation(() => FormSubmission)
   async submitForm(
     @Args('token') token: string,
+    @Args('organizationUnitId', { type: () => ID }) organizationUnitId: string,
     @Args('input') input: SubmitFormInput,
     @Session() session: UserSession,
   ): Promise<FormSubmission> {
@@ -80,6 +81,7 @@ export class MembershipLifecycleMutationResolver {
       token,
       input,
       session.user.id,
+      organizationUnitId,
     );
     return this.formSubmissionMapper.toModelOrThrow(item);
   }

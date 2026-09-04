@@ -13,6 +13,11 @@ import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
 import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
+import {
   isMimeTypeAllowed,
   PURPOSE_VALIDATION_RULES,
   sanitizeFilename,
@@ -46,6 +51,7 @@ export class FileService {
     private readonly db: Database,
     private readonly s3StorageService: S3StorageService,
     private readonly authService: AuthService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async presignUpload(
@@ -122,6 +128,16 @@ export class FileService {
       })
       .returning();
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FILE_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: file.organizationUnitId ?? undefined,
+        purpose: file.purpose,
+      },
+    });
+
     const uploadUrl = await this.s3StorageService.createPresignedUploadUrl({
       storageKey,
       mimeType: input.mimeType,
@@ -137,6 +153,75 @@ export class FileService {
         'Content-Length': String(input.byteSize),
       },
     };
+  }
+
+  /**
+   * Stores bytes generated server-side (e.g. rendered document PDFs): writes
+   * the object directly and records an UPLOADED file row in one step — the
+   * presigned path is for client uploads only.
+   */
+  async saveGeneratedFile(args: {
+    organizationUnitId: string;
+    filename: string;
+    mimeType: string;
+    bytes: Buffer;
+    uploadedByUserId: string;
+    purpose: FilePurpose;
+  }): Promise<FileEntity> {
+    const rule = PURPOSE_VALIDATION_RULES[args.purpose];
+    if (!rule) {
+      throw new BadRequestException('Unsupported file purpose');
+    }
+    if (!isMimeTypeAllowed(rule, args.mimeType)) {
+      throw new BadRequestException(
+        'MIME type is not allowed for this purpose',
+      );
+    }
+
+    if (args.bytes.length <= 0 || args.bytes.length > rule.maxByteSize) {
+      throw new BadRequestException(
+        'File size is not allowed for this purpose',
+      );
+    }
+
+    const sanitizedFilename = sanitizeFilename(args.filename);
+    const storageKey = this.buildStorageKey({
+      visibility: rule.visibility,
+      organizationUnitId: args.organizationUnitId,
+      userId: args.uploadedByUserId,
+      purpose: args.purpose,
+      filename: sanitizedFilename,
+    });
+
+    await this.s3StorageService.putObject(
+      storageKey,
+      args.bytes,
+      args.mimeType,
+    );
+
+    const [file] = await this.db
+      .insert(schema.files)
+      .values({
+        storageKey,
+        bucket: this.s3StorageService.getBucket(),
+        visibility:
+          rule.visibility === 'public'
+            ? FileVisibility.PUBLIC
+            : FileVisibility.PRIVATE,
+        purpose: args.purpose,
+        mimeType: args.mimeType,
+        filename: sanitizedFilename,
+        byteSize: args.bytes.length,
+        status: FileStatus.UPLOADED,
+        uploadedByUserId: args.uploadedByUserId,
+        organizationUnitId: args.organizationUnitId,
+        uploadedAt: new Date(),
+      })
+      .returning();
+    if (!file) {
+      throw new Error('Failed to save generated file');
+    }
+    return file;
   }
 
   async completeUpload(userId: string, fileId: string): Promise<FileEntity> {
@@ -179,6 +264,16 @@ export class FileService {
       })
       .where(eq(schema.files.id, file.id))
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.FILE_UPLOAD,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: updated.organizationUnitId ?? undefined,
+        purpose: updated.purpose,
+      },
+    });
 
     return updated;
   }

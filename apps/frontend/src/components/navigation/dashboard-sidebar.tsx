@@ -3,6 +3,7 @@ import { MembershipRequestStatus, PermissionKey } from '@repo/data';
 import { useCurrentOrg, useMembershipRequestCount } from '@repo/data/react';
 import {
   Button,
+  Logo,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -26,6 +27,7 @@ import {
   NetworkIcon,
   ScanQrCode,
   ShieldIcon,
+  SquareArrowOutUpRight,
   TicketIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -88,8 +90,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
       },
       {
         titleKey: 'checkIn',
-        href: `/admin/${orgUId}/check-in/scan`,
+        href: '/check-in',
         icon: ScanQrCode,
+        trailingIcon: SquareArrowOutUpRight,
       },
       {
         titleKey: 'requirementForms',
@@ -148,7 +151,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3 space-y-2">
-        <div className="text-lg font-bold px-2">{tCommon('brand')}</div>
+        <div className="px-2">
+          <Logo width={96} />
+        </div>
         <OrgSwitcher />
       </SidebarHeader>
 
@@ -171,7 +176,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                             {t(item.titleKey as Parameters<typeof t>[0])}
                           </span>
                         </span>
-                        {'count' in item && item.count ? (
+                        {'trailingIcon' in item && item.trailingIcon ? (
+                          <item.trailingIcon className="h-4 w-4 text-muted-foreground" />
+                        ) : 'count' in item && item.count ? (
                           <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
                             {item.count}
                           </span>

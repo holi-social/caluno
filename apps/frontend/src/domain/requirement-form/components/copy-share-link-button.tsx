@@ -1,5 +1,6 @@
 'use client';
 
+import { useOrgUId } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -12,9 +13,10 @@ interface CopyShareLinkButtonProps {
 export function CopyShareLinkButton({ shareToken }: CopyShareLinkButtonProps) {
   const t = useTranslations('RequirementForm.builder');
   const tActions = useTranslations('RequirementForm.actions');
+  const orgUId = useOrgUId();
 
   async function handleCopyShareLink() {
-    const url = `${window.location.origin}/f/${shareToken}`;
+    const url = `${window.location.origin}/orgs/${orgUId}/forms/${shareToken}`;
     await navigator.clipboard.writeText(url);
     toast.success(tActions('linkCopied'), { description: url });
   }

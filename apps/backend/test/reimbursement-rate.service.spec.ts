@@ -23,7 +23,7 @@ import { OrganizationUnitDataModule } from '../src/organization/organization-uni
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
 import type { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import type { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
-import type { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import {
   createDocumentTemplate,
   createReimbursementType,
@@ -43,6 +43,7 @@ describe('ReimbursementRateService', () => {
   let moduleRef: TestingModule;
   let db: Database;
   let service: ReimbursementRateService;
+  const ACTOR_USER_ID = crypto.randomUUID();
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -60,12 +61,14 @@ describe('ReimbursementRateService', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new ReimbursementRateService(
       db,
       moduleRef.get(OrganizationUnitDataService),
       membershipService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
@@ -115,6 +118,7 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         2_000,
+        ACTOR_USER_ID,
       );
 
       const rates = await service.getEffectiveRates(organization.id, root.id);
@@ -141,6 +145,7 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         2_000,
+        ACTOR_USER_ID,
         root.id,
       );
       const [override] = (
@@ -177,7 +182,12 @@ describe('ReimbursementRateService', () => {
       const type = await createReimbursementType(db, {
         platformDefaultRateCents: 1_500,
       });
-      await service.setReimbursementRate(organization.id, type.id, 2_000);
+      await service.setReimbursementRate(
+        organization.id,
+        type.id,
+        2_000,
+        ACTOR_USER_ID,
+      );
 
       expect(
         await service.getEffectiveRateCents(organization.id, root.id, type.id),
@@ -204,11 +214,17 @@ describe('ReimbursementRateService', () => {
       const type = await createReimbursementType(db, {
         platformDefaultRateCents: 1_500,
       });
-      await service.setReimbursementRate(organization.id, type.id, 2_000); // org-wide
+      await service.setReimbursementRate(
+        organization.id,
+        type.id,
+        2_000,
+        ACTOR_USER_ID,
+      ); // org-wide
       await service.setReimbursementRate(
         organization.id,
         type.id,
         3_000,
+        ACTOR_USER_ID,
         child.id,
       ); // unit override on child
 
@@ -238,12 +254,14 @@ describe('ReimbursementRateService', () => {
         organization.id,
         ehrenamt.id,
         1_800,
+        ACTOR_USER_ID,
         root.id,
       );
       await service.setReimbursementRate(
         organization.id,
         uebungsleiter.id,
         2_800,
+        ACTOR_USER_ID,
         root.id,
       );
 
@@ -273,7 +291,12 @@ describe('ReimbursementRateService', () => {
       );
 
       await expect(
-        service.setReimbursementRate(organization.id, reimbursementType.id, 0),
+        service.setReimbursementRate(
+          organization.id,
+          reimbursementType.id,
+          0,
+          ACTOR_USER_ID,
+        ),
       ).rejects.toBeInstanceOf(BadRequestGraphQLError);
     });
 
@@ -288,6 +311,7 @@ describe('ReimbursementRateService', () => {
           organization.id,
           crypto.randomUUID(),
           1_000,
+          ACTOR_USER_ID,
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
@@ -303,11 +327,13 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         1_800,
+        ACTOR_USER_ID,
       );
       await service.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_200,
+        ACTOR_USER_ID,
       );
 
       const rows = await db
@@ -335,12 +361,14 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         1_800,
+        ACTOR_USER_ID,
         root.id,
       );
       await service.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_200,
+        ACTOR_USER_ID,
         root.id,
       );
 
@@ -369,11 +397,13 @@ describe('ReimbursementRateService', () => {
         organization.id,
         reimbursementType.id,
         1_800,
+        ACTOR_USER_ID,
       );
       await service.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_200,
+        ACTOR_USER_ID,
         root.id,
       );
 

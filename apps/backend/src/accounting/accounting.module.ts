@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
+import { NotificationModule } from '../notification/notification.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { StorageModule } from '../storage/storage.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
@@ -42,18 +44,23 @@ import {
   InvoiceSignatureFieldResolver,
   InvoiceStatusChangeFieldResolver,
   InvoiceTimeEntryFieldResolver,
+  MyDocumentsQueryResolver,
   ReimbursementMutationResolver,
   ReimbursementQueryResolver,
   ReimbursementRateFieldResolver,
   TemplateSigneeFieldResolver,
 } from './resolvers';
 import {
+  AccountingOrgAccessService,
   ContractService,
+  DocumentNotificationService,
+  DocumentProfileRequirementService,
   DocumentRenderingService,
   DocumentSigningService,
   DocumentTemplateService,
   InvoiceService,
   ReimbursementRateService,
+  VolunteerDocumentsService,
 } from './services';
 
 @Module({
@@ -66,12 +73,18 @@ import {
     TimeTrackingModule,
     MembershipModule,
     StorageModule,
+    NotificationModule,
+    RequirementProfileModule,
   ],
   providers: [
+    AccountingOrgAccessService,
+    VolunteerDocumentsService,
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentRenderingService,
+    DocumentProfileRequirementService,
     DocumentSigningService,
+    DocumentNotificationService,
     ContractService,
     InvoiceService,
     ContractMapper,
@@ -109,11 +122,14 @@ import {
     DocumentTemplateSigneesLoader,
     ContractLoader,
     InvoiceLoader,
+    MyDocumentsQueryResolver,
   ],
   exports: [
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentSigningService,
+    DocumentNotificationService,
+    DocumentRenderingService,
     ContractService,
     InvoiceService,
   ],

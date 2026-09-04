@@ -102,6 +102,7 @@ export function ShiftCardMy({
     <Card className="relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card p-0">
       <Link
         href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+        prefetch={false}
         aria-label={shiftInstance.master.title}
         className="absolute inset-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
       />
@@ -150,7 +151,7 @@ export function ShiftCardMy({
             asChild
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl bg-primary text-primary-foreground"
           >
-            <Link href="/qr-id">
+            <Link href="/check-in">
               <QrCodeIcon className="size-5" />
               <span>{t('checkIn')}</span>
             </Link>
@@ -162,7 +163,7 @@ export function ShiftCardMy({
             variant="outline"
             className="relative z-10 flex h-auto w-[100px] shrink-0 flex-col gap-1 self-stretch rounded-xl"
           >
-            <Link href="/qr-id">
+            <Link href="/check-in">
               <DoorOpenIcon className="size-5" />
               <span>{t('checkOut')}</span>
             </Link>

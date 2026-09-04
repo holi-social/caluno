@@ -86,6 +86,12 @@
       "verifying": "Verifying..."
     }
   },
+  "CheckIn": {
+    "manualCheckin": "Manual checkin",
+    "myQrCodeTab": "My QR code",
+    "qrScannerTab": "QR Scanner",
+    "scanACode": "Scan a code"
+  },
   "Common": {
     "avatarAlt": "Avatar of {name}",
     "back": "Back",
@@ -343,6 +349,57 @@
       "fieldColumn": "Field",
       "noFields": "This form has no fields.",
       "submittedOn": "Submitted on {date}"
+    },
+    "documents": {
+      "title": "Your documents",
+      "subtitle": "Agreements and timesheets for reimbursements",
+      "names": {
+        "agreement": "Supplementary agreement",
+        "timesheet": "Timesheet"
+      },
+      "status": {
+        "awaiting-signature": "To sign",
+        "awaiting-countersignature": "To countersign",
+        "signed": "Active",
+        "declined": "Declined"
+      },
+      "figures": "{shifts} Shifts · {hours} hours · {amount}",
+      "lines": {
+        "generated": "Generated on {date} by {name}",
+        "signedByMe": "You signed on {date}",
+        "countersignedBy": "{name} countersigned on {date}",
+        "declinedBy": "{name} declined on {date}"
+      },
+      "actions": {
+        "download": "Download",
+        "sign": "Sign",
+        "decline": "Decline"
+      },
+      "missingProfileWarning": "Your profile is missing details this document needs.",
+      "missingProfileCta": "Complete your profile to sign",
+      "toasts": {
+        "signed": "{name} signed.",
+        "signedError": "{name} could not be signed. Please try again.",
+        "declined": "{name} declined.",
+        "declinedError": "{name} could not be declined. Please try again.",
+        "downloadUnavailable": "The document is not available for download yet."
+      },
+      "empty": {
+        "title": "No documents yet",
+        "description": "Agreements and timesheets this organisation generates for you will appear here."
+      },
+      "declineSheet": {
+        "title": "Decline document",
+        "description": "This organisation needs to understand why you are declining this {documentName}.",
+        "reasonLabel": "Reason for declining",
+        "reasonPlaceholder": "Explain why you are declining the document…",
+        "submit": "Decline"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "The document is not available for preview yet."
+      },
+      "downloadUnavailableNote": "PDF not available yet."
     }
   },
   "MembershipRequest": {
@@ -508,7 +565,9 @@
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
-    "accountingSettings": "Settings"
+    "accountingSettings": "Settings",
+    "myDocuments": "My documents",
+    "myDocumentsBadge": "{count} documents need your signature"
   },
   "OrgDetail": {
     "aboutHeading": "About us",
@@ -554,6 +613,12 @@
     "form": {
       "addressLabel": "Address",
       "addressPlaceholder": "e.g. 123 Main St, City",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g. Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "e.g. 10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe this organizational unit...",
       "emailLabel": "Email",
@@ -640,7 +705,9 @@
         "firstName": "As on your ID",
         "iban": "For expense and allowance payments",
         "lastName": "As on your ID",
-        "preferredName": "If you'd like to be called something else"
+        "preferredName": "If you'd like to be called something else",
+        "bic": "Bank identifier code (BIC) for your account",
+        "taxId": "Your tax identification number (for expense reports)"
       }
     },
     "language": "Language",
@@ -847,6 +914,8 @@
       "firstName": "First name",
       "gender": "Gender",
       "iban": "IBAN",
+      "bic": "BIC",
+      "taxId": "Tax ID",
       "infoText": "Info text",
       "labelLabel": "Label",
       "labelPlaceholder": "e.g. Favorite color",
@@ -900,8 +969,6 @@
       "searchPlaceholder": "Search volunteers…",
       "submissionsColumn": "Submissions",
       "subtitle": "Volunteers who submitted this form. Click a volunteer to view their submission.",
-      "tabRejected": "Rejected",
-      "tabSubmitted": "Submitted",
       "title": "Submissions — {formName}",
       "viewSubmission": "View →",
       "volunteerColumn": "Volunteer"
@@ -934,6 +1001,7 @@
       "fieldRequired": "{label} is required",
       "invalidCharacters": "{label} contains invalid characters",
       "invalidIban": "{label} must be a valid IBAN",
+      "invalidBic": "{label} must be a valid BIC",
       "invalidOptions": "{label} contains invalid options",
       "labelRequired": "Label is required",
       "maxChars": "{label} must be {maxLen} characters or fewer",
@@ -1028,7 +1096,25 @@
     }
   },
   "Settings": {
-    "title": "Settings"
+    "title": "Settings",
+    "organizationProfile": {
+      "title": "Organization profile",
+      "subtitle": "Update your organization's address and contact details.",
+      "addressLabel": "Organization address",
+      "addressPlaceholder": "123 Main St",
+      "cityLabel": "City",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Contact email",
+      "contactEmailPlaceholder": "contact@organization.org",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org",
+      "saved": "Organization updated",
+      "saveFailed": "Failed to update organization"
+    }
   },
   "Shift": {
     "action": {
@@ -1065,7 +1151,6 @@
       "checkingIn": "Checking in...",
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
-      "enterQrTitle": "Or enter their QR ID",
       "generalCheckIn": "General check-in",
       "invalidCheckin": {
         "blocked": {
@@ -1078,8 +1163,6 @@
         }
       },
       "noShiftSelected": "No shift selected",
-      "scanDescription": "Scan the volunteer's QR ID to check them in or out",
-      "searchVolunteerTitle": "Or search for a volunteer",
       "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
       "selectOrgTitle": "Check-in",
       "successNext": "Next",
@@ -1152,6 +1235,9 @@
       "recurrenceEnds": "End of series",
       "recurrenceEndsNever": "Never",
       "recurrenceEndsOn": "On",
+      "reimbursementTypeDescription": "Volunteer time on this shift will be eligible for a timesheet under this Pauschale",
+      "reimbursementTypeLabel": "Reimbursable Pauschale",
+      "reimbursementTypeNone": "Not reimbursable",
       "recurring": "Recurring shift",
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
@@ -1662,6 +1748,7 @@
         "contractSigning": "Sign contracts",
         "timesheetGenerate": "Create timesheets",
         "timesheetSigning": "Sign timesheets",
+        "needsTimesheet": "Timesheet needed",
         "readyToGo": "Ready to go"
       },
       "toolbar": {
@@ -1730,7 +1817,8 @@
             "coordSign": "Coordinator",
             "superSign": "Supervisor",
             "active": "Active",
-            "ready": "Ready"
+            "ready": "Ready",
+            "actorOrg": "Organization"
           },
           "limitSection": "Annual budget",
           "invoicesPaidOut": "Paid out",
@@ -1755,7 +1843,8 @@
             "grossAmount": "Gross amount",
             "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
             "viewBtn": "View timesheets"
-          }
+          },
+          "pdfUnavailableNote": "PDF not available yet."
         },
         "statusLabel": {
           "contractGenerate": "Create contract",
@@ -1823,6 +1912,10 @@
         "sendErrorToast": "Couldn't send the contract to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load profile data",
         "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the contract",
+        "sendError": "The contract couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create a contract template",
+        "completeOrgProfileCta": "Complete your organization profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -1843,6 +1936,10 @@
         "sendErrorToast": "Couldn't send the invoice to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load invoice data",
         "loadError": "{name}'s invoice data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the invoice",
+        "sendError": "The invoice couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create an invoice template",
+        "completeOrgProfileCta": "Complete your organization profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
@@ -1869,6 +1966,18 @@
           "signatureSupervisor": "Supervisor signature",
           "unsigned": "Not yet signed"
         }
+      },
+      "signToasts": {
+        "contract": "Contract countersigned for {name}.",
+        "contractError": "Contract could not be countersigned for {name}.",
+        "invoice": "Timesheet countersigned for {name}.",
+        "invoiceError": "Timesheet could not be countersigned for {name}."
+      },
+      "declineToasts": {
+        "contract": "Contract declined for {name}.",
+        "contractError": "Contract could not be declined for {name}.",
+        "invoice": "Timesheet declined for {name}.",
+        "invoiceError": "Timesheet could not be declined for {name}."
       }
     },
     "templates": {
@@ -1891,6 +2000,11 @@
         "saveButton": "Save template",
         "saveSuccessToast": "Template saved",
         "saveErrorToast": "The template could not be saved. Please try again.",
+        "orgProfile": {
+          "blockedMessage": "Your organization info is missing details this template needs. Complete the organization info before saving.",
+          "blockedCta": "Complete organization info",
+          "blockedAskSomeone": "Ask someone who can manage the organization to complete the organization info."
+        },
         "previewScrollRegionLabel": "Document preview, scrollable",
         "preview": {
           "disclaimerBadge": "Preview",
@@ -2027,6 +2141,15 @@
           "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "My documents",
+    "backLabel": "Back",
+    "loadMore": "Load more ({remaining})",
+    "empty": {
+      "title": "No documents yet",
+      "description": "Agreements and timesheets from your organizations will appear here."
     }
   }
 }

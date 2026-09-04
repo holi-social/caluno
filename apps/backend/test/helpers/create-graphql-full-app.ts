@@ -24,8 +24,12 @@ export const createGraphqlFullTestApp = async (): Promise<INestApplication> => {
 
   const app = moduleRef.createNestApplication({ logger: false });
   app.use((req, _res, next) => {
-    const mutableReq = req as { user?: { id: string } };
+    const mutableReq = req as {
+      user?: { id: string };
+      session?: { user: { id: string } };
+    };
     mutableReq.user = { id: getAuthMockUserId() };
+    mutableReq.session = { user: mutableReq.user };
     next();
   });
 

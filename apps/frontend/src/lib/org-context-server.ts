@@ -10,6 +10,8 @@ export interface OrgContextData {
   description?: string | null;
   logoUrl?: string | null;
   address?: string | null;
+  city?: string | null;
+  legalRep?: string | null;
   organizationId: string;
   accountingEnabled: boolean;
 }
@@ -27,6 +29,8 @@ function normalizeUnits(units: MyOrganizationUnit[]): OrgContextData[] {
         description: unit.description ?? unit.organization.description ?? null,
         logoUrl: unit.logoUrl ?? unit.organization.logoUrl ?? null,
         address: unit.address,
+        city: unit.city,
+        legalRep: unit.legalRep,
         organizationId: unit.organization.id,
         accountingEnabled: unit.organization.accountingEnabled,
       };
@@ -44,6 +48,14 @@ export async function getMyOrgUnits(): Promise<OrgContextData[]> {
 export async function getMyAdministrableOrgUnits(): Promise<OrgContextData[]> {
   const data = await getDataClient();
   const units = await data.organization.findMyAdminstrableOrganizationUnits();
+
+  return normalizeUnits(units);
+}
+
+export async function getMyCheckInOrgUnits(): Promise<OrgContextData[]> {
+  const data = await getDataClient();
+  const units =
+    await data.organization.findMyCheckInAdministrableOrganizationUnits();
 
   return normalizeUnits(units);
 }
@@ -119,6 +131,8 @@ export async function requireOrgAccess(
       description: unit.description ?? null,
       logoUrl: unit.logoUrl ?? null,
       address: unit.address ?? null,
+      city: unit.city ?? null,
+      legalRep: unit.legalRep ?? null,
       organizationId: unit.organizationId ?? '',
       accountingEnabled: false,
     },

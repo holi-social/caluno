@@ -9,6 +9,9 @@ import {
   SigneeType,
 } from '../src/accounting/enums';
 import { ContractService } from '../src/accounting/services/contract.service';
+import { DocumentNotificationService } from '../src/accounting/services/document-notification.service';
+import { DocumentProfileRequirementService } from '../src/accounting/services/document-profile-requirement.service';
+import { DocumentRenderingService } from '../src/accounting/services/document-rendering.service';
 import { DocumentSigningService } from '../src/accounting/services/document-signing.service';
 import { DocumentTemplateService } from '../src/accounting/services/document-template.service';
 import { InvoiceService } from '../src/accounting/services/invoice.service';
@@ -27,7 +30,7 @@ import { OrganizationMapper } from '../src/organization/mappers/organization.map
 import { OrganizationService } from '../src/organization/organization.service';
 import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
-import { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services/file.service';
 import {
   createCompletedTimeEntry,
@@ -67,7 +70,9 @@ describe('InvoiceService', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const organizationUnitDataService = new OrganizationUnitDataService(db);
-    const authService = new AuthService(db, organizationUnitDataService);
+    const authService = new AuthService(db, organizationUnitDataService, {
+      capture: () => {},
+    } as unknown as PostHogService);
     const organizationService = new OrganizationService(
       db,
       {} as OrganizationMapper,
@@ -75,9 +80,17 @@ describe('InvoiceService', () => {
       {} as OrganizationUnitService,
       {} as NotificationService,
       {} as FileService,
-      {} as PostHogCaptureService,
+      { capture: () => {} } as unknown as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db);
+    const documentTemplateService = new DocumentTemplateService(
+      db,
+      {
+        capture: () => {},
+      } as unknown as PostHogService,
+      {
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+    );
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
@@ -87,11 +100,24 @@ describe('InvoiceService', () => {
       db,
       organizationUnitDataService,
       {} as MembershipService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     const contractService = new ContractService(
       db,
       documentTemplateService,
       documentSigningService,
+      {
+        notifyAwaitingVolunteerSignature: () => Promise.resolve(),
+        notifyDeclinedByOrg: () => Promise.resolve(),
+      } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     service = new InvoiceService(
       db,
@@ -99,6 +125,18 @@ describe('InvoiceService', () => {
       documentSigningService,
       reimbursementRateService,
       contractService,
+      {
+        notifyAwaitingVolunteerSignature: () => Promise.resolve(),
+        notifyDeclinedByOrg: () => Promise.resolve(),
+      } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
+      { capture: () => {} } as unknown as PostHogService,
     );
 
     registerTestResourceCleanup(async () => {
@@ -276,6 +314,135 @@ describe('InvoiceService', () => {
     });
   });
 
+  describe('findVolunteersNeedingTimesheets', () => {
+    const yearPeriod = () =>
+      [
+        new Date('2026-01-01T00:00:00.000Z'),
+        new Date('2027-01-01T00:00:00.000Z'),
+      ] as const;
+
+    it('returns volunteers with an eligible (unclaimed, completed, in-period) time entry and its hours', async () => {
+      const { root, reimbursementType, volunteer, timeEntry } = await setup();
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        eligibleHours: 4,
+      });
+      expect(result[0]?.volunteerId).toBe(timeEntry.volunteerId);
+    });
+
+    it('excludes a volunteer whose only entry has already been claimed by an invoice', async () => {
+      const {
+        organization,
+        root,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result.map((r) => r.volunteerId)).not.toContain(volunteer.id);
+    });
+
+    it('excludes a volunteer whose only time entry has not been ended yet', async () => {
+      const { root, reimbursementType } = await setup();
+      const volunteer = await createUser(db);
+      const shift = await createShift(db, {
+        organizationUnitId: root.id,
+        createdById: volunteer.id,
+      });
+      const instance = await createShiftInstance(db, shift.id);
+      await db.insert(schema.timeEntries).values({
+        shiftInstanceId: instance.id,
+        organizationUnitId: root.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-01T09:00:00.000Z'),
+        endedAt: null,
+      });
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result.map((r) => r.volunteerId)).not.toContain(volunteer.id);
+    });
+
+    it('excludes entries that fall outside the requested period', async () => {
+      const { root } = await setup();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        new Date('2026-01-01T00:00:00.000Z'),
+        new Date('2026-07-01T00:00:00.000Z'),
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('scopes the result to the requested organization unit', async () => {
+      const { root } = await setup();
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Other Org ${crypto.randomUUID()}`,
+      );
+      const otherRoot = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'other-root',
+      });
+      const otherVolunteer = await createUser(db);
+      await createCompletedTimeEntry(db, {
+        organizationUnitId: otherRoot.id,
+        volunteerId: otherVolunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-01T09:00:00.000Z'),
+        endedAt: new Date('2026-07-01T13:00:00.000Z'),
+      });
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result.map((r) => r.volunteerId)).not.toContain(otherVolunteer.id);
+    });
+  });
+
   describe('createInvoice', () => {
     it('rejects an empty selection of time entries', async () => {
       const { organization, reimbursementType, volunteer, supervisor } =
@@ -355,11 +522,13 @@ describe('InvoiceService', () => {
         db,
         new OrganizationUnitDataService(db),
         {} as MembershipService,
+        { capture: () => {} } as unknown as PostHogService,
       );
       await reimbursementRateService.setReimbursementRate(
         organization.id,
         reimbursementType.id,
         2_000,
+        supervisor.id,
       );
 
       const invoice = await service.createInvoice(

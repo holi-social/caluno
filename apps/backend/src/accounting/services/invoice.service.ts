@@ -8,8 +8,14 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import type { TimeEntryEntity } from '../../time-tracking/schemas/time-entry.schema';
 import type {
+  EligibleTimesheetVolunteer,
   InvoiceFilter,
   InvoiceWithRelations,
   PendingSignee,
@@ -24,6 +30,9 @@ import type { CreateInvoiceInput } from '../inputs/create-invoice.input';
 import type { InvoiceEntity } from '../schemas/invoice.schema';
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
+import { DocumentNotificationService } from './document-notification.service';
+import { DocumentProfileRequirementService } from './document-profile-requirement.service';
+import { DocumentRenderingService } from './document-rendering.service';
 import { DocumentSigningService } from './document-signing.service';
 import { DocumentTemplateService } from './document-template.service';
 import { ReimbursementRateService } from './reimbursement-rate.service';
@@ -37,6 +46,10 @@ export class InvoiceService {
     private readonly documentSigningService: DocumentSigningService,
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly contractService: ContractService,
+    private readonly documentNotificationService: DocumentNotificationService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
+    private readonly documentRenderingService: DocumentRenderingService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async findInvoice(id: string): Promise<InvoiceWithRelations> {
@@ -48,6 +61,7 @@ export class InvoiceService {
         signatures: true,
         statusChanges: true,
         invoiceTimeEntries: true,
+        organizationUnit: true,
       },
     });
     if (!invoice) {
@@ -126,6 +140,61 @@ export class InvoiceService {
     return rows.map((row) => row.timeEntry);
   }
 
+  /**
+   * Volunteers in the unit that still need a timesheet: they have at least
+   * one eligible (unclaimed, completed, in-period) time entry, grouped by
+   * volunteer and reimbursement type with the summed eligible hours.
+   */
+  async findVolunteersNeedingTimesheets(
+    organizationUnitId: string,
+    periodStart?: Date,
+    periodEnd?: Date,
+  ): Promise<EligibleTimesheetVolunteer[]> {
+    const conditions = [
+      eq(schema.timeEntries.organizationUnitId, organizationUnitId),
+      isNotNull(schema.timeEntries.endedAt),
+      isNotNull(schema.timeEntries.reimbursementTypeId),
+      isNull(schema.invoiceTimeEntries.id),
+    ];
+    if (periodStart) {
+      conditions.push(gte(schema.timeEntries.startedAt, periodStart));
+    }
+    if (periodEnd) {
+      conditions.push(lt(schema.timeEntries.startedAt, periodEnd));
+    }
+
+    const rows = await this.db
+      .select({ timeEntry: schema.timeEntries })
+      .from(schema.timeEntries)
+      .leftJoin(
+        schema.invoiceTimeEntries,
+        eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+      )
+      .where(and(...conditions));
+
+    const hoursByVolunteerType = new Map<string, number>();
+    for (const row of rows) {
+      const entry = row.timeEntry;
+      if (!entry.endedAt || !entry.reimbursementTypeId) continue;
+      const key = `${entry.volunteerId}:${entry.reimbursementTypeId}`;
+      const hours =
+        (entry.endedAt.getTime() - entry.startedAt.getTime()) / 3_600_000;
+      hoursByVolunteerType.set(
+        key,
+        (hoursByVolunteerType.get(key) ?? 0) + hours,
+      );
+    }
+
+    return Array.from(hoursByVolunteerType, ([key, eligibleHours]) => {
+      const [volunteerId, reimbursementTypeId] = key.split(':');
+      return {
+        volunteerId,
+        reimbursementTypeId,
+        eligibleHours: Math.round(eligibleHours * 100) / 100,
+      };
+    });
+  }
+
   async createInvoice(
     organizationId: string,
     input: CreateInvoiceInput,
@@ -176,18 +245,38 @@ export class InvoiceService {
       await this.documentTemplateService.findOrderedTemplateSignees(
         template.id,
       );
+
+    // The unit must have the profile fields its documents render (e.g. city /
+    // address) before one is created — otherwise the PDF comes out with gaps
+    // the org can't fix inline. The account manager is told to complete the
+    // unit's profile first.
+    const missingOrg =
+      await this.documentProfileRequirementService.missingOrgProfileSources(
+        organizationId,
+        input.organizationUnitId,
+        template.body,
+      );
+    if (missingOrg.length > 0) {
+      throw new BadRequestGraphQLError(
+        'Your organization is missing details required for this document: ' +
+          missingOrg.join(', ') +
+          '. Please complete your organization profile before creating documents.',
+      );
+    }
+
     const activeContract = await this.contractService.findActiveContract(
       input.volunteerId,
       input.reimbursementTypeId,
     );
 
-    return this.db.transaction(async (tx) => {
-      const [invoice] = await tx
+    const invoice = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.invoices)
         .values({
           documentTemplateId: template.id,
           volunteerId: input.volunteerId,
           reimbursementTypeId: input.reimbursementTypeId,
+          organizationUnitId: input.organizationUnitId,
           invoiceStatus: this.nextInvoiceStatus(orderedSignees[0].signeeType),
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,
@@ -200,7 +289,7 @@ export class InvoiceService {
 
       await tx.insert(schema.invoiceSignatures).values(
         orderedSignees.map((signee) => ({
-          invoiceId: invoice.id,
+          invoiceId: created.id,
           order: signee.order,
           signeeType: signee.signeeType,
           requiredPermissionId: signee.requiredPermissionId,
@@ -211,19 +300,42 @@ export class InvoiceService {
       // second invoice while this one is still pending signatures.
       await tx.insert(schema.invoiceTimeEntries).values(
         selected.map((entry) => ({
-          invoiceId: invoice.id,
+          invoiceId: created.id,
           timeEntryId: entry.id,
         })),
       );
 
       await tx.insert(schema.invoiceStatusChanges).values({
-        invoiceId: invoice.id,
+        invoiceId: created.id,
         type: DocumentStatusChange.CREATED,
         actorUserId,
       });
 
-      return invoice;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.INVOICE_CREATE,
+      userId: invoice.volunteerId || actorUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: input.organizationUnitId ?? undefined,
+      },
+    });
+
+    // The volunteer only hears about the document when it needs their
+    // signature — generation itself is not news (accounting-volunteer-documents).
+    if (invoice.invoiceStatus === InvoiceStatus.AWAITING_VOLUNTEER_SIGNATURE) {
+      await this.documentNotificationService.notifyAwaitingVolunteerSignature({
+        organizationId,
+        volunteerUserId: invoice.volunteerId,
+        documentId: invoice.id,
+        documentKind: DocumentKind.INVOICE,
+      });
+    }
+
+    return invoice;
   }
 
   async signInvoice(invoiceId: string, userId: string): Promise<InvoiceEntity> {
@@ -250,15 +362,33 @@ export class InvoiceService {
       this.documentSigningService.organizationIdOf(invoice.documentTemplate),
     );
 
+    // The volunteer's own signature is the first step of the chain. Require
+    // the profile fields the template reads before they can sign, so the
+    // signed document never comes out with "—" gaps in place of them.
+    if (pending.signeeType === SigneeType.VOLUNTEER) {
+      const missing =
+        await this.documentProfileRequirementService.missingProfileSources(
+          invoice.volunteerId,
+          invoice.documentTemplate?.body,
+        );
+      if (missing.length > 0) {
+        throw new BadRequestGraphQLError(
+          'Your profile is missing details required for this document: ' +
+            missing.join(', ') +
+            '. Please complete your profile before signing.',
+        );
+      }
+    }
+
     const isFinal = pendingIndex === orderedSignatures.length - 1;
 
-    return this.db.transaction(async (tx) => {
+    const updated = await this.db.transaction(async (tx) => {
       await tx
         .update(schema.invoiceSignatures)
         .set({ signedByUserId: userId, signedAt: new Date() })
         .where(eq(schema.invoiceSignatures.id, pending.id));
 
-      const [updated] = await tx
+      const [signed] = await tx
         .update(schema.invoices)
         .set({
           invoiceStatus: isFinal
@@ -297,8 +427,28 @@ export class InvoiceService {
         }
       }
 
-      return updated;
+      return signed;
     });
+
+    // The timesheet is complete — render its PDF so it can be downloaded.
+    // Failures are logged, never thrown: signing still succeeds.
+    if (isFinal) {
+      const full = await this.findInvoice(invoiceId);
+      await this.documentRenderingService.renderAndAttachPdf(full, userId);
+    }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.INVOICE_SIGN,
+      userId: invoice.volunteerId || userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: this.documentSigningService.organizationIdOf(
+          invoice.documentTemplate,
+        ),
+      },
+    });
+
+    return updated;
   }
 
   async declineInvoice(
@@ -330,8 +480,8 @@ export class InvoiceService {
       this.documentSigningService.organizationIdOf(invoice.documentTemplate),
     );
 
-    return this.db.transaction(async (tx) => {
-      const [updated] = await tx
+    const updated = await this.db.transaction(async (tx) => {
+      const [declined] = await tx
         .update(schema.invoices)
         .set({
           invoiceStatus: InvoiceStatus.DECLINED,
@@ -349,8 +499,36 @@ export class InvoiceService {
         actorUserId: userId,
       });
 
-      return updated;
+      return declined;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.INVOICE_DECLINE,
+      userId: invoice.volunteerId || userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: this.documentSigningService.organizationIdOf(
+          invoice.documentTemplate,
+        ),
+      },
+    });
+
+    // Only the org-side decline is news to the volunteer — they had signed
+    // and would otherwise never learn the document is dead. A decline by the
+    // volunteer themselves is their own doing, so no email.
+    if (updated.declinedAtSigneeType === SigneeType.PERMISSION_HOLDER) {
+      await this.documentNotificationService.notifyDeclinedByOrg({
+        organizationId: this.documentSigningService.organizationIdOf(
+          invoice.documentTemplate,
+        ),
+        volunteerUserId: invoice.volunteerId,
+        documentId: invoiceId,
+        documentKind: DocumentKind.INVOICE,
+        reason,
+      });
+    }
+
+    return updated;
   }
 
   async findInvoiceStatusChanges(

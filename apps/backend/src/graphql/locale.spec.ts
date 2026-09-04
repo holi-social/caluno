@@ -11,22 +11,26 @@ describe('resolveRequestLocale', () => {
     ['en', 'en'],
     ['de-DE', 'de'],
     ['EN-us', 'en'],
-  ] satisfies Array<
-    [string, Locale]
-  >)('uses supported x-locale value %s', (header, expected) => {
-    expect(resolveRequestLocale({ 'x-locale': header })).toBe(expected);
-  });
+  ] satisfies Array<[string, Locale]>)(
+    'uses supported x-locale value %s',
+    (header, expected) => {
+      expect(resolveRequestLocale({ 'x-locale': header })).toBe(expected);
+    },
+  );
 
   it.each([
     ['de', 'de'],
     ['en-US,en;q=0.9,de;q=0.8', 'en'],
     ['de-DE,de;q=0.9,en-US;q=0.7', 'de'],
     ['fr,de;q=0.9', 'de'],
-  ] satisfies Array<
-    [string, Locale]
-  >)('uses Accept-Language %s', (header, expected) => {
-    expect(resolveRequestLocale({ 'accept-language': header })).toBe(expected);
-  });
+  ] satisfies Array<[string, Locale]>)(
+    'uses Accept-Language %s',
+    (header, expected) => {
+      expect(resolveRequestLocale({ 'accept-language': header })).toBe(
+        expected,
+      );
+    },
+  );
 
   it('prefers x-locale over Accept-Language', () => {
     expect(

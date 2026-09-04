@@ -8,6 +8,11 @@ import {
   ConflictGraphQLError,
   NotFoundGraphQLError,
 } from '../../graphql/errors';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { DocumentKind, SigneeType } from '../enums';
 import type { CreateDocumentTemplateInput } from '../inputs/create-document-template.input';
 import type { CreateTemplateSigneeInput } from '../inputs/create-template-signee.input';
@@ -17,12 +22,15 @@ import type {
   DocumentTemplateEntity,
 } from '../schemas/document-template.schema';
 import type { TemplateSigneeEntity } from '../schemas/template-signee.schema';
+import { DocumentProfileRequirementService } from './document-profile-requirement.service';
 
 @Injectable()
 export class DocumentTemplateService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+    private readonly postHogService: PostHogService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
   ) {}
 
   async findDocumentTemplates(
@@ -65,6 +73,14 @@ export class DocumentTemplateService {
       if (!unit) {
         throw new NotFoundGraphQLError('Organization unit not found');
       }
+      // The unit must already carry the org-profile fields the template's
+      // bound org sources render — otherwise the PDF comes out with "—" gaps
+      // the org can't fix inline after the fact.
+      await this.assertOrgProfileComplete(
+        organizationId,
+        input.organizationUnitId,
+        input.body,
+      );
     }
 
     const existing = await this.db.query.documentTemplates.findFirst({
@@ -84,8 +100,8 @@ export class DocumentTemplateService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
-      const [template] = await tx
+    const template = await this.db.transaction(async (tx) => {
+      const [created] = await tx
         .insert(schema.documentTemplates)
         .values({
           organizationId,
@@ -102,15 +118,27 @@ export class DocumentTemplateService {
 
       await tx.insert(schema.templateSignees).values(
         input.signees.map((signee) => ({
-          documentTemplateId: template.id,
+          documentTemplateId: created.id,
           order: signee.order,
           signeeType: signee.signeeType,
           requiredPermissionId: signee.requiredPermissionId ?? null,
         })),
       );
 
-      return template;
+      return created;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.DOCUMENT_TEMPLATE_CREATE,
+      userId: editedByUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: input.organizationUnitId ?? undefined,
+      },
+    });
+
+    return template;
   }
 
   async updateDocumentTemplate(
@@ -119,13 +147,26 @@ export class DocumentTemplateService {
     input: UpdateDocumentTemplateInput,
     editedByUserId: string,
   ): Promise<DocumentTemplateEntity> {
-    await this.findDocumentTemplate(organizationId, templateId);
+    const existingTemplate = await this.findDocumentTemplate(
+      organizationId,
+      templateId,
+    );
     if (input.signees) {
       this.assertValidSignees(input.signees);
     }
 
-    return this.db.transaction(async (tx) => {
-      const [template] = await tx
+    // Org-data can be removed after a template is created, so re-check the
+    // unit the template is scoped to before overwriting its body.
+    if (input.body !== undefined && existingTemplate.organizationUnitId) {
+      await this.assertOrgProfileComplete(
+        organizationId,
+        existingTemplate.organizationUnitId,
+        input.body,
+      );
+    }
+
+    const template = await this.db.transaction(async (tx) => {
+      const [updated] = await tx
         .update(schema.documentTemplates)
         .set({
           ...(input.renewalCadence !== undefined && {
@@ -159,19 +200,41 @@ export class DocumentTemplateService {
         );
       }
 
-      return template;
+      return updated;
     });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.DOCUMENT_TEMPLATE_UPDATE,
+      userId: editedByUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: template.organizationUnitId ?? undefined,
+      },
+    });
+
+    return template;
   }
 
   async deleteDocumentTemplate(
     organizationId: string,
     templateId: string,
+    userId: string,
   ): Promise<void> {
     await this.findDocumentTemplate(organizationId, templateId);
     await this.db
       .update(schema.documentTemplates)
       .set({ isDeleted: true })
       .where(eq(schema.documentTemplates.id, templateId));
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.DOCUMENT_TEMPLATE_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+      },
+    });
   }
 
   /**
@@ -229,6 +292,27 @@ export class DocumentTemplateService {
       );
     }
     return [...signees].sort((a, b) => a.order - b.order);
+  }
+
+  private async assertOrgProfileComplete(
+    organizationId: string,
+    organizationUnitId: string | null,
+    body: unknown,
+  ): Promise<void> {
+    if (!organizationUnitId) return;
+    const missing =
+      await this.documentProfileRequirementService.missingOrgProfileSources(
+        organizationId,
+        organizationUnitId,
+        body,
+      );
+    if (missing.length > 0) {
+      throw new BadRequestGraphQLError(
+        'Your organization is missing details required for this template: ' +
+          missing.join(', ') +
+          '. Please complete your organization profile before saving this template.',
+      );
+    }
   }
 
   private assertValidSignees(signees: CreateTemplateSigneeInput[]): void {

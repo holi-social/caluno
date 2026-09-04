@@ -4,6 +4,7 @@ import {
   useContracts,
   useInvoices,
   useRosterYearlyUsage,
+  useVolunteersNeedingTimesheets,
 } from '@repo/data/react';
 import { useLocale } from 'next-intl';
 import { useMemo } from 'react';
@@ -37,9 +38,16 @@ export function useReimbursementBoardData({
     periodStart,
     periodEnd,
   });
+  const needsTimesheetQuery = useVolunteersNeedingTimesheets({
+    periodStart,
+    periodEnd,
+  });
 
   const volunteers = useMemo(() => {
     if (!rosterQuery.data) return [];
+    const needsTimesheetVolunteers = new Set(
+      (needsTimesheetQuery.data ?? []).map((entry) => entry.volunteer.id),
+    );
     return buildBoardVolunteers({
       rosterUsage: rosterQuery.data,
       contracts: contractsQuery.data ?? [],
@@ -47,11 +55,13 @@ export function useReimbursementBoardData({
       year,
       locale,
       dateRange,
+      needsTimesheetVolunteers,
     });
   }, [
     rosterQuery.data,
     contractsQuery.data,
     invoicesQuery.data,
+    needsTimesheetQuery.data,
     year,
     locale,
     dateRange,
@@ -62,7 +72,12 @@ export function useReimbursementBoardData({
     isLoading:
       rosterQuery.isLoading ||
       contractsQuery.isLoading ||
-      invoicesQuery.isLoading,
-    error: rosterQuery.error ?? contractsQuery.error ?? invoicesQuery.error,
+      invoicesQuery.isLoading ||
+      needsTimesheetQuery.isLoading,
+    error:
+      rosterQuery.error ??
+      contractsQuery.error ??
+      invoicesQuery.error ??
+      needsTimesheetQuery.error,
   };
 }

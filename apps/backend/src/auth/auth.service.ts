@@ -11,6 +11,11 @@ import {
 } from '../database/schema';
 import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { PERMISSION_GROUPS } from './constants/permission-groups';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
@@ -21,11 +26,13 @@ export class AuthService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
     private readonly organizationUnitDataService: OrganizationUnitDataService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async createRole(
     organizationUnitId: string,
     input: CreateRoleInput,
+    userId: string,
   ): Promise<RoleEntity> {
     const organization = await this.getOrganization(organizationUnitId);
 
@@ -50,6 +57,16 @@ export class AuthService {
         })),
       );
     }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ROLE_CREATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: role.organizationId,
+        organization_unit_id: organizationUnitId,
+      },
+    });
 
     return role;
   }
@@ -280,6 +297,7 @@ export class AuthService {
   async updateRole(
     roleId: string,
     input: UpdateRoleInput,
+    userId: string,
   ): Promise<RoleEntity> {
     const [updatedRole] = await this.db.transaction(async (tx) => {
       const updateData: Partial<typeof schema.roles.$inferInsert> = {};
@@ -332,10 +350,19 @@ export class AuthService {
       return [role];
     });
 
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ROLE_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: updatedRole.organizationId,
+      },
+    });
+
     return updatedRole;
   }
 
-  async deleteRole(roleId: string): Promise<RoleEntity> {
+  async deleteRole(roleId: string, userId: string): Promise<RoleEntity> {
     const [deletedRole] = await this.db.transaction(async (tx) => {
       const roleToDelete = await tx.query.roles.findFirst({
         where: { id: roleId },
@@ -359,6 +386,15 @@ export class AuthService {
       }
 
       return [role];
+    });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ROLE_DELETE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: deletedRole.organizationId,
+      },
     });
 
     return deletedRole;

@@ -36,6 +36,7 @@ function shiftShape(t: ShiftSchemaMessages) {
     imageFileId: z.uuid().nullish(),
     minVolunteers: z.number().int().nonnegative().nullable().optional(),
     maxVolunteers: z.number().int().nonnegative().nullable().optional(),
+    reimbursementTypeId: z.string().nullable().optional(),
     requiredFormIds: z.array(z.string()).optional(),
   });
 }

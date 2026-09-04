@@ -4,6 +4,7 @@ jest.mock('nanoid', () => ({
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { DocumentKind } from '../accounting/enums';
 import type { Locale } from '../graphql/locale';
 import { AppI18nService } from '../i18n/app-i18n.service';
 import type { EmailTemplateContext } from '../i18n/email-translate';
@@ -19,20 +20,33 @@ import { UserLocaleService } from '../i18n/user-locale.service';
 import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email/email.service';
+import { documentAwaitingSignatureTemplate } from './email/templates/document-awaiting-signature.template';
+import { documentDeclinedByOrgTemplate } from './email/templates/document-declined-by-org.template';
 import { eventCancelledTemplate } from './email/templates/event-cancelled.template';
+import { eventDetailsChangedTemplate } from './email/templates/event-details-changed.template';
 import { eventInvitedTemplate } from './email/templates/event-invited.template';
 import { eventJoinedTemplate } from './email/templates/event-joined.template';
+import { eventRemovedTemplate } from './email/templates/event-removed.template';
 import { membershipApprovedTemplate } from './email/templates/membership-approved.template';
 import { membershipLeftTemplate } from './email/templates/membership-left.template';
+import { membershipRejectedTemplate } from './email/templates/membership-rejected.template';
 import { membershipRemovedTemplate } from './email/templates/membership-removed.template';
 import { membershipRequestedTemplate } from './email/templates/membership-requested.template';
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { passwordResetTemplate } from './email/templates/password-reset.template';
+import { shiftDetailsChangedTemplate } from './email/templates/shift-details-changed.template';
 import { shiftInstanceCancelledTemplate } from './email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
+import { shiftInstanceLeftTemplate } from './email/templates/shift-instance-left.template';
+import { shiftInstanceRemovedTemplate } from './email/templates/shift-instance-removed.template';
 import { shiftInstanceSeriesCancelledTemplate } from './email/templates/shift-instance-series-cancelled.template';
+import { shiftInstanceVolunteerLeftTemplate } from './email/templates/shift-instance-volunteer-left.template';
 import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
+import { shiftSeriesLeftTemplate } from './email/templates/shift-series-left.template';
+import { shiftSeriesRemovedTemplate } from './email/templates/shift-series-removed.template';
+import { shiftSeriesVolunteerLeftTemplate } from './email/templates/shift-series-volunteer-left.template';
+import { DocumentListener } from './listeners/document.listener';
 import { EventListener } from './listeners/event.listener';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
@@ -104,6 +118,7 @@ describe('NotificationModule', () => {
         MembershipListener,
         ShiftListener,
         EventListener,
+        DocumentListener,
         { provide: EmailService, useValue: emailService },
         { provide: UserService, useValue: userService },
         { provide: UserLocaleService, useValue: userLocaleService },
@@ -889,5 +904,602 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
+  });
+
+  it('sends awaiting-signature email to the volunteer', async () => {
+    const user = {
+      id: 'user-vol-1',
+      name: 'Alexandra Bauer',
+      email: 'alex@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      volunteerUserId: user.id,
+      documentId: 'contract-1',
+      documentKind: DocumentKind.CONTRACT,
+      organizationName: 'Acme Volunteers',
+    };
+    const expected = await documentAwaitingSignatureTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Alexandra',
+        documentName: 'Supplementary agreement',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyDocumentAwaitingSignature(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.subject).toContain('Supplementary agreement');
+  });
+
+  it('sends declined-by-org email with the reason to the volunteer', async () => {
+    const user = {
+      id: 'user-vol-2',
+      name: 'Alexandra Bauer',
+      email: 'alex@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+    userLocaleService.resolveForUser.mockResolvedValue('de');
+
+    const payload = {
+      volunteerUserId: user.id,
+      documentId: 'timesheet-1',
+      documentKind: DocumentKind.INVOICE,
+      organizationName: 'Acme Volunteers',
+      reason: 'Zeitraum stimmt nicht überein',
+    };
+    const expected = await documentDeclinedByOrgTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Alexandra',
+        documentName: 'Stundennachweis',
+        reason: payload.reason,
+      },
+      createFixtureTranslator('de'),
+    );
+
+    notificationService.notifyDocumentDeclinedByOrg(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain(payload.reason);
+    expect(expected.subject).toContain('abgelehnt');
+  });
+
+  it('sends membership rejected email to the applicant with reason', async () => {
+    const user = {
+      id: 'user-applicant-1',
+      name: 'Sam Applicant',
+      email: 'applicant@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+      userId: user.id,
+      rejectionReason: 'No matching role right now',
+    };
+    const expected = await membershipRejectedTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Sam',
+        rejectionReason: payload.rejectionReason,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyMembershipRejected(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain(payload.rejectionReason);
+  });
+
+  it('sends membership rejected email without a reason section when blank', async () => {
+    const user = {
+      id: 'user-applicant-2',
+      name: 'Sam Applicant',
+      email: 'applicant@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+      userId: user.id,
+      rejectionReason: null,
+    };
+    const expected = await membershipRejectedTemplate(
+      {
+        organizationName: payload.organizationName,
+        recipientFirstName: 'Sam',
+        rejectionReason: null,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyMembershipRejected(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).not.toContain('Reason:');
+  });
+
+  it('sends shift instance removed email to the volunteer', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      userId: user.id,
+      startsAt,
+      endsAt,
+    };
+    const expected = await shiftInstanceRemovedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceRemoved(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends shift series removed email to the volunteer', async () => {
+    const fromDate = new Date('2026-07-10T00:00:00.000Z');
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      userId: user.id,
+      fromDate,
+    };
+    const expected = await shiftSeriesRemovedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        fromDate,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftSeriesRemoved(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends event removed email to the volunteer', async () => {
+    const startsAt = new Date('2026-09-01T09:00:00.000Z');
+    const endsAt = new Date('2026-09-01T17:00:00.000Z');
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventId: 'event-1',
+      eventTitle: 'Community Fair',
+      eventLocation: 'Main hall',
+      userId: user.id,
+      startsAt,
+      endsAt,
+    };
+    const expected = await eventRemovedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        eventLocation: payload.eventLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventRemoved(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends shift instance left confirmation email to the volunteer', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      userId: user.id,
+      startsAt,
+      endsAt,
+    };
+    const expected = await shiftInstanceLeftTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceLeft(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends shift series left confirmation email to the volunteer', async () => {
+    const fromDate = new Date('2026-07-10T00:00:00.000Z');
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      userId: user.id,
+      fromDate,
+    };
+    const expected = await shiftSeriesLeftTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        fromDate,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftSeriesLeft(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+  });
+
+  it('sends shift details changed email naming previous and new values', async () => {
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const startsAtPrevious = new Date('2026-07-10T09:00:00.000Z');
+    const startsAtCurrent = new Date('2026-07-10T10:00:00.000Z');
+    const changes = [
+      {
+        field: 'startsAt',
+        kind: 'date' as const,
+        previous: startsAtPrevious.toISOString(),
+        current: startsAtCurrent.toISOString(),
+      },
+      {
+        field: 'location',
+        kind: 'value' as const,
+        previous: 'Main hall',
+        current: 'Side hall',
+      },
+      { field: 'instructions', kind: 'text' as const, text: 'Bring gloves.' },
+    ];
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      recipientUserIds: [user.id],
+      changes,
+    };
+    const expected = await shiftDetailsChangedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        recipientFirstName: 'Sam',
+        fromDate: null,
+        changes,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftDetailsChanged(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain(
+      `${formatLocaleDateTime(startsAtPrevious, 'en')} → ${formatLocaleDateTime(startsAtCurrent, 'en')}`,
+    );
+    expect(expected.html).not.toContain(startsAtPrevious.toISOString());
+    expect(expected.html).not.toContain(startsAtCurrent.toISOString());
+    expect(expected.html).toContain('Main hall → Side hall');
+    expect(expected.html).toContain('Bring gloves.');
+  });
+
+  it('sends event details changed email naming the diff', async () => {
+    const user = {
+      id: 'volunteer-1',
+      name: 'Sam Volunteer',
+      email: 'sam@example.com',
+    };
+    userService.findById.mockResolvedValue(user);
+
+    const endsAtPrevious = new Date('2026-09-01T17:00:00.000Z');
+    const endsAtCurrent = new Date('2026-09-01T18:00:00.000Z');
+    const changes = [
+      { field: 'title', kind: 'text' as const, text: 'Community Fair 2' },
+      {
+        field: 'endsAt',
+        kind: 'date' as const,
+        previous: endsAtPrevious.toISOString(),
+        current: endsAtCurrent.toISOString(),
+      },
+      {
+        field: 'location',
+        kind: 'value' as const,
+        previous: 'Main hall',
+        current: 'Side hall',
+      },
+    ];
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      eventId: 'event-1',
+      eventTitle: 'Community Fair',
+      recipientUserIds: [user.id],
+      changes,
+    };
+    const expected = await eventDetailsChangedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        eventTitle: payload.eventTitle,
+        recipientFirstName: 'Sam',
+        changes,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyEventDetailsChanged(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: user.email,
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain(
+      `${formatLocaleDateTime(endsAtPrevious, 'en')} → ${formatLocaleDateTime(endsAtCurrent, 'en')}`,
+    );
+    expect(expected.html).not.toContain(endsAtPrevious.toISOString());
+    expect(expected.html).not.toContain(endsAtCurrent.toISOString());
+    expect(expected.html).toContain('Main hall → Side hall');
+    expect(expected.html).toContain('Community Fair 2');
+  });
+
+  it('sends shift instance volunteer left email to managers with coverage', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+    const users = new Map([
+      [
+        'volunteer-1',
+        { id: 'volunteer-1', name: 'Sam Volunteer', email: 'sam@example.com' },
+      ],
+      [
+        'manager-1',
+        { id: 'manager-1', name: 'Alice Manager', email: 'alice@example.com' },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      volunteerUserId: 'volunteer-1',
+      volunteerName: 'Sam Volunteer',
+      recipientUserIds: ['manager-1'],
+      startsAt,
+      endsAt,
+      signedUpCount: 2,
+      minVolunteers: 3,
+    };
+    const expected = await shiftInstanceVolunteerLeftTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        volunteerName: payload.volunteerName,
+        recipientFirstName: 'Alice',
+        startsAt,
+        endsAt,
+        signedUpCount: payload.signedUpCount,
+        minVolunteers: payload.minVolunteers,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceVolunteerLeft(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain('2 of 3');
+    expect(expected.html).toContain(
+      `/admin/${payload.organizationUnitId}/shifts`,
+    );
+  });
+
+  it('sends shift series volunteer left email to managers with coverage', async () => {
+    const fromDate = new Date('2026-07-10T00:00:00.000Z');
+    const users = new Map([
+      [
+        'volunteer-1',
+        { id: 'volunteer-1', name: 'Sam Volunteer', email: 'sam@example.com' },
+      ],
+      [
+        'manager-1',
+        { id: 'manager-1', name: 'Alice Manager', email: 'alice@example.com' },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      volunteerUserId: 'volunteer-1',
+      volunteerName: 'Sam Volunteer',
+      recipientUserIds: ['manager-1'],
+      fromDate,
+      signedUpCount: 5,
+      minVolunteers: 6,
+    };
+    const expected = await shiftSeriesVolunteerLeftTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        volunteerName: payload.volunteerName,
+        recipientFirstName: 'Alice',
+        fromDate,
+        signedUpCount: payload.signedUpCount,
+        minVolunteers: payload.minVolunteers,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftSeriesVolunteerLeft(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expected.subject,
+      html: expected.html,
+    });
+    expect(expected.html).toContain('5 of 6');
+    expect(expected.html).toContain(
+      `/admin/${payload.organizationUnitId}/shifts`,
+    );
   });
 });

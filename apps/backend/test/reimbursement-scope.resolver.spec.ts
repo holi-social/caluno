@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
+import { eq } from 'drizzle-orm';
 import {
   DocumentKind,
   InvoiceStatus,
@@ -11,6 +12,7 @@ import { ReimbursementTypeMapper } from '../src/accounting/mappers';
 import { ReimbursementRateMapper } from '../src/accounting/mappers/reimbursement-rate.mapper';
 import { ReimbursementMutationResolver } from '../src/accounting/resolvers/reimbursement-mutation.resolver';
 import { ReimbursementQueryResolver } from '../src/accounting/resolvers/reimbursement-query.resolver';
+import { AccountingOrgAccessService } from '../src/accounting/services/accounting-org-access.service';
 import { ReimbursementRateService } from '../src/accounting/services/reimbursement-rate.service';
 import type { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
@@ -28,7 +30,7 @@ import { OrganizationUnitDataModule } from '../src/organization/organization-uni
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
 import type { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import type { RequirementProfileService } from '../src/requirement-profile/services/requirement-profile.service';
-import type { PostHogCaptureService } from '../src/shared/observability/posthog.capture.service';
+import { PostHogService } from '../src/shared/observability/posthog.service';
 import type { FileService } from '../src/storage/services/file.service';
 import { UserMapper } from '../src/user/mappers/user.mapper';
 import { UserService } from '../src/user/user.service';
@@ -77,6 +79,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
       db,
       {} as FileService,
       organizationUnitDataService,
+      { capture: () => {} } as unknown as PostHogService,
     );
     const membershipService = new MembershipService(
       db,
@@ -84,18 +87,27 @@ describe('reimbursement-rate resolver unit scoping', () => {
       {} as AuthService,
       {} as NotificationService,
       {} as RequiredFormService,
-      { captureUserJoinedOrg: () => {} } as unknown as PostHogCaptureService,
+      { shareSubmissionsWithOrgUnit: async () => {} } as never,
+      { capture: () => {} } as unknown as PostHogService,
     );
     const reimbursementRateService = new ReimbursementRateService(
       db,
       organizationUnitDataService,
       membershipService,
+      { capture: () => {} } as unknown as PostHogService,
     );
-    const userService = new UserService(db);
+    const userService = new UserService(db, {
+      capture: () => {},
+    } as unknown as PostHogService);
+    const accountingOrgAccessService = new AccountingOrgAccessService(
+      db,
+      organizationUnitService,
+    );
     queryResolver = new ReimbursementQueryResolver(
       reimbursementRateService,
       new ReimbursementTypeMapper(),
       organizationUnitService,
+      accountingOrgAccessService,
       new UserMapper(),
       membershipService,
       userService,
@@ -103,6 +115,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
     mutationResolver = new ReimbursementMutationResolver(
       reimbursementRateService,
       new ReimbursementRateMapper(),
+      accountingOrgAccessService,
       organizationUnitService,
       membershipService,
       new UserMapper(),
@@ -124,6 +137,11 @@ describe('reimbursement-rate resolver unit scoping', () => {
       db,
       `Scope Org ${crypto.randomUUID()}`,
     );
+    // The resolver under test is now gated on accountingEnabled.
+    await db
+      .update(schema.organizations)
+      .set({ accountingEnabled: true })
+      .where(eq(schema.organizations.id, organization.id));
     const root = await createUnit(db, {
       organizationId: organization.id,
       typeId: type.id,
@@ -154,9 +172,13 @@ describe('reimbursement-rate resolver unit scoping', () => {
     organizationUnitId: string,
   ): AuthenticatedGraphQLContext =>
     ({
-      user: { id: `test-user-${crypto.randomUUID()}` },
       organizationUnitId,
     }) as AuthenticatedGraphQLContext;
+
+  const sessionFor = (): UserSession =>
+    ({
+      user: { id: `test-user-${crypto.randomUUID()}` },
+    }) as UserSession;
 
   describe('setReimbursementRate', () => {
     it('rejects a caller from a sibling branch targeting another branch', async () => {
@@ -171,6 +193,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
           2_000,
           branchB.id,
           contextFor(branchA.id),
+          sessionFor(),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
@@ -187,6 +210,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
           2_000,
           root.id,
           contextFor(branchA.id),
+          sessionFor(),
         ),
       ).rejects.toBeInstanceOf(NotFoundGraphQLError);
     });
@@ -202,6 +226,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
         2_000,
         branchA.id,
         contextFor(branchA.id),
+        sessionFor(),
       );
       expect(rate.hourlyRateCents).toBe(2_000);
     });
@@ -217,6 +242,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
         2_000,
         branchASub.id,
         contextFor(branchA.id),
+        sessionFor(),
       );
       expect(rate.hourlyRateCents).toBe(2_000);
     });

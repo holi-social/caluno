@@ -11,6 +11,11 @@ import {
 } from '../graphql/errors';
 import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
+import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../shared/observability/posthog.events';
+import { PostHogService } from '../shared/observability/posthog.service';
 import { ShiftService } from '../shift/shift.service';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
@@ -27,16 +32,21 @@ export class TimeTrackingService {
     private readonly db: Database,
     readonly _membershipService: MembershipService,
     private readonly shiftService: ShiftService,
+    private readonly postHogService: PostHogService,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
     input: AddTimeEntryInput,
+    _actorUserId: string,
+    options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
+    let reimbursementTypeId: string | null = null;
     if (input.shiftInstanceId) {
-      await this.assertShiftInstanceInOrgUnit(
+      const context = await this.resolveShiftInstanceContext(
         input.shiftInstanceId,
         organizationUnitId,
       );
+      reimbursementTypeId = context.reimbursementTypeId;
     }
 
     try {
@@ -49,8 +59,20 @@ export class TimeTrackingService {
           startedAt: input.startedAt,
           endedAt: input.endedAt ?? null,
           notes: input.notes,
+          reimbursementTypeId,
         })
         .returning();
+      if (!options?.skipCapture) {
+        this.postHogService.capture({
+          event: POSTHOG_EVENT.TIME_ENTRY_CREATE,
+          userId: timeEntry.volunteerId,
+          properties: {
+            surface: POSTHOG_SURFACE.BACKOFFICE,
+            organization_unit_id: organizationUnitId,
+            shift_instance_id: timeEntry.shiftInstanceId ?? undefined,
+          },
+        });
+      }
       return timeEntry;
     } catch (error) {
       if (
@@ -63,10 +85,10 @@ export class TimeTrackingService {
     }
   }
 
-  private async assertShiftInstanceInOrgUnit(
+  private async resolveShiftInstanceContext(
     shiftInstanceId: string,
     organizationUnitId: string,
-  ): Promise<void> {
+  ): Promise<{ reimbursementTypeId: string | null }> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: shiftInstanceId },
       with: { master: true },
@@ -80,12 +102,21 @@ export class TimeTrackingService {
         'Shift instance does not exist in this organization',
       );
     }
+
+    return {
+      reimbursementTypeId:
+        instance.overrideReimbursementTypeId ??
+        instance.master.reimbursementTypeId ??
+        null,
+    };
   }
 
   async closeTimeEntry(
     id: string,
     organizationUnitId: string,
     input: CloseTimeEntryInput,
+    _actorUserId: string,
+    options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
@@ -101,6 +132,18 @@ export class TimeTrackingService {
       .where(eq(schema.timeEntries.id, id))
       .returning();
 
+    if (!options?.skipCapture) {
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.TIME_ENTRY_END,
+        userId: timeEntry.volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_unit_id: organizationUnitId,
+          shift_instance_id: timeEntry.shiftInstanceId ?? undefined,
+        },
+      });
+    }
+
     return timeEntry;
   }
 
@@ -108,6 +151,7 @@ export class TimeTrackingService {
     id: string,
     organizationUnitId: string,
     input: UpdateTimeEntryInput,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
@@ -118,7 +162,7 @@ export class TimeTrackingService {
     }
 
     if (input.shiftInstanceId) {
-      await this.assertShiftInstanceInOrgUnit(
+      await this.resolveShiftInstanceContext(
         input.shiftInstanceId,
         organizationUnitId,
       );
@@ -130,6 +174,16 @@ export class TimeTrackingService {
         .set(input)
         .where(eq(schema.timeEntries.id, id))
         .returning();
+
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.TIME_ENTRY_UPDATE,
+        userId: timeEntry.volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_unit_id: organizationUnitId,
+          shift_instance_id: timeEntry.shiftInstanceId ?? undefined,
+        },
+      });
 
       return timeEntry;
     } catch (error) {
@@ -146,6 +200,7 @@ export class TimeTrackingService {
   async deleteTimeEntry(
     organizationUnitId: string,
     id: string,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
     const entry = await this.db.query.timeEntries.findFirst({
       where: { id },
@@ -159,6 +214,17 @@ export class TimeTrackingService {
       .delete(schema.timeEntries)
       .where(eq(schema.timeEntries.id, id))
       .returning();
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.TIME_ENTRY_DELETE,
+      userId: deletedTimeEntry.volunteerId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: organizationUnitId,
+        shift_instance_id: deletedTimeEntry.shiftInstanceId ?? undefined,
+      },
+    });
+
     return deletedTimeEntry;
   }
 
@@ -320,7 +386,24 @@ export class TimeTrackingService {
     input.endedAt = null;
     input.notes = null;
 
-    return this.addTimeEntry(instance.master.organizationUnitId, input);
+    const timeEntry = await this.addTimeEntry(
+      instance.master.organizationUnitId,
+      input,
+      userId,
+      { skipCapture: true },
+    );
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_CHECK_IN,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_unit_id: instance.master.organizationUnitId,
+        shift_instance_id: shiftInstanceId,
+      },
+    });
+
+    return timeEntry;
   }
 
   async checkOut(
@@ -344,11 +427,25 @@ export class TimeTrackingService {
     closeInput.endedAt = new Date();
     closeInput.notes = null;
 
-    return this.closeTimeEntry(
+    const timeEntry = await this.closeTimeEntry(
       entry.id,
       instance.master.organizationUnitId,
       closeInput,
+      userId,
+      { skipCapture: true },
     );
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_CHECK_OUT,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        organization_unit_id: instance.master.organizationUnitId,
+        shift_instance_id: shiftInstanceId,
+      },
+    });
+
+    return timeEntry;
   }
 }
 

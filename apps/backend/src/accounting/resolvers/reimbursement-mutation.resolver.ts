@@ -15,13 +15,17 @@ import { ReimbursementRateMapper, ReimbursementTypeMapper } from '../mappers';
 import { BundleDownloadStatus } from '../models/bundle-download-status.model';
 import { ManualBaseline } from '../models/manual-baseline.model';
 import { ReimbursementRate } from '../models/reimbursement-rate.model';
-import { ReimbursementRateService } from '../services';
+import {
+  AccountingOrgAccessService,
+  ReimbursementRateService,
+} from '../services';
 
 @Resolver(() => ReimbursementRate)
 export class ReimbursementMutationResolver {
   constructor(
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly reimbursementRateMapper: ReimbursementRateMapper,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
     private readonly organizationUnitService: OrganizationUnitService,
     private readonly membershipService: MembershipService,
     private readonly userMapper: UserMapper,
@@ -38,14 +42,12 @@ export class ReimbursementMutationResolver {
     @Args('organizationUnitId', { type: () => ID, nullable: true })
     organizationUnitId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<ReimbursementRate> {
     const organizationId =
-      await this.organizationUnitService.findOrganizationIdByUnitId(
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
         context.organizationUnitId,
       );
-    if (!organizationId) {
-      throw new NotFoundGraphQLError('Organization not found');
-    }
     if (
       organizationUnitId &&
       organizationUnitId !== context.organizationUnitId
@@ -63,6 +65,7 @@ export class ReimbursementMutationResolver {
       organizationId,
       reimbursementTypeId,
       hourlyRateCents,
+      session.user.id,
       organizationUnitId ?? undefined,
     );
     return this.reimbursementRateMapper.toModelOrThrow(rate);
@@ -79,6 +82,9 @@ export class ReimbursementMutationResolver {
     @Context() context: AuthenticatedGraphQLContext,
     @Session() session: UserSession,
   ): Promise<BundleDownloadStatus> {
+    await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+      context.organizationUnitId,
+    );
     const memberships =
       await this.membershipService.getMyMemberships(volunteerId);
     let inScope = false;
@@ -138,6 +144,9 @@ export class ReimbursementMutationResolver {
       throw new BadRequestGraphQLError('Amount must not be negative');
     }
 
+    await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+      context.organizationUnitId,
+    );
     const memberships =
       await this.membershipService.getMyMemberships(volunteerId);
     let inScope = false;
