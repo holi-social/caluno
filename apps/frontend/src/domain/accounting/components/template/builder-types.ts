@@ -101,7 +101,7 @@ export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
  * occurrence" slot either.
  */
 function allLines(doc: TemplateDocument): TemplateLine[] {
-  const lines = [doc.header.orgIdentityLine, ...doc.header.metaLines];
+  const lines = [doc.header.orgIdentityLine, ...(doc.header.metaLines ?? [])];
   for (const block of doc.blocks) {
     if (block.kind === 'text' && (block.locked || block.enabled)) {
       lines.push(...block.lines);
