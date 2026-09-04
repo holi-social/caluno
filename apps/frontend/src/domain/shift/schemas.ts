@@ -1,3 +1,4 @@
+import { startOfDay } from 'date-fns';
 import z from 'zod';
 
 const recurrenceDayEnum = z.enum([
@@ -16,6 +17,8 @@ interface ShiftSchemaMessages {
   endTimeRequired: string;
   windowViolation?: string;
   minMaxVolunteers: string;
+  recurrenceEndRequired?: string;
+  recurrenceEndBeforeStart?: string;
 }
 
 function shiftShape(t: ShiftSchemaMessages) {
@@ -28,6 +31,7 @@ function shiftShape(t: ShiftSchemaMessages) {
     openShift: z.boolean().optional(),
     invitedMemberIds: z.array(z.string()).optional(),
     recurrenceDays: z.array(recurrenceDayEnum).optional(),
+    recurrenceEndMode: z.enum(['never', 'on']).optional(),
     recurrenceEndsAt: z.date().optional(),
     imageFileId: z.uuid().nullish(),
     minVolunteers: z.number().int().nonnegative().nullable().optional(),
@@ -55,6 +59,29 @@ export function shiftFormSchema(
         return d.minVolunteers <= d.maxVolunteers;
       },
       { message: t.minMaxVolunteers, path: ['maxVolunteers'] },
+    )
+    .refine(
+      (d) => {
+        if ((d.recurrenceDays?.length ?? 0) === 0) return true;
+        if (d.recurrenceEndMode !== 'on') return true;
+        return d.recurrenceEndsAt instanceof Date;
+      },
+      {
+        message: t.recurrenceEndRequired ?? 'End date is required',
+        path: ['recurrenceEndsAt'],
+      },
+    )
+    .refine(
+      (d) => {
+        if (!d.recurrenceEndsAt || !d.startsAt) return true;
+        return startOfDay(d.recurrenceEndsAt) >= startOfDay(d.startsAt);
+      },
+      {
+        message:
+          t.recurrenceEndBeforeStart ??
+          'End date cannot be before the start date',
+        path: ['recurrenceEndsAt'],
+      },
     );
 }
 
@@ -63,6 +90,8 @@ export const serverShiftFormSchema = shiftFormSchema({
   startTimeRequired: 'Start time is required',
   endTimeRequired: 'End time is required',
   minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+  recurrenceEndRequired: 'End date is required',
+  recurrenceEndBeforeStart: 'End date cannot be before the start date',
 });
 
 export type ShiftFormValues = z.infer<typeof serverShiftFormSchema>;
@@ -76,6 +105,31 @@ export function editShiftInstanceFormSchema(t: ShiftSchemaMessages) {
         return d.minVolunteers <= d.maxVolunteers;
       },
       { message: t.minMaxVolunteers, path: ['maxVolunteers'] },
+    )
+    .refine(
+      (d) => {
+        if (!d.applyToAllFuture) return true;
+        if ((d.recurrenceDays?.length ?? 0) === 0) return true;
+        if (d.recurrenceEndMode !== 'on') return true;
+        return d.recurrenceEndsAt instanceof Date;
+      },
+      {
+        message: t.recurrenceEndRequired ?? 'End date is required',
+        path: ['recurrenceEndsAt'],
+      },
+    )
+    .refine(
+      (d) => {
+        if (!d.applyToAllFuture) return true;
+        if (!d.recurrenceEndsAt || !d.startsAt) return true;
+        return startOfDay(d.recurrenceEndsAt) >= startOfDay(d.startsAt);
+      },
+      {
+        message:
+          t.recurrenceEndBeforeStart ??
+          'End date cannot be before the start date',
+        path: ['recurrenceEndsAt'],
+      },
     );
 }
 
@@ -84,6 +138,8 @@ export const serverEditShiftInstanceFormSchema = editShiftInstanceFormSchema({
   startTimeRequired: 'Start time is required',
   endTimeRequired: 'End time is required',
   minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+  recurrenceEndRequired: 'End date is required',
+  recurrenceEndBeforeStart: 'End date cannot be before the start date',
 });
 
 export type EditShiftInstanceFormValues = z.infer<
