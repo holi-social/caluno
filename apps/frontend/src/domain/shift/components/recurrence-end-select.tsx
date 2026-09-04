@@ -72,7 +72,7 @@ export function RecurrenceEndSelect({
   };
 
   return (
-    <FieldSet disabled={disabled} className="gap-3">
+    <FieldSet disabled={disabled} className="gap-2">
       <FieldLegend variant="label" id="recurrence-ends-legend">
         {t('form.recurrenceEnds')}
       </FieldLegend>
@@ -82,9 +82,9 @@ export function RecurrenceEndSelect({
         onValueChange={(value) => onModeChange(value as RecurrenceEndMode)}
         disabled={disabled}
         aria-labelledby="recurrence-ends-legend"
-        className="gap-1"
+        className="gap-2"
       >
-        <div className="flex min-h-11 items-center gap-3">
+        <div className="flex items-center gap-2">
           <RadioGroupItem value="never" id="recurrence-end-never" />
           <label
             htmlFor="recurrence-end-never"
@@ -94,7 +94,7 @@ export function RecurrenceEndSelect({
           </label>
         </div>
 
-        <div className="flex min-h-11 items-center gap-3">
+        <div className="flex items-center gap-2">
           <RadioGroupItem value="on" id="recurrence-end-on" />
           <label
             htmlFor="recurrence-end-on"
