@@ -44,6 +44,9 @@ export class CreateShiftInput {
   @Field(() => Int, { nullable: true })
   minVolunteers?: number | null;
 
+  @Field(() => Boolean, { nullable: true })
+  joinRequiresApproval?: boolean | null;
+
   @Field(() => String, { nullable: true })
   rrule?: string | null;
 

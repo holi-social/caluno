@@ -20,11 +20,11 @@ export default async function InvitationsPage({
   const client = await getDataClient();
   const [shiftInvites, eventInvites] = await Promise.all([
     client.shift.findMyShiftInstances({
-      statuses: [ShiftInviteStatus.Invited],
+      statuses: [ShiftInviteStatus.AdminInvited],
       limit: 50,
     }),
     client.event.findMyEvents({
-      statuses: [EventInviteStatus.Invited],
+      statuses: [EventInviteStatus.AdminInvited],
       limit: 50,
     }),
   ]);

@@ -9,6 +9,7 @@ import * as schema from '../database/schema';
 import {
   BadRequestGraphQLError,
   ConflictGraphQLError,
+  ForbiddenGraphQLError,
   NotFoundGraphQLError,
 } from '../graphql/errors';
 import type { PaginationInput } from '../graphql/pagination.input';
@@ -29,7 +30,11 @@ import {
   ACTIVE_EVENT_INVITE_STATUSES,
   ADMIN_LIST_EVENT_INVITE_STATUSES,
   canTransitionInviteStatus,
+  isVolunteerJoinResolveSource,
   PARTICIPATING_EVENT_INVITE_STATUSES,
+  resolveAdminApprovalTargetStatus,
+  resolveVolunteerJoinTargetStatus,
+  volunteerMayRequestInviteStatus,
 } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
@@ -340,6 +345,7 @@ export class EventService {
           coverUrl,
           startsAt: eventInput.startsAt,
           endsAt: eventInput.endsAt,
+          joinRequiresApproval: eventInput.joinRequiresApproval ?? false,
           organizationUnitId,
           createdById: userId,
         })
@@ -356,7 +362,7 @@ export class EventService {
             invitedMemberIds.map((memberId) => ({
               eventId: event.id,
               userId: memberId,
-              status: EventInviteStatus.INVITED,
+              status: EventInviteStatus.ADMIN_INVITED,
             })),
           )
           .onConflictDoNothing();
@@ -419,6 +425,9 @@ export class EventService {
           coverUrl: resolved.coverUrl,
           startsAt: resolved.startsAt,
           endsAt: resolved.endsAt,
+          ...(input.joinRequiresApproval != null
+            ? { joinRequiresApproval: input.joinRequiresApproval }
+            : {}),
         })
         .where(
           and(
@@ -550,8 +559,8 @@ export class EventService {
             eventId,
             userId,
             status: isSelf(userId)
-              ? EventInviteStatus.ACCEPTED
-              : EventInviteStatus.INVITED,
+              ? EventInviteStatus.JOINED
+              : EventInviteStatus.ADMIN_INVITED,
           })),
         )
         .onConflictDoNothing();
@@ -564,7 +573,7 @@ export class EventService {
       if (otherReinviteIds.length > 0) {
         await this.db
           .update(schema.eventInvites)
-          .set({ status: EventInviteStatus.INVITED })
+          .set({ status: EventInviteStatus.ADMIN_INVITED })
           .where(
             and(
               eq(schema.eventInvites.eventId, eventId),
@@ -576,7 +585,7 @@ export class EventService {
       if (selfReinviteIds.length > 0) {
         await this.db
           .update(schema.eventInvites)
-          .set({ status: EventInviteStatus.ACCEPTED })
+          .set({ status: EventInviteStatus.JOINED })
           .where(
             and(
               eq(schema.eventInvites.eventId, eventId),
@@ -689,46 +698,70 @@ export class EventService {
 
     if (existingInvite) {
       if (
-        !canTransitionInviteStatus(
-          existingInvite.status,
-          EventInviteStatus.ACCEPTED,
-        )
+        existingInvite.status === EventInviteStatus.JOINED ||
+        existingInvite.status === EventInviteStatus.AWAITING_ADMIN_APPROVAL ||
+        existingInvite.status === EventInviteStatus.WAITLIST_JOINED ||
+        existingInvite.status === EventInviteStatus.ADMIN_REJECTED
       ) {
-        throw new BadRequestGraphQLError(
-          `Cannot transition invite status from ${existingInvite.status} to ${EventInviteStatus.ACCEPTED}`,
-        );
-      }
-
-      if (existingInvite.status === EventInviteStatus.ACCEPTED) {
         return event;
       }
 
-      await db
-        .update(schema.eventInvites)
-        .set({ status: EventInviteStatus.ACCEPTED })
-        .where(eq(schema.eventInvites.id, existingInvite.id));
+      if (
+        existingInvite.status === EventInviteStatus.VOLUNTEER_CANCELLED ||
+        existingInvite.status === EventInviteStatus.VOLUNTEER_REJECTED ||
+        existingInvite.status === EventInviteStatus.ADMIN_INVITED
+      ) {
+        const targetStatus = resolveVolunteerJoinTargetStatus({
+          joinRequiresApproval: event.joinRequiresApproval,
+          hasAvailableSeat: true,
+          allowWaitlist: false,
+          considerApproval:
+            existingInvite.status === EventInviteStatus.VOLUNTEER_REJECTED ||
+            existingInvite.status === EventInviteStatus.ADMIN_INVITED,
+        }) as EventInviteStatus;
 
-      void this.loadAndEmitEventJoinedNotification(userId, event);
-      await this.captureEventJoin({
-        userId,
-        event,
-        source,
-      });
+        if (!canTransitionInviteStatus(existingInvite.status, targetStatus)) {
+          throw new BadRequestGraphQLError(
+            `Cannot transition invite status from ${existingInvite.status} to ${targetStatus}`,
+          );
+        }
+
+        await db
+          .update(schema.eventInvites)
+          .set({ status: targetStatus })
+          .where(eq(schema.eventInvites.id, existingInvite.id));
+
+        if (targetStatus === EventInviteStatus.JOINED) {
+          void this.loadAndEmitEventJoinedNotification(userId, event);
+          await this.captureEventJoin({
+            userId,
+            event,
+            source,
+          });
+        }
+      }
 
       return event;
     }
+
+    const targetStatus = resolveVolunteerJoinTargetStatus({
+      joinRequiresApproval: event.joinRequiresApproval,
+      hasAvailableSeat: true,
+      allowWaitlist: false,
+      considerApproval: true,
+    }) as EventInviteStatus;
 
     const [inserted] = await db
       .insert(schema.eventInvites)
       .values({
         eventId,
         userId,
-        status: EventInviteStatus.ACCEPTED,
+        status: targetStatus,
       })
       .onConflictDoNothing()
       .returning();
 
-    if (inserted) {
+    if (inserted && targetStatus === EventInviteStatus.JOINED) {
       void this.loadAndEmitEventJoinedNotification(userId, event);
       await this.captureEventJoin({
         userId,
@@ -880,35 +913,67 @@ export class EventService {
     }
 
     // Idempotent no-op — matching status skips the shift cascade re-run.
-    // Unreachable from the UI today: the admin volunteers list only offers
-    // uninvite from INVITED/SELF_JOINED/ACCEPTED, so an admin can't retrigger
-    // this on an already-ADMIN_REJECTED invite. If shift invites ever drift
-    // out of sync with the event status, a repeat call here will not re-sync
-    // them.
-    if (invite.status === status) {
+    const isAdminActor = actorUserId !== userId;
+
+    if (
+      !isAdminActor &&
+      !volunteerMayRequestInviteStatus(invite.status, status)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to set this invite status',
+      );
+    }
+
+    let targetStatus = status;
+
+    if (
+      isVolunteerJoinResolveSource(invite.status) &&
+      (status === EventInviteStatus.JOINED ||
+        status === EventInviteStatus.WAITLIST_JOINED ||
+        status === EventInviteStatus.AWAITING_ADMIN_APPROVAL)
+    ) {
+      targetStatus = resolveVolunteerJoinTargetStatus({
+        joinRequiresApproval: event.joinRequiresApproval,
+        hasAvailableSeat: true,
+        allowWaitlist: false,
+        considerApproval:
+          invite.status !== EventInviteStatus.VOLUNTEER_CANCELLED,
+      }) as EventInviteStatus;
+    } else if (
+      invite.status === EventInviteStatus.AWAITING_ADMIN_APPROVAL &&
+      status === EventInviteStatus.JOINED &&
+      isAdminActor
+    ) {
+      targetStatus = resolveAdminApprovalTargetStatus({
+        hasAvailableSeat: true,
+        allowWaitlist: false,
+      }) as EventInviteStatus;
+    }
+
+    if (invite.status === targetStatus) {
       return invite;
     }
 
-    if (!canTransitionInviteStatus(invite.status, status)) {
+    if (!canTransitionInviteStatus(invite.status, targetStatus)) {
       throw new BadRequestGraphQLError(
-        `Cannot transition invite status from ${invite.status} to ${status}`,
+        `Cannot transition invite status from ${invite.status} to ${targetStatus}`,
       );
     }
 
     const updated = await this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(schema.eventInvites)
-        .set({ status })
+        .set({ status: targetStatus })
         .where(eq(schema.eventInvites.id, invite.id))
         .returning();
 
-      if (status === EventInviteStatus.ADMIN_REJECTED) {
+      if (targetStatus === EventInviteStatus.ADMIN_REJECTED) {
         await this.shiftService.adminRejectInvitesForEventUser(
           eventId,
           userId,
           tx,
         );
-      } else if (status === EventInviteStatus.INVITED) {
+      } else if (targetStatus === EventInviteStatus.ADMIN_INVITED) {
         await this.shiftService.adminReinviteInvitesForEventUser(
           eventId,
           userId,
@@ -919,7 +984,7 @@ export class EventService {
       return updated;
     });
 
-    if (status === EventInviteStatus.INVITED) {
+    if (targetStatus === EventInviteStatus.ADMIN_INVITED) {
       void this.loadAndEmitEventInvitedNotification(event, [userId]);
     }
 
@@ -943,13 +1008,10 @@ export class EventService {
         organization_unit_id: event.organizationUnitId,
         source,
         event_id: eventId,
-        invite_status: status,
+        invite_status: targetStatus,
       },
     });
-    if (
-      status === EventInviteStatus.ACCEPTED ||
-      status === EventInviteStatus.SELF_JOINED
-    ) {
+    if (targetStatus === EventInviteStatus.JOINED) {
       this.postHogService.capture({
         event: POSTHOG_EVENT.EVENT_JOIN,
         userId,

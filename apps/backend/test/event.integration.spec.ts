@@ -8,10 +8,12 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { PERMISSIONS } from '../src/auth/constants';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { EventInviteStatus } from '../src/event/enums';
+import { EventService } from '../src/event/event.service';
 import { MembershipRequestStatus } from '../src/membership/enums';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
@@ -134,7 +136,7 @@ describe('publicEvent', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instance.id,
       userId: user.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      status: ShiftInviteStatus.JOINED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -611,12 +613,12 @@ describe('myEvents', () => {
       {
         eventId: invitedEvent.id,
         userId: user.id,
-        status: EventInviteStatus.INVITED,
+        status: EventInviteStatus.ADMIN_INVITED,
       },
       {
         eventId: acceptedEvent.id,
         userId: user.id,
-        status: EventInviteStatus.ACCEPTED,
+        status: EventInviteStatus.JOINED,
       },
     ]);
 
@@ -634,7 +636,7 @@ describe('myEvents', () => {
       app,
       {
         query,
-        variables: { includePast: true, statuses: ['INVITED'] },
+        variables: { includePast: true, statuses: ['ADMIN_INVITED'] },
       },
       'myEvents',
     );
@@ -674,12 +676,12 @@ describe('myEvents', () => {
       {
         eventId: eventForA.id,
         userId: userA.id,
-        status: EventInviteStatus.INVITED,
+        status: EventInviteStatus.ADMIN_INVITED,
       },
       {
         eventId: eventForB.id,
         userId: userB.id,
-        status: EventInviteStatus.INVITED,
+        status: EventInviteStatus.ADMIN_INVITED,
       },
     ]);
 
@@ -696,7 +698,7 @@ describe('myEvents', () => {
       myEvents: { items: Array<{ id: string }> };
     }>(
       app,
-      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      { query, variables: { includePast: true, statuses: ['ADMIN_INVITED'] } },
       'myEvents',
     );
     const idsForA = asUserA.myEvents.items.map((item) => item.id);
@@ -708,7 +710,7 @@ describe('myEvents', () => {
       myEvents: { items: Array<{ id: string }> };
     }>(
       app,
-      { query, variables: { includePast: true, statuses: ['INVITED'] } },
+      { query, variables: { includePast: true, statuses: ['ADMIN_INVITED'] } },
       'myEvents',
     );
     const idsForB = asUserB.myEvents.items.map((item) => item.id);
@@ -840,12 +842,12 @@ describe('availableEvents', () => {
       {
         eventId: acceptedEvent.id,
         userId: testUserId,
-        status: EventInviteStatus.ACCEPTED,
+        status: EventInviteStatus.JOINED,
       },
       {
         eventId: invitedEvent.id,
         userId: testUserId,
-        status: EventInviteStatus.INVITED,
+        status: EventInviteStatus.ADMIN_INVITED,
       },
     ]);
 
@@ -1031,7 +1033,7 @@ describe('eventInvites', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: invitedUser.id,
-      status: EventInviteStatus.INVITED,
+      status: EventInviteStatus.ADMIN_INVITED,
     });
 
     const { organization: otherOrganization, type: otherType } =
@@ -1089,7 +1091,7 @@ describe('eventInvites', () => {
       .values({
         eventId: event.id,
         userId: invitedUser.id,
-        status: EventInviteStatus.INVITED,
+        status: EventInviteStatus.ADMIN_INVITED,
       })
       .returning();
 
@@ -1157,12 +1159,12 @@ describe('events (admin list)', () => {
   it('counts only active invites toward signedUpCount', async () => {
     const event = await createEvent(db, { organizationUnitId });
     const statuses = [
-      EventInviteStatus.INVITED,
-      EventInviteStatus.ACCEPTED,
-      EventInviteStatus.SELF_JOINED,
+      EventInviteStatus.ADMIN_INVITED,
+      EventInviteStatus.JOINED,
+      EventInviteStatus.JOINED,
       EventInviteStatus.VOLUNTEER_REJECTED,
       EventInviteStatus.ADMIN_REJECTED,
-      EventInviteStatus.CANCELLED,
+      EventInviteStatus.VOLUNTEER_CANCELLED,
     ];
     for (const status of statuses) {
       const user = await createUser(db);
@@ -1248,7 +1250,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.ACCEPTED,
+      status: EventInviteStatus.JOINED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -1297,17 +1299,17 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.INVITED,
+      status: EventInviteStatus.ADMIN_INVITED,
     });
     await db.insert(schema.shiftInvites).values({
       shiftId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.INVITED,
+      status: ShiftInviteStatus.ADMIN_INVITED,
     });
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      status: ShiftInviteStatus.JOINED,
     });
 
     await graphqlRequestRequiringData(
@@ -1357,20 +1359,22 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
       'updateEventInviteStatus',
     );
 
-    expect(data.updateEventInviteStatus.status).toBe(EventInviteStatus.INVITED);
+    expect(data.updateEventInviteStatus.status).toBe(
+      EventInviteStatus.ADMIN_INVITED,
+    );
     expect(data.updateEventInviteStatus.userId).toBe(volunteer.id);
 
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: volunteer.id },
     });
-    expect(row?.status).toBe(EventInviteStatus.INVITED);
+    expect(row?.status).toBe(EventInviteStatus.ADMIN_INVITED);
   });
 
   it('cascades INVITED to event-linked shift invites left ADMIN_REJECTED by a prior uninvite', async () => {
@@ -1412,7 +1416,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -1429,9 +1433,9 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       where: { instanceId, userId: volunteer.id },
     });
 
-    expect(eventInvite?.status).toBe(EventInviteStatus.INVITED);
-    expect(shiftInvite?.status).toBe(ShiftInviteStatus.INVITED);
-    expect(instanceInvite?.status).toBe(ShiftInviteStatus.INVITED);
+    expect(eventInvite?.status).toBe(EventInviteStatus.ADMIN_INVITED);
+    expect(shiftInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    expect(instanceInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
   });
 
   it('does not restore shift invites that were not ADMIN_REJECTED by the event cascade', async () => {
@@ -1460,7 +1464,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
         variables: {
           eventId: event.id,
           userId: volunteer.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
         headers: { 'x-organization-unit-id': organizationUnitId },
       },
@@ -1506,7 +1510,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: volunteer.id },
     });
-    expect(row?.status).toBe(EventInviteStatus.INVITED);
+    expect(row?.status).toBe(EventInviteStatus.ADMIN_INVITED);
   });
 
   it('does not re-invite ADMIN_REJECTED omitted from inviteMembersToEvent memberIds', async () => {
@@ -1547,7 +1551,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       where: { eventId: event.id, userId: fresh.id },
     });
     expect(rejectedRow?.status).toBe(EventInviteStatus.ADMIN_REJECTED);
-    expect(freshRow?.status).toBe(EventInviteStatus.INVITED);
+    expect(freshRow?.status).toBe(EventInviteStatus.ADMIN_INVITED);
   });
 
   it('writes ACCEPTED directly when the inviter adds themselves via inviteMembersToEvent', async () => {
@@ -1578,7 +1582,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: selfUserId },
     });
-    expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+    expect(row?.status).toBe(EventInviteStatus.JOINED);
   });
 
   it('writes ACCEPTED for the self-adding inviter but INVITED for others in the same batch', async () => {
@@ -1613,8 +1617,8 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const otherRow = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: otherUser.id },
     });
-    expect(selfRow?.status).toBe(EventInviteStatus.ACCEPTED);
-    expect(otherRow?.status).toBe(EventInviteStatus.INVITED);
+    expect(selfRow?.status).toBe(EventInviteStatus.JOINED);
+    expect(otherRow?.status).toBe(EventInviteStatus.ADMIN_INVITED);
   });
 
   it('resurrects a self-invite from ADMIN_REJECTED straight to ACCEPTED', async () => {
@@ -1650,7 +1654,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const row = await db.query.eventInvites.findFirst({
       where: { eventId: event.id, userId: selfUserId },
     });
-    expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+    expect(row?.status).toBe(EventInviteStatus.JOINED);
   });
 
   it('lists ADMIN_REJECTED invites for admin re-invite', async () => {
@@ -1707,12 +1711,12 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.INVITED,
+      status: EventInviteStatus.ADMIN_INVITED,
     });
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: otherInstanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      status: ShiftInviteStatus.JOINED,
     });
 
     await graphqlRequestRequiringData(
@@ -1732,7 +1736,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     const otherInstanceInvite = await db.query.shiftInstanceInvites.findFirst({
       where: { instanceId: otherInstanceId, userId: volunteer.id },
     });
-    expect(otherInstanceInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(otherInstanceInvite?.status).toBe(ShiftInviteStatus.JOINED);
   });
 
   it('forbids volunteer from self-setting ADMIN_REJECTED', async () => {
@@ -1742,7 +1746,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.ACCEPTED,
+      status: EventInviteStatus.JOINED,
     });
 
     setAuthMockUserId(volunteer.id);
@@ -1764,7 +1768,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       const row = await db.query.eventInvites.findFirst({
         where: { eventId: event.id, userId: volunteer.id },
       });
-      expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+      expect(row?.status).toBe(EventInviteStatus.JOINED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -1776,7 +1780,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     await db.insert(schema.eventInvites).values({
       eventId: event.id,
       userId: volunteer.id,
-      status: EventInviteStatus.ACCEPTED,
+      status: EventInviteStatus.JOINED,
     });
 
     const actor = await createUser(db);
@@ -1817,7 +1821,7 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
       const row = await db.query.eventInvites.findFirst({
         where: { eventId: event.id, userId: volunteer.id },
       });
-      expect(row?.status).toBe(EventInviteStatus.ACCEPTED);
+      expect(row?.status).toBe(EventInviteStatus.JOINED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -1857,5 +1861,113 @@ describe('updateEventInviteStatus (admin uninvite)', () => {
     } finally {
       setAuthMockUserId(originalUserId);
     }
+  });
+});
+
+describe('EventService.joinEvent — existing invite statuses', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let eventService: EventService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    eventService = app.get(EventService);
+  });
+
+  async function seedJoinScenario(
+    initialStatus: EventInviteStatus,
+    joinRequiresApproval = false,
+  ) {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const event = await createEvent(db, { organizationUnitId });
+    if (joinRequiresApproval) {
+      await db
+        .update(schema.events)
+        .set({ joinRequiresApproval: true })
+        .where(eq(schema.events.id, event.id));
+    }
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: user.id,
+      status: initialStatus,
+    });
+    return { user, event };
+  }
+
+  async function getInviteStatus(
+    eventId: string,
+    userId: string,
+  ): Promise<EventInviteStatus | undefined> {
+    const invite = await db.query.eventInvites.findFirst({
+      where: { eventId, userId },
+    });
+    return invite?.status;
+  }
+
+  function registerJoinEventStatusCases(
+    cases: ReadonlyArray<readonly [EventInviteStatus, EventInviteStatus]>,
+    joinRequiresApproval: boolean,
+  ) {
+    for (const [initialStatus, expectedStatus] of cases) {
+      it(`from ${initialStatus} resolves to ${expectedStatus} after joinEvent`, async () => {
+        const { user, event } = await seedJoinScenario(
+          initialStatus,
+          joinRequiresApproval,
+        );
+
+        await eventService.joinEvent(user.id, event.id, {
+          formsAlreadySatisfied: true,
+        });
+
+        expect(await getInviteStatus(event.id, user.id)).toBe(expectedStatus);
+      });
+    }
+  }
+
+  describe('when joinRequiresApproval is false', () => {
+    registerJoinEventStatusCases(
+      [
+        [EventInviteStatus.ADMIN_INVITED, EventInviteStatus.JOINED],
+        [EventInviteStatus.VOLUNTEER_REJECTED, EventInviteStatus.JOINED],
+        [EventInviteStatus.VOLUNTEER_CANCELLED, EventInviteStatus.JOINED],
+        [EventInviteStatus.JOINED, EventInviteStatus.JOINED],
+        [
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [EventInviteStatus.WAITLIST_JOINED, EventInviteStatus.WAITLIST_JOINED],
+        [EventInviteStatus.ADMIN_REJECTED, EventInviteStatus.ADMIN_REJECTED],
+      ],
+      false,
+    );
+  });
+
+  describe('when joinRequiresApproval is true', () => {
+    registerJoinEventStatusCases(
+      [
+        [
+          EventInviteStatus.ADMIN_INVITED,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [
+          EventInviteStatus.VOLUNTEER_REJECTED,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [EventInviteStatus.VOLUNTEER_CANCELLED, EventInviteStatus.JOINED],
+        [EventInviteStatus.JOINED, EventInviteStatus.JOINED],
+        [
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+        ],
+        [EventInviteStatus.WAITLIST_JOINED, EventInviteStatus.WAITLIST_JOINED],
+        [EventInviteStatus.ADMIN_REJECTED, EventInviteStatus.ADMIN_REJECTED],
+      ],
+      true,
+    );
   });
 });

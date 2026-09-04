@@ -41,9 +41,7 @@ interface ShiftActionCardProps {
 
 const isParticipatingInvite = (
   status: ShiftInviteStatus | null | undefined,
-): boolean =>
-  status === ShiftInviteStatus.Accepted ||
-  status === ShiftInviteStatus.SelfJoined;
+): boolean => status === ShiftInviteStatus.Joined;
 
 export function ShiftActionCard({
   shiftId,
@@ -119,16 +117,18 @@ export function ShiftActionCard({
 
   const getInviteStatusNote = () => {
     switch (inviteStatus) {
-      case ShiftInviteStatus.Invited:
+      case ShiftInviteStatus.AdminInvited:
         return t('respondBeforeNote', { date: longDate });
-      case ShiftInviteStatus.Accepted:
+      case ShiftInviteStatus.Joined:
         return t('cancelUntilNote', { date: longDate });
-      case ShiftInviteStatus.Cancelled:
+      case ShiftInviteStatus.VolunteerCancelled:
         return t('cancelledNote', { date: longDate });
-      case ShiftInviteStatus.SelfJoined:
-        return t('joinedNote');
       case ShiftInviteStatus.VolunteerRejected:
         return t('declinedNote');
+      case ShiftInviteStatus.AwaitingAdminApproval:
+        return t('pendingNote');
+      case ShiftInviteStatus.WaitlistJoined:
+        return t('fullNote');
       default:
         if (effectiveMembershipState === JoinStatus.Pending) {
           return t('pendingNote');
@@ -169,13 +169,13 @@ export function ShiftActionCard({
         />
       )}
 
-      {inviteStatus === ShiftInviteStatus.Accepted && (
+      {inviteStatus === ShiftInviteStatus.Joined && (
         <Badge variant="secondary" className="gap-1">
           <CheckIcon className="size-3.5" />
           {t('acceptedBadge')}
         </Badge>
       )}
-      {inviteStatus === ShiftInviteStatus.Cancelled && (
+      {inviteStatus === ShiftInviteStatus.VolunteerCancelled && (
         <Badge variant="secondary" className="gap-1">
           <XIcon className="size-3.5" />
           {t('cancelledBadge')}

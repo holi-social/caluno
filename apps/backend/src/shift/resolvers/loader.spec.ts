@@ -16,7 +16,7 @@ const invite = (
   id: 'invite-1',
   instanceId: 'instance-1',
   userId: 'user-1',
-  status: ShiftInviteStatus.INVITED,
+  status: ShiftInviteStatus.ADMIN_INVITED,
   createdAt: now,
   updatedAt: now,
   ...overrides,

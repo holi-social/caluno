@@ -1301,6 +1301,7 @@
       "joining": "Joining...",
       "keepShift": "Keep shift",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
+      "pendingApproval": "Waiting for approval",
       "pendingCta": "Request pending",
       "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
       "reenter": "Re-enter shift",
@@ -1309,7 +1310,8 @@
       "requestSent": "Request sent",
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
-      "unexpected": "Unexpected response from server"
+      "unexpected": "Unexpected response from server",
+      "waitlisted": "On waitlist"
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
