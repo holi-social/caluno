@@ -37,6 +37,9 @@ export class ShiftInstance {
   @Field(() => Int, { nullable: true })
   overrideMinVolunteers?: number | null;
 
+  @Field(() => ID, { nullable: true })
+  overrideReimbursementTypeId?: string | null;
+
   @Field(() => Boolean)
   isException!: boolean;
 

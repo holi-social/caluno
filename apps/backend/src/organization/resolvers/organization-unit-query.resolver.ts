@@ -46,6 +46,17 @@ export class OrganizationUnitQueryResolver {
     return this.organizationUnitMapper.toArray(units);
   }
 
+  @Query(() => [OrganizationUnit])
+  async myCheckInAdministrableOrganizationUnits(
+    @Session() session: UserSession,
+  ): Promise<OrganizationUnit[]> {
+    const units = await this.organizationService.findUnitsWithPermission(
+      session.user.id,
+      PERMISSIONS.CHECK_IN_MANAGE,
+    );
+    return this.organizationUnitMapper.toArray(units);
+  }
+
   @Query(() => OrganizationUnit, { nullable: true })
   async organizationUnit(
     @Args('id') id: string,

@@ -52,9 +52,9 @@ export default async function EditEventShiftPage({
         openShift: shift.visibility === ShiftVisibility.AllMembers,
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
-        imageFileId: shift.imageUrl ?? undefined,
         minVolunteers: shift.minVolunteers ?? undefined,
         maxVolunteers: shift.maxVolunteers ?? undefined,
+        reimbursementTypeId: shift.reimbursementTypeId ?? undefined,
       }}
     />
   );

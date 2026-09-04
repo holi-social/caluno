@@ -132,12 +132,16 @@ export class ShiftMutationResolver {
     @Args('applyToAllFuture', { type: () => Boolean, nullable: true })
     applyToAllFuture: boolean | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<ShiftInstance> {
     const instance = await this.shiftService.updateShiftInstance(
       instanceId,
       input,
       context.organizationUnitId,
-      { applyToAllFuture: applyToAllFuture ?? false },
+      {
+        applyToAllFuture: applyToAllFuture ?? false,
+        actorUserId: session.user.id,
+      },
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
@@ -147,10 +151,12 @@ export class ShiftMutationResolver {
   async deleteShift(
     @Args('id', { type: () => String }) id: string,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<Shift> {
     const result = await this.shiftService.delete(
       id,
       context.organizationUnitId,
+      session.user.id,
     );
     return this.shiftMapper.toModelOrThrow(result);
   }
@@ -162,11 +168,15 @@ export class ShiftMutationResolver {
     @Args('applyToAllFuture', { type: () => Boolean, nullable: true })
     applyToAllFuture: boolean | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<ShiftInstance> {
     const instance = await this.shiftService.deleteShiftInstance(
       id,
       context.organizationUnitId,
-      { applyToAllFuture: applyToAllFuture ?? false },
+      {
+        applyToAllFuture: applyToAllFuture ?? false,
+        actorUserId: session.user.id,
+      },
     );
     return this.shiftInstanceMapper.toModelOrThrow(instance);
   }
@@ -177,6 +187,7 @@ export class ShiftMutationResolver {
     @Args('shiftId', { type: () => ID }) shiftId: string,
     @Args('formIds', { type: () => [String] }) formIds: string[],
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequiredFormRef[]> {
     await this.shiftService.findOrgUnitsShift(
       shiftId,
@@ -186,6 +197,7 @@ export class ShiftMutationResolver {
     const requiredForms = await this.requiredFormService.setRequiredForms(
       { targetType: RequiredFormTargetType.SHIFT, targetId: shiftId },
       formIds,
+      session.user.id,
     );
 
     return this.requiredFormRefMapper.toArray(requiredForms);
@@ -197,6 +209,7 @@ export class ShiftMutationResolver {
     @Args('instanceId', { type: () => ID }) instanceId: string,
     @Args('formIds', { type: () => [String] }) formIds: string[],
     @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
   ): Promise<RequiredFormRef[]> {
     await this.shiftService.findInstanceById(
       instanceId,
@@ -209,6 +222,7 @@ export class ShiftMutationResolver {
         targetId: instanceId,
       },
       formIds,
+      session.user.id,
     );
 
     return this.requiredFormRefMapper.toArray(requiredForms);
@@ -279,6 +293,7 @@ export class ShiftMutationResolver {
       session.user.id,
       shiftId,
       status,
+      session.user.id,
     );
     return this.shiftInviteMapper.toModelOrThrow(invite);
   }
@@ -307,6 +322,7 @@ export class ShiftMutationResolver {
       targetUserId,
       instanceId,
       status,
+      session.user.id,
     );
     return this.shiftInstanceInviteMapper.toModelOrThrow(invite);
   }

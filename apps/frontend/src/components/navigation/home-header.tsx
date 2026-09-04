@@ -1,5 +1,6 @@
 'use client';
 
+import { useMyDocumentSummary } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/base/avatar';
 import { Logo } from '@repo/ui/logo';
@@ -95,6 +96,10 @@ function AvatarTrigger({
   const buttonSize = isOpen ? 56 : 44;
   const t = useTranslations('Navigation');
   const tCommon = useTranslations('Common');
+  // A red dot on the avatar signals documents needing the volunteer's
+  // signature; the exact count lives in the dropdown ("My documents" badge).
+  const summary = useMyDocumentSummary();
+  const hasPendingDocuments = (summary.data?.pending ?? 0) > 0;
 
   const avatar = (
     <motion.div
@@ -131,7 +136,7 @@ function AvatarTrigger({
         size="icon"
         variant="ghost"
         aria-label={t('profile')}
-        className="size-auto"
+        className="relative size-auto"
       >
         <motion.span
           initial={{ width: buttonSize, height: buttonSize }}
@@ -141,6 +146,12 @@ function AvatarTrigger({
         >
           {avatar}
         </motion.span>
+        {hasPendingDocuments && (
+          <span
+            aria-hidden="true"
+            className="absolute top-0.5 right-0.5 size-2.5 rounded-full bg-destructive ring-2 ring-background"
+          />
+        )}
       </Button>
     </ProfileDropdown>
   );
@@ -180,7 +191,7 @@ export function HomeHeader({
 
           <div className="flex shrink-0 items-center gap-3">
             <Link href="/" aria-label={t('home')}>
-              <Logo width={isOpen ? 42 : 38} />
+              <Logo width={96} />
             </Link>
           </div>
         </div>

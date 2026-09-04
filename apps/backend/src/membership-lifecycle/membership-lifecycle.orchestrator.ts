@@ -10,6 +10,7 @@ import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
+import { POSTHOG_JOIN_SOURCE } from '../shared/observability/posthog.events';
 import { ShiftService } from '../shift/shift.service';
 
 @Injectable()
@@ -47,62 +48,49 @@ export class MembershipLifecycleOrchestrator {
     reviewerId: string,
     rejectionReason: string,
   ): Promise<MembershipRequestEntity> {
-    const request = await this.membershipService.rejectMembershipRequest(
+    return this.membershipService.rejectMembershipRequest(
       id,
       organizationUnitId,
       reviewerId,
       rejectionReason,
     );
-
-    if (request.userId && request.organizationUnitId) {
-      await this.formSubmissionService.rejectByUserAndOrgUnit(
-        request.userId,
-        request.organizationUnitId,
-      );
-    }
-
-    return request;
   }
 
   async submitForm(
     token: string,
     input: SubmitFormInput,
     userId: string,
+    organizationUnitId: string,
   ): Promise<FormSubmissionEntity> {
     const submission = await this.formSubmissionService.submit(
       token,
       input,
       userId,
+      organizationUnitId,
     );
 
-    const organizationUnitId =
-      await this.formSubmissionService.findOrganizationUnitIdByFormId(
-        submission.formId,
-      );
-    if (organizationUnitId) {
-      const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
-        userId,
-        organizationUnitId,
-      );
-      if (!isMember) {
-        const requiredFormsSatisfied =
-          await this.requiredFormService.areRequiredFormsSatisfied(userId, {
-            targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
-            targetId: organizationUnitId,
-          });
-        if (requiredFormsSatisfied) {
-          try {
-            await this.membershipService.createMembershipRequest(
-              userId,
-              organizationUnitId,
-            );
-          } catch (e) {
-            // Pending request already exists or transient error — submission is still valid
-            this.logger.warn(
-              '[FormSubmission] createMembershipRequest skipped',
-              e,
-            );
-          }
+    const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
+      userId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      const requiredFormsSatisfied =
+        await this.requiredFormService.areRequiredFormsSatisfied(userId, {
+          targetType: RequiredFormTargetType.ORGANIZATION_UNIT,
+          targetId: organizationUnitId,
+        });
+      if (requiredFormsSatisfied) {
+        try {
+          await this.membershipService.createMembershipRequest(
+            userId,
+            organizationUnitId,
+          );
+        } catch (e) {
+          // Pending request already exists or transient error — submission is still valid
+          this.logger.warn(
+            '[FormSubmission] createMembershipRequest skipped',
+            e,
+          );
         }
       }
     }
@@ -130,6 +118,7 @@ export class MembershipLifecycleOrchestrator {
           await this.shiftService.joinShiftInstance(
             membershipRequest.userId,
             instanceId,
+            { source: POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE },
           );
         } catch (e) {
           this.logger.warn(
@@ -142,7 +131,11 @@ export class MembershipLifecycleOrchestrator {
     if (metadata.intendedShiftIds?.length) {
       for (const shiftId of metadata.intendedShiftIds) {
         try {
-          await this.shiftService.joinShift(membershipRequest.userId, shiftId);
+          await this.shiftService.joinShift(
+            membershipRequest.userId,
+            shiftId,
+            POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+          );
         } catch (e) {
           this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
         }
@@ -157,6 +150,9 @@ export class MembershipLifecycleOrchestrator {
             await this.eventService.joinEvent(
               membershipRequest.userId,
               eventId,
+              {
+                source: POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+              },
             );
           }
         } catch (e) {

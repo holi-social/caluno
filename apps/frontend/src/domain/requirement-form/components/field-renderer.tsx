@@ -46,12 +46,16 @@ export const validateIban = (value: string): boolean => {
     .join('');
   let remainder = '';
   for (const digit of numeric) {
-    remainder = `${remainder}${digit}`.replace(/^0+/, '');
-    const n = Number.parseInt(remainder, 10);
-    if (Number.isNaN(n)) return false;
+    const n = Number.parseInt(`${remainder}${digit}`, 10);
     remainder = (n % 97).toString();
   }
   return remainder === '1';
+};
+
+/** BIC / SWIFT-BIC: 8 or 11 chars, `AAAA BB CC` (+ optional `DDD`), no spaces. */
+export const validateBic = (value: string): boolean => {
+  const bic = value.replace(/\s+/g, '').toUpperCase();
+  return /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic);
 };
 
 export type ValidationMessages = {
@@ -66,6 +70,7 @@ export type ValidationMessages = {
   validPostalCode: (label: string) => string;
   minAge: (minAge: number) => string;
   invalidIban: (label: string) => string;
+  invalidBic: (label: string) => string;
   dateNotFuture: (label: string) => string;
 };
 
@@ -254,6 +259,12 @@ export function buildFieldSchema(
   if (type === FieldType.Iban || systemKey === 'iban') {
     s = s.refine((v) => !v || validateIban(v), {
       message: messages.invalidIban(label),
+    }) as z.ZodString;
+  }
+
+  if (systemKey === 'bic') {
+    s = s.refine((v) => !v || validateBic(v), {
+      message: messages.invalidBic(label),
     }) as z.ZodString;
   }
 
@@ -545,6 +556,7 @@ export const useValidationMessages = (): ValidationMessages => {
       validPostalCode: (label) => tValidation('validPostalCode', { label }),
       minAge: (minAge) => tValidation('minAge', { minAge }),
       invalidIban: (label) => tValidation('invalidIban', { label }),
+      invalidBic: (label) => tValidation('invalidBic', { label }),
       dateNotFuture: (label) => tValidation('dateNotFuture', { label }),
     }),
     [tValidation],

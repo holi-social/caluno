@@ -52,6 +52,9 @@ export class Shift {
   @Field(() => String, { nullable: true })
   rrule?: string | null;
 
+  @Field(() => ID, { nullable: true })
+  reimbursementTypeId?: string | null;
+
   @Field(() => Event, { nullable: true })
   event?: Event | null;
 

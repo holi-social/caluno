@@ -1,6 +1,6 @@
 'use client';
 
-import { EventInviteStatus, MembershipRequestStatus } from '@repo/data';
+import { type EventInviteStatus, MembershipRequestStatus } from '@repo/data';
 import type { EventInviteItem } from '@repo/data/react';
 import {
   Button,
@@ -76,21 +76,15 @@ export function EventVolunteersSection({
     }
   };
 
-  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
-    const isParticipating =
-      invite.status === EventInviteStatus.Accepted ||
-      invite.status === EventInviteStatus.SelfJoined;
-
-    return {
-      id: invite.user.id,
-      name: invite.user.name,
-      image: invite.user.image,
-      state: toInviteDisplayState(invite.status),
-      statusLabel: statusLabel(invite.status),
-      actions: manageActions(invite.status, canEdit),
-      iconActions: isParticipating ? ['View', 'Check in'] : ['View'],
-    };
-  });
+  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => ({
+    id: invite.user.id,
+    name: invite.user.name,
+    image: invite.user.image,
+    state: toInviteDisplayState(invite.status),
+    statusLabel: statusLabel(invite.status),
+    actions: manageActions(invite.status, canEdit),
+    iconActions: ['View', 'Check in'],
+  }));
 
   const counts = countInviteDisplayStates(invites.map((i) => i.status));
   const summary = formatInviteStatusSummary(counts, null, {

@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { Database } from '../../src/database/database.module';
 import * as schema from '../../src/database/schema';
-import { FormSubmissionStatus } from '../../src/requirement-profile/enums';
 
 export const createRequirementForm = async (
   db: Database,
@@ -74,7 +73,6 @@ export const createFormSubmission = async (
   args: {
     formId: string;
     userId: string;
-    status?: 'submitted' | 'rejected';
   },
 ) => {
   const [submission] = await db
@@ -82,10 +80,6 @@ export const createFormSubmission = async (
     .values({
       formId: args.formId,
       userId: args.userId,
-      status:
-        args.status === 'rejected'
-          ? FormSubmissionStatus.REJECTED
-          : FormSubmissionStatus.SUBMITTED,
       submittedAt: new Date(),
     })
     .returning();

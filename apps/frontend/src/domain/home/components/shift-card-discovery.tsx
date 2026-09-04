@@ -109,6 +109,7 @@ export function ShiftCardDiscovery({
       {event && (
         <Link
           href={`/events/${event.id}`}
+          prefetch={false}
           className="relative block h-[120px] w-full bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
         >
           {event.coverImageUrl && (
@@ -135,6 +136,7 @@ export function ShiftCardDiscovery({
       ) : (
         <Link
           href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+          prefetch={false}
           className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
         >
           {body}
