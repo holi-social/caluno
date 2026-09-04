@@ -141,6 +141,7 @@ export function parseTemplateBody(
   raw: Record<string, unknown>,
 ): TemplateDocument {
   const header = (raw.header ?? {}) as TemplateHeader;
+  header.metaLines = header.metaLines ?? [];
   const blocks = (
     Array.isArray(raw.blocks) ? raw.blocks : []
   ) as TemplateBlock[];
