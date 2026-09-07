@@ -50,7 +50,11 @@ export default async function DocumentPreviewPage({
         locale={locale}
       >
         <div className="mx-auto flex w-full max-w-4xl grow flex-col px-4">
-          <VolunteerDocumentPreview documentId={documentId} kind={kind} />
+          <VolunteerDocumentPreview
+            documentId={documentId}
+            kind={kind}
+            membershipId={membershipId}
+          />
         </div>
       </DataProvider>
     </div>
