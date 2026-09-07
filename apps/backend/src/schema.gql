@@ -652,6 +652,7 @@ type Mutation {
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembership(id: ID!): Membership!
   removeMembershipRequest(id: ID!): MembershipRequest!
+  sendShiftInstanceCallOut(instanceId: String!): ShiftInstanceCallOutResult!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setManualBaseline(amountCents: Int!, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline!
   setReimbursementRate(hourlyRateCents: Int!, organizationUnitId: ID, reimbursementTypeId: ID!): ReimbursementRate!
@@ -1217,6 +1218,7 @@ type ShiftInstance {
   isCheckedIn: Boolean!
   isException: Boolean!
   isIntendingToJoin: Boolean!
+  lastCallOut: ShiftInstanceCallOutSummary
   master: Shift!
   masterId: ID!
   myInviteStatus: ShiftInviteStatus
@@ -1232,6 +1234,17 @@ type ShiftInstance {
   requiredFormsCount: Int!
   spotsLeft: Int
   volunteers: [User!]
+}
+
+type ShiftInstanceCallOutResult {
+  recipientCount: Int!
+  sentToManagerFallback: Boolean!
+}
+
+type ShiftInstanceCallOutSummary {
+  recipientCount: Int!
+  sentAt: DateTime!
+  sentBy: User!
 }
 
 type ShiftInstanceInvite {

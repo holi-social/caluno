@@ -2,7 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ShiftVisibility } from '@repo/data';
-import { Checkbox, FieldDescription, FieldLabel, Separator } from '@repo/ui';
+import {
+  Button,
+  Checkbox,
+  FieldDescription,
+  FieldLabel,
+  Separator,
+} from '@repo/ui';
+import { Megaphone } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
@@ -12,6 +19,7 @@ import { useRouter } from '@/i18n/navigation';
 import type { RecurrenceDayValue } from '../constants';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
+import { SendCallOutDialog } from './send-call-out-dialog';
 import ShareLinkButton from './share-link-button';
 import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
 import { TransferList } from './transfer-list';
@@ -52,6 +60,7 @@ interface InviteShiftFormProps {
 export function InviteShiftForm({
   title,
   description,
+  orgUId,
   shiftId,
   instanceId,
   isCreationFlow = false,
@@ -154,9 +163,21 @@ export function InviteShiftForm({
       <div className="flex min-h-full flex-col gap-6">
         <div className="flex shrink-0 flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-muted-foreground">
-              {t('inviteForm.managingLabel')}
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                {t('inviteForm.managingLabel')}
+              </p>
+              <SendCallOutDialog
+                orgUId={orgUId}
+                instanceId={instanceId}
+                trigger={
+                  <Button type="button" variant="outline" size="sm">
+                    <Megaphone />
+                    {t('instanceDetail.callOutCta')}
+                  </Button>
+                }
+              />
+            </div>
             <ShiftInstanceSummaryCard
               title={shift.title}
               startsAt={instanceStartDate}

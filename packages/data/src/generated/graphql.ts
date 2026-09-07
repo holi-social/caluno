@@ -690,6 +690,7 @@ export type Mutation = {
   rejectMembershipRequest: MembershipRequest;
   removeMembership: Membership;
   removeMembershipRequest: MembershipRequest;
+  sendShiftInstanceCallOut: ShiftInstanceCallOutResult;
   setEventRequiredForms: Array<RequiredFormRef>;
   setManualBaseline: ManualBaseline;
   setReimbursementRate: ReimbursementRate;
@@ -965,6 +966,11 @@ export type MutationRemoveMembershipArgs = {
 
 export type MutationRemoveMembershipRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSendShiftInstanceCallOutArgs = {
+  instanceId: Scalars['String']['input'];
 };
 
 
@@ -2210,6 +2216,7 @@ export type ShiftInstance = {
   isCheckedIn: Scalars['Boolean']['output'];
   isException: Scalars['Boolean']['output'];
   isIntendingToJoin: Scalars['Boolean']['output'];
+  lastCallOut?: Maybe<ShiftInstanceCallOutSummary>;
   master: Shift;
   masterId: Scalars['ID']['output'];
   myInviteStatus?: Maybe<ShiftInviteStatus>;
@@ -2235,6 +2242,19 @@ export type ShiftInstanceInviteArgs = {
 
 export type ShiftInstanceInvitesArgs = {
   statuses?: InputMaybe<Array<ShiftInviteStatus>>;
+};
+
+export type ShiftInstanceCallOutResult = {
+  __typename?: 'ShiftInstanceCallOutResult';
+  recipientCount: Scalars['Int']['output'];
+  sentToManagerFallback: Scalars['Boolean']['output'];
+};
+
+export type ShiftInstanceCallOutSummary = {
+  __typename?: 'ShiftInstanceCallOutSummary';
+  recipientCount: Scalars['Int']['output'];
+  sentAt: Scalars['DateTime']['output'];
+  sentBy: User;
 };
 
 export type ShiftInstanceInvite = {
@@ -3562,6 +3582,20 @@ export type UpdateShiftInstanceInviteStatusMutationVariables = Exact<{
 
 
 export type UpdateShiftInstanceInviteStatusMutation = { __typename?: 'Mutation', updateShiftInstanceInviteStatus: { __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, userId: string } };
+
+export type SendShiftInstanceCallOutMutationVariables = Exact<{
+  instanceId: Scalars['String']['input'];
+}>;
+
+
+export type SendShiftInstanceCallOutMutation = { __typename?: 'Mutation', sendShiftInstanceCallOut: { __typename?: 'ShiftInstanceCallOutResult', recipientCount: number, sentToManagerFallback: boolean } };
+
+export type GetShiftInstanceCallOutSummaryQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
 
 export type JoinShiftInstanceMutationVariables = Exact<{
   instanceId: Scalars['String']['input'];
@@ -6459,6 +6493,30 @@ export const UpdateShiftInstanceInviteStatusDocument = gql`
   }
 }
     `;
+export const SendShiftInstanceCallOutDocument = gql`
+    mutation SendShiftInstanceCallOut($instanceId: String!) {
+  sendShiftInstanceCallOut(instanceId: $instanceId) {
+    recipientCount
+    sentToManagerFallback
+  }
+}
+    `;
+export const GetShiftInstanceCallOutSummaryDocument = gql`
+    query GetShiftInstanceCallOutSummary($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    lastCallOut {
+      sentAt
+      recipientCount
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+    `;
 export const JoinShiftInstanceDocument = gql`
     mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
@@ -7384,6 +7442,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     UpdateShiftInstanceInviteStatus(variables: UpdateShiftInstanceInviteStatusMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateShiftInstanceInviteStatusMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UpdateShiftInstanceInviteStatusMutation>({ document: UpdateShiftInstanceInviteStatusDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateShiftInstanceInviteStatus', 'mutation', variables);
+    },
+    SendShiftInstanceCallOut(variables: SendShiftInstanceCallOutMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SendShiftInstanceCallOutMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SendShiftInstanceCallOutMutation>({ document: SendShiftInstanceCallOutDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SendShiftInstanceCallOut', 'mutation', variables);
+    },
+    GetShiftInstanceCallOutSummary(variables: GetShiftInstanceCallOutSummaryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetShiftInstanceCallOutSummaryQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetShiftInstanceCallOutSummaryQuery>({ document: GetShiftInstanceCallOutSummaryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetShiftInstanceCallOutSummary', 'query', variables);
     },
     JoinShiftInstance(variables: JoinShiftInstanceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<JoinShiftInstanceMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<JoinShiftInstanceMutation>({ document: JoinShiftInstanceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'JoinShiftInstance', 'mutation', variables);

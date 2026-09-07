@@ -15,6 +15,11 @@ export enum ShiftInviteStatus {
   ADMIN_REJECTED = 'ADMIN_REJECTED',
 }
 
+export enum ShiftCallOutDeliveryStatus {
+  SENT = 'SENT',
+  FAILED = 'FAILED',
+}
+
 export enum RecurrenceDay {
   MONDAY = 'MONDAY',
   TUESDAY = 'TUESDAY',
