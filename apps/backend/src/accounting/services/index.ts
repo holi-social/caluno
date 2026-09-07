@@ -5,6 +5,7 @@ export { DocumentProfileRequirementService } from './document-profile-requiremen
 export { DocumentRenderingService } from './document-rendering.service';
 export { DocumentSigningService } from './document-signing.service';
 export { DocumentTemplateService } from './document-template.service';
+export { InviteAllowanceEligibilityService } from './invite-allowance-eligibility.service';
 export { InvoiceService } from './invoice.service';
 export { ReimbursementRateService } from './reimbursement-rate.service';
 export { VolunteerDocumentsService } from './volunteer-documents.service';

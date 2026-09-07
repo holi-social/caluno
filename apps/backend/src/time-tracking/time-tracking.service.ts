@@ -49,6 +49,11 @@ export class TimeTrackingService {
       reimbursementTypeId = context.reimbursementTypeId;
     }
 
+    if (input.reimbursementTypeId) {
+      await this.assertReimbursementTypeExists(input.reimbursementTypeId);
+    }
+    reimbursementTypeId = input.reimbursementTypeId ?? reimbursementTypeId;
+
     try {
       const [timeEntry] = await this.db
         .insert(schema.timeEntries)
@@ -82,6 +87,17 @@ export class TimeTrackingService {
         throw new ConflictGraphQLError('Already checked in');
       }
       throw error;
+    }
+  }
+
+  private async assertReimbursementTypeExists(
+    reimbursementTypeId: string,
+  ): Promise<void> {
+    const reimbursementType = await this.db.query.reimbursementTypes.findFirst({
+      where: { id: reimbursementTypeId },
+    });
+    if (!reimbursementType) {
+      throw new NotFoundGraphQLError('Reimbursement type not found');
     }
   }
 
@@ -166,6 +182,10 @@ export class TimeTrackingService {
         input.shiftInstanceId,
         organizationUnitId,
       );
+    }
+
+    if (input.reimbursementTypeId) {
+      await this.assertReimbursementTypeExists(input.reimbursementTypeId);
     }
 
     try {

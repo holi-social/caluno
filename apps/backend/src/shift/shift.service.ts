@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, count, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
+import { ReimbursementTypeKey } from '../accounting/enums';
 import { AccountingOrgAccessService } from '../accounting/services/accounting-org-access.service';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
@@ -2563,6 +2564,23 @@ export class ShiftService {
 
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
+  }
+
+  /**
+   * Batch-resolve reimbursement type keys by id. Volunteer-facing surfaces
+   * only ever need the Pauschalentyp (EHRENAMT/UEBUNGSLEITER), never the
+   * rate/limit amounts, so this intentionally returns just the key.
+   */
+  async findReimbursementTypeKeysByIds(
+    ids: string[],
+  ): Promise<{ id: string; key: ReimbursementTypeKey }[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    return this.db.query.reimbursementTypes.findMany({
+      where: { id: { in: ids } },
+      columns: { id: true, key: true },
+    });
   }
 
   private async loadAndEmitShiftInstanceInvitedNotification(
