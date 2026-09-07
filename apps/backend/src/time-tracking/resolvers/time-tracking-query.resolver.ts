@@ -3,8 +3,10 @@ import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { plainToInstance } from 'class-transformer';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
+import { ForbiddenGraphQLError } from '../../graphql/errors';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { PaginationInput } from '../../graphql/pagination.input';
+import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormWithStatus } from '../../membership/models/required-form-with-status.model';
 import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
 import { RequiredFormTargetType } from '../../requirement-profile/enums';
@@ -28,6 +30,7 @@ export class TimeTrackingQueryResolver {
     private readonly userMapper: UserMapper,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
     private readonly requiredFormService: RequiredFormService,
+    private readonly membershipService: MembershipService,
   ) {}
 
   @Permissions(PERMISSIONS.SHIFT_VIEW)
@@ -81,6 +84,14 @@ export class TimeTrackingQueryResolver {
     @Args('volunteerId', { type: () => ID }) volunteerId: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<RequiredFormWithStatus[]> {
+    const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
+      volunteerId,
+      context.organizationUnitId,
+    );
+    if (!isMember) {
+      throw new ForbiddenGraphQLError('Volunteer is not a member of this unit');
+    }
+
     const statuses = await this.requiredFormService.getRequiredFormStatuses(
       volunteerId,
       {

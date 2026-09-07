@@ -74,11 +74,12 @@ export function ManualCheckInPage({
   // the day list, so one range query serves every consumer on the page.
   const [visibleMonth, setVisibleMonth] = useState(() => new Date());
 
-  const { data: rawInstances } = useCheckInShiftInstances(
-    selection.orgUnitId,
-    startOfMonth(visibleMonth),
-    endOfMonth(visibleMonth),
-  );
+  const { data: rawInstances, isPlaceholderData: instancesStale } =
+    useCheckInShiftInstances(
+      selection.orgUnitId,
+      startOfMonth(visibleMonth),
+      endOfMonth(visibleMonth),
+    );
 
   const instances = useMemo(
     () => (rawInstances ?? []).map(toCheckInInstance),
@@ -266,6 +267,7 @@ export function ManualCheckInPage({
           selectedShiftId={selection.shiftId}
           month={visibleMonth}
           onMonthChange={setVisibleMonth}
+          isLoadingInstances={instancesStale}
           onSelect={(date) =>
             setSelection((current) =>
               applyDate(current, date, instances, new Date()),
@@ -280,14 +282,18 @@ export function ManualCheckInPage({
           instances={instances}
           selectedDate={selection.date}
           selectedShiftInstanceId={selection.shiftInstanceId}
-          onSelectInstance={(instance) =>
-            setSelection((current) => applyShiftInstance(current, instance))
-          }
-          onSelectShift={(shiftId) =>
+          onSelectInstance={(instance) => {
+            // Instances are stale while the range query is in flight —
+            // applying one would resolve against the wrong month.
+            if (instancesStale) return;
+            setSelection((current) => applyShiftInstance(current, instance));
+          }}
+          onSelectShift={(shiftId) => {
+            if (instancesStale) return;
             setSelection((current) =>
               applyShift(current, shiftId, instances, new Date()),
-            )
-          }
+            );
+          }}
         />
 
         <AcceptMembershipSheet

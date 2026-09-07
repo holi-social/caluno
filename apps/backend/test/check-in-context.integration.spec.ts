@@ -101,9 +101,14 @@ describe('TimeTrackingService.getCheckInContext', () => {
 
     expect(result?.volunteer.id).toBe(volunteer.id);
     expect(result?.openTimeEntries.map((e) => e.id)).toEqual([visibleEntry.id]);
-    expect(result?.eligibleOrganizationUnits.map((u) => u.id)).toEqual([
+    // toContain, not toEqual: other specs share this context org and may add
+    // child units, which are eligible too via the ancestor walk.
+    expect(result?.eligibleOrganizationUnits.map((u) => u.id)).toContain(
       organizationUnitId,
-    ]);
+    );
+    expect(result?.eligibleOrganizationUnits.map((u) => u.id)).not.toContain(
+      foreignUnit.id,
+    );
   });
 
   it('returns null when the volunteer is not a member of any caller-manageable unit', async () => {
