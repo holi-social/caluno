@@ -1534,7 +1534,7 @@ export type QueryCheckInContextArgs = {
 
 
 export type QueryCheckInReadinessArgs = {
-  shiftInstanceId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
   volunteerId: Scalars['ID']['input'];
 };
 
@@ -3882,7 +3882,7 @@ export type GetCheckInContextQuery = { __typename?: 'Query', checkInContext?: { 
 
 export type GetCheckInReadinessQueryVariables = Exact<{
   volunteerId: Scalars['ID']['input'];
-  shiftInstanceId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -7184,7 +7184,7 @@ export const GetCheckInContextDocument = gql`
 }
     `;
 export const GetCheckInReadinessDocument = gql`
-    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID) {
   checkInReadiness(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
     isMember
     openMembershipRequestId
