@@ -488,6 +488,13 @@ export type FormSubmissionValue = {
   value: Scalars['String']['output'];
 };
 
+export enum InviteAllowanceState {
+  Eligible = 'ELIGIBLE',
+  NearlyExhausted = 'NEARLY_EXHAUSTED',
+  NoAgreement = 'NO_AGREEMENT',
+  WouldExceed = 'WOULD_EXCEED'
+}
+
 export type Invoice = {
   __typename?: 'Invoice';
   createdAt: Scalars['DateTime']['output'];
@@ -1356,6 +1363,7 @@ export type Query = {
   formSubmissionsByForm: FormSubmissionPaginatedResponse;
   formSubmissionsByMembershipRequest: Array<FormSubmission>;
   formSubmissionsForVolunteer: Array<FormSubmission>;
+  inviteAllowanceEligibility: Array<VolunteerInviteAllowance>;
   invoice: Invoice;
   invoices: Array<Invoice>;
   isMemberOfUnitOrAncestor: Scalars['Boolean']['output'];
@@ -1558,6 +1566,13 @@ export type QueryFormSubmissionsByMembershipRequestArgs = {
 
 export type QueryFormSubmissionsForVolunteerArgs = {
   userId: Scalars['String']['input'];
+};
+
+
+export type QueryInviteAllowanceEligibilityArgs = {
+  organizationUnitId: Scalars['ID']['input'];
+  reimbursementTypeId: Scalars['ID']['input'];
+  shiftDurationMinutes: Scalars['Int']['input'];
 };
 
 
@@ -2534,6 +2549,12 @@ export type UserRequirementStatus = {
   status: RequirementFulfillmentStatus;
 };
 
+export type VolunteerInviteAllowance = {
+  __typename?: 'VolunteerInviteAllowance';
+  state: InviteAllowanceState;
+  volunteerId: Scalars['ID']['output'];
+};
+
 export type VolunteerNeedsTimesheet = {
   __typename?: 'VolunteerNeedsTimesheet';
   eligibleHours: Scalars['Float']['output'];
@@ -2582,6 +2603,15 @@ export type GetYearlyUsageQueryVariables = Exact<{
 
 
 export type GetYearlyUsageQuery = { __typename?: 'Query', yearlyUsage: { __typename?: 'YearlyUsage', usedCents: number, limitCents: number, remainingCents: number } };
+
+export type GetInviteAllowanceEligibilityQueryVariables = Exact<{
+  organizationUnitId: Scalars['ID']['input'];
+  reimbursementTypeId: Scalars['ID']['input'];
+  shiftDurationMinutes: Scalars['Int']['input'];
+}>;
+
+
+export type GetInviteAllowanceEligibilityQuery = { __typename?: 'Query', inviteAllowanceEligibility: Array<{ __typename?: 'VolunteerInviteAllowance', volunteerId: string, state: InviteAllowanceState }> };
 
 export type GetRosterYearlyUsageQueryVariables = Exact<{
   organizationUnitId: Scalars['ID']['input'];
@@ -4296,6 +4326,18 @@ export const GetYearlyUsageDocument = gql`
     usedCents
     limitCents
     remainingCents
+  }
+}
+    `;
+export const GetInviteAllowanceEligibilityDocument = gql`
+    query GetInviteAllowanceEligibility($organizationUnitId: ID!, $reimbursementTypeId: ID!, $shiftDurationMinutes: Int!) {
+  inviteAllowanceEligibility(
+    organizationUnitId: $organizationUnitId
+    reimbursementTypeId: $reimbursementTypeId
+    shiftDurationMinutes: $shiftDurationMinutes
+  ) {
+    volunteerId
+    state
   }
 }
     `;
@@ -7062,6 +7104,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetYearlyUsage(variables: GetYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetYearlyUsageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetYearlyUsageQuery>({ document: GetYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetYearlyUsage', 'query', variables);
+    },
+    GetInviteAllowanceEligibility(variables: GetInviteAllowanceEligibilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetInviteAllowanceEligibilityQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetInviteAllowanceEligibilityQuery>({ document: GetInviteAllowanceEligibilityDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetInviteAllowanceEligibility', 'query', variables);
     },
     GetRosterYearlyUsage(variables: GetRosterYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetRosterYearlyUsageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetRosterYearlyUsageQuery>({ document: GetRosterYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetRosterYearlyUsage', 'query', variables);
