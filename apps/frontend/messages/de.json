@@ -1176,6 +1176,11 @@
       "empty": "Keine Freiwilligen gefunden",
       "placeholder": "Freiwillige:n auswählen"
     },
+    "compensation": {
+      "agreementNote": "Mit der Annahme dieser Schicht erhältst du eine Vereinbarung zur Unterschrift.",
+      "ehrenamt": "Vergütet über Ehrenamtspauschale",
+      "uebungsleiter": "Vergütet über Übungsleiterpauschale"
+    },
     "detail": {
       "createdByLabel": "Erstellt von",
       "createdLabel": "Erstellt",
