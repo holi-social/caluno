@@ -28,6 +28,7 @@ const shift = {
   visibility: ShiftVisibility.ALL_MEMBERS,
   maxVolunteers: null,
   minVolunteers: null,
+  joinRequiresApproval: false,
   rrule: null,
   originalStartsAt: now,
   durationMinutes: 120,

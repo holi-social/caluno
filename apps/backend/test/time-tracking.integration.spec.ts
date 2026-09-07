@@ -82,7 +82,7 @@ describe('TimeTrackingService', () => {
     await db.insert(schema.shiftInstanceInvites).values({
       instanceId: instanceId ?? '',
       userId: user.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      status: ShiftInviteStatus.JOINED,
     });
 
     await service.checkIn(instanceId ?? '', user.id);

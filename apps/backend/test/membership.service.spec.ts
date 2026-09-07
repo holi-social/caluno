@@ -252,22 +252,22 @@ describe('MembershipService', () => {
         {
           eventId: event.id,
           userId: user.id,
-          status: EventInviteStatus.ACCEPTED,
+          status: EventInviteStatus.JOINED,
         },
         {
           eventId: childEvent.id,
           userId: user.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
         {
           eventId: event.id,
           userId: otherUser.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
         {
           eventId: otherEvent.id,
           userId: user.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
       ]);
       await db.insert(schema.shiftInvites).values([
@@ -279,19 +279,19 @@ describe('MembershipService', () => {
         {
           shiftId: childShift.id,
           userId: user.id,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         },
       ]);
       await db.insert(schema.shiftInstanceInvites).values([
         {
           instanceId: instance.id,
           userId: user.id,
-          status: ShiftInviteStatus.SELF_JOINED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: childInstance.id,
           userId: user.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
       ]);
       await db.insert(schema.membershipRequests).values([
@@ -478,56 +478,56 @@ describe('MembershipService', () => {
         {
           eventId: pastEvent.id,
           userId: user.id,
-          status: EventInviteStatus.ACCEPTED,
+          status: EventInviteStatus.JOINED,
         },
         {
           eventId: currentEvent.id,
           userId: user.id,
-          status: EventInviteStatus.SELF_JOINED,
+          status: EventInviteStatus.JOINED,
         },
         {
           eventId: futureEvent.id,
           userId: user.id,
-          status: EventInviteStatus.INVITED,
+          status: EventInviteStatus.ADMIN_INVITED,
         },
       ]);
       await db.insert(schema.shiftInvites).values([
         {
           shiftId: pastShift.id,
           userId: user.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           shiftId: currentShift.id,
           userId: user.id,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         },
         {
           shiftId: mixedShift.id,
           userId: user.id,
-          status: ShiftInviteStatus.SELF_JOINED,
+          status: ShiftInviteStatus.JOINED,
         },
       ]);
       await db.insert(schema.shiftInstanceInvites).values([
         {
           instanceId: pastInstance.id,
           userId: user.id,
-          status: ShiftInviteStatus.SELF_JOINED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: currentInstance.id,
           userId: user.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: pastMixedInstance.id,
           userId: user.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: futureMixedInstance.id,
           userId: user.id,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         },
       ]);
 

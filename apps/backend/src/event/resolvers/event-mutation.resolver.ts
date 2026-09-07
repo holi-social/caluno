@@ -44,7 +44,7 @@ export class EventMutationResolver {
     const isSelf = actorUserId === targetUserId;
     const isAdminOnlyTarget =
       status === EventInviteStatus.ADMIN_REJECTED ||
-      status === EventInviteStatus.INVITED;
+      status === EventInviteStatus.ADMIN_INVITED;
 
     if (isSelf && !isAdminOnlyTarget) {
       return;
