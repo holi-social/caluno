@@ -1,5 +1,6 @@
 export { documentAwaitingSignatureTemplate } from './document-awaiting-signature.template';
 export { documentDeclinedByOrgTemplate } from './document-declined-by-org.template';
+export { documentDeclinedByVolunteerTemplate } from './document-declined-by-volunteer.template';
 export { eventCancelledTemplate } from './event-cancelled.template';
 export { eventDetailsChangedTemplate } from './event-details-changed.template';
 export { eventInvitedTemplate } from './event-invited.template';

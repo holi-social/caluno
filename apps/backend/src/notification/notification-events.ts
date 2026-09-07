@@ -38,6 +38,9 @@ export const NotificationEvent = {
   // accounting-volunteer-documents.
   DOCUMENT_AWAITING_SIGNATURE: 'notification.document.awaiting-signature',
   DOCUMENT_DECLINED_BY_ORG: 'notification.document.declined-by-org',
+  // The admin-facing counterpart: the volunteer declined a document with a
+  // reason, and whoever can correct and reissue it needs to know (VOLI-1246).
+  DOCUMENT_DECLINED_BY_VOLUNTEER: 'notification.document.declined-by-volunteer',
 } as const;
 
 export type NotificationEvent =
