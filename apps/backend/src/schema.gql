@@ -1200,6 +1200,7 @@ type Shift {
   organizationUnitId: ID!
   originalStartsAt: DateTime!
   reimbursementTypeId: ID
+  reimbursementTypeKey: ReimbursementTypeKey
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
   rrule: String
