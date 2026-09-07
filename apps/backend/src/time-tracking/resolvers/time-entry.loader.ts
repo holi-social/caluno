@@ -1,5 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
+import { ReimbursementTypeMapper } from '../../accounting/mappers/reimbursement-type.mapper';
+import type { ReimbursementType } from '../../accounting/models/reimbursement-type.model';
+import type { Database } from '../../database/database.module';
+import { DATABASE_CONNECTION } from '../../database/database-connection';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import { RegisterLoader } from '../../graphql/interceptors';
 import { OrganizationUnitMapper } from '../../organization/mappers/organization-unit.mapper';
@@ -12,6 +16,8 @@ export class TimeEntryLoader {
   constructor(
     private readonly organizationUnitDataService: OrganizationUnitDataService,
     private readonly organizationUnitMapper: OrganizationUnitMapper,
+    private readonly reimbursementTypeMapper: ReimbursementTypeMapper,
+    @Inject(DATABASE_CONNECTION) private readonly db: Database,
   ) {}
 
   public readonly organizationUnitById = new DataLoader<
@@ -31,6 +37,26 @@ export class TimeEntryLoader {
         );
       }
       return this.organizationUnitMapper.toModelOrThrow(unit);
+    });
+  });
+
+  public readonly reimbursementTypeById = new DataLoader<
+    string,
+    ReimbursementType
+  >(async (ids) => {
+    const types = await this.db.query.reimbursementTypes.findMany({
+      where: { id: { in: [...ids] } },
+    });
+    const byId = new Map(types.map((type) => [type.id, type]));
+
+    return ids.map((id) => {
+      const type = byId.get(id);
+      if (!type) {
+        return new NotFoundGraphQLError(
+          `Reimbursement type with ID ${id} not found`,
+        );
+      }
+      return this.reimbursementTypeMapper.toModelOrThrow(type);
     });
   });
 }

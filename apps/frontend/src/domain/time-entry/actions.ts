@@ -24,6 +24,7 @@ export const createTimeEntry = actionClient
       startedAt: parsedInput.startedAt.toISOString(),
       endedAt: parsedInput.endedAt ? parsedInput.endedAt?.toISOString() : null,
       notes: parsedInput.notes || null,
+      reimbursementTypeId: parsedInput.reimbursementTypeId || null,
     };
 
     return await data.timeEntry.add(input);
@@ -42,6 +43,7 @@ export const updateTimeEntry = actionClient
       startedAt: parsedInput.startedAt.toISOString(),
       endedAt: parsedInput.endedAt?.toISOString() ?? null,
       notes: parsedInput.notes || null,
+      reimbursementTypeId: parsedInput.reimbursementTypeId || null,
     };
 
     return await data.timeEntry.update(timeEntryId, input);

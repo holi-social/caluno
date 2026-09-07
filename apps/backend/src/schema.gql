@@ -5,6 +5,7 @@
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
+  reimbursementTypeId: String
   shiftInstanceId: String
   startedAt: DateTime!
   volunteerId: String!
@@ -517,6 +518,13 @@ type InvoiceSignature {
   updatedAt: DateTime
 }
 
+enum InviteAllowanceState {
+  ELIGIBLE
+  NEARLY_EXHAUSTED
+  NO_AGREEMENT
+  WOULD_EXCEED
+}
+
 enum InvoiceStatus {
   AWAITING_SUPERVISOR_SIGNATURE
   AWAITING_VOLUNTEER_SIGNATURE
@@ -876,6 +884,11 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
+  inviteAllowanceEligibility(
+    organizationUnitId: ID!
+    reimbursementTypeId: ID!
+    shiftDurationMinutes: Int!
+  ): [VolunteerInviteAllowance!]!
   invoice(id: ID!): Invoice!
   invoices(filter: InvoiceFilterInput): [Invoice!]!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
@@ -1223,6 +1236,7 @@ type Shift {
   organizationUnitId: ID!
   originalStartsAt: DateTime!
   reimbursementTypeId: ID
+  reimbursementTypeKey: ReimbursementTypeKey
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
   rrule: String
@@ -1502,6 +1516,7 @@ input UpdateShiftInstanceInput {
 input UpdateTimeEntryInput {
   endedAt: DateTime
   notes: String
+  reimbursementTypeId: String
   shiftInstanceId: String
   startedAt: DateTime!
 }
@@ -1532,6 +1547,11 @@ type UserRequirementStatus {
   name: String!
   requirementId: ID!
   status: RequirementFulfillmentStatus!
+}
+
+type VolunteerInviteAllowance {
+  state: InviteAllowanceState!
+  volunteerId: ID!
 }
 
 type VolunteerNeedsTimesheet {

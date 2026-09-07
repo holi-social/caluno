@@ -1,4 +1,5 @@
 import { Context, Parent, ResolveField, Resolver } from '@nestjs/graphql';
+import { ReimbursementType } from '../../accounting/models/reimbursement-type.model';
 import { Loader } from '../../graphql/decorators/loader.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
@@ -56,5 +57,16 @@ export class TimeEntryFieldResolver {
     @Loader(TimeEntryLoader) loader: TimeEntryLoader,
   ): Promise<OrganizationUnit> {
     return loader.organizationUnitById.load(timeEntry.organizationUnitId);
+  }
+
+  @ResolveField(() => ReimbursementType, { nullable: true })
+  async reimbursementType(
+    @Parent() timeEntry: TimeEntryEntity,
+    @Loader(TimeEntryLoader) loader: TimeEntryLoader,
+  ): Promise<ReimbursementType | null> {
+    if (!timeEntry.reimbursementTypeId) {
+      return null;
+    }
+    return loader.reimbursementTypeById.load(timeEntry.reimbursementTypeId);
   }
 }
