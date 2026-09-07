@@ -252,6 +252,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
     findPendingMembershipRequest: jest.fn().mockResolvedValue({ id: 'mr-1' }),
   });
   const shiftService = () => ({
+    findInstanceById: jest.fn().mockResolvedValue({ id: 'si-1' }),
     findInviteStatusesForUser: jest.fn(),
     hasOpenTimeEntry: jest.fn(),
   });
@@ -281,6 +282,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       isParticipating: false,
       hasOpenTimeEntry: false,
     });
+    expect(shift.findInstanceById).not.toHaveBeenCalled();
     expect(shift.findInviteStatusesForUser).not.toHaveBeenCalled();
     expect(shift.hasOpenTimeEntry).not.toHaveBeenCalled();
   });
@@ -301,6 +303,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
 
     await service.getCheckInReadiness('volunteer-1', 'si-1', 'ou-1');
 
+    expect(shift.findInstanceById).toHaveBeenCalledWith('si-1', 'ou-1');
     expect(shift.findInviteStatusesForUser).toHaveBeenCalledWith(
       'volunteer-1',
       ['si-1'],
