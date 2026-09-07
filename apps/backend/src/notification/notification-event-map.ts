@@ -1,6 +1,7 @@
 import { NotificationEvent } from './notification-events';
 import type { DocumentAwaitingSignaturePayload } from './payloads/document-awaiting-signature.payload';
 import type { DocumentDeclinedByOrgPayload } from './payloads/document-declined-by-org.payload';
+import type { DocumentDeclinedByVolunteerPayload } from './payloads/document-declined-by-volunteer.payload';
 import type { EventCancelledPayload } from './payloads/event-cancelled.payload';
 import type { EventDetailsChangedPayload } from './payloads/event-details-changed.payload';
 import type { EventInvitedPayload } from './payloads/event-invited.payload';
@@ -13,6 +14,8 @@ import type { MembershipRemovedPayload } from './payloads/membership-removed.pay
 import type { MembershipRequestedPayload } from './payloads/membership-requested.payload';
 import type { OrganizationCreatedPayload } from './payloads/organization-created.payload';
 import type { ShiftDetailsChangedPayload } from './payloads/shift-details-changed.payload';
+import type { ShiftInstanceCallOutPayload } from './payloads/shift-instance-call-out.payload';
+import type { ShiftInstanceCallOutNoRecipientsPayload } from './payloads/shift-instance-call-out-no-recipients.payload';
 import type { ShiftInstanceCancelledPayload } from './payloads/shift-instance-cancelled.payload';
 import type { ShiftInstanceInvitedPayload } from './payloads/shift-instance-invited.payload';
 import type { ShiftInstanceJoinedPayload } from './payloads/shift-instance-joined.payload';
@@ -44,6 +47,8 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT]: ShiftSeriesVolunteerLeftPayload;
   [NotificationEvent.SHIFT_DETAILS_CHANGED]: ShiftDetailsChangedPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
+  [NotificationEvent.SHIFT_INSTANCE_CALL_OUT]: ShiftInstanceCallOutPayload;
+  [NotificationEvent.SHIFT_INSTANCE_CALL_OUT_NO_RECIPIENTS]: ShiftInstanceCallOutNoRecipientsPayload;
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
   [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;
   [NotificationEvent.EVENT_CANCELLED]: EventCancelledPayload;
@@ -51,4 +56,5 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.EVENT_DETAILS_CHANGED]: EventDetailsChangedPayload;
   [NotificationEvent.DOCUMENT_AWAITING_SIGNATURE]: DocumentAwaitingSignaturePayload;
   [NotificationEvent.DOCUMENT_DECLINED_BY_ORG]: DocumentDeclinedByOrgPayload;
+  [NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER]: DocumentDeclinedByVolunteerPayload;
 }

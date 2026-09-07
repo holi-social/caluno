@@ -17,6 +17,7 @@ import { ShiftInstanceInvitesLoader } from './resolvers/loader';
 import { ShiftLoader } from './resolvers/shift.loader';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
 import { ShiftInstanceLoader } from './resolvers/shift-instance.loader';
+import { ShiftInstanceCallOutSummaryFieldResolver } from './resolvers/shift-instance-call-out-summary-field.resolver';
 import { ShiftInstanceFieldResolver } from './resolvers/shift-instance-field.resolver';
 import { ShiftInstanceInviteFieldResolver } from './resolvers/shift-instance-invite-field.resolver';
 import { ShiftInstanceInviteUsersLoader } from './resolvers/shift-instance-invite-users.loader';
@@ -24,6 +25,7 @@ import { ShiftInstanceRequiredFormsLoader } from './resolvers/shift-instance-req
 import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';
 import { ShiftQueryResolver } from './resolvers/shift-query.resolver';
 import { ShiftRequiredFormsLoader } from './resolvers/shift-required-forms.loader';
+import { ShiftCallOutService } from './services/shift-call-out.service';
 import { ShiftService } from './shift.service';
 
 @Module({
@@ -40,6 +42,7 @@ import { ShiftService } from './shift.service';
   ],
   providers: [
     ShiftService,
+    ShiftCallOutService,
     AccountingOrgAccessService,
     ShiftQueryResolver,
     ShiftMapper,
@@ -49,6 +52,7 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
     ShiftInstanceFieldResolver,
+    ShiftInstanceCallOutSummaryFieldResolver,
     ShiftInstanceInviteFieldResolver,
     ShiftInstanceInvitesLoader,
     ShiftInstanceInviteUsersLoader,

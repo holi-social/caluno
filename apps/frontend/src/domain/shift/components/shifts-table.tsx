@@ -18,6 +18,7 @@ import { Link } from '@/i18n/navigation';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { shiftDetailPath, shiftEditPath } from '../routes';
 import { ActionBar } from './action-bar';
+import { PauschaleMarker } from './pauschale-marker';
 
 type ShiftListItem = GetShiftsQuery['shifts']['items'][number] & {
   instance?: { id: string } | null;
@@ -77,15 +78,20 @@ export async function ShiftsTable({
             return (
               <TableRow key={shift.id}>
                 <TableCell>
-                  <Link
-                    className="hover:underline block truncate"
-                    href={shiftDetailPath(orgUId, shift.id, {
-                      view: 'shifts',
-                      ...(page && page > 1 ? { page: String(page) } : {}),
-                    })}
-                  >
-                    {shift.title}
-                  </Link>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <Link
+                      className="hover:underline truncate"
+                      href={shiftDetailPath(orgUId, shift.id, {
+                        view: 'shifts',
+                        ...(page && page > 1 ? { page: String(page) } : {}),
+                      })}
+                    >
+                      {shift.title}
+                    </Link>
+                    <PauschaleMarker
+                      reimbursementTypeId={shift.reimbursementTypeId}
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatDate(startDate)}

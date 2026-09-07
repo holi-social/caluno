@@ -513,14 +513,25 @@ export class InvoiceService {
       },
     });
 
-    // Only the org-side decline is news to the volunteer — they had signed
-    // and would otherwise never learn the document is dead. A decline by the
-    // volunteer themselves is their own doing, so no email.
+    const organizationId = this.documentSigningService.organizationIdOf(
+      invoice.documentTemplate,
+    );
+
+    // The org-side decline is news to the volunteer — they had signed and
+    // would otherwise never learn the document is dead. The volunteer-side
+    // decline is news to whoever manages accounting — they need to correct
+    // and reissue the document (VOLI-1246).
     if (updated.declinedAtSigneeType === SigneeType.PERMISSION_HOLDER) {
       await this.documentNotificationService.notifyDeclinedByOrg({
-        organizationId: this.documentSigningService.organizationIdOf(
-          invoice.documentTemplate,
-        ),
+        organizationId,
+        volunteerUserId: invoice.volunteerId,
+        documentId: invoiceId,
+        documentKind: DocumentKind.INVOICE,
+        reason,
+      });
+    } else {
+      await this.documentNotificationService.notifyDeclinedByVolunteer({
+        organizationId,
         volunteerUserId: invoice.volunteerId,
         documentId: invoiceId,
         documentKind: DocumentKind.INVOICE,

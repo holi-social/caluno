@@ -95,6 +95,9 @@ type DocumentAwaitingSignatureInput =
 type DocumentDeclinedByOrgInput =
   NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_DECLINED_BY_ORG];
 
+type DocumentDeclinedByVolunteerInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER];
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -277,5 +280,11 @@ export class NotificationService {
 
   notifyDocumentDeclinedByOrg(input: DocumentDeclinedByOrgInput): void {
     this.emitter.emit(NotificationEvent.DOCUMENT_DECLINED_BY_ORG, input);
+  }
+
+  notifyDocumentDeclinedByVolunteer(
+    input: DocumentDeclinedByVolunteerInput,
+  ): void {
+    this.emitter.emit(NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER, input);
   }
 }

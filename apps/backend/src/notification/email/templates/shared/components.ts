@@ -134,6 +134,7 @@ export interface HeadingOptions {
   size?: string;
   padding?: string;
   letterSpacing?: string;
+  color?: string;
 }
 
 /** Section heading. */
@@ -142,11 +143,13 @@ export function heading(content: string, options: HeadingOptions = {}): string {
     size = '26px',
     padding = '0 0 12px',
     letterSpacing = '-0.02em',
+    color = colors.ink,
   } = options;
 
   return text(content, {
     size,
     weight: 700,
+    color,
     padding,
     letterSpacing,
     lineHeight: '1.25',
