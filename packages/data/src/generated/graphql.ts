@@ -3484,7 +3484,7 @@ export type GetShiftsQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftsQuery = { __typename?: 'Query', shifts: { __typename?: 'ShiftPaginatedResponse', items: Array<{ __typename?: 'Shift', id: string, title: string, rrule?: string | null, originalStartsAt: string, durationMinutes: number, visibility: ShiftVisibility, maxVolunteers?: number | null, minVolunteers?: number | null, requiredFormsCount: number, createdBy?: { __typename?: 'User', id: string, name: string, email: string } | null }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+export type GetShiftsQuery = { __typename?: 'Query', shifts: { __typename?: 'ShiftPaginatedResponse', items: Array<{ __typename?: 'Shift', id: string, title: string, rrule?: string | null, originalStartsAt: string, durationMinutes: number, visibility: ShiftVisibility, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, requiredFormsCount: number, createdBy?: { __typename?: 'User', id: string, name: string, email: string } | null }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
 
 export type GetEventShiftsQueryVariables = Exact<{
   eventId: Scalars['ID']['input'];
@@ -3640,7 +3640,7 @@ export type GetWeeklyShiftsQueryVariables = Exact<{
 }>;
 
 
-export type GetWeeklyShiftsQuery = { __typename?: 'Query', weeklyShifts: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCancelled: boolean, overrideMinVolunteers?: number | null, overrideMaxVolunteers?: number | null, master: { __typename?: 'Shift', id: string, title: string, minVolunteers?: number | null, maxVolunteers?: number | null, visibility: ShiftVisibility, rrule?: string | null }, volunteers?: Array<{ __typename?: 'User', id: string, name: string }> | null, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null } }> | null }> };
+export type GetWeeklyShiftsQuery = { __typename?: 'Query', weeklyShifts: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCancelled: boolean, overrideMinVolunteers?: number | null, overrideMaxVolunteers?: number | null, overrideReimbursementTypeId?: string | null, master: { __typename?: 'Shift', id: string, title: string, minVolunteers?: number | null, maxVolunteers?: number | null, visibility: ShiftVisibility, rrule?: string | null, reimbursementTypeId?: string | null }, volunteers?: Array<{ __typename?: 'User', id: string, name: string }> | null, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null } }> | null }> };
 
 export type PublicShiftDetailInstanceFieldsFragment = { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null, myInviteStatus?: ShiftInviteStatus | null, isIntendingToJoin: boolean, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> };
 
@@ -6352,6 +6352,7 @@ export const GetShiftsDocument = gql`
       visibility
       maxVolunteers
       minVolunteers
+      reimbursementTypeId
       requiredFormsCount
       createdBy {
         id
@@ -6669,6 +6670,7 @@ export const GetWeeklyShiftsDocument = gql`
     isCancelled
     overrideMinVolunteers
     overrideMaxVolunteers
+    overrideReimbursementTypeId
     master {
       id
       title
@@ -6676,6 +6678,7 @@ export const GetWeeklyShiftsDocument = gql`
       maxVolunteers
       visibility
       rrule
+      reimbursementTypeId
     }
     volunteers {
       id
