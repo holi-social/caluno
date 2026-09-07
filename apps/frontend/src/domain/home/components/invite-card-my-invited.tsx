@@ -47,14 +47,14 @@ export function InviteCardMyInvited({ invite }: { invite: MergedInvitation }) {
         await respondToShiftInvite.mutateAsync({
           instanceId: n.id,
           status: accept
-            ? ShiftInviteStatus.Accepted
+            ? ShiftInviteStatus.Joined
             : ShiftInviteStatus.VolunteerRejected,
         });
       } else {
         await respondToEventInvite.mutateAsync({
           eventId: n.id,
           status: accept
-            ? EventInviteStatus.Accepted
+            ? EventInviteStatus.Joined
             : EventInviteStatus.VolunteerRejected,
         });
       }

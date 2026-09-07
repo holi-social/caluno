@@ -1301,6 +1301,7 @@
       "joining": "Wird beigetreten...",
       "keepShift": "Einsatz behalten",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
+      "pendingApproval": "Warte auf Freigabe",
       "pendingCta": "Anfrage ausstehend",
       "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde.",
       "reenter": "Erneut beitreten",
@@ -1309,7 +1310,8 @@
       "requestSent": "Anfrage gesendet",
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
       "requirementsNeeded": "Noch zu erledigen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
-      "unexpected": "Unerwartete Antwort vom Server"
+      "unexpected": "Unerwartete Antwort vom Server",
+      "waitlisted": "Auf der Warteliste"
     },
     "loading": "Wird geladen...",
     "notFound": "Einsatz nicht gefunden.",

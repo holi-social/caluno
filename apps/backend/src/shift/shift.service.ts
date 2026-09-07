@@ -36,7 +36,11 @@ import {
   ADMIN_UNINVITE_SOURCE_STATUSES,
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
+  isVolunteerJoinResolveSource,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
+  resolveAdminApprovalTargetStatus,
+  resolveVolunteerJoinTargetStatus,
+  volunteerMayRequestInviteStatus,
 } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
@@ -665,7 +669,7 @@ export class ShiftService {
         master: { organizationUnitId: { in: acceptedIds } },
         OR: [
           { master: { visibility: ShiftVisibility.ALL_MEMBERS } },
-          { invites: { userId, status: ShiftInviteStatus.INVITED } },
+          { invites: { userId, status: ShiftInviteStatus.ADMIN_INVITED } },
         ],
       });
     }
@@ -904,6 +908,7 @@ export class ShiftService {
           visibility: shiftInput.visibility,
           maxVolunteers: shiftInput.maxVolunteers,
           minVolunteers: shiftInput.minVolunteers,
+          joinRequiresApproval: shiftInput.joinRequiresApproval ?? false,
           rrule: shiftInput.rrule,
           originalStartsAt: shiftInput.startsAt,
           durationMinutes,
@@ -936,7 +941,10 @@ export class ShiftService {
           await this.createInvitesForInstances(
             tx,
             createdInstances.map((i) => i.id),
-            this.toInviteMembers(invitedMemberIds, ShiftInviteStatus.INVITED),
+            this.toInviteMembers(
+              invitedMemberIds,
+              ShiftInviteStatus.ADMIN_INVITED,
+            ),
           );
         }
       }
@@ -1062,37 +1070,20 @@ export class ShiftService {
       }
     >,
     memberIds: string[],
-    inviteStatus: ShiftInviteStatus = ShiftInviteStatus.INVITED,
+    inviteStatus: ShiftInviteStatus = ShiftInviteStatus.ADMIN_INVITED,
     actorUserId?: string,
   ): Promise<void> {
     if (memberIds.length === 0) {
       return;
     }
-    const maxVolunteers =
-      shiftInstance.overrideMaxVolunteers ?? shiftInstance.master.maxVolunteers;
-
-    // Only active (pending or participating) invites occupy capacity —
-    // REJECTED/CANCELLED rows must not block re-invites. Stale rows for the
-    // members being (re)added are still represented by memberIds.length here,
-    // since they resurrect to active below.
-    const activeInviteCount = shiftInstance.invites.filter((inv) =>
-      ACTIVE_SHIFT_INVITE_STATUSES.includes(inv.status),
-    ).length;
-
-    if (maxVolunteers && activeInviteCount + memberIds.length > maxVolunteers) {
-      throw new ConflictGraphQLError(
-        `Cannot invite members: instance would exceed capacity of ${maxVolunteers}`,
-      );
-    }
-
-    // Inviting yourself happens silently: written straight to ACCEPTED with
-    // no pending state, since there's nothing for the actor to accept.
+    // Over-inviting is allowed — accept/join resolves to WAITLIST when full.
+    // Inviting yourself is written straight to JOINED (no pending accept).
     // Notifications for this batch are emitted by the caller after commit.
     const members = memberIds.map((userId) => ({
       userId,
       status:
         actorUserId != null && userId === actorUserId
-          ? ShiftInviteStatus.ACCEPTED
+          ? ShiftInviteStatus.JOINED
           : inviteStatus,
     }));
 
@@ -1127,7 +1118,8 @@ export class ShiftService {
     } = {},
     actorUserId?: string,
   ): Promise<ShiftInstanceEntity> {
-    const inviteStatus = options.inviteStatus ?? ShiftInviteStatus.INVITED;
+    const inviteStatus =
+      options.inviteStatus ?? ShiftInviteStatus.ADMIN_INVITED;
     const currentShiftInstance = await this.db.query.shiftInstances.findFirst({
       where: {
         id: shiftInstanceId,
@@ -1197,7 +1189,7 @@ export class ShiftService {
           if (selfIdsToAdd.length > 0) {
             await tx
               .update(schema.shiftInstanceInvites)
-              .set({ status: ShiftInviteStatus.ACCEPTED })
+              .set({ status: ShiftInviteStatus.JOINED })
               .where(
                 and(
                   eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
@@ -2052,7 +2044,7 @@ export class ShiftService {
     if (activeInvites.length > 0) {
       await tx
         .update(schema.shiftInstanceInvites)
-        .set({ status: ShiftInviteStatus.CANCELLED })
+        .set({ status: ShiftInviteStatus.VOLUNTEER_CANCELLED })
         .where(
           and(
             inArray(schema.shiftInstanceInvites.instanceId, instanceIds),
@@ -2246,6 +2238,7 @@ export class ShiftService {
       eventId: inputEventId,
       imageFileId,
       requiredFormIds,
+      joinRequiresApproval,
       ...shiftInput
     } = input;
 
@@ -2331,6 +2324,7 @@ export class ShiftService {
             durationMinutes,
             ...(inputEventId !== undefined ? { eventId: inputEventId } : {}),
             ...(imageUrl !== undefined ? { imageUrl } : {}),
+            ...(joinRequiresApproval != null ? { joinRequiresApproval } : {}),
           })
           .where(
             and(
@@ -3173,7 +3167,7 @@ export class ShiftService {
     } = {},
   ): Promise<void> {
     const {
-      status = ShiftInviteStatus.ACCEPTED,
+      status: _ignoredJoinStatus = ShiftInviteStatus.JOINED,
       tx,
       formsAlreadySatisfied,
       source = POSTHOG_JOIN_SOURCE.SELF_JOIN,
@@ -3228,6 +3222,7 @@ export class ShiftService {
     }
 
     const maxVolunteers = instance.overrideMaxVolunteers ?? shift.maxVolunteers;
+    const hasSeat = await this.hasAvailableSeat(instanceId, maxVolunteers, db);
 
     const existingInvite = await db.query.shiftInstanceInvites.findFirst({
       where: {
@@ -3242,78 +3237,59 @@ export class ShiftService {
       }
 
       if (
-        existingInvite.status === ShiftInviteStatus.CANCELLED &&
-        status === ShiftInviteStatus.SELF_JOINED
+        existingInvite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL ||
+        existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED
       ) {
-        this.assertInviteStatusTransition(
-          existingInvite.status,
-          ShiftInviteStatus.SELF_JOINED,
-        );
+        return;
+      }
 
-        if (maxVolunteers) {
-          const [capacity] = await db
-            .select({ current: count() })
-            .from(schema.shiftInstanceInvites)
-            .where(
-              and(
-                inArray(schema.shiftInstanceInvites.status, [
-                  ...PARTICIPATING_SHIFT_INVITE_STATUSES,
-                ]),
-                eq(schema.shiftInstanceInvites.instanceId, instanceId),
-              ),
-            );
+      if (
+        existingInvite.status === ShiftInviteStatus.VOLUNTEER_CANCELLED ||
+        existingInvite.status === ShiftInviteStatus.VOLUNTEER_REJECTED
+      ) {
+        const targetStatus = resolveVolunteerJoinTargetStatus({
+          joinRequiresApproval: shift.joinRequiresApproval,
+          hasAvailableSeat: hasSeat,
+          allowWaitlist: true,
+          considerApproval:
+            existingInvite.status === ShiftInviteStatus.VOLUNTEER_REJECTED,
+        }) as ShiftInviteStatus;
 
-          if ((capacity?.current ?? 0) >= maxVolunteers) {
-            throw new ConflictGraphQLError(
-              `Cannot join shift: instance is at full capacity of ${maxVolunteers}`,
-            );
-          }
-        }
+        this.assertInviteStatusTransition(existingInvite.status, targetStatus);
 
         await db
           .update(schema.shiftInstanceInvites)
-          .set({ status: ShiftInviteStatus.SELF_JOINED })
+          .set({ status: targetStatus })
           .where(eq(schema.shiftInstanceInvites.id, existingInvite.id));
 
-        void this.notifyShiftInstanceJoined(userId, shift, instance);
-        await this.captureShiftInstanceJoin({
-          userId,
-          organizationUnitId: shift.organizationUnitId,
-          shiftId: shift.id,
-          shiftInstanceId: instanceId,
-          source,
-        });
+        if (targetStatus === ShiftInviteStatus.JOINED) {
+          void this.notifyShiftInstanceJoined(userId, shift, instance);
+          await this.captureShiftInstanceJoin({
+            userId,
+            organizationUnitId: shift.organizationUnitId,
+            shiftId: shift.id,
+            shiftInstanceId: instanceId,
+            source,
+          });
+        }
       }
 
       return;
     }
 
-    if (maxVolunteers) {
-      const [capacity] = await db
-        .select({ current: count() })
-        .from(schema.shiftInstanceInvites)
-        .where(
-          and(
-            inArray(schema.shiftInstanceInvites.status, [
-              ...PARTICIPATING_SHIFT_INVITE_STATUSES,
-            ]),
-            eq(schema.shiftInstanceInvites.instanceId, instanceId),
-          ),
-        );
-
-      if ((capacity?.current ?? 0) >= maxVolunteers) {
-        throw new ConflictGraphQLError(
-          `Cannot join shift: instance is at full capacity of ${maxVolunteers}`,
-        );
-      }
-    }
+    const targetStatus = resolveVolunteerJoinTargetStatus({
+      joinRequiresApproval: shift.joinRequiresApproval,
+      hasAvailableSeat: hasSeat,
+      allowWaitlist: true,
+      considerApproval: true,
+    }) as ShiftInviteStatus;
 
     const [inserted] = await db
       .insert(schema.shiftInstanceInvites)
       .values({
         instanceId,
         userId,
-        status,
+        status: targetStatus,
       })
       .onConflictDoNothing()
       .returning();
@@ -3322,14 +3298,16 @@ export class ShiftService {
       return;
     }
 
-    void this.notifyShiftInstanceJoined(userId, shift, instance);
-    await this.captureShiftInstanceJoin({
-      userId,
-      organizationUnitId: shift.organizationUnitId,
-      shiftId: shift.id,
-      shiftInstanceId: instanceId,
-      source,
-    });
+    if (targetStatus === ShiftInviteStatus.JOINED) {
+      void this.notifyShiftInstanceJoined(userId, shift, instance);
+      await this.captureShiftInstanceJoin({
+        userId,
+        organizationUnitId: shift.organizationUnitId,
+        shiftId: shift.id,
+        shiftInstanceId: instanceId,
+        source,
+      });
+    }
   }
 
   async joinShift(
@@ -3397,7 +3375,7 @@ export class ShiftService {
         shift.organizationUnitId,
         {
           inviteToAllInstances: true,
-          inviteStatus: ShiftInviteStatus.ACCEPTED,
+          inviteStatus: ShiftInviteStatus.JOINED,
           skipCapture: true,
         },
       );
@@ -3536,7 +3514,7 @@ export class ShiftService {
       }
 
       await this.joinShiftInstance(userId, instanceId, {
-        status: ShiftInviteStatus.SELF_JOINED,
+        status: ShiftInviteStatus.JOINED,
         formsAlreadySatisfied: true,
       });
       return {
@@ -3566,7 +3544,7 @@ export class ShiftService {
     }
 
     await this.joinShiftInstance(userId, instanceId, {
-      status: ShiftInviteStatus.SELF_JOINED,
+      status: ShiftInviteStatus.JOINED,
       formsAlreadySatisfied: true,
     });
     return {
@@ -3597,20 +3575,77 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Shift invite not found');
     }
 
-    this.assertInviteStatusTransition(invite.status, status);
+    const nextInstance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        masterId: shiftId,
+        isCancelled: false,
+        actualStartsAt: { gte: new Date() },
+      },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const hasSeat = nextInstance
+      ? await this.hasAvailableSeat(
+          nextInstance.id,
+          nextInstance.overrideMaxVolunteers ?? shift.maxVolunteers,
+        )
+      : true;
+    const isAdminActor = actorUserId !== userId;
 
-    if (invite.status === status) {
+    if (
+      !isAdminActor &&
+      !volunteerMayRequestInviteStatus(invite.status, status)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to set this invite status',
+      );
+    }
+
+    let targetStatus = status;
+
+    if (
+      isVolunteerJoinResolveSource(invite.status) &&
+      (status === ShiftInviteStatus.JOINED ||
+        status === ShiftInviteStatus.WAITLIST_JOINED ||
+        status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL)
+    ) {
+      targetStatus = resolveVolunteerJoinTargetStatus({
+        joinRequiresApproval: shift.joinRequiresApproval,
+        hasAvailableSeat: hasSeat,
+        allowWaitlist: true,
+        considerApproval:
+          invite.status !== ShiftInviteStatus.VOLUNTEER_CANCELLED,
+      }) as ShiftInviteStatus;
+    } else if (
+      invite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL &&
+      status === ShiftInviteStatus.JOINED &&
+      isAdminActor
+    ) {
+      targetStatus = resolveAdminApprovalTargetStatus({
+        hasAvailableSeat: hasSeat,
+        allowWaitlist: true,
+      }) as ShiftInviteStatus;
+    }
+
+    this.assertInviteStatusTransition(invite.status, targetStatus);
+
+    if (invite.status === targetStatus) {
       return invite;
     }
 
-    if (status === ShiftInviteStatus.ACCEPTED) {
+    // Direct JOINED without waitlist fallback still needs capacity on future instances
+    if (
+      targetStatus === ShiftInviteStatus.JOINED &&
+      status === ShiftInviteStatus.JOINED &&
+      !isVolunteerJoinResolveSource(invite.status) &&
+      invite.status !== ShiftInviteStatus.AWAITING_ADMIN_APPROVAL
+    ) {
       await this.assertShiftSeriesAcceptanceCapacity(shiftId, userId);
     }
 
     const updated = await this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(schema.shiftInvites)
-        .set({ status })
+        .set({ status: targetStatus })
         .where(eq(schema.shiftInvites.id, invite.id))
         .returning();
 
@@ -3618,7 +3653,7 @@ export class ShiftService {
         tx,
         shiftId,
         userId,
-        status,
+        targetStatus,
       );
 
       return updated;
@@ -3640,13 +3675,10 @@ export class ShiftService {
         organization_unit_id: shift.organizationUnitId,
         source,
         shift_id: shiftId,
-        invite_status: status,
+        invite_status: targetStatus,
       },
     });
-    if (
-      status === ShiftInviteStatus.ACCEPTED ||
-      status === ShiftInviteStatus.SELF_JOINED
-    ) {
+    if (targetStatus === ShiftInviteStatus.JOINED) {
       this.postHogService.capture({
         event: POSTHOG_EVENT.SHIFT_JOIN,
         userId,
@@ -3671,7 +3703,10 @@ export class ShiftService {
       );
     }
 
-    if (status === ShiftInviteStatus.CANCELLED && actorUserId === userId) {
+    if (
+      status === ShiftInviteStatus.VOLUNTEER_CANCELLED &&
+      actorUserId === userId
+    ) {
       void this.loadAndEmitShiftSeriesLeftNotification(
         shift,
         new Date(),
@@ -3757,7 +3792,7 @@ export class ShiftService {
 
     await db
       .update(schema.shiftInvites)
-      .set({ status: ShiftInviteStatus.INVITED })
+      .set({ status: ShiftInviteStatus.ADMIN_INVITED })
       .where(
         and(
           eq(schema.shiftInvites.userId, userId),
@@ -3780,7 +3815,7 @@ export class ShiftService {
     const instanceIds = instances.map((instance) => instance.id);
     await db
       .update(schema.shiftInstanceInvites)
-      .set({ status: ShiftInviteStatus.INVITED })
+      .set({ status: ShiftInviteStatus.ADMIN_INVITED })
       .where(
         and(
           eq(schema.shiftInstanceInvites.userId, userId),
@@ -3816,23 +3851,69 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Shift instance invite not found');
     }
 
-    this.assertInviteStatusTransition(invite.status, status);
+    const maxVolunteers =
+      instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
+    const hasSeat = await this.hasAvailableSeat(instanceId, maxVolunteers);
+    const isAdminActor = actorUserId !== userId;
 
-    if (invite.status === status) {
+    if (
+      !isAdminActor &&
+      !volunteerMayRequestInviteStatus(invite.status, status)
+    ) {
+      throw new ForbiddenGraphQLError(
+        'You do not have permission to set this invite status',
+      );
+    }
+
+    let targetStatus = status;
+
+    if (
+      isVolunteerJoinResolveSource(invite.status) &&
+      (status === ShiftInviteStatus.JOINED ||
+        status === ShiftInviteStatus.WAITLIST_JOINED ||
+        status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL)
+    ) {
+      targetStatus = resolveVolunteerJoinTargetStatus({
+        joinRequiresApproval: instance.master.joinRequiresApproval,
+        hasAvailableSeat: hasSeat,
+        allowWaitlist: true,
+        considerApproval:
+          invite.status !== ShiftInviteStatus.VOLUNTEER_CANCELLED,
+      }) as ShiftInviteStatus;
+    } else if (
+      invite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL &&
+      status === ShiftInviteStatus.JOINED &&
+      isAdminActor
+    ) {
+      targetStatus = resolveAdminApprovalTargetStatus({
+        hasAvailableSeat: hasSeat,
+        allowWaitlist: true,
+      }) as ShiftInviteStatus;
+    }
+
+    this.assertInviteStatusTransition(invite.status, targetStatus);
+
+    if (invite.status === targetStatus) {
       return invite;
     }
 
-    if (status === ShiftInviteStatus.ACCEPTED) {
-      await this.assertShiftInstanceAcceptanceCapacity(instanceId);
-    }
+    const freedSeat = invite.status === ShiftInviteStatus.JOINED;
 
     const [updated] = await this.db
       .update(schema.shiftInstanceInvites)
-      .set({ status })
+      .set({ status: targetStatus })
       .where(eq(schema.shiftInstanceInvites.id, invite.id))
       .returning();
 
-    if (status === ShiftInviteStatus.ACCEPTED) {
+    if (
+      freedSeat &&
+      (targetStatus === ShiftInviteStatus.VOLUNTEER_CANCELLED ||
+        targetStatus === ShiftInviteStatus.ADMIN_REJECTED)
+    ) {
+      await this.promoteOldestWaitlisted(instanceId);
+    }
+
+    if (targetStatus === ShiftInviteStatus.JOINED) {
       void this.notifyShiftInstanceJoined(userId, instance.master, instance);
     }
 
@@ -3844,7 +3925,10 @@ export class ShiftService {
       );
     }
 
-    if (status === ShiftInviteStatus.CANCELLED && actorUserId === userId) {
+    if (
+      status === ShiftInviteStatus.VOLUNTEER_CANCELLED &&
+      actorUserId === userId
+    ) {
       void this.loadAndEmitShiftInstanceLeftNotification(
         instance.master,
         instance,
@@ -3869,13 +3953,10 @@ export class ShiftService {
         source,
         shift_id: instance.master.id,
         shift_instance_id: instanceId,
-        invite_status: status,
+        invite_status: targetStatus,
       },
     });
-    if (
-      status === ShiftInviteStatus.ACCEPTED ||
-      status === ShiftInviteStatus.SELF_JOINED
-    ) {
+    if (targetStatus === ShiftInviteStatus.JOINED) {
       this.postHogService.capture({
         event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
         userId,
@@ -3907,6 +3988,69 @@ export class ShiftService {
     }
   }
 
+  private async hasAvailableSeat(
+    instanceId: string,
+    maxVolunteers: number | null | undefined,
+    db: Database = this.db,
+  ): Promise<boolean> {
+    if (!maxVolunteers) {
+      return true;
+    }
+
+    const [capacity] = await db
+      .select({ current: count() })
+      .from(schema.shiftInstanceInvites)
+      .where(
+        and(
+          inArray(schema.shiftInstanceInvites.status, [
+            ...PARTICIPATING_SHIFT_INVITE_STATUSES,
+          ]),
+          eq(schema.shiftInstanceInvites.instanceId, instanceId),
+        ),
+      );
+
+    return (capacity?.current ?? 0) < maxVolunteers;
+  }
+
+  private async promoteOldestWaitlisted(
+    instanceId: string,
+    db: Database = this.db,
+  ): Promise<void> {
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { id: instanceId, isCancelled: false },
+      with: { master: true },
+    });
+
+    if (!instance?.master) {
+      return;
+    }
+
+    const maxVolunteers =
+      instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
+    if (!(await this.hasAvailableSeat(instanceId, maxVolunteers, db))) {
+      return;
+    }
+
+    const next = await db.query.shiftInstanceInvites.findFirst({
+      where: {
+        instanceId,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!next) {
+      return;
+    }
+
+    await db
+      .update(schema.shiftInstanceInvites)
+      .set({ status: ShiftInviteStatus.JOINED })
+      .where(eq(schema.shiftInstanceInvites.id, next.id));
+
+    void this.notifyShiftInstanceJoined(next.userId, instance.master, instance);
+  }
+
   private async assertShiftInstanceAcceptanceCapacity(
     instanceId: string,
     db: Database = this.db,
@@ -3923,23 +4067,7 @@ export class ShiftService {
     const maxVolunteers =
       instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
 
-    if (!maxVolunteers) {
-      return;
-    }
-
-    const [capacity] = await db
-      .select({ current: count() })
-      .from(schema.shiftInstanceInvites)
-      .where(
-        and(
-          inArray(schema.shiftInstanceInvites.status, [
-            ...PARTICIPATING_SHIFT_INVITE_STATUSES,
-          ]),
-          eq(schema.shiftInstanceInvites.instanceId, instanceId),
-        ),
-      );
-
-    if ((capacity?.current ?? 0) >= maxVolunteers) {
+    if (!(await this.hasAvailableSeat(instanceId, maxVolunteers, db))) {
       throw new ConflictGraphQLError(
         `Cannot accept invite: instance is at full capacity of ${maxVolunteers}`,
       );

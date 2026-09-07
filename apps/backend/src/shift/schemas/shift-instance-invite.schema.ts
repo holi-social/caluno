@@ -30,7 +30,7 @@ export const shiftInstanceInvites = snakeCase.table(
     status: shiftInviteStatusEnum('status')
       .$type<ShiftInviteStatus>()
       .notNull()
-      .default(ShiftInviteStatus.INVITED),
+      .default(ShiftInviteStatus.ADMIN_INVITED),
     ...timestampColumns,
   },
   (table) => [

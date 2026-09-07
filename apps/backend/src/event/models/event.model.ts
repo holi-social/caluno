@@ -43,6 +43,9 @@ export class Event {
   endsAt!: Date;
 
   @Field(() => Boolean)
+  joinRequiresApproval!: boolean;
+
+  @Field(() => Boolean)
   isDeleted!: boolean;
 
   @Field(() => Int)
