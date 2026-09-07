@@ -602,6 +602,29 @@ export class ShiftService {
     includePast: boolean = true,
   ): Record<string, unknown> {
     const condition: Record<string, unknown> = {};
+    if (startsAfter) {
+      condition.actualStartsAt = { gte: startsAfter };
+    }
+
+    const actualEndsAt: { gte?: Date; lt?: Date } = {};
+    if (!includePast) {
+      actualEndsAt.gte = new Date();
+    }
+    if (endsBefore) {
+      actualEndsAt.lt = endsBefore;
+    }
+    if (actualEndsAt.gte || actualEndsAt.lt) {
+      condition.actualEndsAt = actualEndsAt;
+    }
+
+    return condition;
+  }
+
+  /** Weekplan inclusion is start-in-window so an overnight end past weekEnd stays on the start week. */
+  private buildWeekStartDateCondition(
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+  ): Record<string, unknown> {
     const actualStartsAt: { gte?: Date; lt?: Date } = {};
     if (startsAfter) {
       actualStartsAt.gte = startsAfter;
@@ -609,15 +632,7 @@ export class ShiftService {
     if (endsBefore) {
       actualStartsAt.lt = endsBefore;
     }
-    if (actualStartsAt.gte || actualStartsAt.lt) {
-      condition.actualStartsAt = actualStartsAt;
-    }
-
-    if (!includePast) {
-      condition.actualEndsAt = { gte: new Date() };
-    }
-
-    return condition;
+    return actualStartsAt.gte || actualStartsAt.lt ? { actualStartsAt } : {};
   }
 
   async findAvailableShiftInstances(
@@ -2560,7 +2575,7 @@ export class ShiftService {
     const shiftIds = shifts.map((s) => s.id);
     if (shiftIds.length === 0) return [];
 
-    const dateCondition = this.buildMyShiftDateCondition(
+    const dateCondition = this.buildWeekStartDateCondition(
       startsAfter,
       endsBefore,
     );
