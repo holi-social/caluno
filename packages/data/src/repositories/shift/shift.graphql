@@ -230,6 +230,7 @@ mutation JoinShiftInstance($instanceId: String!) {
     status
     shiftInstance {
       id
+      myInviteStatus
       actualStartsAt
       actualEndsAt
       overrideTitle

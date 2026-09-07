@@ -25,7 +25,7 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { BanIcon, ClockIcon } from 'lucide-react';
+import { ArrowRightIcon, BanIcon, ClockIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -112,23 +112,26 @@ export function JoinShiftButton({
     [instanceId, respondToInvite, router, t, onInviteStatusChange],
   );
 
-  const handleCancel = useCallback(async () => {
-    if (!instanceId) {
-      toast.error('This shift link is missing an instance.');
-      return;
-    }
-    try {
-      await respondToInvite.mutateAsync({
-        instanceId,
-        status: ShiftInviteStatus.VolunteerCancelled,
-      });
-      toast.success(t('join.cancelled'));
-      onInviteStatusChange?.(ShiftInviteStatus.VolunteerCancelled);
-      router.refresh();
-    } catch (error) {
-      toast.error(getErrorMessage(error) ?? t('join.failed'));
-    }
-  }, [instanceId, respondToInvite, router, t, onInviteStatusChange]);
+  const handleCancel = useCallback(
+    async (successMessage: string) => {
+      if (!instanceId) {
+        toast.error('This shift link is missing an instance.');
+        return;
+      }
+      try {
+        await respondToInvite.mutateAsync({
+          instanceId,
+          status: ShiftInviteStatus.VolunteerCancelled,
+        });
+        toast.success(successMessage);
+        onInviteStatusChange?.(ShiftInviteStatus.VolunteerCancelled);
+        router.refresh();
+      } catch (error) {
+        toast.error(getErrorMessage(error) ?? t('join.failed'));
+      }
+    },
+    [instanceId, respondToInvite, router, t, onInviteStatusChange],
+  );
 
   const targetRequiredForms = [...shiftRequiredForms, ...instanceRequiredForms];
 
@@ -171,8 +174,17 @@ export function JoinShiftButton({
         const result = await joinShiftInstance.mutateAsync(instanceId);
 
         if (result.status === JoinStatus.Joined) {
-          toast.success(t('join.joined'));
-          onInviteStatusChange?.(ShiftInviteStatus.Joined);
+          // The server resolves a full shift to the waitlist but still
+          // reports JOINED, so trust the refetched invite status.
+          const resolvedInviteStatus =
+            result.shiftInstance.myInviteStatus ?? ShiftInviteStatus.Joined;
+          if (resolvedInviteStatus === ShiftInviteStatus.WaitlistJoined) {
+            toast.success(t('join.waitlistJoined'));
+            onInviteStatusChange?.(ShiftInviteStatus.WaitlistJoined);
+          } else {
+            toast.success(t('join.joined'));
+            onInviteStatusChange?.(ShiftInviteStatus.Joined);
+          }
           if (isAuto) router.push('/');
         } else if (result.status === JoinStatus.Pending) {
           toast.success(t('join.pending'));
@@ -275,6 +287,9 @@ export function JoinShiftButton({
     }
   }, [autoJoin, isAuthenticated, instanceId, visibility, handleJoin]);
 
+  // A full shift any member can join offers the waitlist instead of a dead end.
+  const showWaitlistCta = isFull && visibility === ShiftVisibility.AllMembers;
+
   if (inviteStatus === ShiftInviteStatus.AdminInvited) {
     return (
       <div className={cn('flex flex-col gap-2', className)}>
@@ -305,8 +320,9 @@ export function JoinShiftButton({
   }
 
   if (
-    inviteStatus === ShiftInviteStatus.VolunteerCancelled ||
-    inviteStatus === ShiftInviteStatus.VolunteerRejected
+    (inviteStatus === ShiftInviteStatus.VolunteerCancelled ||
+      inviteStatus === ShiftInviteStatus.VolunteerRejected) &&
+    !showWaitlistCta
   ) {
     return (
       <Button
@@ -324,16 +340,26 @@ export function JoinShiftButton({
     );
   }
 
-  if (
-    inviteStatus === ShiftInviteStatus.AwaitingAdminApproval ||
-    inviteStatus === ShiftInviteStatus.WaitlistJoined
-  ) {
+  if (inviteStatus === ShiftInviteStatus.WaitlistJoined) {
+    return (
+      <Button
+        onClick={() => handleCancel(t('join.leftWaitlist'))}
+        disabled={respondToInvite.isPending || !instanceId}
+        variant="secondary"
+        size="xl"
+        className={className}
+      >
+        <ArrowRightIcon className="size-5" />
+        {t('join.leaveWaitlist')}
+      </Button>
+    );
+  }
+
+  if (inviteStatus === ShiftInviteStatus.AwaitingAdminApproval) {
     return (
       <Button variant="outline" size="xl" className={className} disabled>
         <ClockIcon className="size-5" />
-        {inviteStatus === ShiftInviteStatus.WaitlistJoined
-          ? t('join.waitlisted')
-          : t('join.pendingApproval')}
+        {t('join.pendingApproval')}
       </Button>
     );
   }
@@ -364,7 +390,7 @@ export function JoinShiftButton({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction
-              onClick={handleCancel}
+              onClick={() => handleCancel(t('join.cancelled'))}
               variant="outline"
               disabled={respondToInvite.isPending}
             >
@@ -402,6 +428,22 @@ export function JoinShiftButton({
       <Button disabled variant="secondary" size="xl" className={className}>
         <ClockIcon className="size-5" />
         {t('join.pendingCta')}
+      </Button>
+    );
+  }
+
+  if (showWaitlistCta) {
+    return (
+      <Button
+        onClick={() => handleJoin()}
+        disabled={joinShiftInstance.isPending || !instanceId}
+        size="xl"
+        className={className}
+      >
+        <ArrowRightIcon className="size-5" />
+        {joinShiftInstance.isPending
+          ? t('join.joining')
+          : t('join.joinWaitlist')}
       </Button>
     );
   }
