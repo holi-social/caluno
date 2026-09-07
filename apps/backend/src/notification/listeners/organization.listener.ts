@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
 import { organizationCreatedTemplate } from '../email/templates/organization-created.template';
+import { organizationUnitInvitedTemplate } from '../email/templates/organization-unit-invited.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
@@ -32,6 +33,30 @@ export class OrganizationListener {
           {
             organizationUnitId: payload.organizationUnitId,
             organizationName: payload.organizationName,
+            recipientFirstName: recipient.firstName,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.ORGANIZATION_UNIT_INVITED)
+  async handleOrganizationUnitInvited(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.ORGANIZATION_UNIT_INVITED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      { event: NotificationEvent.ORGANIZATION_UNIT_INVITED },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return organizationUnitInvitedTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            organizationUnitName: payload.organizationUnitName,
             recipientFirstName: recipient.firstName,
           },
           templateContext,
