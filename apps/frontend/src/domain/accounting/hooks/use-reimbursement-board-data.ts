@@ -45,9 +45,18 @@ export function useReimbursementBoardData({
 
   const volunteers = useMemo(() => {
     if (!rosterQuery.data) return [];
-    const needsTimesheetVolunteers = new Set(
-      (needsTimesheetQuery.data ?? []).map((entry) => entry.volunteer.id),
-    );
+    // Volunteer id -> reimbursement type ids they have eligible hours for.
+    // Kept per-type (not just per-volunteer) so a volunteer with an active
+    // contract for one pauschale but none for another isn't wrongly
+    // fast-tracked to "Stundennachweis fällig" for the type that still
+    // needs a Vereinbarung — see buildBoardVolunteers.
+    const needsTimesheetVolunteers = new Map<string, Set<string>>();
+    for (const entry of needsTimesheetQuery.data ?? []) {
+      const types =
+        needsTimesheetVolunteers.get(entry.volunteer.id) ?? new Set();
+      types.add(entry.reimbursementType.id);
+      needsTimesheetVolunteers.set(entry.volunteer.id, types);
+    }
     return buildBoardVolunteers({
       rosterUsage: rosterQuery.data,
       contracts: contractsQuery.data ?? [],
