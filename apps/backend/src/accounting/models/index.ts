@@ -4,6 +4,7 @@ export { ContractSignature } from './contract-signature.model';
 export { ContractStatusChange } from './contract-status-change.model';
 export { DocumentTemplate } from './document-template.model';
 export { EffectiveRate } from './effective-rate.model';
+export { VolunteerInviteAllowance } from './invite-allowance.model';
 export { Invoice } from './invoice.model';
 export { InvoiceSignature } from './invoice-signature.model';
 export { InvoiceStatusChange } from './invoice-status-change.model';

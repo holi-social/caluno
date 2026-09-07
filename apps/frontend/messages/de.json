@@ -1438,6 +1438,18 @@
     },
     "transferList": {
       "addAria": "Hinzufügen",
+      "allowance": {
+        "eligible": "Auszahlungsberechtigt",
+        "nearlyExhausted": "Limit fast erreicht",
+        "noAgreement": "Vereinbarung nötig",
+        "wouldExceed": "Überschreitet Limit!"
+      },
+      "confirmExceedAllowance": {
+        "cancel": "Abbrechen",
+        "confirm": "Trotzdem einladen",
+        "description": "Die Auszahlung an {name} für diesen Einsatz würde den jährlichen Höchstbetrag überschreiten. Du kannst die Person trotzdem einladen, prüfe aber, ob das gewollt ist.",
+        "title": "Dies würde das Limit von {name} überschreiten"
+      },
       "removeAria": "Entfernen"
     },
     "validation": {
