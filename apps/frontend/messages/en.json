@@ -397,7 +397,11 @@
       },
       "preview": {
         "title": "{name}",
-        "unavailable": "The document is not available for preview yet."
+        "unavailable": "The document is not available for preview yet.",
+        "error": "The preview could not be loaded.",
+        "retry": "Try again",
+        "errorHelp": "Go to your membership for help",
+        "signDisabledHint": "You can only sign or decline once you've viewed the document in the preview."
       },
       "downloadUnavailableNote": "PDF not available yet."
     }
@@ -1176,6 +1180,11 @@
       "empty": "No volunteer found",
       "placeholder": "Select a volunteer"
     },
+    "compensation": {
+      "agreementNote": "Accepting this shift means you'll be sent a reimbursement agreement to sign.",
+      "ehrenamt": "Compensated via volunteer allowance",
+      "uebungsleiter": "Compensated via trainer's allowance"
+    },
     "detail": {
       "createdByLabel": "Created by",
       "createdLabel": "Created",
@@ -1333,6 +1342,12 @@
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
+    "paidMarker": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "ehrenamtShort": "Ehrenamt",
+      "uebungsleiter": "Übungsleiterpauschale",
+      "uebungsleiterShort": "Übungsleiter"
+    },
     "page": {
       "createButton": "Create shift",
       "subtitle": "Shift details",
@@ -1423,6 +1438,18 @@
     },
     "transferList": {
       "addAria": "Add",
+      "allowance": {
+        "eligible": "Eligible",
+        "nearlyExhausted": "Allowance nearly exhausted",
+        "noAgreement": "Agreement needed",
+        "wouldExceed": "Would exceed allowance!"
+      },
+      "confirmExceedAllowance": {
+        "cancel": "Cancel",
+        "confirm": "Invite anyway",
+        "description": "Paying {name} for this shift would take them past their annual allowance ceiling. You can still invite them, but double check this is intended.",
+        "title": "This would exceed {name}'s allowance"
+      },
       "removeAria": "Remove"
     },
     "validation": {
@@ -1531,6 +1558,9 @@
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
       "notTiedToShiftLabel": "Not tied to a shift",
+      "paidTimeLabel": "Paid time",
+      "pauschaleTypeLabel": "Pauschale type",
+      "pauschaleTypePlaceholder": "Select a Pauschale type",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",
@@ -1544,6 +1574,10 @@
     "page": {
       "createButton": "Add time entry",
       "title": "Timesheets"
+    },
+    "pauschaleType": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "uebungsleiter": "Übungsleiterpauschale"
     },
     "picker": {
       "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
@@ -1565,6 +1599,7 @@
     "validation": {
       "endedAtRequired": "End time is required",
       "organizationUnitRequired": "Organization unit is required",
+      "reimbursementTypeRequired": "Pauschale type is required",
       "shiftInstanceRequired": "Shift date is required",
       "startedAtRequired": "Start time is required",
       "timeEntryIdRequired": "Time entry ID is required",

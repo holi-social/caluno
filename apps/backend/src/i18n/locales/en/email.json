@@ -398,6 +398,17 @@
     "previewText": "{documentName} from {organizationName} was declined.",
     "footerNote": "You're receiving this because a document from {organizationName} was declined on {brandName}."
   },
+  "documentDeclinedByVolunteer": {
+    "heading": "A volunteer declined a document",
+    "greeting": "Hi {firstName},",
+    "declined": "declined {documentName}.",
+    "reasonLabel": "Reason given:",
+    "buttonLabel": "Open Abrechnungen",
+    "note": "The document needs to be corrected and reissued before it can be signed again.",
+    "subject": "{volunteerName} declined {documentName}",
+    "previewText": "{volunteerName} declined {documentName}.",
+    "footerNote": "You're receiving this because you manage accounting documents on {brandName}."
+  },
   "documentNames": {
     "agreement": "Supplementary agreement",
     "timesheet": "Timesheet"
