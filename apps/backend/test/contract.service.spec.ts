@@ -53,6 +53,7 @@ describe('ContractService', () => {
   let moduleRef: TestingModule;
   let db: Database;
   let service: ContractService;
+  const declinedByVolunteerCalls: unknown[] = [];
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -95,6 +96,10 @@ describe('ContractService', () => {
       {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: (input: unknown) => {
+          declinedByVolunteerCalls.push(input);
+          return Promise.resolve();
+        },
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
@@ -336,6 +341,38 @@ describe('ContractService', () => {
         contract.id,
       );
       expect(statusChanges.at(-1)?.type).toBe(DocumentStatusChange.DECLINED);
+    });
+
+    it('notifies the admin side when the volunteer declines (VOLI-1246)', async () => {
+      const { organization, reimbursementType, volunteer, signer } =
+        await setup();
+      const contract = await service.createContract(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
+        signer.id,
+      );
+
+      const before = declinedByVolunteerCalls.length;
+      await service.declineContract(
+        contract.id,
+        volunteer.id,
+        'Terms are not acceptable',
+      );
+
+      expect(declinedByVolunteerCalls.length).toBe(before + 1);
+      expect(declinedByVolunteerCalls.at(-1)).toMatchObject({
+        organizationId: organization.id,
+        volunteerUserId: volunteer.id,
+        documentId: contract.id,
+        documentKind: DocumentKind.CONTRACT,
+        reason: 'Terms are not acceptable',
+      });
     });
   });
 

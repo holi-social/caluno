@@ -1,5 +1,6 @@
 export type { DocumentAwaitingSignaturePayload } from './document-awaiting-signature.payload';
 export type { DocumentDeclinedByOrgPayload } from './document-declined-by-org.payload';
+export type { DocumentDeclinedByVolunteerPayload } from './document-declined-by-volunteer.payload';
 export type { EventCancelledPayload } from './event-cancelled.payload';
 export type { EventDetailsChangedPayload } from './event-details-changed.payload';
 export type { EventRemovedPayload } from './event-removed.payload';

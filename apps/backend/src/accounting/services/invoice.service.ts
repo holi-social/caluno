@@ -117,8 +117,9 @@ export class InvoiceService {
       eq(schema.timeEntries.volunteerId, volunteerId),
       eq(schema.timeEntries.reimbursementTypeId, reimbursementTypeId),
       isNotNull(schema.timeEntries.endedAt),
-      // Time entries stay claimed once pulled into any invoice, even a
-      // declined one - reissuing means picking up fresh, unclaimed hours.
+      // Time entries stay claimed while tied to a live (non-declined)
+      // invoice. Declining releases the claim (see declineInvoice), so a
+      // released row no longer excludes the entry here.
       isNull(schema.invoiceTimeEntries.id),
     ];
     if (periodStart) {
@@ -133,7 +134,10 @@ export class InvoiceService {
       .from(schema.timeEntries)
       .leftJoin(
         schema.invoiceTimeEntries,
-        eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+        and(
+          eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+          eq(schema.invoiceTimeEntries.released, false),
+        ),
       )
       .where(and(...conditions));
 
@@ -168,7 +172,10 @@ export class InvoiceService {
       .from(schema.timeEntries)
       .leftJoin(
         schema.invoiceTimeEntries,
-        eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+        and(
+          eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+          eq(schema.invoiceTimeEntries.released, false),
+        ),
       )
       .where(and(...conditions));
 
@@ -499,6 +506,15 @@ export class InvoiceService {
         actorUserId: userId,
       });
 
+      // Release the time entries this invoice had claimed. The declined
+      // invoice and its invoiceTimeEntries rows stay around as a record
+      // (and still show what was declined), but the entries themselves
+      // become selectable again for a replacement document.
+      await tx
+        .update(schema.invoiceTimeEntries)
+        .set({ released: true })
+        .where(eq(schema.invoiceTimeEntries.invoiceId, invoiceId));
+
       return declined;
     });
 
@@ -513,14 +529,25 @@ export class InvoiceService {
       },
     });
 
-    // Only the org-side decline is news to the volunteer — they had signed
-    // and would otherwise never learn the document is dead. A decline by the
-    // volunteer themselves is their own doing, so no email.
+    const organizationId = this.documentSigningService.organizationIdOf(
+      invoice.documentTemplate,
+    );
+
+    // The org-side decline is news to the volunteer — they had signed and
+    // would otherwise never learn the document is dead. The volunteer-side
+    // decline is news to whoever manages accounting — they need to correct
+    // and reissue the document (VOLI-1246).
     if (updated.declinedAtSigneeType === SigneeType.PERMISSION_HOLDER) {
       await this.documentNotificationService.notifyDeclinedByOrg({
-        organizationId: this.documentSigningService.organizationIdOf(
-          invoice.documentTemplate,
-        ),
+        organizationId,
+        volunteerUserId: invoice.volunteerId,
+        documentId: invoiceId,
+        documentKind: DocumentKind.INVOICE,
+        reason,
+      });
+    } else {
+      await this.documentNotificationService.notifyDeclinedByVolunteer({
+        organizationId,
         volunteerUserId: invoice.volunteerId,
         documentId: invoiceId,
         documentKind: DocumentKind.INVOICE,

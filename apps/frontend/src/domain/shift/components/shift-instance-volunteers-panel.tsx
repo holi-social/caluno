@@ -7,7 +7,7 @@ import {
   VolunteeringVolunteerList,
   type VolunteeringVolunteerListItem,
 } from '@repo/ui';
-import { UserPlus } from 'lucide-react';
+import { Megaphone, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
@@ -24,6 +24,7 @@ import {
   toInviteDisplayState,
 } from '../invite-status-display';
 import { shiftInvitePath } from '../routes';
+import { SendCallOutDialog } from './send-call-out-dialog';
 
 type InstanceInvite = {
   status: ShiftInviteStatus;
@@ -179,12 +180,24 @@ export function ShiftInstanceVolunteersPanel({
       summary={summary}
       headerAction={
         canManage ? (
-          <Button asChild size="sm">
-            <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
-              <UserPlus />
-              {t('instanceDetail.inviteCta')}
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <SendCallOutDialog
+              orgUId={orgUId}
+              instanceId={instanceId}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <Megaphone />
+                  {t('instanceDetail.callOutCta')}
+                </Button>
+              }
+            />
+            <Button asChild size="sm">
+              <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
+                <UserPlus />
+                {t('instanceDetail.inviteCta')}
+              </Link>
+            </Button>
+          </div>
         ) : undefined
       }
       actionLabels={{

@@ -61,6 +61,7 @@ describe('InvoiceService', () => {
   let moduleRef: TestingModule;
   let db: Database;
   let service: InvoiceService;
+  const declinedByVolunteerCalls: unknown[] = [];
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -109,6 +110,7 @@ describe('InvoiceService', () => {
       {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: () => Promise.resolve(),
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
@@ -128,6 +130,10 @@ describe('InvoiceService', () => {
       {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: (input: unknown) => {
+          declinedByVolunteerCalls.push(input);
+          return Promise.resolve();
+        },
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
@@ -283,7 +289,36 @@ describe('InvoiceService', () => {
       expect(eligible.every((entry) => entry.endedAt !== null)).toBe(true);
     });
 
-    it('excludes an entry already claimed by an invoice, even a declined one', async () => {
+    it('excludes an entry claimed by a live (non-declined) invoice', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const eligible = await service.findEligibleTimeEntries(
+        volunteer.id,
+        reimbursementType.id,
+      );
+      expect(eligible.map((e) => e.id)).not.toContain(timeEntry.id);
+    });
+
+    it('releases an entry back to the eligible pool once its invoice is declined', async () => {
       const {
         organization,
         reimbursementType,
@@ -306,6 +341,60 @@ describe('InvoiceService', () => {
       );
       await service.declineInvoice(invoice.id, volunteer.id, 'changed my mind');
 
+      const eligible = await service.findEligibleTimeEntries(
+        volunteer.id,
+        reimbursementType.id,
+      );
+      expect(eligible.map((e) => e.id)).toContain(timeEntry.id);
+    });
+
+    it('lets a replacement invoice be created for the hours of a declined one', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+
+      const declinedInvoice = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+      await service.declineInvoice(
+        declinedInvoice.id,
+        volunteer.id,
+        'changed my mind',
+      );
+
+      const replacement = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      expect(replacement.id).not.toBe(declinedInvoice.id);
+
+      // Retained as a record, not deleted.
+      const stillThere = await service.findInvoice(declinedInvoice.id);
+      expect(stillThere.invoiceStatus).toBe(InvoiceStatus.DECLINED);
+
+      // No longer selectable now that a live invoice holds it again.
       const eligible = await service.findEligibleTimeEntries(
         volunteer.id,
         reimbursementType.id,
@@ -738,6 +827,40 @@ describe('InvoiceService', () => {
       expect(declined.invoiceStatus).toBe(InvoiceStatus.DECLINED);
       expect(declined.declineReason).toBe('Wrong hours');
       expect(declined.declinedAtSigneeType).toBe(SigneeType.VOLUNTEER);
+    });
+
+    it('notifies the admin side when the volunteer declines (VOLI-1246)', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const invoice = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const before = declinedByVolunteerCalls.length;
+      await service.declineInvoice(invoice.id, volunteer.id, 'Wrong hours');
+
+      expect(declinedByVolunteerCalls.length).toBe(before + 1);
+      expect(declinedByVolunteerCalls.at(-1)).toMatchObject({
+        organizationId: organization.id,
+        volunteerUserId: volunteer.id,
+        documentId: invoice.id,
+        documentKind: DocumentKind.INVOICE,
+        reason: 'Wrong hours',
+      });
     });
   });
 

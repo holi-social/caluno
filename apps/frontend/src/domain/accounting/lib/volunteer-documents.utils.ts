@@ -204,6 +204,29 @@ export function documentState(
   return 'signed';
 }
 
+// ─── Signing gate ─────────────────────────────────────────────────────────────
+
+/** Lifecycle of the embedded PDF preview the volunteer must see before deciding. */
+export type PreviewStatus =
+  | 'loading'
+  | 'unavailable'
+  | 'rendering'
+  | 'ready'
+  | 'error';
+
+/**
+ * A volunteer may only sign or decline a document they have actually been
+ * able to view. This is the single choke point that couples the two: no
+ * preview, no decision — closing the gap where "not available for preview"
+ * and "sign/decline enabled" could both be true at once (VOLI-1216).
+ */
+export function canDecideDocument(
+  state: VolunteerDocumentState,
+  previewStatus: PreviewStatus,
+): boolean {
+  return state === 'awaiting-signature' && previewStatus === 'ready';
+}
+
 // ─── Full mapping ─────────────────────────────────────────────────────────────
 
 export function contractToVolunteerDocument(

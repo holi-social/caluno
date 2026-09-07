@@ -358,6 +358,32 @@
     "scheduleRecurring": "{days}, {timeRange}",
     "subject": "You're invited to {shiftTitle}"
   },
+  "shiftInstanceCallOut": {
+    "buttonLabel": "I can help",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you're eligible to help with this shift on {brandName}.",
+    "greeting": "Hi {firstName}, {shiftTitle} at {organizationName} is still short on volunteers and needs help soon.",
+    "heading": "We need your help",
+    "previewText": "{shiftTitle} at {organizationName} is short on volunteers — can you help?",
+    "subject": "Urgent: {shiftTitle} still needs volunteers",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftInstanceCallOutNoRecipients": {
+    "buttonLabel": "View shifts",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you sent a call-out on {brandName}.",
+    "greeting": "Hi {firstName}, everyone eligible for {shiftTitle} has already been asked to help.",
+    "heading": "Nobody left to ask",
+    "note": "No email was sent to volunteers — you may want to widen the invite list or adjust the shift.",
+    "previewText": "Everyone eligible for {shiftTitle} has already been asked.",
+    "subject": "Nobody left to ask for {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "documentAwaitingSignature": {
     "heading": "Your document is waiting for your signature",
     "greeting": "Hi {firstName},",
@@ -379,6 +405,17 @@
     "subject": "{documentName} from {organizationName} was declined",
     "previewText": "{documentName} from {organizationName} was declined.",
     "footerNote": "You're receiving this because a document from {organizationName} was declined on {brandName}."
+  },
+  "documentDeclinedByVolunteer": {
+    "heading": "A volunteer declined a document",
+    "greeting": "Hi {firstName},",
+    "declined": "declined {documentName}.",
+    "reasonLabel": "Reason given:",
+    "buttonLabel": "Open Abrechnungen",
+    "note": "The document needs to be corrected and reissued before it can be signed again.",
+    "subject": "{volunteerName} declined {documentName}",
+    "previewText": "{volunteerName} declined {documentName}.",
+    "footerNote": "You're receiving this because you manage accounting documents on {brandName}."
   },
   "documentNames": {
     "agreement": "Supplementary agreement",

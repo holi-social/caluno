@@ -6,6 +6,7 @@ export const emailTheme = {
     "Geologica, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   colors: {
     primary: '#cb4a4c',
+    primarySoft: 'rgba(203, 74, 76, 0.12)',
     primaryText: '#bf3e42',
     ink: '#323a49',
     muted: '#4d638c',

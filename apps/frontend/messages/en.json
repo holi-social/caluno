@@ -439,7 +439,11 @@
       },
       "preview": {
         "title": "{name}",
-        "unavailable": "The document is not available for preview yet."
+        "unavailable": "The document is not available for preview yet.",
+        "error": "The preview could not be loaded.",
+        "retry": "Try again",
+        "errorHelp": "Go to your membership for help",
+        "signDisabledHint": "You can only sign or decline once you've viewed the document in the preview."
       },
       "downloadUnavailableNote": "PDF not available yet."
     }
@@ -1225,6 +1229,10 @@
         "updateFailedToast": "Failed to update required forms"
       },
       "statusLabel": "Status",
+      "urgentCallLabel": "Urgent Call",
+      "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
+      "urgentCallSentByDate": "on {date}",
+      "urgentCallSentByPrefix": "Sent by",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1255,6 +1263,10 @@
       "noRecurrence": "No recurrence",
       "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
       "openShiftLabel": "Open shift",
+      "recurrenceEndDatePlaceholder": "Pick a date",
+      "recurrenceEnds": "End of series",
+      "recurrenceEndsNever": "Never",
+      "recurrenceEndsOn": "On",
       "reimbursementTypeDescription": "Volunteer time on this shift will be eligible for a timesheet under this Pauschale",
       "reimbursementTypeLabel": "Reimbursable Pauschale",
       "reimbursementTypeNone": "Not reimbursable",
@@ -1262,6 +1274,16 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
+      "callOutAria": "Urgent Call",
+      "callOutCta": "Urgent Call",
+      "callOutDialog": {
+        "confirm": "Urgent Call",
+        "description": "This sends an urgent call to everyone eligible to help with this shift, asking them to join. It won't add anyone to the roster.",
+        "error": "Failed to send the urgent call. {error}",
+        "noRecipients": "Nobody was left to ask — we've emailed you instead.",
+        "success": "Urgent call sent to {count, plural, one {# volunteer} other {# volunteers}}.",
+        "title": "Send an urgent call?"
+      },
       "deleteAria": "Delete",
       "deleteDialog": {
         "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
@@ -1339,6 +1361,12 @@
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
+    "paidMarker": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "ehrenamtShort": "Ehrenamt",
+      "uebungsleiter": "Übungsleiterpauschale",
+      "uebungsleiterShort": "Übungsleiter"
+    },
     "page": {
       "createButton": "Create shift",
       "subtitle": "Shift details",
@@ -1440,6 +1468,8 @@
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
       "nameRequired": "Name is required",
       "organizationUnitRequired": "Organization unit is required",
+      "recurrenceEndBeforeStart": "End date cannot be before the start date",
+      "recurrenceEndRequired": "End date is required",
       "shiftIdRequired": "Shift ID is required",
       "startTimeRequired": "Start time is required",
       "windowViolation": "Must fall within the event window"
