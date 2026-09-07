@@ -1465,7 +1465,8 @@ export class EventService {
       userId: input.userId,
       properties: {
         surface:
-          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
+          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN
             ? POSTHOG_SURFACE.BACKOFFICE
             : POSTHOG_SURFACE.VOLUNTEERING,
         organization_id: await this.resolveOrganizationId(

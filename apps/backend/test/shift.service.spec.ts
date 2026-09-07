@@ -61,6 +61,7 @@ describe('ShiftService', () => {
       notifyShiftInvited: mock(() => {}),
       notifyShiftInstanceCancelled: mock(() => {}),
       notifyShiftInstanceSeriesCancelled: mock(() => {}),
+      notifyShiftInstanceJoined: mock(() => {}),
     } as unknown as NotificationService;
 
     capture = mock(() => {});
@@ -2246,5 +2247,57 @@ describe('ShiftService', () => {
         ),
       ).rejects.toThrow(ForbiddenGraphQLError);
     });
+  });
+
+  it('captures shift_instance_join from waitlist promotion when a seat frees', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const shift = await createShift(db, {
+      organizationUnitId,
+      createdById: userId,
+      startsAt,
+      endsAt,
+      rrule: null,
+      maxVolunteers: 1,
+    });
+    const [instance] = await getInstances(shift.id);
+    const joinedUser = await createUser(db);
+    const waitlistedUser = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId: instance.id,
+        userId: joinedUser.id,
+        status: ShiftInviteStatus.JOINED,
+      },
+      {
+        instanceId: instance.id,
+        userId: waitlistedUser.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+    ]);
+
+    capture.mockClear();
+
+    await shiftService.updateShiftInstanceInviteStatus(
+      joinedUser.id,
+      instance.id,
+      ShiftInviteStatus.VOLUNTEER_CANCELLED,
+    );
+
+    const waitlisted = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: waitlistedUser.id },
+    });
+    expect(waitlisted?.status).toBe(ShiftInviteStatus.JOINED);
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+        userId: waitlistedUser.id,
+        properties: expect.objectContaining({
+          source: 'waitlist_promote',
+          shift_instance_id: instance.id,
+        }),
+      }),
+    );
   });
 });
