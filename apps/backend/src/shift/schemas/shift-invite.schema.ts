@@ -17,7 +17,7 @@ export const shiftInvites = pgTable(
       .notNull(),
     status: shiftInviteStatusEnum('status')
       .notNull()
-      .default(ShiftInviteStatus.INVITED),
+      .default(ShiftInviteStatus.ADMIN_INVITED),
     ...timestampColumns,
   },
   (table) => [

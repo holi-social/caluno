@@ -525,13 +525,11 @@ type ShiftFixture = {
   instructions?: string;
   location?: string;
   imageUrl?: string;
-  /** Invites inserted with this status instead of ACCEPTED (does not count toward capacity). */
+  /** Invites inserted with this status instead of JOINED (does not count toward capacity). */
   pendingInviteUserIds?: string[];
   /**
-   * Invites at explicit statuses (e.g. VOLUNTEER_REJECTED, CANCELLED,
-   * SELF_JOINED), seeded to every instance. Lets fixtures cover the full invite
-   * lifecycle beyond ACCEPTED/INVITED. Only participating statuses
-   * (ACCEPTED/SELF_JOINED) count toward capacity.
+   * Invites at explicit statuses (e.g. VOLUNTEER_REJECTED, VOLUNTEER_CANCELLED,
+   * WAITLIST_JOINED), seeded to every instance. Only JOINED counts toward capacity.
    */
   extraInvites?: Array<{ userIds: string[]; status: ShiftInviteStatus }>;
 };
@@ -626,7 +624,7 @@ const ensureShiftWithInvites = async (
         shift.inviteUserIds.map((userId) => ({
           instanceId: instance.id,
           userId,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         })),
       ),
     );
@@ -638,7 +636,7 @@ const ensureShiftWithInvites = async (
         (shift.pendingInviteUserIds ?? []).map((userId) => ({
           instanceId: instance.id,
           userId,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         })),
       ),
     );
@@ -1650,7 +1648,7 @@ async function seedFixtures() {
     await db.insert(schema.eventInvites).values({
       eventId: showcaseEvent.id,
       userId: demoUser.id,
-      status: EventInviteStatus.ACCEPTED,
+      status: EventInviteStatus.JOINED,
     });
   }
 
@@ -1850,10 +1848,10 @@ async function seedFixtures() {
     pendingInviteUserIds: [demoUser.id],
   });
 
-  // Terminal invite states. ACCEPTED and SELF_JOINED surface under "Your
-  // shifts"; VOLUNTEER_REJECTED and CANCELLED are filtered off home but remain
+  // Terminal invite states. JOINED surfaces under "Your shifts";
+  // VOLUNTEER_REJECTED and VOLUNTEER_CANCELLED are filtered off home but remain
   // reachable at their shift-detail URL (logged in the fixtures summary) to
-  // demo the accepted/declined/cancelled detail states directly.
+  // demo the joined/declined/cancelled detail states directly.
   const acceptedDay = discoverDay(5);
   const acceptedInvite = await ensureShiftWithInvites(
     db,
@@ -1924,7 +1922,10 @@ async function seedFixtures() {
       location: 'Exhibition Hall B',
       inviteUserIds: [],
       extraInvites: [
-        { userIds: [demoUser.id], status: ShiftInviteStatus.CANCELLED },
+        {
+          userIds: [demoUser.id],
+          status: ShiftInviteStatus.VOLUNTEER_CANCELLED,
+        },
       ],
     },
   );
@@ -1949,7 +1950,7 @@ async function seedFixtures() {
       location: 'Community Garden',
       inviteUserIds: [],
       extraInvites: [
-        { userIds: [demoUser.id], status: ShiftInviteStatus.SELF_JOINED },
+        { userIds: [demoUser.id], status: ShiftInviteStatus.JOINED },
       ],
     },
   );
@@ -2081,7 +2082,7 @@ async function seedFixtures() {
       `  accepted → /shifts/${acceptedInvite.shiftId} (Accepted badge + Cancel)`,
       `  declined → /shifts/${declinedInvite.shiftId} (VOLUNTEER_REJECTED)`,
       `  cancelled → /shifts/${cancelledInvite.shiftId} (CANCELLED, post-withdrawal)`,
-      `  self-joined → /shifts/${selfJoinedShift.shiftId} (SELF_JOINED, no Cancel)`,
+      `  joined → /shifts/${selfJoinedShift.shiftId} (JOINED)`,
     ].join('\n'),
   );
 
