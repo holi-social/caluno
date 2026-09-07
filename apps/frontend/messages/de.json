@@ -1201,6 +1201,10 @@
         "updateFailedToast": "Erforderliche Formulare konnten nicht aktualisiert werden"
       },
       "statusLabel": "Status",
+      "urgentCallLabel": "Dringender Aufruf",
+      "urgentCallNotified": "{count, plural, one {# Freiwillige:r benachrichtigt} other {# Freiwillige benachrichtigt}}",
+      "urgentCallSentByDate": "am {date}",
+      "urgentCallSentByPrefix": "Gesendet von",
       "visibilityLabel": "Sichtbarkeit"
     },
     "editInstanceForm": {
@@ -1242,6 +1246,16 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
+      "callOutAria": "Dringender Aufruf",
+      "callOutCta": "Dringender Aufruf",
+      "callOutDialog": {
+        "confirm": "Dringender Aufruf",
+        "description": "Dies sendet einen dringenden Aufruf an alle, die für diesen Einsatz infrage kommen, und bittet sie mitzumachen. Niemand wird dadurch in den Einsatzplan eingetragen.",
+        "error": "Der dringende Aufruf konnte nicht gesendet werden. {error}",
+        "noRecipients": "Niemand war mehr zu fragen — wir haben stattdessen dir eine E-Mail geschickt.",
+        "success": "Dringender Aufruf an {count, plural, one {# Person} other {# Personen}} gesendet.",
+        "title": "Dringenden Aufruf senden?"
+      },
       "deleteAria": "Löschen",
       "deleteDialog": {
         "description": "Dieser Einsatztermin ist Teil einer Serie. Wähle aus, ob nur diesen Termin oder alle kommenden Termine gelöscht werden sollen.",
