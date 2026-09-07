@@ -1091,7 +1091,7 @@ export class ShiftService {
   }
 
   /**
-   * Creates a single INVITED invite for one volunteer, without touching any
+   * Creates a single ADMIN_INVITED invite for one volunteer, without touching any
    * other invite on the instance — unlike `updateMembersForShiftInstance`,
    * which replaces the whole member list. Used by the check-in flow's
    * "invite to shift" blocker action.

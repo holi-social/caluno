@@ -18,7 +18,7 @@ export const createShiftInstanceInvite = async (
     .values({
       instanceId: args.instanceId,
       userId: args.userId,
-      status: args.status ?? ShiftInviteStatus.INVITED,
+      status: args.status ?? ShiftInviteStatus.ADMIN_INVITED,
     })
     .returning();
 
