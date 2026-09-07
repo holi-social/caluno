@@ -158,13 +158,13 @@ describe('checkInReadiness query', () => {
     expect(data.checkInReadiness.openMembershipRequestId).toBe(request.id);
   });
 
-  it('reports participating for a member with an ACCEPTED invite', async () => {
+  it('reports participating for a member with a JOINED invite', async () => {
     const volunteer = await createUser(db);
     await addMembership(db, volunteer.id, unitId);
     await createShiftInstanceInvite(db, {
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      status: ShiftInviteStatus.JOINED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -186,18 +186,18 @@ describe('checkInReadiness query', () => {
     expect(data.checkInReadiness).toEqual({
       isMember: true,
       openMembershipRequestId: null,
-      shiftInviteStatus: 'ACCEPTED',
+      shiftInviteStatus: 'JOINED',
       isParticipating: true,
     });
   });
 
-  it('reports not participating for a member with only an INVITED (not accepted) invite', async () => {
+  it('reports not participating for a member with only an ADMIN_INVITED (not joined) invite', async () => {
     const volunteer = await createUser(db);
     await addMembership(db, volunteer.id, unitId);
     await createShiftInstanceInvite(db, {
       instanceId,
       userId: volunteer.id,
-      status: ShiftInviteStatus.INVITED,
+      status: ShiftInviteStatus.ADMIN_INVITED,
     });
 
     const data = await graphqlRequestRequiringData<{
@@ -216,7 +216,7 @@ describe('checkInReadiness query', () => {
     );
 
     expect(data.checkInReadiness.isParticipating).toBe(false);
-    expect(data.checkInReadiness.shiftInviteStatus).toBe('INVITED');
+    expect(data.checkInReadiness.shiftInviteStatus).toBe('ADMIN_INVITED');
   });
 });
 
@@ -661,14 +661,14 @@ describe('checkInInviteToShiftInstance mutation', () => {
     setAuthMockUserId(callerUserId);
   });
 
-  it('creates an INVITED invite and leaves other invites on the instance intact', async () => {
+  it('creates an ADMIN_INVITED invite and leaves other invites on the instance intact', async () => {
     const shift = await createShift(db, { organizationUnitId: unitId });
     const instance = await createShiftInstance(db, shift.id);
     const alreadyInvited = await createUser(db);
     await createShiftInstanceInvite(db, {
       instanceId: instance.id,
       userId: alreadyInvited.id,
-      status: ShiftInviteStatus.ACCEPTED,
+      status: ShiftInviteStatus.JOINED,
     });
     const volunteer = await createUser(db);
 
@@ -687,8 +687,8 @@ describe('checkInInviteToShiftInstance mutation', () => {
     });
     const byUserId = new Map(invites.map((i) => [i.userId, i.status]));
 
-    expect(byUserId.get(volunteer.id)).toBe(ShiftInviteStatus.INVITED);
-    expect(byUserId.get(alreadyInvited.id)).toBe(ShiftInviteStatus.ACCEPTED);
+    expect(byUserId.get(volunteer.id)).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    expect(byUserId.get(alreadyInvited.id)).toBe(ShiftInviteStatus.JOINED);
   });
 
   it('rejects a shift instance that belongs to a different org unit', async () => {
