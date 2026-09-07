@@ -464,10 +464,13 @@ export class TimeTrackingService {
     hasOpenTimeEntry: boolean;
   }> {
     // Scoped lookup throws NotFound for foreign/missing instances.
-    await this.shiftService.findInstanceById(
-      shiftInstanceId,
-      organizationUnitId,
-    );
+    // No instance in without-shift mode: there is nothing to scope against.
+    if (shiftInstanceId) {
+      await this.shiftService.findInstanceById(
+        shiftInstanceId,
+        organizationUnitId,
+      );
+    }
 
     const [isMember, pendingRequest, inviteStatuses, hasOpenTimeEntry] =
       await Promise.all([
