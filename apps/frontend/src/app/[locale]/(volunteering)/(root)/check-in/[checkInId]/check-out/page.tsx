@@ -6,33 +6,34 @@ import { UserCard } from '@/components/user-card';
 import { CheckOutButton } from '@/domain/shift/components/checkout-button';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
-import { requireOrgAccess } from '@/lib/org-context-server';
 
-interface CheckOutPageProps {
-  params: Promise<{ orgUId: string; checkInId: string }>;
+interface VolunteeringCheckOutPageProps {
+  params: Promise<{ checkInId: string }>;
+  searchParams: Promise<{ entryId?: string }>;
 }
 
-export default async function CheckOutPage({ params }: CheckOutPageProps) {
-  const { orgUId, checkInId } = await params;
+export default async function VolunteeringCheckOutPage({
+  params,
+  searchParams,
+}: VolunteeringCheckOutPageProps) {
+  const { checkInId } = await params;
+  const { entryId } = await searchParams;
 
-  await requireOrgAccess(orgUId);
-  const data = await getDataClient({ orgUId });
-  const user = await data.user.findByCheckInId(checkInId);
+  const data = await getDataClient();
+  const context = await data.timeEntry.getCheckInContext(checkInId);
 
-  const t = await getTranslations('Shift.checkIn');
-  const { formatDateTime } = await getFormatting();
-
-  if (!user) {
+  if (!context) {
     notFound();
   }
 
-  const timeEntries = await data.timeEntry.findByUser(user.id);
-  const openTimeEntries = timeEntries.items.filter((entry) => !entry.endedAt);
-  const entry = openTimeEntries[0];
+  const entry = context.openTimeEntries.find((item) => item.id === entryId);
 
   if (!entry) {
     notFound();
   }
+
+  const t = await getTranslations('Shift.checkIn');
+  const { formatDateTime } = await getFormatting();
 
   return (
     <div className="max-w-2xl">
@@ -67,11 +68,11 @@ export default async function CheckOutPage({ params }: CheckOutPageProps) {
             </CardContent>
           </Card>
 
-          <UserCard user={user} size="lg" />
+          <UserCard user={context.volunteer} size="lg" />
 
           <div className="mt-2 fixed bottom-0 left-4 right-4 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))] md:static md:w-full">
             <CheckOutButton
-              organizationUnitId={orgUId}
+              organizationUnitId={entry.organizationUnit.id}
               timeEntryId={entry.id}
             />
           </div>

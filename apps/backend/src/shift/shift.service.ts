@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { and, count, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
+import { ReimbursementTypeKey } from '../accounting/enums';
 import { AccountingOrgAccessService } from '../accounting/services/accounting-org-access.service';
 import { AuthService } from '../auth/auth.service';
 import { PERMISSIONS } from '../auth/constants';
@@ -1088,6 +1089,83 @@ export class ShiftService {
     }));
 
     await this.createInvitesForInstances(tx, [shiftInstance.id], members);
+  }
+
+  /**
+   * Creates a single ADMIN_INVITED invite for one volunteer, without touching any
+   * other invite on the instance — unlike `updateMembersForShiftInstance`,
+   * which replaces the whole member list. Used by the check-in flow's
+   * "invite to shift" blocker action. Re-inviting resurrects an inactive
+   * (REJECTED/CANCELLED) row like `updateMembersForShiftInstance` does; the
+   * invite notification only goes out when the invite actually changes.
+   */
+  async inviteVolunteerToShiftInstance(
+    shiftInstanceId: string,
+    volunteerId: string,
+    organizationUnitId: string,
+  ): Promise<ShiftInstanceEntity> {
+    const instance = await this.db.query.shiftInstances.findFirst({
+      where: {
+        id: shiftInstanceId,
+        master: { organizationUnitId, isDeleted: false },
+        isCancelled: false,
+      },
+      with: {
+        invites: { columns: { userId: true, status: true } },
+        master: true,
+      },
+    });
+    if (!instance) {
+      throw new NotFoundGraphQLError(
+        `Shift instance with ID ${shiftInstanceId} not found`,
+      );
+    }
+
+    const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
+      volunteerId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      throw new ForbiddenGraphQLError('Volunteer is not a member of this unit');
+    }
+
+    const existingStatus = instance.invites.find(
+      (invite) => invite.userId === volunteerId,
+    )?.status as ShiftInviteStatus | undefined;
+    const hasActiveInvite =
+      existingStatus != null &&
+      ACTIVE_SHIFT_INVITE_STATUSES.includes(existingStatus);
+
+    await this.db.transaction(async (tx) => {
+      await this.inviteMembersToShiftInstance(
+        tx,
+        instance,
+        [volunteerId],
+        ShiftInviteStatus.ADMIN_INVITED,
+      );
+      if (existingStatus != null && !hasActiveInvite) {
+        // The insert above no-ops on conflict; resurrect the inactive row.
+        await tx
+          .update(schema.shiftInstanceInvites)
+          .set({ status: ShiftInviteStatus.ADMIN_INVITED })
+          .where(
+            and(
+              eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+              eq(schema.shiftInstanceInvites.userId, volunteerId),
+            ),
+          );
+      }
+    });
+
+    if (!hasActiveInvite) {
+      void this.loadAndEmitShiftInstanceInvitedNotification(
+        instance.master,
+        instance,
+        [volunteerId],
+      );
+    }
+
+    return instance;
   }
 
   async uninviteMembersFromShiftInstance(
@@ -2528,7 +2606,7 @@ export class ShiftService {
     });
   }
 
-  async findShiftsForWeek(
+  async findInstancesForOrgUnitInRange(
     organizationUnitId: string,
     startsAfter: Date | null,
     endsBefore: Date | null,
@@ -2561,8 +2639,46 @@ export class ShiftService {
     });
   }
 
+  /**
+   * Shifts in the org unit whose title matches `search`. Used by the check-in
+   * shift picker, which searches shift names rather than instances — so this
+   * takes no date range.
+   */
+  async findShiftsByTitle(
+    organizationUnitId: string,
+    search: string | null,
+    limit = 20,
+  ): Promise<ShiftEntity[]> {
+    return this.db.query.shifts.findMany({
+      where: {
+        organizationUnitId,
+        isDeleted: false,
+        ...(search ? { title: { ilike: `%${search}%` } } : {}),
+      },
+      orderBy: { title: 'asc' },
+      limit,
+    });
+  }
+
   async findCreator(createdById: string): Promise<UserEntity> {
     return this.userService.findByIdOrThrow(createdById);
+  }
+
+  /**
+   * Batch-resolve reimbursement type keys by id. Volunteer-facing surfaces
+   * only ever need the Pauschalentyp (EHRENAMT/UEBUNGSLEITER), never the
+   * rate/limit amounts, so this intentionally returns just the key.
+   */
+  async findReimbursementTypeKeysByIds(
+    ids: string[],
+  ): Promise<{ id: string; key: ReimbursementTypeKey }[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    return this.db.query.reimbursementTypes.findMany({
+      where: { id: { in: ids } },
+      columns: { id: true, key: true },
+    });
   }
 
   private async loadAndEmitShiftInstanceInvitedNotification(
