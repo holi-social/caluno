@@ -12,4 +12,5 @@ export {
   cancelShiftInstance,
   createShiftInstance,
 } from './shift-instance.factory';
+export { createShiftInstanceInvite } from './shift-instance-invite.factory';
 export { createUser } from './user.factory';

@@ -1,15 +1,12 @@
 'use server';
 
-import type {
-  AddTimeEntryInput,
-  CloseTimeEntryInput,
-  UpdateTimeEntryInput,
-} from '@repo/data';
+import type { AddTimeEntryInput, UpdateTimeEntryInput } from '@repo/data';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
 import {
-  serverCloseTimeEntrySchema,
+  serverCheckInVolunteerSchema,
+  serverCheckOutVolunteerSchema,
   serverDeleteTimeEntrySchema,
   serverTimeEntrySchema,
 } from './schemas';
@@ -31,21 +28,6 @@ export const createTimeEntry = actionClient
     };
 
     return await data.timeEntry.add(input);
-  });
-
-export const closeTimeEntry = actionClient
-  .inputSchema(serverCloseTimeEntrySchema)
-  .action(async ({ parsedInput }) => {
-    const data = await getDataClient({
-      orgUId: parsedInput.organizationUnitId,
-    });
-
-    const input: CloseTimeEntryInput = {
-      endedAt: parsedInput.endedAt.toISOString(),
-      notes: parsedInput.notes,
-    };
-
-    return await data.timeEntry.close(parsedInput.id, input);
   });
 
 export const updateTimeEntry = actionClient
@@ -74,4 +56,26 @@ export const deleteTimeEntry = actionClient
       orgUId: parsedInput.organizationUnitId,
     });
     return await data.timeEntry.delete(parsedInput.id);
+  });
+
+export const checkInVolunteer = actionClient
+  .inputSchema(serverCheckInVolunteerSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+
+    return await data.timeEntry.checkInVolunteer(
+      parsedInput.volunteerId,
+      parsedInput.shiftInstanceId,
+    );
+  });
+
+export const checkOutVolunteer = actionClient
+  .inputSchema(serverCheckOutVolunteerSchema)
+  .action(async ({ parsedInput }) => {
+    const data = await getDataClient({
+      orgUId: parsedInput.organizationUnitId,
+    });
+    return await data.timeEntry.checkOutVolunteer(parsedInput.timeEntryId);
   });

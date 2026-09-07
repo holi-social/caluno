@@ -1,78 +1,58 @@
 'use client';
 
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  InputGroupAddon,
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  cn,
 } from '@repo/ui';
-import { ScanQrCode, User } from 'lucide-react';
+import { UserCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/navigation';
 
 type Volunteer = {
   checkInId: string;
   name: string;
 };
 
-/** Base UI combobox item shape — the input shows `label` (the name), `value` keeps the check-in id. */
-type VolunteerOption = {
-  value: string;
-  label: string;
-};
-
-type VolunteerCheckinProps = {
-  organizationUnitId: string;
+type CheckInSelectorProps = {
   volunteers: Volunteer[];
-  /**
-   * Portal target for the combobox popup. Pass the dialog content element when
-   * rendered inside a Radix Dialog — otherwise the popup lands on `<body>`,
-   * outside the dialog's pointer-events/scroll-lock shard, and is unclickable.
-   */
-  portalContainer?: HTMLElement | null;
+  selectedCheckInId: string | null;
+  onSelectedCheckInIdChange: (checkInId: string) => void;
 };
 
 export const CheckInSelector = ({
   volunteers,
-  organizationUnitId,
-  portalContainer,
-}: VolunteerCheckinProps) => {
-  const router = useRouter();
-  const t = useTranslations('Shift');
-
-  const handleCheckin = (option: VolunteerOption | null) => {
-    if (option?.value)
-      router.push(
-        `/admin/${organizationUnitId}/check-in/${option.value}/decide`,
-      );
-  };
+  selectedCheckInId,
+  onSelectedCheckInIdChange,
+}: CheckInSelectorProps) => {
+  const t = useTranslations('CheckIn');
 
   return (
-    <Combobox
-      items={volunteers.map((v) => ({ value: v.checkInId, label: v.name }))}
-      onValueChange={handleCheckin}
-    >
-      <ComboboxInput
-        placeholder={t('checkInSelector.placeholder')}
-        className="w-full max-w-72"
-      >
-        <InputGroupAddon>
-          <User />
-        </InputGroupAddon>
-      </ComboboxInput>
-      <ComboboxContent container={portalContainer}>
-        <ComboboxEmpty>{t('checkInSelector.empty')}</ComboboxEmpty>
-        <ComboboxList>
-          {(option: VolunteerOption) => (
-            <ComboboxItem key={option.value} value={option}>
-              {option.label} <ScanQrCode />
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
+    <Command forceShowInput className="flex min-h-0 flex-1 flex-col">
+      <CommandInput placeholder={t('searchVolunteerPlaceholder')} />
+      <CommandList className="max-h-none flex-1">
+        <CommandEmpty>{t('noVolunteersFound')}</CommandEmpty>
+        {volunteers.map((volunteer) => {
+          const isSelected = selectedCheckInId === volunteer.checkInId;
+
+          return (
+            <CommandItem
+              key={volunteer.checkInId}
+              value={volunteer.name}
+              onSelect={() => onSelectedCheckInIdChange(volunteer.checkInId)}
+              className={cn(
+                'cursor-pointer justify-between',
+                isSelected && 'bg-accent text-accent-foreground',
+              )}
+            >
+              {volunteer.name}
+              {isSelected && <UserCheck />}
+            </CommandItem>
+          );
+        })}
+      </CommandList>
+    </Command>
   );
 };
