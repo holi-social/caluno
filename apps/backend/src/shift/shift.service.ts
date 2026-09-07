@@ -62,7 +62,10 @@ import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
 import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-propagation';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
-import { getDurationMinutes } from './utils/duration';
+import {
+  getDurationMinutes,
+  isValidShiftDurationMinutes,
+} from './utils/duration';
 import { parseRruleDays, parseRruleUntil } from './utils/parse-rrule';
 import { expandShift } from './utils/rrule-expander';
 import { localDateKey, syncShiftInstances } from './utils/shift-instance-sync';
@@ -599,19 +602,19 @@ export class ShiftService {
     includePast: boolean = true,
   ): Record<string, unknown> {
     const condition: Record<string, unknown> = {};
+    const actualStartsAt: { gte?: Date; lt?: Date } = {};
     if (startsAfter) {
-      condition.actualStartsAt = { gte: startsAfter };
-    }
-
-    const actualEndsAt: { gte?: Date; lt?: Date } = {};
-    if (!includePast) {
-      actualEndsAt.gte = new Date();
+      actualStartsAt.gte = startsAfter;
     }
     if (endsBefore) {
-      actualEndsAt.lt = endsBefore;
+      actualStartsAt.lt = endsBefore;
     }
-    if (actualEndsAt.gte || actualEndsAt.lt) {
-      condition.actualEndsAt = actualEndsAt;
+    if (actualStartsAt.gte || actualStartsAt.lt) {
+      condition.actualStartsAt = actualStartsAt;
+    }
+
+    if (!includePast) {
+      condition.actualEndsAt = { gte: new Date() };
     }
 
     return condition;
@@ -839,6 +842,14 @@ export class ShiftService {
       .map(([id]) => id);
   }
 
+  private requireValidDuration(start: Date, end: Date): number {
+    const durationMinutes = getDurationMinutes(start, end);
+    if (!isValidShiftDurationMinutes(durationMinutes)) {
+      throw new BadRequestGraphQLError('shift_duration_out_of_range');
+    }
+    return durationMinutes;
+  }
+
   private async assertShiftWindowValid(
     startsAt: Date,
     endsAt: Date,
@@ -871,7 +882,7 @@ export class ShiftService {
       requiredFormIds,
       ...shiftInput
     } = input;
-    const durationMinutes = getDurationMinutes(
+    const durationMinutes = this.requireValidDuration(
       shiftInput.startsAt,
       shiftInput.endsAt,
     );
@@ -1510,6 +1521,8 @@ export class ShiftService {
     instance: ShiftInstanceEntity & { master: ShiftEntity },
     input: UpdateShiftInstanceInput,
   ): Promise<ShiftInstanceEntity> {
+    this.requireValidDuration(input.startsAt, input.endsAt);
+
     const startsAtChanged =
       input.startsAt.getTime() !== instance.actualStartsAt.getTime();
 
@@ -1591,7 +1604,10 @@ export class ShiftService {
       throw new ConflictGraphQLError('shift_instance_date_mismatch');
     }
 
-    const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
+    const durationMinutes = this.requireValidDuration(
+      input.startsAt,
+      input.endsAt,
+    );
     const newOriginalStartsAt = this.applyTimeOfDay(
       shift.originalStartsAt,
       input.startsAt,
@@ -1733,7 +1749,6 @@ export class ShiftService {
         );
     } else {
       const startTime = this.toTimeOfDayString(input.startsAt);
-      const endTime = this.toTimeOfDayString(input.endsAt);
 
       await tx
         .update(schema.shiftInstances)
@@ -1746,7 +1761,7 @@ export class ShiftService {
           overrideReimbursementTypeId: null,
           isException: false,
           actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
-          actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
+          actualEndsAt: sql`(date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval) + (${durationMinutes}::int * interval '1 minute')`,
         })
         .where(
           and(
@@ -2306,7 +2321,7 @@ export class ShiftService {
       if (hasValuesToUpdate) {
         const durationMinutes =
           input.endsAt && input.startsAt
-            ? getDurationMinutes(input.startsAt, input.endsAt)
+            ? this.requireValidDuration(input.startsAt, input.endsAt)
             : undefined;
 
         const imageUrl =
