@@ -56,6 +56,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      reimbursementTypeId
       requiredFormsCount
       createdBy {
         id
@@ -371,6 +372,7 @@ query GetWeeklyShifts(
     isCancelled
     overrideMinVolunteers
     overrideMaxVolunteers
+    overrideReimbursementTypeId
     master {
       id
       title
@@ -378,6 +380,7 @@ query GetWeeklyShifts(
       maxVolunteers
       visibility
       rrule
+      reimbursementTypeId
     }
     volunteers {
       id
