@@ -3,7 +3,7 @@
  * priority order: an open time entry for the selected instance wins over
  * everything (the check-in already happened), then membership blocks before
  * participation, and a pending request is distinguished from no request at
- * all.
+ * all. Without a shift, only the membership rung of that ladder applies.
  */
 
 export type CheckInReadinessState =
@@ -20,16 +20,24 @@ export type CheckInReadinessFacts = {
   isParticipating: boolean;
 };
 
+/**
+ * `requiresShift: false` is the check-in-without-shift mode: there is no
+ * instance to be a participant of and none to already be checked into, so the
+ * two shift-scoped states drop out and only the membership gate remains.
+ */
 export function resolveCheckInReadiness(
   facts: CheckInReadinessFacts,
+  options?: { requiresShift?: boolean },
 ): CheckInReadinessState {
-  if (facts.hasOpenTimeEntry) {
+  const requiresShift = options?.requiresShift ?? true;
+
+  if (requiresShift && facts.hasOpenTimeEntry) {
     return 'alreadyCheckedIn';
   }
   if (!facts.isMember) {
     return facts.openMembershipRequestId ? 'pendingMembership' : 'notMember';
   }
-  if (!facts.isParticipating) {
+  if (requiresShift && !facts.isParticipating) {
     return 'notInShift';
   }
   return 'ready';
