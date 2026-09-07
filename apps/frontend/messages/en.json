@@ -1201,6 +1201,10 @@
         "updateFailedToast": "Failed to update required forms"
       },
       "statusLabel": "Status",
+      "urgentCallLabel": "Urgent Call",
+      "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
+      "urgentCallSentByDate": "on {date}",
+      "urgentCallSentByPrefix": "Sent by",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1231,6 +1235,10 @@
       "noRecurrence": "No recurrence",
       "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
       "openShiftLabel": "Open shift",
+      "recurrenceEndDatePlaceholder": "Pick a date",
+      "recurrenceEnds": "End of series",
+      "recurrenceEndsNever": "Never",
+      "recurrenceEndsOn": "On",
       "reimbursementTypeDescription": "Volunteer time on this shift will be eligible for a timesheet under this Pauschale",
       "reimbursementTypeLabel": "Reimbursable Pauschale",
       "reimbursementTypeNone": "Not reimbursable",
@@ -1238,6 +1246,16 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
+      "callOutAria": "Urgent Call",
+      "callOutCta": "Urgent Call",
+      "callOutDialog": {
+        "confirm": "Urgent Call",
+        "description": "This sends an urgent call to everyone eligible to help with this shift, asking them to join. It won't add anyone to the roster.",
+        "error": "Failed to send the urgent call. {error}",
+        "noRecipients": "Nobody was left to ask — we've emailed you instead.",
+        "success": "Urgent call sent to {count, plural, one {# volunteer} other {# volunteers}}.",
+        "title": "Send an urgent call?"
+      },
       "deleteAria": "Delete",
       "deleteDialog": {
         "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
@@ -1301,6 +1319,7 @@
       "joining": "Joining...",
       "keepShift": "Keep shift",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
+      "pendingApproval": "Waiting for approval",
       "pendingCta": "Request pending",
       "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
       "reenter": "Re-enter shift",
@@ -1309,7 +1328,8 @@
       "requestSent": "Request sent",
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
-      "unexpected": "Unexpected response from server"
+      "unexpected": "Unexpected response from server",
+      "waitlisted": "On waitlist"
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
@@ -1414,6 +1434,8 @@
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
       "nameRequired": "Name is required",
       "organizationUnitRequired": "Organization unit is required",
+      "recurrenceEndBeforeStart": "End date cannot be before the start date",
+      "recurrenceEndRequired": "End date is required",
       "shiftIdRequired": "Shift ID is required",
       "startTimeRequired": "Start time is required",
       "windowViolation": "Must fall within the event window"

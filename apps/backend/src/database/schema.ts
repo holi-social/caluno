@@ -42,6 +42,7 @@ export * from '../requirement-profile/schemas/requirement-profile-submission.sch
 export * from '../requirement-profile/schemas/user-profile.schema';
 export * from '../shared/observability/schemas/posthog-distinct-secret.schema';
 export * from '../shift/schemas/shift.schema';
+export * from '../shift/schemas/shift-call-out-recipient.schema';
 export * from '../shift/schemas/shift-instance.schema';
 export * from '../shift/schemas/shift-instance-invite.schema';
 export * from '../shift/schemas/shift-instance-required-form.schema';

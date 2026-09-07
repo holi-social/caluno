@@ -9,11 +9,13 @@ import {
   type GetAvailableShiftInstancesQuery,
   type GetMyShiftInstancesQuery,
   type GetPublicShiftInstancesQuery,
+  type GetShiftInstanceCallOutSummaryQuery,
   type GetShiftInstanceQuery,
   type GetShiftInstancesQuery,
   type GetShiftQuery,
   type GetWeeklyShiftsQuery,
   type JoinShiftInstanceMutation,
+  type SendShiftInstanceCallOutMutation,
   type SetShiftInstanceRequiredFormsMutation,
   type SetShiftRequiredFormsMutation,
   type ShiftInviteStatus,
@@ -203,6 +205,24 @@ export class ShiftRepository extends BaseRepository {
   async findInstance(id: string) {
     const data = await this.sdk.GetShiftInstance({ id });
     return data.shiftInstance;
+  }
+
+  async findLastCallOutSummary(
+    id: string,
+  ): Promise<
+    NonNullable<
+      GetShiftInstanceCallOutSummaryQuery['shiftInstance']
+    >['lastCallOut']
+  > {
+    const data = await this.sdk.GetShiftInstanceCallOutSummary({ id });
+    return data.shiftInstance.lastCallOut ?? null;
+  }
+
+  async sendCallOut(
+    instanceId: string,
+  ): Promise<SendShiftInstanceCallOutMutation['sendShiftInstanceCallOut']> {
+    const data = await this.sdk.SendShiftInstanceCallOut({ instanceId });
+    return data.sendShiftInstanceCallOut;
   }
 
   async updateShiftInstanceInviteStatus(

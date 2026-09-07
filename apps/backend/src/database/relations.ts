@@ -7,6 +7,7 @@ import { membershipRequestRelations } from '../membership/schemas/membership-req
 import { organizationRelations } from '../organization/schemas/organization.relations';
 import { requirementProfilesRelations } from '../requirement-profile/schemas/requirement-profiles.relations';
 import { shiftsRelations } from '../shift/schemas/shift.relations';
+import { shiftCallOutRecipientsRelations } from '../shift/schemas/shift-call-out-recipient.relations';
 import { shiftInstancesRelations } from '../shift/schemas/shift-instance.relations';
 import { shiftInstanceInvitesRelations } from '../shift/schemas/shift-instance-invite.relations';
 import { shiftInvitesRelations } from '../shift/schemas/shift-invite.relations';
@@ -24,6 +25,7 @@ export const relations = {
   ...organizationRelations,
   ...requirementProfilesRelations,
   ...shiftsRelations,
+  ...shiftCallOutRecipientsRelations,
   ...shiftInstancesRelations,
   ...shiftInstanceInvitesRelations,
   ...shiftInvitesRelations,

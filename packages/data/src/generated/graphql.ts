@@ -126,6 +126,7 @@ export type CreateEventInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   endsAt: Scalars['DateTime']['input'];
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   logoFileId?: InputMaybe<Scalars['String']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -246,6 +247,7 @@ export type CreateShiftInput = {
   imageFileId?: InputMaybe<Scalars['String']['input']>;
   instructions?: InputMaybe<Scalars['String']['input']>;
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;
@@ -312,6 +314,7 @@ export type Event = {
   endsAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   isDeleted: Scalars['Boolean']['output'];
+  joinRequiresApproval: Scalars['Boolean']['output'];
   location?: Maybe<Scalars['String']['output']>;
   logoUrl?: Maybe<Scalars['String']['output']>;
   myInvitedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -340,12 +343,13 @@ export type EventInvite = {
 };
 
 export enum EventInviteStatus {
-  Accepted = 'ACCEPTED',
+  AdminInvited = 'ADMIN_INVITED',
   AdminRejected = 'ADMIN_REJECTED',
-  Cancelled = 'CANCELLED',
-  Invited = 'INVITED',
-  SelfJoined = 'SELF_JOINED',
-  VolunteerRejected = 'VOLUNTEER_REJECTED'
+  AwaitingAdminApproval = 'AWAITING_ADMIN_APPROVAL',
+  Joined = 'JOINED',
+  VolunteerCancelled = 'VOLUNTEER_CANCELLED',
+  VolunteerRejected = 'VOLUNTEER_REJECTED',
+  WaitlistJoined = 'WAITLIST_JOINED'
 }
 
 export type EventOrganizationUnit = {
@@ -686,6 +690,7 @@ export type Mutation = {
   rejectMembershipRequest: MembershipRequest;
   removeMembership: Membership;
   removeMembershipRequest: MembershipRequest;
+  sendShiftInstanceCallOut: ShiftInstanceCallOutResult;
   setEventRequiredForms: Array<RequiredFormRef>;
   setManualBaseline: ManualBaseline;
   setReimbursementRate: ReimbursementRate;
@@ -961,6 +966,11 @@ export type MutationRemoveMembershipArgs = {
 
 export type MutationRemoveMembershipRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSendShiftInstanceCallOutArgs = {
+  instanceId: Scalars['String']['input'];
 };
 
 
@@ -2177,6 +2187,7 @@ export type Shift = {
   instances: Array<ShiftInstance>;
   instructions?: Maybe<Scalars['String']['output']>;
   isDeleted: Scalars['Boolean']['output'];
+  joinRequiresApproval: Scalars['Boolean']['output'];
   location?: Maybe<Scalars['String']['output']>;
   maxVolunteers?: Maybe<Scalars['Int']['output']>;
   minVolunteers?: Maybe<Scalars['Int']['output']>;
@@ -2205,6 +2216,7 @@ export type ShiftInstance = {
   isCheckedIn: Scalars['Boolean']['output'];
   isException: Scalars['Boolean']['output'];
   isIntendingToJoin: Scalars['Boolean']['output'];
+  lastCallOut?: Maybe<ShiftInstanceCallOutSummary>;
   master: Shift;
   masterId: Scalars['ID']['output'];
   myInviteStatus?: Maybe<ShiftInviteStatus>;
@@ -2230,6 +2242,19 @@ export type ShiftInstanceInviteArgs = {
 
 export type ShiftInstanceInvitesArgs = {
   statuses?: InputMaybe<Array<ShiftInviteStatus>>;
+};
+
+export type ShiftInstanceCallOutResult = {
+  __typename?: 'ShiftInstanceCallOutResult';
+  recipientCount: Scalars['Int']['output'];
+  sentToManagerFallback: Scalars['Boolean']['output'];
+};
+
+export type ShiftInstanceCallOutSummary = {
+  __typename?: 'ShiftInstanceCallOutSummary';
+  recipientCount: Scalars['Int']['output'];
+  sentAt: Scalars['DateTime']['output'];
+  sentBy: User;
 };
 
 export type ShiftInstanceInvite = {
@@ -2264,12 +2289,13 @@ export type ShiftInvite = {
 };
 
 export enum ShiftInviteStatus {
-  Accepted = 'ACCEPTED',
+  AdminInvited = 'ADMIN_INVITED',
   AdminRejected = 'ADMIN_REJECTED',
-  Cancelled = 'CANCELLED',
-  Invited = 'INVITED',
-  SelfJoined = 'SELF_JOINED',
-  VolunteerRejected = 'VOLUNTEER_REJECTED'
+  AwaitingAdminApproval = 'AWAITING_ADMIN_APPROVAL',
+  Joined = 'JOINED',
+  VolunteerCancelled = 'VOLUNTEER_CANCELLED',
+  VolunteerRejected = 'VOLUNTEER_REJECTED',
+  WaitlistJoined = 'WAITLIST_JOINED'
 }
 
 export type ShiftPaginatedResponse = {
@@ -2337,6 +2363,7 @@ export type UpdateEventInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   endsAt?: InputMaybe<Scalars['DateTime']['input']>;
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   logoFileId?: InputMaybe<Scalars['String']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2439,6 +2466,7 @@ export type UpdateShiftInput = {
   imageFileId?: InputMaybe<Scalars['String']['input']>;
   instructions?: InputMaybe<Scalars['String']['input']>;
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;
@@ -3554,6 +3582,20 @@ export type UpdateShiftInstanceInviteStatusMutationVariables = Exact<{
 
 
 export type UpdateShiftInstanceInviteStatusMutation = { __typename?: 'Mutation', updateShiftInstanceInviteStatus: { __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, userId: string } };
+
+export type SendShiftInstanceCallOutMutationVariables = Exact<{
+  instanceId: Scalars['String']['input'];
+}>;
+
+
+export type SendShiftInstanceCallOutMutation = { __typename?: 'Mutation', sendShiftInstanceCallOut: { __typename?: 'ShiftInstanceCallOutResult', recipientCount: number, sentToManagerFallback: boolean } };
+
+export type GetShiftInstanceCallOutSummaryQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
 
 export type JoinShiftInstanceMutationVariables = Exact<{
   instanceId: Scalars['String']['input'];
@@ -6451,6 +6493,30 @@ export const UpdateShiftInstanceInviteStatusDocument = gql`
   }
 }
     `;
+export const SendShiftInstanceCallOutDocument = gql`
+    mutation SendShiftInstanceCallOut($instanceId: String!) {
+  sendShiftInstanceCallOut(instanceId: $instanceId) {
+    recipientCount
+    sentToManagerFallback
+  }
+}
+    `;
+export const GetShiftInstanceCallOutSummaryDocument = gql`
+    query GetShiftInstanceCallOutSummary($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    lastCallOut {
+      sentAt
+      recipientCount
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+    `;
 export const JoinShiftInstanceDocument = gql`
     mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
@@ -7376,6 +7442,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     UpdateShiftInstanceInviteStatus(variables: UpdateShiftInstanceInviteStatusMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateShiftInstanceInviteStatusMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UpdateShiftInstanceInviteStatusMutation>({ document: UpdateShiftInstanceInviteStatusDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateShiftInstanceInviteStatus', 'mutation', variables);
+    },
+    SendShiftInstanceCallOut(variables: SendShiftInstanceCallOutMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SendShiftInstanceCallOutMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SendShiftInstanceCallOutMutation>({ document: SendShiftInstanceCallOutDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SendShiftInstanceCallOut', 'mutation', variables);
+    },
+    GetShiftInstanceCallOutSummary(variables: GetShiftInstanceCallOutSummaryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetShiftInstanceCallOutSummaryQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetShiftInstanceCallOutSummaryQuery>({ document: GetShiftInstanceCallOutSummaryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetShiftInstanceCallOutSummary', 'query', variables);
     },
     JoinShiftInstance(variables: JoinShiftInstanceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<JoinShiftInstanceMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<JoinShiftInstanceMutation>({ document: JoinShiftInstanceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'JoinShiftInstance', 'mutation', variables);
