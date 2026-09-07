@@ -5,13 +5,13 @@ describe('extractCheckInPath', () => {
   it('extracts the check-in path from a full scanned URL', () => {
     expect(
       extractCheckInPath('https://app.caluno.com/admin/check-in/abc123def456'),
-    ).toBe('/admin/check-in/abc123def456');
+    ).toBe('/check-in/abc123def456/decide');
   });
 
   it('lowercases an uppercase check-in id', () => {
     expect(
       extractCheckInPath('https://app.caluno.com/admin/check-in/ABC123DEF456'),
-    ).toBe('/admin/check-in/abc123def456');
+    ).toBe('/check-in/abc123def456/decide');
   });
 
   it('returns null for a value that is not a check-in URL', () => {

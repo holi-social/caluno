@@ -83,6 +83,8 @@ type EventJoinedInput =
 type EventCancelledInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_CANCELLED];
 
+type OrganizationUnitInvitedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.ORGANIZATION_UNIT_INVITED];
 type EventRemovedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.EVENT_REMOVED];
 
@@ -264,6 +266,10 @@ export class NotificationService {
 
   notifyEventCancelled(input: EventCancelledInput): void {
     this.emitter.emit(NotificationEvent.EVENT_CANCELLED, input);
+  }
+
+  notifyOrganizationUnitInvited(input: OrganizationUnitInvitedInput): void {
+    this.emitter.emit(NotificationEvent.ORGANIZATION_UNIT_INVITED, input);
   }
 
   notifyEventRemoved(input: EventRemovedInput): void {
