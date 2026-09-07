@@ -8,6 +8,7 @@ import {
   SigneeType,
 } from '@repo/data';
 import {
+  canDecideDocument,
   contractToVolunteerDocument,
   documentLines,
   documentState,
@@ -69,6 +70,25 @@ describe('documentState', () => {
   it('maps declined to declined', () => {
     expect(documentState(ContractStatus.Declined)).toBe('declined');
     expect(documentState(InvoiceStatus.Declined)).toBe('declined');
+  });
+});
+
+describe('canDecideDocument', () => {
+  it('blocks signing while the preview has not been confirmed ready', () => {
+    expect(canDecideDocument('awaiting-signature', 'loading')).toBe(false);
+    expect(canDecideDocument('awaiting-signature', 'unavailable')).toBe(false);
+    expect(canDecideDocument('awaiting-signature', 'rendering')).toBe(false);
+    expect(canDecideDocument('awaiting-signature', 'error')).toBe(false);
+  });
+
+  it('allows signing only once the preview is ready and a decision is due', () => {
+    expect(canDecideDocument('awaiting-signature', 'ready')).toBe(true);
+  });
+
+  it('never allows deciding outside the awaiting-signature state, even with a ready preview', () => {
+    expect(canDecideDocument('awaiting-countersignature', 'ready')).toBe(false);
+    expect(canDecideDocument('signed', 'ready')).toBe(false);
+    expect(canDecideDocument('declined', 'ready')).toBe(false);
   });
 });
 
