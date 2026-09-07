@@ -117,6 +117,7 @@ input CreateEventInput {
   description: String
   endsAt: DateTime!
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   logoFileId: String
   requiredFormIds: [String!]
@@ -237,6 +238,7 @@ input CreateShiftInput {
   imageFileId: String
   instructions: String
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   maxVolunteers: Int
   minVolunteers: Int
@@ -305,6 +307,7 @@ type Event {
   endsAt: DateTime!
   id: ID!
   isDeleted: Boolean!
+  joinRequiresApproval: Boolean!
   location: String
   logoUrl: String
   myInvitedAt: DateTime
@@ -332,12 +335,13 @@ type EventInvite {
 }
 
 enum EventInviteStatus {
-  ACCEPTED
+  ADMIN_INVITED
   ADMIN_REJECTED
-  CANCELLED
-  INVITED
-  SELF_JOINED
+  AWAITING_ADMIN_APPROVAL
+  JOINED
+  VOLUNTEER_CANCELLED
   VOLUNTEER_REJECTED
+  WAITLIST_JOINED
 }
 
 type EventOrganizationUnit {
@@ -1209,6 +1213,7 @@ type Shift {
   instances: [ShiftInstance!]!
   instructions: String
   isDeleted: Boolean!
+  joinRequiresApproval: Boolean!
   location: String
   maxVolunteers: Int
   minVolunteers: Int
@@ -1281,12 +1286,13 @@ type ShiftInvite {
 }
 
 enum ShiftInviteStatus {
-  ACCEPTED
+  ADMIN_INVITED
   ADMIN_REJECTED
-  CANCELLED
-  INVITED
-  SELF_JOINED
+  AWAITING_ADMIN_APPROVAL
+  JOINED
+  VOLUNTEER_CANCELLED
   VOLUNTEER_REJECTED
+  WAITLIST_JOINED
 }
 
 type ShiftPaginatedResponse {
@@ -1350,6 +1356,7 @@ input UpdateEventInput {
   description: String
   endsAt: DateTime
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   logoFileId: String
   requiredFormIds: [String!]
@@ -1452,6 +1459,7 @@ input UpdateShiftInput {
   imageFileId: String
   instructions: String
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   maxVolunteers: Int
   minVolunteers: Int

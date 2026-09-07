@@ -23,6 +23,9 @@ export class CreateEventInput {
   @Field(() => Date)
   endsAt!: Date;
 
+  @Field(() => Boolean, { nullable: true })
+  joinRequiresApproval?: boolean | null;
+
   @Field(() => [String], { nullable: true })
   invitedMemberIds?: string[] | null;
 

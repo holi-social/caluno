@@ -1,17 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingHttpHeaders } from 'node:http';
+import { buildSharedPinoOptions, PINO_REDACT_PATHS } from '@repo/observability';
 import * as Sentry from '@sentry/nestjs';
-import type { LevelWithSilent } from 'pino';
 import type { Options as PinoHttpOptions } from 'pino-http';
 
 /**
  * pino-http options for the Caluno backend.
  *
+ * The shared pino core (level selection, service/env base labels, Loki-friendly
+ * string `level` formatter, transport, and the shared PII redaction paths) is
+ * reused from `@repo/observability`. This file adds the pino-http-only layers:
+ * request/response serialization, request-id generation and Sentry trace
+ * correlation.
+ *
  * Output contract (Loki consumes JSON from stdout):
  * - Every line carries `service: "caluno-backend"` and `env` so Loki can
- *   filter by service/environment, plus `level` as a string ("info") instead
- *   of pino's numeric code, and `reqId` / `trace_id` / `user_id` for
- *   correlation and alerting.
+ *   filter by service/environment, plus `level` as a string ("info"), and
+ *   `reqId` / `trace_id` / `user_id` for correlation and alerting.
  *
  * PII policy — the request serializers are the *primary* control:
  * - Request bodies are never logged. In particular, GraphQL `variables`
@@ -21,22 +26,11 @@ import type { Options as PinoHttpOptions } from 'pino-http';
  * - The logged URL has its query string stripped (`?token=`, `?code=`,
  *   `?query=` for GraphQL GET).
  * - Only `host`, `user-agent` and `x-organization-unit-id` headers are kept.
- * - `redact` below is a second line of defence for application-level log
- *   payloads; it cannot redact inside string values (e.g. template-literal
- *   messages), so app code must still mask PII before interpolating it.
+ * - `redact` below extends the shared base with transport credentials; it is a
+ *   second line of defence for application-level log payloads. It cannot
+ *   redact inside string values (e.g. template-literal messages), so app code
+ *   must still mask PII before interpolating it.
  */
-
-const PRODUCTION_ENVIRONMENTS = new Set(['production', 'staging']);
-
-const PINO_LEVELS = new Set<LevelWithSilent>([
-  'fatal',
-  'error',
-  'warn',
-  'info',
-  'debug',
-  'trace',
-  'silent',
-]);
 
 /** Headers accepted as the caller-provided request id (Loki correlation). */
 const REQUEST_ID_HEADERS = ['x-request-id', 'request-id'] as const;
@@ -150,66 +144,26 @@ function requestIdFromHeaders(req: LoggableRequest): string | undefined {
   return undefined;
 }
 
-const REDACT_PATHS = [
-  // Transport credentials — the req serializer already drops these headers;
-  // kept as a second line of defence.
+// pino-http transport credentials — the req serializer already drops these
+// headers; kept as a second line of defence on top of the shared base.
+const HTTP_REDACT_PATHS = [
   'req.headers.authorization',
   'req.headers.cookie',
   'req.headers["set-cookie"]',
-  // Credentials.
-  'authorization',
-  '*.authorization',
-  'password',
-  '*.password',
-  'token',
-  '*.token',
-  'otp',
-  '*.otp',
-  'apiKey',
-  '*.apiKey',
-  'secret',
-  '*.secret',
-  // Contact PII. (Only exact paths and single-level wildcards are matched.)
-  'email',
-  '*.email',
-  'phone',
-  '*.phone',
-  'user.email',
-  'user.name',
 ];
 
 export function buildPinoHttpOptions(
   input: PinoHttpOptionsInput = {},
 ): PinoHttpOptions {
-  const nodeEnv = input.nodeEnv ?? 'development';
-  const isProduction = PRODUCTION_ENVIRONMENTS.has(nodeEnv);
-  const isTest = nodeEnv === 'test';
-  const configuredLevel = PINO_LEVELS.has(input.logLevel as LevelWithSilent)
-    ? (input.logLevel as LevelWithSilent)
-    : undefined;
-
-  const level: LevelWithSilent = isTest
-    ? (configuredLevel ?? 'silent')
-    : (configuredLevel ?? (isProduction ? 'info' : 'debug'));
+  const shared = buildSharedPinoOptions({
+    service: 'caluno-backend',
+    nodeEnv: input.nodeEnv,
+    logLevel: input.logLevel,
+  });
 
   return {
-    level,
-    // JSON on stdout in production/staging for Loki; human-readable pretty
-    // printing locally; test runs stay silent and spawn no worker transport.
-    transport:
-      isProduction || isTest
-        ? undefined
-        : { target: 'pino-pretty', options: { singleLine: true } },
-    base: {
-      service: 'caluno-backend',
-      env: nodeEnv,
-    },
-    formatters: {
-      // Loki-friendly string level ("info") instead of pino's numeric code.
-      level: (label) => ({ level: label }),
-    },
-    genReqId: (req) =>
-      requestIdFromHeaders(req as LoggableRequest) ?? randomUUID(),
+    ...shared,
+    genReqId: (req) => requestIdFromHeaders(req) ?? randomUUID(),
     customLogLevel: (_req, res, error) =>
       error || res.statusCode >= 500
         ? 'error'
@@ -217,18 +171,18 @@ export function buildPinoHttpOptions(
           ? 'warn'
           : 'info',
     redact: {
-      paths: REDACT_PATHS,
+      paths: [...HTTP_REDACT_PATHS, ...PINO_REDACT_PATHS],
       censor: '[Redacted]',
     },
     customProps: (req) => {
-      const raw = asRawRequest(req as LoggableRequest);
+      const raw = asRawRequest(req);
       return {
-        trace_id: sentryTraceId(req as LoggableRequest),
+        trace_id: sentryTraceId(raw),
         user_id: raw.user?.id,
       };
     },
     serializers: {
-      req: (req) => serializeRequest(req as LoggableRequest),
+      req: (req) => serializeRequest(req),
       res: (res) => ({ statusCode: res.statusCode }),
     },
   };
