@@ -1341,7 +1341,10 @@
       "joinShift": "Einsatz beitreten",
       "joined": "Du bist dem Einsatz beigetreten",
       "joining": "Wird beigetreten...",
+      "joinWaitlist": "Auf die Warteliste",
       "keepShift": "Einsatz behalten",
+      "leaveWaitlist": "Warteliste verlassen",
+      "leftWaitlist": "Du hast die Warteliste verlassen.",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "pendingApproval": "Warte auf Freigabe",
       "pendingCta": "Anfrage ausstehend",
@@ -1353,7 +1356,7 @@
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
       "requirementsNeeded": "Noch zu erledigen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
       "unexpected": "Unerwartete Antwort vom Server",
-      "waitlisted": "Auf der Warteliste"
+      "waitlistJoined": "Du bist auf der Warteliste. Wir schreiben dir per E-Mail, wenn ein Platz frei wird."
     },
     "loading": "Wird geladen...",
     "notFound": "Einsatz nicht gefunden.",
@@ -1525,6 +1528,8 @@
     "spotsFull": "· ausgebucht",
     "spotsTaken": "{filled} von {max} belegt",
     "timeLabel": "Zeit",
+    "waitlistBadge": "Du bist auf der Warteliste",
+    "waitlistNote": "Wird ein Platz frei, schreiben wir dir eine E-Mail, damit du ihn übernehmen kannst.",
     "whatYouDoHeading": "Was du tun wirst",
     "whenWhereHeading": "Wann & Wo"
   },
