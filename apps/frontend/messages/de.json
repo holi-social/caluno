@@ -397,7 +397,11 @@
       },
       "preview": {
         "title": "{name}",
-        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar."
+        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar.",
+        "error": "Die Vorschau konnte nicht geladen werden.",
+        "retry": "Erneut versuchen",
+        "errorHelp": "Zu deiner Mitgliedschaft, um Hilfe zu erhalten",
+        "signDisabledHint": "Du kannst erst unterschreiben oder ablehnen, wenn du das Dokument in der Vorschau angesehen hast."
       },
       "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
@@ -1176,6 +1180,11 @@
       "empty": "Keine Freiwilligen gefunden",
       "placeholder": "Freiwillige:n auswählen"
     },
+    "compensation": {
+      "agreementNote": "Mit der Annahme dieser Schicht erhältst du eine Vereinbarung zur Unterschrift.",
+      "ehrenamt": "Vergütet über Ehrenamtspauschale",
+      "uebungsleiter": "Vergütet über Übungsleiterpauschale"
+    },
     "detail": {
       "createdByLabel": "Erstellt von",
       "createdLabel": "Erstellt",
@@ -1429,6 +1438,18 @@
     },
     "transferList": {
       "addAria": "Hinzufügen",
+      "allowance": {
+        "eligible": "Auszahlungsberechtigt",
+        "nearlyExhausted": "Limit fast erreicht",
+        "noAgreement": "Vereinbarung nötig",
+        "wouldExceed": "Überschreitet Limit!"
+      },
+      "confirmExceedAllowance": {
+        "cancel": "Abbrechen",
+        "confirm": "Trotzdem einladen",
+        "description": "Die Auszahlung an {name} für diesen Einsatz würde den jährlichen Höchstbetrag überschreiten. Du kannst die Person trotzdem einladen, prüfe aber, ob das gewollt ist.",
+        "title": "Dies würde das Limit von {name} überschreiten"
+      },
       "removeAria": "Entfernen"
     },
     "validation": {
@@ -1534,6 +1555,9 @@
       "notesLabel": "Notizen",
       "notesPlaceholder": "Notizen zu diesem Zeiteintrag hinzufügen...",
       "notTiedToShiftLabel": "Keiner Schicht zugeordnet",
+      "paidTimeLabel": "Bezahlte Zeit",
+      "pauschaleTypeLabel": "Pauschalenart",
+      "pauschaleTypePlaceholder": "Pauschalenart auswählen",
       "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
       "selectShiftLabel": "Einsatz auswählen",
       "selectShiftPlaceholder": "Einsatz auswählen",
@@ -1547,6 +1571,10 @@
     "page": {
       "createButton": "Zeiteintrag hinzufügen",
       "title": "Stundenzettel"
+    },
+    "pauschaleType": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "uebungsleiter": "Übungsleiterpauschale"
     },
     "picker": {
       "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
@@ -1568,6 +1596,7 @@
     "validation": {
       "endedAtRequired": "Endzeit ist erforderlich",
       "organizationUnitRequired": "Organisationseinheit ist erforderlich",
+      "reimbursementTypeRequired": "Pauschalenart ist erforderlich",
       "shiftInstanceRequired": "Einsatztermin ist erforderlich",
       "startedAtRequired": "Startzeit ist erforderlich",
       "timeEntryIdRequired": "Zeiteintrags-ID ist erforderlich",

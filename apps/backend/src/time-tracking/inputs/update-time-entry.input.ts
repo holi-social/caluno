@@ -13,4 +13,8 @@ export class UpdateTimeEntryInput {
 
   @Field(() => String, { nullable: true })
   notes?: string | null;
+
+  // See AddTimeEntryInput.reimbursementTypeId — null clears paid status.
+  @Field(() => String, { nullable: true })
+  reimbursementTypeId?: string | null;
 }
