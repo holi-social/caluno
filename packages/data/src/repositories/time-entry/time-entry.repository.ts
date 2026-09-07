@@ -1,3 +1,4 @@
+import { DataError } from '../../errors/data-error';
 import type {
   AddTimeEntryInput,
   CloseTimeEntryInput,
@@ -8,7 +9,6 @@ import {
   BaseRepository,
   type PaginationOptions,
 } from '../base/base.repository';
-import { DataError } from '../../errors/data-error';
 
 export type TimeEntryDetail = GetTimeEntryQuery['timeEntry'];
 
