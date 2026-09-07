@@ -61,6 +61,7 @@ describe('InvoiceService', () => {
   let moduleRef: TestingModule;
   let db: Database;
   let service: InvoiceService;
+  const declinedByVolunteerCalls: unknown[] = [];
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -109,6 +110,7 @@ describe('InvoiceService', () => {
       {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: () => Promise.resolve(),
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
@@ -128,6 +130,10 @@ describe('InvoiceService', () => {
       {
         notifyAwaitingVolunteerSignature: () => Promise.resolve(),
         notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: (input: unknown) => {
+          declinedByVolunteerCalls.push(input);
+          return Promise.resolve();
+        },
       } as unknown as DocumentNotificationService,
       {
         missingProfileSources: () => Promise.resolve([]),
@@ -738,6 +744,40 @@ describe('InvoiceService', () => {
       expect(declined.invoiceStatus).toBe(InvoiceStatus.DECLINED);
       expect(declined.declineReason).toBe('Wrong hours');
       expect(declined.declinedAtSigneeType).toBe(SigneeType.VOLUNTEER);
+    });
+
+    it('notifies the admin side when the volunteer declines (VOLI-1246)', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const invoice = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const before = declinedByVolunteerCalls.length;
+      await service.declineInvoice(invoice.id, volunteer.id, 'Wrong hours');
+
+      expect(declinedByVolunteerCalls.length).toBe(before + 1);
+      expect(declinedByVolunteerCalls.at(-1)).toMatchObject({
+        organizationId: organization.id,
+        volunteerUserId: volunteer.id,
+        documentId: invoice.id,
+        documentKind: DocumentKind.INVOICE,
+        reason: 'Wrong hours',
+      });
     });
   });
 
