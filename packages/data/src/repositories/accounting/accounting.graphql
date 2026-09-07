@@ -46,6 +46,21 @@ query GetYearlyUsage($reimbursementTypeId: ID!, $year: Int!) {
   }
 }
 
+query GetInviteAllowanceEligibility(
+  $organizationUnitId: ID!
+  $reimbursementTypeId: ID!
+  $shiftDurationMinutes: Int!
+) {
+  inviteAllowanceEligibility(
+    organizationUnitId: $organizationUnitId
+    reimbursementTypeId: $reimbursementTypeId
+    shiftDurationMinutes: $shiftDurationMinutes
+  ) {
+    volunteerId
+    state
+  }
+}
+
 query GetRosterYearlyUsage($organizationUnitId: ID!, $year: Int!) {
   rosterYearlyUsage(organizationUnitId: $organizationUnitId, year: $year) {
     volunteer {

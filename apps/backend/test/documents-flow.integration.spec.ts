@@ -1104,7 +1104,7 @@ describe('documents flow — admin + volunteer', () => {
                 lines: [
                   {
                     id: 'jahresdeckel-note',
-                    text: '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {contractPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten. Rechnungsnr. {documentNumber}',
+                    text: '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {alreadyReceivedPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten. Rechnungsnr. {documentNumber}',
                     fields: [
                       {
                         id: 'jahresdeckel-volunteer-first',
@@ -1119,7 +1119,10 @@ describe('documents flow — admin + volunteer', () => {
                       },
                       {
                         id: 'jahresdeckel-period',
-                        value: { kind: 'bound', source: 'contract_period' },
+                        value: {
+                          kind: 'bound',
+                          source: 'already_received_period',
+                        },
                       },
                       {
                         id: 'jahresdeckel-received',
@@ -1416,9 +1419,15 @@ describe('documents flow — admin + volunteer', () => {
       expect(glyphs).toContain('Jahresdeckel');
       expect(glyphs).toContain('im Zeitraum');
       expect(glyphs).toContain('Rechnungsnr.');
-      // The period is formatted "01.07.2026 – 31.07.2026" — a rendered date range means
-      // contract_period was filled (empty would have produced an em-dash).
-      expect(glyphs).toMatch(/01\.07\.2026/);
+      // The Jahresdeckel sentence states the running year-to-date window the
+      // amount is actually summed over — Jan 1 of the invoice's year through
+      // its own period end — not the invoice's own (monthly) period, so the
+      // stated period matches what was summed. Formatted
+      // "01.01.2026 – 31.07.2026" (a rendered range means
+      // already_received_period was filled — empty would have produced an
+      // em-dash).
+      expect(glyphs).toMatch(/01\.01\.2026/);
+      expect(glyphs).toMatch(/31\.07\.2026/);
       // The yearly cap (from the seeded reimbursement type, 840 €) and mock
       // document number are present.
       expect(glyphs).toContain('840,00');

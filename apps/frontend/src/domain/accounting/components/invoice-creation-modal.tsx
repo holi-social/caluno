@@ -394,6 +394,14 @@ export function InvoiceCreationModal({
       period.to ?? new Date(),
       'dd.MM.yyyy',
     )}`,
+    // The Jahresdeckel sentence's "already received" figure is a running
+    // calendar-year-to-date sum, not the invoice's own (monthly) period — so
+    // its stated period runs from Jan 1 of that year through this period's
+    // end, matching what the backend actually sums at generation time.
+    already_received_period: `${format(
+      new Date((period.from ?? new Date()).getFullYear(), 0, 1),
+      'dd.MM.yyyy',
+    )} – ${format(period.to ?? new Date(), 'dd.MM.yyyy')}`,
     already_received_amount:
       yearlyUsageQuery.data?.usedCents !== undefined
         ? `${centsToEuros(yearlyUsageQuery.data.usedCents).toLocaleString(
