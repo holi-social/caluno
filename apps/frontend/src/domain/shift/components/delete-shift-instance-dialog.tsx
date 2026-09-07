@@ -87,7 +87,9 @@ export function DeleteShiftInstanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger disabled={isInstanceInThePast}>{trigger}</DialogTrigger>
+      <DialogTrigger asChild disabled={isInstanceInThePast}>
+        {trigger}
+      </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

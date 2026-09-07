@@ -4,6 +4,7 @@ import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus } from '../enums';
 import type { Shift } from './shift.model';
 import { Shift as ShiftModel } from './shift.model';
+import { ShiftInstanceCallOutSummary } from './shift-instance-call-out.model';
 import { ShiftInstanceInvite } from './shift-instance-invite.model';
 @ObjectType()
 export class ShiftInstance {
@@ -66,6 +67,9 @@ export class ShiftInstance {
 
   @Field(() => Boolean)
   isIntendingToJoin!: boolean;
+
+  @Field(() => ShiftInstanceCallOutSummary, { nullable: true })
+  lastCallOut?: ShiftInstanceCallOutSummary | null;
 }
 
 export const ShiftInstancePaginatedResponse =

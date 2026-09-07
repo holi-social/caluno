@@ -204,3 +204,11 @@ export const updateShiftInstanceInviteStatus = actionClient
       );
     },
   );
+
+export const sendShiftInstanceCallOut = actionClient
+  .inputSchema(z.object({}))
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(async ({ bindArgsParsedInputs: [orgUId, instanceId] }) => {
+    const data = await getDataClient({ orgUId });
+    return await data.shift.sendCallOut(instanceId);
+  });
