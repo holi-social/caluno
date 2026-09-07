@@ -7,6 +7,7 @@ interface TimeEntrySchemaMessages {
   startedAtRequired: string;
   endedAtRequired: string;
   timeEntryIdRequired: string;
+  reimbursementTypeRequired?: string;
 }
 
 export function timeEntrySchema(t: TimeEntrySchemaMessages) {
@@ -18,18 +19,26 @@ export function timeEntrySchema(t: TimeEntrySchemaMessages) {
     startedAt: z.date(t.startedAtRequired),
     endedAt: z.date().nullable().optional(),
     notes: z.string().trim().optional(),
+    reimbursementTypeId: z.string().optional(),
   });
 }
 
 export function clientTimeEntrySchema(t: TimeEntrySchemaMessages) {
   return timeEntrySchema(t)
-    .extend({ hasShift: z.boolean() })
+    .extend({ hasShift: z.boolean(), isPaidTime: z.boolean() })
     .superRefine((data, ctx) => {
       if (data.hasShift && !data.shiftInstanceId) {
         ctx.addIssue({
           code: 'custom',
           path: ['shiftInstanceId'],
           message: t.shiftInstanceRequired,
+        });
+      }
+      if (data.isPaidTime && !data.reimbursementTypeId) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['reimbursementTypeId'],
+          message: t.reimbursementTypeRequired ?? 'Pauschale type is required',
         });
       }
     });

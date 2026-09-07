@@ -1196,6 +1196,11 @@
       "generalCheckIn": "General check-in",
       "volunteerCheckedOut": "Volunteer checked out"
     },
+    "compensation": {
+      "agreementNote": "Accepting this shift means you'll be sent a reimbursement agreement to sign.",
+      "ehrenamt": "Compensated via volunteer allowance",
+      "uebungsleiter": "Compensated via trainer's allowance"
+    },
     "detail": {
       "createdByLabel": "Created by",
       "createdLabel": "Created",
@@ -1449,6 +1454,18 @@
     },
     "transferList": {
       "addAria": "Add",
+      "allowance": {
+        "eligible": "Eligible",
+        "nearlyExhausted": "Allowance nearly exhausted",
+        "noAgreement": "Agreement needed",
+        "wouldExceed": "Would exceed allowance!"
+      },
+      "confirmExceedAllowance": {
+        "cancel": "Cancel",
+        "confirm": "Invite anyway",
+        "description": "Paying {name} for this shift would take them past their annual allowance ceiling. You can still invite them, but double check this is intended.",
+        "title": "This would exceed {name}'s allowance"
+      },
       "removeAria": "Remove"
     },
     "validation": {
@@ -1554,6 +1571,9 @@
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
       "notTiedToShiftLabel": "Not tied to a shift",
+      "paidTimeLabel": "Paid time",
+      "pauschaleTypeLabel": "Pauschale type",
+      "pauschaleTypePlaceholder": "Select a Pauschale type",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",
@@ -1567,6 +1587,10 @@
     "page": {
       "createButton": "Add time entry",
       "title": "Timesheets"
+    },
+    "pauschaleType": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "uebungsleiter": "Übungsleiterpauschale"
     },
     "picker": {
       "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
@@ -1588,6 +1612,7 @@
     "validation": {
       "endedAtRequired": "End time is required",
       "organizationUnitRequired": "Organization unit is required",
+      "reimbursementTypeRequired": "Pauschale type is required",
       "shiftInstanceRequired": "Shift date is required",
       "startedAtRequired": "Start time is required",
       "timeEntryIdRequired": "Time entry ID is required",
