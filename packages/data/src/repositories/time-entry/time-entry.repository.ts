@@ -18,7 +18,10 @@ export class TimeEntryRepository extends BaseRepository {
       const data = await this.sdk.GetTimeEntry({ id });
       return data.timeEntry;
     } catch (error) {
-      if (error instanceof DataError && error.message === 'Time entry not found') {
+      if (
+        error instanceof DataError &&
+        error.message === 'Time entry not found'
+      ) {
         return null;
       }
       throw error;
