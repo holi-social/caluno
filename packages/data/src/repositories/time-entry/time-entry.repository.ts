@@ -8,13 +8,21 @@ import {
   BaseRepository,
   type PaginationOptions,
 } from '../base/base.repository';
+import { DataError } from '../../errors/data-error';
 
 export type TimeEntryDetail = GetTimeEntryQuery['timeEntry'];
 
 export class TimeEntryRepository extends BaseRepository {
-  async findById(id: string): Promise<TimeEntryDetail> {
-    const data = await this.sdk.GetTimeEntry({ id });
-    return data.timeEntry;
+  async findById(id: string): Promise<TimeEntryDetail | null> {
+    try {
+      const data = await this.sdk.GetTimeEntry({ id });
+      return data.timeEntry;
+    } catch (error) {
+      if (error instanceof DataError && error.message === 'Time entry not found') {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async add(input: AddTimeEntryInput) {
