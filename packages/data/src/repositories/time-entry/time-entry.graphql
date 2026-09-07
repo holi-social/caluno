@@ -23,6 +23,11 @@ query GetTimeEntry($id: String!) {
     endedAt
     notes
     createdAt
+    isPaid
+    reimbursementType {
+      id
+      key
+    }
     volunteer {
       id
       name
