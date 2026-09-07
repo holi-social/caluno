@@ -1176,6 +1176,11 @@
       "empty": "No volunteer found",
       "placeholder": "Select a volunteer"
     },
+    "compensation": {
+      "agreementNote": "Accepting this shift means you'll be sent a reimbursement agreement to sign.",
+      "ehrenamt": "Compensated via volunteer allowance",
+      "uebungsleiter": "Compensated via trainer's allowance"
+    },
     "detail": {
       "createdByLabel": "Created by",
       "createdLabel": "Created",
