@@ -1,6 +1,14 @@
 'use client';
 
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Badge,
   Button,
   cn,
@@ -8,9 +16,22 @@ import {
   type ShiftVolunteeringDisplayState,
   VolunteeringMemberRow,
 } from '@repo/ui';
-import { ArrowLeftRight, CirclePlus, CircleX } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  CircleAlert,
+  CircleCheck,
+  CirclePlus,
+  CircleX,
+  FileWarning,
+  TriangleAlert,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import type { InviteAllowanceState } from '../invite-allowance-display';
+import {
+  requiresInviteConfirmation,
+  toInviteAllowanceDisplay,
+} from '../invite-allowance-display';
 import {
   type InviteStatus,
   toInviteDisplayState,
@@ -27,7 +48,42 @@ type Member = {
   inviteStatus?: InviteStatus | null;
   /** When set, overrides inviteStatus → display mapping (e.g. events). */
   displayState?: ShiftVolunteeringDisplayState;
+  /**
+   * Allowance eligibility for the shift being invited to. Only set for a
+   * paid shift (VOLI-1248) — undefined/null renders no badge at all, which
+   * is what keeps an unpaid shift's list unchanged.
+   */
+  allowanceState?: InviteAllowanceState | null;
 };
+
+const ALLOWANCE_ICON: Record<InviteAllowanceState, typeof CircleCheck> = {
+  ELIGIBLE: CircleCheck,
+  NEARLY_EXHAUSTED: TriangleAlert,
+  WOULD_EXCEED: CircleAlert,
+  NO_AGREEMENT: FileWarning,
+};
+
+const ALLOWANCE_BADGE_VARIANT: Record<
+  InviteAllowanceState,
+  'success' | 'info' | 'destructive'
+> = {
+  ELIGIBLE: 'success',
+  NEARLY_EXHAUSTED: 'info',
+  WOULD_EXCEED: 'destructive',
+  NO_AGREEMENT: 'info',
+};
+
+function AllowanceBadge({ state }: { state: InviteAllowanceState }) {
+  const t = useTranslations('Shift.transferList.allowance');
+  const display = toInviteAllowanceDisplay(state);
+  const Icon = ALLOWANCE_ICON[state];
+  return (
+    <Badge variant={ALLOWANCE_BADGE_VARIANT[state]} className="gap-1 shrink-0">
+      <Icon className="size-3" />
+      {t(display.labelKey)}
+    </Badge>
+  );
+}
 
 type TransferListProps = {
   available: Member[];
@@ -44,7 +100,11 @@ export function TransferList({
 }: TransferListProps) {
   const [availableSearch, setAvailableSearch] = useState('');
   const [invitedSearch, setInvitedSearch] = useState('');
+  const [pendingExceedMember, setPendingExceedMember] = useState<Member | null>(
+    null,
+  );
   const t = useTranslations('Shift');
+  const tConfirm = useTranslations('Shift.transferList.confirmExceedAllowance');
 
   const invitedIds = new Set(invited.map((m) => m.id));
 
@@ -61,8 +121,28 @@ export function TransferList({
       m.email.toLowerCase().includes(invitedSearch.toLowerCase()),
   );
 
-  const addMember = (member: Member) => {
+  const commitAddMember = (member: Member) => {
     onInvitedChange([...invited.map((m) => m.id), member.id]);
+  };
+
+  /**
+   * "Would exceed" is the only state that requires an explicit confirmation
+   * before inviting (AC5) — every other state, including "nearly
+   * exhausted", is informational only and invites immediately.
+   */
+  const addMember = (member: Member) => {
+    if (requiresInviteConfirmation(member.allowanceState)) {
+      setPendingExceedMember(member);
+      return;
+    }
+    commitAddMember(member);
+  };
+
+  const confirmPendingExceedMember = () => {
+    if (pendingExceedMember) {
+      commitAddMember(pendingExceedMember);
+    }
+    setPendingExceedMember(null);
   };
 
   const removeMember = (memberId: string) => {
@@ -109,6 +189,9 @@ export function TransferList({
                     {member.email}
                   </p>
                 </div>
+                {member.allowanceState && (
+                  <AllowanceBadge state={member.allowanceState} />
+                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -175,6 +258,34 @@ export function TransferList({
           </div>
         </div>
       </div>
+
+      <AlertDialog
+        open={pendingExceedMember != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingExceedMember(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {tConfirm('title', { name: pendingExceedMember?.name ?? '' })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {tConfirm('description', {
+                name: pendingExceedMember?.name ?? '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingExceedMember(null)}>
+              {tConfirm('cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPendingExceedMember}>
+              {tConfirm('confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

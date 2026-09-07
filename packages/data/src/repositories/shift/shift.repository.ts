@@ -7,6 +7,8 @@ import {
   type CreateShiftInput,
   type GetActiveShiftInstancesQuery,
   type GetAvailableShiftInstancesQuery,
+  type GetCheckInShiftInstancesQuery,
+  type GetCheckInShiftsQuery,
   type GetMyShiftInstancesQuery,
   type GetPublicShiftInstancesQuery,
   type GetShiftInstanceCallOutSummaryQuery,
@@ -42,6 +44,9 @@ export type PublicShiftInstance =
   GetPublicShiftInstancesQuery['publicShiftInstances'][number];
 export type RawPublicShiftInstance =
   GetPublicShiftInstancesQuery['publicShiftInstances'];
+export type CheckInShiftInstance =
+  GetCheckInShiftInstancesQuery['checkInShiftInstances'][number];
+export type CheckInShift = GetCheckInShiftsQuery['checkInShifts'][number];
 export interface ShiftDetail extends RawShift {
   startDate: Date;
   endDate: Date;
@@ -254,6 +259,48 @@ export class ShiftRepository extends BaseRepository {
       eventId: eventId ?? undefined,
     });
     return data.weeklyShifts;
+  }
+
+  /**
+   * Check-in shift picker. The org unit travels as a per-request header
+   * because the backend derives permissions from it — never from an argument.
+   */
+  async findCheckInInstances(
+    organizationUnitId: string,
+    startsAfter: Date,
+    endsBefore: Date,
+  ): Promise<CheckInShiftInstance[]> {
+    const data = await this.sdk.GetCheckInShiftInstances(
+      {
+        startsAfter: startsAfter.toISOString(),
+        endsBefore: endsBefore.toISOString(),
+      },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return data.checkInShiftInstances;
+  }
+
+  async findCheckInShifts(
+    organizationUnitId: string,
+    search?: string,
+  ): Promise<CheckInShift[]> {
+    const data = await this.sdk.GetCheckInShifts(
+      { search: search ?? null },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return data.checkInShifts;
+  }
+
+  async checkInInviteToShiftInstance(
+    organizationUnitId: string,
+    shiftInstanceId: string,
+    volunteerId: string,
+  ): Promise<{ id: string }> {
+    const data = await this.sdk.CheckInInviteToShiftInstance(
+      { shiftInstanceId, volunteerId },
+      { 'x-organization-unit-id': organizationUnitId },
+    );
+    return { id: data.checkInInviteToShiftInstance.id };
   }
 
   async findMyShiftInstances(

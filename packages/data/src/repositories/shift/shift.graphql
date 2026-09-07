@@ -15,6 +15,7 @@ query GetShift($id: String!) {
     originalStartsAt
     durationMinutes
     organizationUnitId
+    reimbursementTypeKey
     requiredFormsCount
     requiredForms {
       ...RequiredFormRefFields
@@ -442,6 +443,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     location
     rrule
     maxVolunteers
+    reimbursementTypeKey
     organizationUnit {
       id
       name
@@ -521,6 +523,41 @@ mutation CheckIn($shiftInstanceId: ID!) {
 
 mutation CheckOut($shiftInstanceId: ID!) {
   checkOut(shiftInstanceId: $shiftInstanceId) {
+    id
+  }
+}
+
+query GetCheckInShiftInstances(
+  $startsAfter: DateTime!
+  $endsBefore: DateTime!
+) {
+  checkInShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    master {
+      id
+      title
+    }
+  }
+}
+
+query GetCheckInShifts($search: String) {
+  checkInShifts(search: $search) {
+    id
+    title
+  }
+}
+
+mutation CheckInInviteToShiftInstance(
+  $shiftInstanceId: ID!
+  $volunteerId: ID!
+) {
+  checkInInviteToShiftInstance(
+    shiftInstanceId: $shiftInstanceId
+    volunteerId: $volunteerId
+  ) {
     id
   }
 }

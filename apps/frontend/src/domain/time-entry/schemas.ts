@@ -57,24 +57,6 @@ export type TimeEntryFormValues = z.infer<
   ReturnType<typeof clientTimeEntrySchema>
 >;
 
-export function closeTimeEntrySchema(t: TimeEntrySchemaMessages) {
-  return z.object({
-    id: z.string().min(1, t.timeEntryIdRequired),
-    endedAt: z.date(t.endedAtRequired),
-    organizationUnitId: z.string().min(1, t.organizationUnitRequired),
-    notes: z.string().trim().optional(),
-  });
-}
-
-export const serverCloseTimeEntrySchema = closeTimeEntrySchema({
-  organizationUnitRequired: 'Organization unit ID is required',
-  shiftInstanceRequired: 'Shift date is required',
-  volunteerRequired: 'Volunteer is required',
-  startedAtRequired: 'Start time is required',
-  endedAtRequired: 'End time is required',
-  timeEntryIdRequired: 'Time Entry ID is required',
-});
-
 export function deleteTimeEntrySchema(
   t: Pick<
     TimeEntrySchemaMessages,
@@ -90,4 +72,15 @@ export function deleteTimeEntrySchema(
 export const serverDeleteTimeEntrySchema = deleteTimeEntrySchema({
   timeEntryIdRequired: 'Time Entry ID is required',
   organizationUnitRequired: 'Organization unit ID is required',
+});
+
+export const serverCheckInVolunteerSchema = z.object({
+  organizationUnitId: z.string().min(1, 'Organization Unit is required'),
+  volunteerId: z.string().min(1, 'Volunteer is required'),
+  shiftInstanceId: z.string().min(1).nullable(),
+});
+
+export const serverCheckOutVolunteerSchema = z.object({
+  timeEntryId: z.string().min(1, 'Time Entry ID is required'),
+  organizationUnitId: z.string().min(1, 'Organization unit ID is required'),
 });

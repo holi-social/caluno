@@ -74,6 +74,9 @@ describe('Time entry -> eligible timesheet flow', () => {
       {} as MembershipService,
       shiftService,
       { capture: () => {} } as unknown as PostHogService,
+      {} as OrganizationService,
+      {} as never,
+      {} as NotificationService,
     );
     // InvoiceService is not registered as a provider by DatabaseModule alone
     // (it depends on a chain of accounting services), so it is constructed

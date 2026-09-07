@@ -1,4 +1,5 @@
 import { registerEnumType } from '@nestjs/graphql';
+import { InviteAllowanceState } from '../services/invite-allowance-eligibility';
 import {
   ContractStatus,
   DocumentKind,
@@ -35,4 +36,8 @@ registerEnumType(InvoiceStatus, {
 
 registerEnumType(DocumentStatusChange, {
   name: 'DocumentStatusChange',
+});
+
+registerEnumType(InviteAllowanceState, {
+  name: 'InviteAllowanceState',
 });
