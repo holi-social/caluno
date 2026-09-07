@@ -222,6 +222,26 @@ describe('mapContractToBoardDoc', () => {
     expect(doc.pauschale).toBe('ehrenamt');
     expect(doc.lastActionDate).toBeInstanceOf(Date);
   });
+
+  // VOLI-1246: the admin's document sheet needs to show who declined a
+  // document, alongside the reason and date — the GraphQL fragment already
+  // fetches declinedByUser, so this just has to reach the board doc.
+  it('surfaces who declined the contract', () => {
+    const doc = mapContractToBoardDoc(
+      makeContract({
+        contractStatus: ContractStatus.Declined,
+        declineReason: 'Terms are not acceptable',
+        declinedAt: '2026-03-01T00:00:00.000Z',
+        declinedAtSigneeType: SigneeType.Volunteer,
+        declinedByUser: { id: 'v-1', name: 'Anna Müller' },
+      }),
+      'ehrenamt',
+    );
+    expect(doc.status).toBe('contract-declined');
+    expect(doc.declineReason).toBe('Terms are not acceptable');
+    expect(doc.declinedBy).toBe('Anna Müller');
+    expect(doc.declinedAt).toEqual(new Date('2026-03-01T00:00:00.000Z'));
+  });
 });
 
 describe('mapInvoiceToBoardDoc', () => {
@@ -232,6 +252,24 @@ describe('mapInvoiceToBoardDoc', () => {
     expect(doc.hours).toBe(8);
     expect(doc.periodLabel).toContain('2026');
     expect(doc.pauschale).toBe('ehrenamt');
+  });
+
+  it('surfaces who declined the invoice', () => {
+    const doc = mapInvoiceToBoardDoc(
+      makeInvoice({
+        invoiceStatus: InvoiceStatus.Declined,
+        declineReason: 'Wrong hours',
+        declinedAt: '2026-03-01T00:00:00.000Z',
+        declinedAtSigneeType: SigneeType.Volunteer,
+        declinedByUser: { id: 'v-1', name: 'Anna Müller' },
+      }),
+      'ehrenamt',
+      'de',
+    );
+    expect(doc.status).toBe('timesheet-declined');
+    expect(doc.declineReason).toBe('Wrong hours');
+    expect(doc.declinedBy).toBe('Anna Müller');
+    expect(doc.declinedAt).toEqual(new Date('2026-03-01T00:00:00.000Z'));
   });
 });
 
@@ -313,16 +351,54 @@ describe('buildBoardVolunteers', () => {
     expect(volunteers[0]?.needsTimesheet).toBe(false);
   });
 
-  it('flags a volunteer with eligible time entries as needing a timesheet', () => {
+  it('flags a volunteer with eligible time entries and an active contract as needing a timesheet', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [
+        makeContract({ id: 'c-active', contractStatus: ContractStatus.Active }),
+      ],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    expect(volunteers[0]?.needsTimesheet).toBe(true);
+  });
+
+  it('queues a volunteer with eligible hours but no Vereinbarung under contract-generate, not needs-timesheet', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [],
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Set(['v-1']),
+      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(true);
+    expect(volunteers[0]?.needsTimesheet).toBe(false);
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs).toHaveLength(1);
+    expect(docs[0]?.status).toBe('contract-generate');
+    expect(docs[0]?.pauschale).toBe('ehrenamt');
+  });
+
+  it('queues a volunteer with eligible hours and an uncountersigned Vereinbarung under contract-signing, not needs-timesheet', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [
+        makeContract({
+          id: 'c-pending',
+          contractStatus: ContractStatus.AwaitingNgoSignature,
+        }),
+      ],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    expect(volunteers[0]?.needsTimesheet).toBe(false);
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
+    expect(docs.some((d) => d.status === 'contract-signing-coord')).toBe(true);
   });
 
   it('maps the active contract and skips timesheet placeholders when there is no invoice', () => {
