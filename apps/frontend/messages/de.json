@@ -1427,6 +1427,9 @@
     },
     "validation": {
       "endTimeRequired": "Endzeit ist erforderlich",
+      "endMustBeLaterThanStart": "Die Endzeit muss nach der Startzeit liegen",
+      "continuesIntoNextDay": "Dieser Einsatz geht in den nächsten Tag über.",
+      "shorterThan24Hours": "Der Einsatz muss kürzer als 24 Stunden sein.",
       "instanceClearRecurrenceUnsupported": "Die Wiederholung kannst du hier nicht entfernen. Bearbeite sie auf der Seite „Einsatz bearbeiten“.",
       "instanceDateMismatch": "Das Datum passt nicht zu diesem Termin. Öffne das Bearbeitungsformular bitte noch einmal.",
       "instanceRecurrenceConflict": "Die neue Wiederholung enthält den Wochentag dieses Termins nicht. Passe die Wiederholung an oder bearbeite einen anderen Termin.",
