@@ -30,7 +30,7 @@ export const eventInvites = snakeCase.table(
     status: eventInviteStatusEnum('status')
       .$type<EventInviteStatus>()
       .notNull()
-      .default(EventInviteStatus.INVITED),
+      .default(EventInviteStatus.ADMIN_INVITED),
     ...timestampColumns,
   },
   (table) => [

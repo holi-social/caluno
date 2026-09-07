@@ -49,6 +49,9 @@ export class Shift {
   @Field(() => Int, { nullable: true })
   minVolunteers?: number | null;
 
+  @Field(() => Boolean)
+  joinRequiresApproval!: boolean;
+
   @Field(() => String, { nullable: true })
   rrule?: string | null;
 

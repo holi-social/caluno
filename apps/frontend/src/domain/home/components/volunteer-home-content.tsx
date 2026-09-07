@@ -143,7 +143,7 @@ export function VolunteerHomeContent({
     );
 
   const { data: shiftInvitationsPage } = useMyShiftInstances(
-    { limit: 10, statuses: [ShiftInviteStatus.Invited] },
+    { limit: 10, statuses: [ShiftInviteStatus.AdminInvited] },
     {
       initialData: {
         items: initialShiftInvitations,
@@ -158,7 +158,7 @@ export function VolunteerHomeContent({
   );
 
   const { data: eventInvitationsPage } = useMyEvents(
-    { limit: 10, statuses: [EventInviteStatus.Invited] },
+    { limit: 10, statuses: [EventInviteStatus.AdminInvited] },
     {
       initialData: {
         items: initialEventInvitations,

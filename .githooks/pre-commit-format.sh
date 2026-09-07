@@ -28,7 +28,11 @@ fi
 
 for file in "${staged[@]}"; do
   if [[ -e "$file" ]]; then
-    git add -- "$file"
+    # -f: these files were already deliberately staged before this hook ran
+    # (e.g. a merge bringing in a committed-but-gitignored file like a
+    # generated codegen output); re-adding them post-format must not be
+    # blocked by an ignore-pattern match.
+    git add -f -- "$file"
   fi
 done
 

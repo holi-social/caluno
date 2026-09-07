@@ -8,6 +8,7 @@ import {
   type PostHogCaptureProperties,
   type PostHogEventName,
 } from './posthog.events';
+import { PostHogDistinctSecretService } from './posthog-distinct-secret.service';
 
 export const POSTHOG_CLIENT = Symbol('POSTHOG_CLIENT');
 
@@ -29,16 +30,13 @@ export type PostHogCaptureInput = {
 
 /**
  * Daily PostHog distinctId: HMAC-SHA256 of `${userId}:YYYY-MM-DD` in
- * Europe/Berlin, keyed by POSTHOG_DISTINCT_SECRET.
+ * Europe/Berlin, keyed by the in-memory daily secret.
  */
 export function createDailyDistinctId(
   userId: string,
+  secret: string,
   date: Date = new Date(),
 ): string {
-  const secret = process.env.POSTHOG_DISTINCT_SECRET;
-  if (!secret) {
-    throw new Error('POSTHOG_DISTINCT_SECRET is not set');
-  }
   return createHmac('sha256', secret)
     .update(`${userId}:${numericCalendarDate(date)}`)
     .digest('hex');
@@ -56,10 +54,11 @@ export class PostHogService implements OnApplicationShutdown {
     @Optional()
     @Inject(POSTHOG_CLIENT)
     private readonly client: PostHogCaptureClient | null,
+    private readonly distinctSecrets: PostHogDistinctSecretService,
   ) {
-    if (!this.client || !process.env.POSTHOG_DISTINCT_SECRET) {
+    if (!this.client) {
       this.logger.warn(
-        'PostHog capture disabled: missing POSTHOG_API_KEY or POSTHOG_DISTINCT_SECRET or client could not be created for another reason',
+        'PostHog capture disabled: missing POSTHOG_API_KEY or client could not be created for another reason',
       );
     }
   }
@@ -71,33 +70,42 @@ export class PostHogService implements OnApplicationShutdown {
   }
 
   capture(input: PostHogCaptureInput): void {
-    if (this.client && process.env.POSTHOG_DISTINCT_SECRET) {
-      try {
-        const definition = POSTHOG_EVENT_REGISTRY[input.event];
-        const { properties, droppedKeys } = omitForbiddenPostHogProperties({
-          ...input.properties,
-          event_description: definition.description,
-        });
-        if (droppedKeys.length > 0) {
-          this.logger.warn(
-            `Dropped forbidden PostHog properties: ${droppedKeys.join(', ')}`,
-          );
-        }
-        const groups = properties.organization_id
-          ? { organization: properties.organization_id }
-          : undefined;
-        this.client.capture({
-          event: input.event,
-          distinctId: createDailyDistinctId(input.userId),
-          properties,
-          ...(groups ? { groups } : {}),
-        });
-      } catch (error) {
-        this.logger.error(
-          'PostHog capture failed',
-          error instanceof Error ? error.stack : undefined,
+    void this.captureAsync(input);
+  }
+
+  private async captureAsync(input: PostHogCaptureInput): Promise<void> {
+    if (!this.client) {
+      return;
+    }
+    try {
+      const secret = await this.distinctSecrets.ensureCurrent();
+      if (!secret) {
+        return;
+      }
+      const definition = POSTHOG_EVENT_REGISTRY[input.event];
+      const { properties, droppedKeys } = omitForbiddenPostHogProperties({
+        ...input.properties,
+        event_description: definition.description,
+      });
+      if (droppedKeys.length > 0) {
+        this.logger.warn(
+          `Dropped forbidden PostHog properties: ${droppedKeys.join(', ')}`,
         );
       }
+      const groups = properties.organization_id
+        ? { organization: properties.organization_id }
+        : undefined;
+      this.client.capture({
+        event: input.event,
+        distinctId: createDailyDistinctId(input.userId, secret),
+        properties,
+        ...(groups ? { groups } : {}),
+      });
+    } catch (error) {
+      this.logger.error(
+        'PostHog capture failed',
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 }
