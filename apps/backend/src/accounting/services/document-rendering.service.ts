@@ -379,13 +379,22 @@ export class DocumentRenderingService {
     // Invoice-only computed values: the period range, the yearly budget
     // already used (minus this invoice) and the statutory cap, and the mock
     // document number. These are generation-time, not volunteer-profile data.
+    //
+    // The "already received" figure is a running calendar-year-to-date sum
+    // for the correct Pauschalentyp — Jan 1 of the document's own period's
+    // year through that document's own period end (not "today"), so a
+    // reissued/regenerated document stays internally consistent with what it
+    // originally stated instead of drifting with later invoices.
+    const documentPeriodStart = new Date(document.periodStart);
+    const documentPeriodEnd = new Date(document.periodEnd);
     const yearlyUsage =
       'invoiceStatus' in document
         ? await this.reimbursementRateService
             .getYearlyUsage(
               document.volunteerId,
               document.reimbursementTypeId,
-              new Date(document.periodStart).getFullYear(),
+              documentPeriodStart.getFullYear(),
+              documentPeriodEnd,
             )
             .catch((error: unknown) => {
               this.logger.warn(
@@ -401,6 +410,10 @@ export class DocumentRenderingService {
       : undefined;
     const yearlyLimitCents =
       yearlyUsage?.limitCents ?? document.reimbursementType?.yearlyLimitCents;
+    const alreadyReceivedPeriod =
+      'invoiceStatus' in document
+        ? `${this.formatDate(new Date(Date.UTC(documentPeriodStart.getFullYear(), 0, 1)))} – ${this.formatDate(documentPeriodEnd)}`
+        : undefined;
 
     const str = (value: unknown): string =>
       typeof value === 'string' ? value : '';
@@ -442,6 +455,7 @@ export class DocumentRenderingService {
         alreadyReceivedCents !== undefined
           ? this.formatEuro(alreadyReceivedCents)
           : '',
+      already_received_period: alreadyReceivedPeriod ?? '',
       yearly_limit_amount:
         yearlyLimitCents !== undefined ? this.formatEuro(yearlyLimitCents) : '',
       document_number:
@@ -622,11 +636,19 @@ export class DocumentRenderingService {
     return [parts[0] ?? '', parts.slice(1).join(' ')];
   }
 
+  /**
+   * Formats a stored period/date boundary in UTC — document periods are
+   * calendar-date boundaries (e.g. periodEnd `23:59:59.999Z`), not
+   * timezone-local instants, and formatting in the server's local timezone
+   * can roll a late-UTC timestamp into the next calendar day (e.g. Jahresdeckel
+   * period-end dates would silently drift by a day in timezones ahead of UTC).
+   */
   private formatDate(date: Date): string {
     return new Intl.DateTimeFormat('de-DE', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      timeZone: 'UTC',
     }).format(date);
   }
 

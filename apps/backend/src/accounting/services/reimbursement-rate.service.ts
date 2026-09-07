@@ -193,10 +193,20 @@ export class ReimbursementRateService {
     return rate;
   }
 
+  /**
+   * `asOfDate` bounds the sum to invoices whose own period has ended by that
+   * date — pass a document's `periodEnd` when computing the Jahresdeckel
+   * "already received" figure so a reissued/regenerated document keeps
+   * reporting the same year-to-date figure it originally stated, instead of
+   * drifting with invoices created after the fact (or "today"). Omitted for
+   * the live in-app usage view, which has no such reissue-consistency
+   * requirement and should reflect everything on record for the year.
+   */
   async getYearlyUsage(
     volunteerId: string,
     reimbursementTypeId: string,
     year: number,
+    asOfDate?: Date,
   ): Promise<YearlyUsage> {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
@@ -209,6 +219,7 @@ export class ReimbursementRateService {
           volunteerId,
           reimbursementTypeId,
           periodStart: { gte: yearStart, lt: yearEnd },
+          ...(asOfDate ? { periodEnd: { lte: asOfDate } } : {}),
         },
         columns: { totalAmountCents: true, invoiceStatus: true },
       }),
