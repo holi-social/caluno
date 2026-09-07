@@ -1333,6 +1333,12 @@
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
+    "paidMarker": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "ehrenamtShort": "Ehrenamt",
+      "uebungsleiter": "Übungsleiterpauschale",
+      "uebungsleiterShort": "Übungsleiter"
+    },
     "page": {
       "createButton": "Create shift",
       "subtitle": "Shift details",

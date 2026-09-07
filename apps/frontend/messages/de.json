@@ -1333,6 +1333,12 @@
     },
     "loading": "Wird geladen...",
     "notFound": "Einsatz nicht gefunden.",
+    "paidMarker": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "ehrenamtShort": "Ehrenamt",
+      "uebungsleiter": "Übungsleiterpauschale",
+      "uebungsleiterShort": "Übungsleiter"
+    },
     "page": {
       "createButton": "Einsatz erstellen",
       "subtitle": "Einsatzdetails und Freiwillige",
