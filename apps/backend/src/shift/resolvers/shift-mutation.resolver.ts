@@ -24,14 +24,17 @@ import { ShiftInviteMapper } from '../mappers/shift-invite.mapper';
 import { JoinShiftInstanceResult } from '../models/join-shift-instance-result.model';
 import { Shift } from '../models/shift.model';
 import { ShiftInstance } from '../models/shift-instance.model';
+import { ShiftInstanceCallOutResult } from '../models/shift-instance-call-out.model';
 import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';
 import { ShiftInvite } from '../models/shift-invite.model';
+import { ShiftCallOutService } from '../services/shift-call-out.service';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
 export class ShiftMutationResolver {
   constructor(
     private readonly shiftService: ShiftService,
+    private readonly shiftCallOutService: ShiftCallOutService,
     private readonly shiftMapper: ShiftMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
     private readonly shiftInviteMapper: ShiftInviteMapper,
@@ -296,6 +299,20 @@ export class ShiftMutationResolver {
       session.user.id,
     );
     return this.shiftInviteMapper.toModelOrThrow(invite);
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => ShiftInstanceCallOutResult)
+  async sendShiftInstanceCallOut(
+    @Args('instanceId', { type: () => String }) instanceId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
+  ): Promise<ShiftInstanceCallOutResult> {
+    return this.shiftCallOutService.sendCallOut(
+      instanceId,
+      context.organizationUnitId,
+      session.user.id,
+    );
   }
 
   @Mutation(() => ShiftInstanceInvite)

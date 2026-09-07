@@ -350,6 +350,32 @@
     "scheduleRecurring": "{days}, {timeRange}",
     "subject": "Du bist zu {shiftTitle} eingeladen"
   },
+  "shiftInstanceCallOut": {
+    "buttonLabel": "Ich kann helfen",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du für diesen Einsatz angefragt werden kannst auf {brandName}.",
+    "greeting": "Hallo {firstName}, {shiftTitle} bei {organizationName} braucht dringend noch Freiwillige.",
+    "heading": "Wir brauchen deine Hilfe",
+    "previewText": "{shiftTitle} bei {organizationName} braucht noch Freiwillige — kannst du helfen?",
+    "subject": "Dringend: {shiftTitle} braucht noch Freiwillige",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftInstanceCallOutNoRecipients": {
+    "buttonLabel": "Einsätze ansehen",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du einen Aufruf auf {brandName} gesendet hast.",
+    "greeting": "Hallo {firstName}, alle, die für {shiftTitle} infrage kommen, wurden bereits gefragt.",
+    "heading": "Niemand mehr zu fragen",
+    "note": "Es wurde keine E-Mail an Freiwillige gesendet — vielleicht möchtest du den Empfängerkreis erweitern oder den Einsatz anpassen.",
+    "previewText": "Alle, die für {shiftTitle} infrage kommen, wurden bereits gefragt.",
+    "subject": "Niemand mehr zu fragen für {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "documentAwaitingSignature": {
     "heading": "Ein Dokument wartet auf deine Unterschrift",
     "greeting": "Hallo {firstName},",

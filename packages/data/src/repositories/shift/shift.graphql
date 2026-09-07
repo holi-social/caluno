@@ -201,6 +201,28 @@ mutation UpdateShiftInstanceInviteStatus(
   }
 }
 
+mutation SendShiftInstanceCallOut($instanceId: String!) {
+  sendShiftInstanceCallOut(instanceId: $instanceId) {
+    recipientCount
+    sentToManagerFallback
+  }
+}
+
+query GetShiftInstanceCallOutSummary($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    lastCallOut {
+      sentAt
+      recipientCount
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+
 mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
     status
