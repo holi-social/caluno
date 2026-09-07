@@ -24,6 +24,7 @@ export type Scalars = {
 export type AddTimeEntryInput = {
   endedAt?: InputMaybe<Scalars['DateTime']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
+  reimbursementTypeId?: InputMaybe<Scalars['String']['input']>;
   shiftInstanceId?: InputMaybe<Scalars['String']['input']>;
   startedAt: Scalars['DateTime']['input'];
   volunteerId: Scalars['String']['input'];
@@ -2496,6 +2497,7 @@ export type UpdateShiftInstanceInput = {
 export type UpdateTimeEntryInput = {
   endedAt?: InputMaybe<Scalars['DateTime']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
+  reimbursementTypeId?: InputMaybe<Scalars['String']['input']>;
   shiftInstanceId?: InputMaybe<Scalars['String']['input']>;
   startedAt: Scalars['DateTime']['input'];
 };
@@ -3726,7 +3728,7 @@ export type GetTimeEntryQueryVariables = Exact<{
 }>;
 
 
-export type GetTimeEntryQuery = { __typename?: 'Query', timeEntry: { __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, notes?: string | null, createdAt: string, volunteer: { __typename?: 'User', id: string, name: string, email: string }, shiftInstance?: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string } } | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } } };
+export type GetTimeEntryQuery = { __typename?: 'Query', timeEntry: { __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, notes?: string | null, createdAt: string, isPaid: boolean, reimbursementType?: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } | null, volunteer: { __typename?: 'User', id: string, name: string, email: string }, shiftInstance?: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string } } | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } } };
 
 export type UpdateTimeEntryMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -6802,6 +6804,11 @@ export const GetTimeEntryDocument = gql`
     endedAt
     notes
     createdAt
+    isPaid
+    reimbursementType {
+      id
+      key
+    }
     volunteer {
       id
       name
