@@ -16,6 +16,10 @@ export const shiftInstancesRelations = defineRelationsPart(schema, (r) => ({
       from: r.shiftInstances.id,
       to: r.shiftInstanceRequiredForms.shiftInstanceId,
     }),
+    callOutRecipients: r.many.shiftCallOutRecipients({
+      from: r.shiftInstances.id,
+      to: r.shiftCallOutRecipients.instanceId,
+    }),
   },
   shiftInstanceRequiredForms: {
     shiftInstance: r.one.shiftInstances({
