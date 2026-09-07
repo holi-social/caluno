@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq } from 'drizzle-orm';
+import { and, count, eq, isNull } from 'drizzle-orm';
 import { PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
@@ -150,9 +150,14 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Time entry not found');
     }
 
+    // Notes are only overwritten when explicitly provided — closing an entry
+    // (e.g. check-out) must not wipe notes set at check-in or by an edit.
     const [timeEntry] = await this.db
       .update(schema.timeEntries)
-      .set({ endedAt: input.endedAt, notes: input.notes })
+      .set({
+        endedAt: input.endedAt,
+        ...(input.notes != null ? { notes: input.notes } : {}),
+      })
       .where(eq(schema.timeEntries.id, id))
       .returning();
 
@@ -423,6 +428,11 @@ export class TimeTrackingService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
+    const volunteer = await this.userService.findById(volunteerId);
+    if (!volunteer) {
+      throw new NotFoundGraphQLError('User not found');
+    }
+
     this.notificationService.notifyOrganizationUnitInvited({
       organizationUnitId,
       organizationUnitName: organizationUnit.name,
@@ -448,6 +458,12 @@ export class TimeTrackingService {
     isParticipating: boolean;
     hasOpenTimeEntry: boolean;
   }> {
+    // Scoped lookup throws NotFound for foreign/missing instances.
+    await this.shiftService.findInstanceById(
+      shiftInstanceId,
+      organizationUnitId,
+    );
+
     const [isMember, pendingRequest, inviteStatuses, hasOpenTimeEntry] =
       await Promise.all([
         this._membershipService.isMemberOfUnitOrAncestor(
@@ -649,29 +665,43 @@ export class TimeTrackingService {
   async checkOutVolunteer(
     timeEntryId: string,
     organizationUnitId: string,
-    actorUserId: string,
+    _actorUserId: string,
   ): Promise<TimeEntryEntity> {
-    const entry = await this.db.query.timeEntries.findFirst({
-      where: { id: timeEntryId },
-    });
+    // Single conditional update: the endedAt-IS-NULL guard makes concurrent
+    // check-outs safe (only one wins) and no separate fetch is needed.
+    const [closed] = await this.db
+      .update(schema.timeEntries)
+      .set({ endedAt: new Date() })
+      .where(
+        and(
+          eq(schema.timeEntries.id, timeEntryId),
+          eq(schema.timeEntries.organizationUnitId, organizationUnitId),
+          isNull(schema.timeEntries.endedAt),
+        ),
+      )
+      .returning();
 
-    if (!entry || entry.organizationUnitId !== organizationUnitId) {
-      throw new NotFoundGraphQLError('Time entry not found');
-    }
-    if (entry.endedAt) {
+    if (!closed) {
+      const entry = await this.db.query.timeEntries.findFirst({
+        where: { id: timeEntryId },
+      });
+      if (!entry || entry.organizationUnitId !== organizationUnitId) {
+        throw new NotFoundGraphQLError('Time entry not found');
+      }
       throw new ConflictGraphQLError('Time entry is already closed');
     }
 
-    const input = new CloseTimeEntryInput();
-    input.endedAt = new Date();
-    input.notes = null;
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.TIME_ENTRY_END,
+      userId: closed.volunteerId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_unit_id: organizationUnitId,
+        shift_instance_id: closed.shiftInstanceId ?? undefined,
+      },
+    });
 
-    return this.closeTimeEntry(
-      timeEntryId,
-      organizationUnitId,
-      input,
-      actorUserId,
-    );
+    return closed;
   }
 }
 

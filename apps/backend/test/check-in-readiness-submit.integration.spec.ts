@@ -9,6 +9,7 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { DEFAULT_MEMBER_ROLE_NAME, PERMISSIONS } from '../src/auth/constants';
 import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
@@ -218,6 +219,35 @@ describe('checkInReadiness query', () => {
     expect(data.checkInReadiness.isParticipating).toBe(false);
     expect(data.checkInReadiness.shiftInviteStatus).toBe('ADMIN_INVITED');
   });
+
+  it('rejects a shift instance that belongs to a different org unit', async () => {
+    const otherOrg = await createOrganizationWithType(
+      db,
+      `ReadinessOther ${crypto.randomUUID()}`,
+    );
+    const otherUnit = await createUnit(db, {
+      organizationId: otherOrg.organization.id,
+      typeId: otherOrg.type.id,
+      name: 'Other readiness unit',
+    });
+    const foreignShift = await createShift(db, {
+      organizationUnitId: otherUnit.id,
+    });
+    const foreignInstance = await createShiftInstance(db, foreignShift.id);
+    const volunteer = await createUser(db);
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_READINESS,
+      variables: {
+        volunteerId: volunteer.id,
+        shiftInstanceId: foreignInstance.id,
+      },
+      // Caller's header names their OWN unit, not the foreign one.
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toContain('not found');
+  });
 });
 
 describe('checkInVolunteerRequiredForms query', () => {
@@ -279,6 +309,7 @@ describe('checkInVolunteerRequiredForms query', () => {
 
   it('returns an empty list when the unit has no required forms', async () => {
     const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
 
     const data = await graphqlRequestRequiringData<{
       checkInVolunteerRequiredForms: unknown[];
@@ -297,6 +328,7 @@ describe('checkInVolunteerRequiredForms query', () => {
 
   it("pairs a required form with the volunteer's submission status", async () => {
     const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
     const { form } = await createRequirementForm(db, {
       organizationId,
       organizationUnitId: unitId,
@@ -358,6 +390,20 @@ describe('checkInVolunteerRequiredForms query', () => {
     expect(submitted.checkInVolunteerRequiredForms[0]?.submitted).toBe(true);
     expect(submitted.checkInVolunteerRequiredForms[0]?.submissionId).toBe(
       submission.id,
+    );
+  });
+
+  it('rejects a volunteer who is not a member of the unit', async () => {
+    const volunteer = await createUser(db); // no membership anywhere
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_REQUIRED_FORMS,
+      variables: { volunteerId: volunteer.id },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe(
+      'Volunteer is not a member of this unit',
     );
   });
 });
@@ -671,6 +717,7 @@ describe('checkInInviteToShiftInstance mutation', () => {
       status: ShiftInviteStatus.JOINED,
     });
     const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
 
     await graphqlRequestRequiringData(
       app,
@@ -689,6 +736,81 @@ describe('checkInInviteToShiftInstance mutation', () => {
 
     expect(byUserId.get(volunteer.id)).toBe(ShiftInviteStatus.ADMIN_INVITED);
     expect(byUserId.get(alreadyInvited.id)).toBe(ShiftInviteStatus.JOINED);
+  });
+
+  it('resurrects a declined invite back to ADMIN_INVITED on re-invite', async () => {
+    const shift = await createShift(db, { organizationUnitId: unitId });
+    const instance = await createShiftInstance(db, shift.id);
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
+    await createShiftInstanceInvite(db, {
+      instanceId: instance.id,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+    });
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: CHECK_IN_INVITE_TO_SHIFT_INSTANCE,
+        variables: { shiftInstanceId: instance.id, volunteerId: volunteer.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInInviteToShiftInstance',
+    );
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: volunteer.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+  });
+
+  it('does not downgrade an active invite on re-invite', async () => {
+    const shift = await createShift(db, { organizationUnitId: unitId });
+    const instance = await createShiftInstance(db, shift.id);
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
+    await createShiftInstanceInvite(db, {
+      instanceId: instance.id,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.JOINED,
+    });
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: CHECK_IN_INVITE_TO_SHIFT_INSTANCE,
+        variables: { shiftInstanceId: instance.id, volunteerId: volunteer.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInInviteToShiftInstance',
+    );
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: volunteer.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.JOINED);
+  });
+
+  it('rejects a volunteer who is not a member of the unit', async () => {
+    const shift = await createShift(db, { organizationUnitId: unitId });
+    const instance = await createShiftInstance(db, shift.id);
+    const volunteer = await createUser(db); // no membership anywhere
+
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_INVITE_TO_SHIFT_INSTANCE,
+      variables: { shiftInstanceId: instance.id, volunteerId: volunteer.id },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe(
+      'Volunteer is not a member of this unit',
+    );
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: volunteer.id },
+    });
+    expect(invite).toBeUndefined();
   });
 
   it('rejects a shift instance that belongs to a different org unit', async () => {
@@ -798,6 +920,16 @@ describe('checkInInviteToOrganization mutation', () => {
     });
     expect(membership).toBeUndefined();
     expect(request).toBeUndefined();
+  });
+
+  it('rejects an unknown volunteer id', async () => {
+    const response = await graphqlRequest(app, {
+      query: CHECK_IN_INVITE_TO_ORGANIZATION,
+      variables: { volunteerId: crypto.randomUUID() },
+      headers: { 'x-organization-unit-id': unitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe('User not found');
   });
 });
 
@@ -1021,5 +1153,30 @@ describe('checkOutVolunteer mutation', () => {
     });
 
     expect(response.errors?.[0]?.message).toBe('Time entry is already closed');
+  });
+
+  it('keeps existing notes on the entry when checking out', async () => {
+    const volunteer = await createUser(db);
+    const entry = await insertEntry(volunteer.id, unitId);
+    await db
+      .update(schema.timeEntries)
+      .set({ notes: 'Came late' })
+      .where(eq(schema.timeEntries.id, entry.id));
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: CHECK_OUT_VOLUNTEER,
+        variables: { timeEntryId: entry.id },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkOutVolunteer',
+    );
+
+    const closed = await db.query.timeEntries.findFirst({
+      where: { id: entry.id },
+    });
+    expect(closed?.endedAt).toBeTruthy();
+    expect(closed?.notes).toBe('Came late');
   });
 });

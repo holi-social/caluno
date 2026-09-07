@@ -1094,7 +1094,9 @@ export class ShiftService {
    * Creates a single ADMIN_INVITED invite for one volunteer, without touching any
    * other invite on the instance — unlike `updateMembersForShiftInstance`,
    * which replaces the whole member list. Used by the check-in flow's
-   * "invite to shift" blocker action.
+   * "invite to shift" blocker action. Re-inviting resurrects an inactive
+   * (REJECTED/CANCELLED) row like `updateMembersForShiftInstance` does; the
+   * invite notification only goes out when the invite actually changes.
    */
   async inviteVolunteerToShiftInstance(
     shiftInstanceId: string,
@@ -1118,20 +1120,49 @@ export class ShiftService {
       );
     }
 
-    await this.db.transaction((tx) =>
-      this.inviteMembersToShiftInstance(
+    const isMember = await this.membershipService.isMemberOfUnitOrAncestor(
+      volunteerId,
+      organizationUnitId,
+    );
+    if (!isMember) {
+      throw new ForbiddenGraphQLError('Volunteer is not a member of this unit');
+    }
+
+    const existingStatus = instance.invites.find(
+      (invite) => invite.userId === volunteerId,
+    )?.status as ShiftInviteStatus | undefined;
+    const hasActiveInvite =
+      existingStatus != null &&
+      ACTIVE_SHIFT_INVITE_STATUSES.includes(existingStatus);
+
+    await this.db.transaction(async (tx) => {
+      await this.inviteMembersToShiftInstance(
         tx,
         instance,
         [volunteerId],
         ShiftInviteStatus.ADMIN_INVITED,
-      ),
-    );
+      );
+      if (existingStatus != null && !hasActiveInvite) {
+        // The insert above no-ops on conflict; resurrect the inactive row.
+        await tx
+          .update(schema.shiftInstanceInvites)
+          .set({ status: ShiftInviteStatus.ADMIN_INVITED })
+          .where(
+            and(
+              eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
+              eq(schema.shiftInstanceInvites.userId, volunteerId),
+            ),
+          );
+      }
+    });
 
-    void this.loadAndEmitShiftInstanceInvitedNotification(
-      instance.master,
-      instance,
-      [volunteerId],
-    );
+    if (!hasActiveInvite) {
+      void this.loadAndEmitShiftInstanceInvitedNotification(
+        instance.master,
+        instance,
+        [volunteerId],
+      );
+    }
 
     return instance;
   }

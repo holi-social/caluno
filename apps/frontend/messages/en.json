@@ -1187,21 +1187,12 @@
       "openInstanceAria": "Open"
     },
     "checkIn": {
-      "checkIn": "Check in",
-      "checkInWithShift": "Choose a shift instead",
-      "checkInWithoutShift": "Check in without a shift",
       "checkOut": "Check-out",
       "checkOutTitle": "Check-out",
       "checkedInAt": "Checked in: {time}",
-      "checkingIn": "Checking in...",
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
       "generalCheckIn": "General check-in",
-      "noShiftSelected": "No shift selected",
-      "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
-      "selectOrgTitle": "Check-in",
-      "successNext": "Next",
-      "volunteerCheckedIn": "Volunteer checked in",
       "volunteerCheckedOut": "Volunteer checked out"
     },
     "detail": {

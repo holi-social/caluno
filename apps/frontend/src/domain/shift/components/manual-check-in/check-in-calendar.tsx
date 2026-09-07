@@ -12,6 +12,8 @@ type CheckInCalendarProps = {
   month: Date;
   onMonthChange: (month: Date) => void;
   onSelect: (date: Date) => void;
+  /** Disables day selection while the instances for `month` are loading. */
+  disabled?: boolean;
 };
 
 export function CheckInCalendar({
@@ -21,6 +23,7 @@ export function CheckInCalendar({
   month,
   onMonthChange,
   onSelect,
+  disabled,
 }: CheckInCalendarProps) {
   const { anyDays, shiftDays } = useMemo(() => {
     const any = new Set<string>();
@@ -47,6 +50,7 @@ export function CheckInCalendar({
       onSelect={(date) => {
         if (date) onSelect(date);
       }}
+      disabled={disabled}
       showOutsideDays={false}
       modifiers={{
         hasInstance: (date) => anyDays.has(date.toDateString()),

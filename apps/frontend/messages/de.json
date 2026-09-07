@@ -1187,21 +1187,12 @@
       "openInstanceAria": "Öffnen"
     },
     "checkIn": {
-      "checkIn": "Einchecken",
-      "checkInWithShift": "Stattdessen eine Schicht wählen",
-      "checkInWithoutShift": "Ohne Schicht einchecken",
       "checkOut": "Auschecken",
       "checkOutTitle": "Auschecken",
       "checkedInAt": "Eingecheckt: {time}",
-      "checkingIn": "Wird eingecheckt...",
       "checkingOut": "Wird ausgecheckt...",
       "checkingOutAt": "Wird ausgecheckt: {time}",
       "generalCheckIn": "Allgemeines Check-in",
-      "noShiftSelected": "Kein Einsatz ausgewählt",
-      "selectOrgDescription": "Wähle die Organisation aus, in die die Person eingecheckt werden soll.",
-      "selectOrgTitle": "Einchecken",
-      "successNext": "Weiter",
-      "volunteerCheckedIn": "Freiwillige:r eingecheckt",
       "volunteerCheckedOut": "Freiwillige:r ausgecheckt"
     },
     "detail": {

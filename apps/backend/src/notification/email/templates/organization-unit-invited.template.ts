@@ -41,9 +41,11 @@ export async function organizationUnitInvitedTemplate(
 
   return renderEmail({
     templateName: 'organizationUnitInvitedTemplate',
-    subject: t('organizationUnitInvited.subject', { organizationUnitName }),
+    subject: t('organizationUnitInvited.subject', {
+      organizationUnitName: data.organizationUnitName,
+    }),
     previewText: t('organizationUnitInvited.previewText', {
-      organizationUnitName,
+      organizationUnitName: data.organizationUnitName,
     }),
     body,
     footerNote: t('organizationUnitInvited.footerNote', { brandName }),

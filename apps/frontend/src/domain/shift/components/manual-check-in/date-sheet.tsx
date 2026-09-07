@@ -14,6 +14,8 @@ type DateSheetProps = {
   month: Date;
   onMonthChange: (month: Date) => void;
   onSelect: (date: Date) => void;
+  /** True while the month-range query is in flight with stale instances. */
+  isLoadingInstances?: boolean;
 };
 
 export function DateSheet({
@@ -25,6 +27,7 @@ export function DateSheet({
   month,
   onMonthChange,
   onSelect,
+  isLoadingInstances,
 }: DateSheetProps) {
   const t = useTranslations('CheckIn');
 
@@ -40,6 +43,7 @@ export function DateSheet({
         selectedShiftId={selectedShiftId}
         month={month}
         onMonthChange={onMonthChange}
+        disabled={isLoadingInstances}
         onSelect={(date) => {
           onSelect(date);
           onOpenChange(false);
