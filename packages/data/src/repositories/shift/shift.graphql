@@ -56,6 +56,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      reimbursementTypeId
       requiredFormsCount
       createdBy {
         id
@@ -198,6 +199,28 @@ mutation UpdateShiftInstanceInviteStatus(
   ) {
     status
     userId
+  }
+}
+
+mutation SendShiftInstanceCallOut($instanceId: String!) {
+  sendShiftInstanceCallOut(instanceId: $instanceId) {
+    recipientCount
+    sentToManagerFallback
+  }
+}
+
+query GetShiftInstanceCallOutSummary($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    lastCallOut {
+      sentAt
+      recipientCount
+      sentBy {
+        id
+        name
+        image
+      }
+    }
   }
 }
 
@@ -349,6 +372,7 @@ query GetWeeklyShifts(
     isCancelled
     overrideMinVolunteers
     overrideMaxVolunteers
+    overrideReimbursementTypeId
     master {
       id
       title
@@ -356,6 +380,7 @@ query GetWeeklyShifts(
       maxVolunteers
       visibility
       rrule
+      reimbursementTypeId
     }
     volunteers {
       id
