@@ -398,6 +398,17 @@
     "previewText": "{documentName} von {organizationName} wurde abgelehnt.",
     "footerNote": "Du erhältst diese E-Mail, weil ein Dokument von {organizationName} auf {brandName} abgelehnt wurde."
   },
+  "documentDeclinedByVolunteer": {
+    "heading": "Ein:e Freiwillige:r hat ein Dokument abgelehnt",
+    "greeting": "Hallo {firstName},",
+    "declined": "hat {documentName} abgelehnt.",
+    "reasonLabel": "Genannter Grund:",
+    "buttonLabel": "Zu Abrechnungen",
+    "note": "Das Dokument muss korrigiert und neu ausgestellt werden, bevor es erneut unterschrieben werden kann.",
+    "subject": "{volunteerName} hat {documentName} abgelehnt",
+    "previewText": "{volunteerName} hat {documentName} abgelehnt.",
+    "footerNote": "Du erhältst diese E-Mail, weil du Abrechnungsdokumente auf {brandName} verwaltest."
+  },
   "documentNames": {
     "agreement": "Zusatzvereinbarung",
     "timesheet": "Stundennachweis"
