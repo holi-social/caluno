@@ -5,6 +5,7 @@
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
+  reimbursementTypeId: String
   shiftInstanceId: String
   startedAt: DateTime!
   volunteerId: String!
@@ -1479,6 +1480,7 @@ input UpdateShiftInstanceInput {
 input UpdateTimeEntryInput {
   endedAt: DateTime
   notes: String
+  reimbursementTypeId: String
   shiftInstanceId: String
   startedAt: DateTime!
 }
