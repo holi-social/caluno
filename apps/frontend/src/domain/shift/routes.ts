@@ -4,7 +4,7 @@ const CHECK_IN_URL_PATTERN = /\/admin\/check-in\/([a-z0-9]{12})(?:[/?#]|$)/i;
 
 export function extractCheckInPath(scannedValue: string): string | null {
   const match = scannedValue.match(CHECK_IN_URL_PATTERN);
-  return match ? `/admin/check-in/${match[1]?.toLowerCase()}` : null;
+  return match ? `/check-in/${match[1]?.toLowerCase()}/decide` : null;
 }
 
 export type ShiftListQuery = {

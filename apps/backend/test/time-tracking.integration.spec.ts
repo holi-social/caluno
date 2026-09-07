@@ -7,6 +7,7 @@ import {
   it,
   mock,
   setDefaultTimeout,
+  spyOn,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
@@ -17,6 +18,7 @@ import {
   NotFoundGraphQLError,
 } from '../src/graphql/errors';
 import { ShiftInviteStatus } from '../src/shift/enums';
+import { ShiftService } from '../src/shift/shift.service';
 import { AddTimeEntryInput } from '../src/time-tracking/inputs/add-time-entry.input';
 import { TimeTrackingService } from '../src/time-tracking/time-tracking.service';
 import { createShift, createUser } from './factories';
@@ -101,6 +103,40 @@ describe('TimeTrackingService', () => {
     expect(entries).toHaveLength(1);
   });
 
+  it('getCheckInReadiness reports hasOpenTimeEntry for the instance', async () => {
+    const user = await createUser(db);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    const before = await service.getCheckInReadiness(
+      user.id,
+      instanceId ?? '',
+      organizationUnitId,
+    );
+    expect(before.hasOpenTimeEntry).toBe(false);
+
+    await db.insert(schema.timeEntries).values({
+      shiftInstanceId: instanceId ?? '',
+      organizationUnitId,
+      volunteerId: user.id,
+      startedAt: new Date(),
+    });
+
+    const after = await service.getCheckInReadiness(
+      user.id,
+      instanceId ?? '',
+      organizationUnitId,
+    );
+    expect(after.hasOpenTimeEntry).toBe(true);
+  });
+
   it('addTimeEntry rejects duplicate open time entries at the database guard level', async () => {
     const user = await createUser(db);
 
@@ -134,6 +170,77 @@ describe('TimeTrackingService', () => {
       },
     });
     expect(entries).toHaveLength(1);
+  });
+
+  it('addTimeEntry proactively rejects a duplicate open entry before insert', async () => {
+    const user = await createUser(db);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    // Open entry created directly, so the spy only observes the second call.
+    await db.insert(schema.timeEntries).values({
+      shiftInstanceId: instanceId ?? '',
+      organizationUnitId,
+      volunteerId: user.id,
+      startedAt: new Date(),
+    });
+
+    const shiftService = app.get(ShiftService);
+    const spy = spyOn(shiftService, 'hasOpenTimeEntry');
+
+    const input = new AddTimeEntryInput();
+    input.shiftInstanceId = instanceId ?? '';
+    input.volunteerId = user.id;
+    input.startedAt = new Date();
+    input.endedAt = null;
+    input.notes = null;
+
+    await expect(
+      service.addTimeEntry(organizationUnitId, input, user.id),
+    ).rejects.toThrow(ConflictGraphQLError);
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('addTimeEntry still allows a closed entry while an open entry exists', async () => {
+    const user = await createUser(db);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db.insert(schema.timeEntries).values({
+      shiftInstanceId: instanceId ?? '',
+      organizationUnitId,
+      volunteerId: user.id,
+      startedAt: new Date(),
+    });
+
+    const input = new AddTimeEntryInput();
+    input.shiftInstanceId = instanceId ?? '';
+    input.volunteerId = user.id;
+    input.startedAt = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    input.endedAt = new Date(Date.now() - 60 * 60 * 1000);
+    input.notes = null;
+
+    const entry = await service.addTimeEntry(
+      organizationUnitId,
+      input,
+      user.id,
+    );
+    expect(entry.id).toBeDefined();
   });
 
   it('addTimeEntry creates a shift-less entry with the given org unit and no shift instance', async () => {

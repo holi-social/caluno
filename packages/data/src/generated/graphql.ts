@@ -38,6 +38,22 @@ export type BundleDownloadStatus = {
   volunteer: User;
 };
 
+export type CheckInContext = {
+  __typename?: 'CheckInContext';
+  eligibleOrganizationUnits: Array<OrganizationUnit>;
+  openTimeEntries: Array<TimeEntry>;
+  volunteer: User;
+};
+
+export type CheckInReadiness = {
+  __typename?: 'CheckInReadiness';
+  hasOpenTimeEntry: Scalars['Boolean']['output'];
+  isMember: Scalars['Boolean']['output'];
+  isParticipating: Scalars['Boolean']['output'];
+  openMembershipRequestId?: Maybe<Scalars['ID']['output']>;
+  shiftInviteStatus?: Maybe<ShiftInviteStatus>;
+};
+
 export type CloseTimeEntryInput = {
   endedAt: Scalars['DateTime']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -488,6 +504,13 @@ export type FormSubmissionValue = {
   value: Scalars['String']['output'];
 };
 
+export enum InviteAllowanceState {
+  Eligible = 'ELIGIBLE',
+  NearlyExhausted = 'NEARLY_EXHAUSTED',
+  NoAgreement = 'NO_AGREEMENT',
+  WouldExceed = 'WOULD_EXCEED'
+}
+
 export type Invoice = {
   __typename?: 'Invoice';
   createdAt: Scalars['DateTime']['output'];
@@ -649,7 +672,12 @@ export type Mutation = {
   approveMembershipRequest: MembershipRequest;
   cancelMembershipRequest: MembershipRequest;
   checkIn: TimeEntry;
+  checkInApproveMembershipRequest: MembershipRequest;
+  checkInInviteToOrganization: Scalars['Boolean']['output'];
+  checkInInviteToShiftInstance: ShiftInstance;
+  checkInVolunteer: TimeEntry;
   checkOut: TimeEntry;
+  checkOutVolunteer: TimeEntry;
   closeTimeEntry: TimeEntry;
   createContract: Contract;
   createDocumentTemplate: DocumentTemplate;
@@ -750,8 +778,35 @@ export type MutationCheckInArgs = {
 };
 
 
+export type MutationCheckInApproveMembershipRequestArgs = {
+  requestId: Scalars['ID']['input'];
+};
+
+
+export type MutationCheckInInviteToOrganizationArgs = {
+  volunteerId: Scalars['ID']['input'];
+};
+
+
+export type MutationCheckInInviteToShiftInstanceArgs = {
+  shiftInstanceId: Scalars['ID']['input'];
+  volunteerId: Scalars['ID']['input'];
+};
+
+
+export type MutationCheckInVolunteerArgs = {
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
+  volunteerId: Scalars['ID']['input'];
+};
+
+
 export type MutationCheckOutArgs = {
   shiftInstanceId: Scalars['ID']['input'];
+};
+
+
+export type MutationCheckOutVolunteerArgs = {
+  timeEntryId: Scalars['ID']['input'];
 };
 
 
@@ -1340,6 +1395,11 @@ export type Query = {
   availableEvents: EventPaginatedResponse;
   availableShiftInstances: ShiftInstancePaginatedResponse;
   bundleDownloadStatus?: Maybe<BundleDownloadStatus>;
+  checkInContext?: Maybe<CheckInContext>;
+  checkInReadiness: CheckInReadiness;
+  checkInShiftInstances: Array<ShiftInstance>;
+  checkInShifts: Array<Shift>;
+  checkInVolunteerRequiredForms: Array<RequiredFormWithStatus>;
   contract: Contract;
   contracts: Array<Contract>;
   documentTemplate: DocumentTemplate;
@@ -1356,6 +1416,7 @@ export type Query = {
   formSubmissionsByForm: FormSubmissionPaginatedResponse;
   formSubmissionsByMembershipRequest: Array<FormSubmission>;
   formSubmissionsForVolunteer: Array<FormSubmission>;
+  inviteAllowanceEligibility: Array<VolunteerInviteAllowance>;
   invoice: Invoice;
   invoices: Array<Invoice>;
   isMemberOfUnitOrAncestor: Scalars['Boolean']['output'];
@@ -1476,6 +1537,35 @@ export type QueryBundleDownloadStatusArgs = {
 };
 
 
+export type QueryCheckInContextArgs = {
+  checkInId: Scalars['String']['input'];
+};
+
+
+export type QueryCheckInReadinessArgs = {
+  shiftInstanceId: Scalars['ID']['input'];
+  volunteerId: Scalars['ID']['input'];
+};
+
+
+export type QueryCheckInShiftInstancesArgs = {
+  endsBefore?: InputMaybe<Scalars['DateTime']['input']>;
+  limit?: Scalars['Int']['input'];
+  offset?: Scalars['Int']['input'];
+  startsAfter?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+
+export type QueryCheckInShiftsArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryCheckInVolunteerRequiredFormsArgs = {
+  volunteerId: Scalars['ID']['input'];
+};
+
+
 export type QueryContractArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1558,6 +1648,13 @@ export type QueryFormSubmissionsByMembershipRequestArgs = {
 
 export type QueryFormSubmissionsForVolunteerArgs = {
   userId: Scalars['String']['input'];
+};
+
+
+export type QueryInviteAllowanceEligibilityArgs = {
+  organizationUnitId: Scalars['ID']['input'];
+  reimbursementTypeId: Scalars['ID']['input'];
+  shiftDurationMinutes: Scalars['Int']['input'];
 };
 
 
@@ -2197,6 +2294,7 @@ export type Shift = {
   organizationUnitId: Scalars['ID']['output'];
   originalStartsAt: Scalars['DateTime']['output'];
   reimbursementTypeId?: Maybe<Scalars['ID']['output']>;
+  reimbursementTypeKey?: Maybe<ReimbursementTypeKey>;
   requiredForms: Array<RequiredFormRef>;
   requiredFormsCount: Scalars['Int']['output'];
   rrule?: Maybe<Scalars['String']['output']>;
@@ -2533,6 +2631,12 @@ export type UserRequirementStatus = {
   status: RequirementFulfillmentStatus;
 };
 
+export type VolunteerInviteAllowance = {
+  __typename?: 'VolunteerInviteAllowance';
+  state: InviteAllowanceState;
+  volunteerId: Scalars['ID']['output'];
+};
+
 export type VolunteerNeedsTimesheet = {
   __typename?: 'VolunteerNeedsTimesheet';
   eligibleHours: Scalars['Float']['output'];
@@ -2581,6 +2685,15 @@ export type GetYearlyUsageQueryVariables = Exact<{
 
 
 export type GetYearlyUsageQuery = { __typename?: 'Query', yearlyUsage: { __typename?: 'YearlyUsage', usedCents: number, limitCents: number, remainingCents: number } };
+
+export type GetInviteAllowanceEligibilityQueryVariables = Exact<{
+  organizationUnitId: Scalars['ID']['input'];
+  reimbursementTypeId: Scalars['ID']['input'];
+  shiftDurationMinutes: Scalars['Int']['input'];
+}>;
+
+
+export type GetInviteAllowanceEligibilityQuery = { __typename?: 'Query', inviteAllowanceEligibility: Array<{ __typename?: 'VolunteerInviteAllowance', volunteerId: string, state: InviteAllowanceState }> };
 
 export type GetRosterYearlyUsageQueryVariables = Exact<{
   organizationUnitId: Scalars['ID']['input'];
@@ -3041,6 +3154,13 @@ export type GetMyMembershipRequestsQueryVariables = Exact<{
 
 export type GetMyMembershipRequestsQuery = { __typename?: 'Query', myMembershipRequests: { __typename?: 'MembershipRequestPaginatedResponse', items: Array<{ __typename?: 'MembershipRequest', id: string, status: MembershipRequestStatus, reviewedAt?: string | null, rejectionReason?: string | null, createdAt: string, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, type: { __typename?: 'OrganizationUnitType', icon: string }, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', name: string } }, user: { __typename?: 'User', id: string, name: string, email: string }, contact?: { __typename?: 'User', id: string, name: string } | null }> } };
 
+export type CheckInApproveMembershipRequestMutationVariables = Exact<{
+  requestId: Scalars['ID']['input'];
+}>;
+
+
+export type CheckInApproveMembershipRequestMutation = { __typename?: 'Mutation', checkInApproveMembershipRequest: { __typename?: 'MembershipRequest', id: string, status: MembershipRequestStatus } };
+
 export type GetOrganizationQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
@@ -3478,7 +3598,7 @@ export type GetShiftQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftQuery = { __typename?: 'Query', shift: { __typename?: 'Shift', id: string, title: string, slug: string, instructions?: string | null, location?: string | null, imageUrl?: string | null, visibility: ShiftVisibility, createdAt: string, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, rrule?: string | null, originalStartsAt: string, durationMinutes: number, organizationUnitId: string, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organization: { __typename?: 'Organization', id: string, name: string } }, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
+export type GetShiftQuery = { __typename?: 'Query', shift: { __typename?: 'Shift', id: string, title: string, slug: string, instructions?: string | null, location?: string | null, imageUrl?: string | null, visibility: ShiftVisibility, createdAt: string, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, rrule?: string | null, originalStartsAt: string, durationMinutes: number, organizationUnitId: string, reimbursementTypeKey?: ReimbursementTypeKey | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organization: { __typename?: 'Organization', id: string, name: string } }, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
 
 export type GetShiftsQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -3660,7 +3780,7 @@ export type GetPublicShiftInstanceQueryVariables = Exact<{
 
 export type GetPublicShiftInstanceQuery = { __typename?: 'Query', publicShiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null, myInviteStatus?: ShiftInviteStatus | null, isIntendingToJoin: boolean, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } };
 
-export type VolunteerHomeShiftInstanceFragment = { __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
+export type VolunteerHomeShiftInstanceFragment = { __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, reimbursementTypeKey?: ReimbursementTypeKey | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
 
 export type GetMyShiftInstancesQueryVariables = Exact<{
   includePast?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3674,7 +3794,7 @@ export type GetMyShiftInstancesQueryVariables = Exact<{
 }>;
 
 
-export type GetMyShiftInstancesQuery = { __typename?: 'Query', myShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+export type GetMyShiftInstancesQuery = { __typename?: 'Query', myShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, reimbursementTypeKey?: ReimbursementTypeKey | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
 
 export type GetAvailableShiftInstancesQueryVariables = Exact<{
   startsAfter?: InputMaybe<Scalars['DateTime']['input']>;
@@ -3685,7 +3805,7 @@ export type GetAvailableShiftInstancesQueryVariables = Exact<{
 }>;
 
 
-export type GetAvailableShiftInstancesQuery = { __typename?: 'Query', availableShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+export type GetAvailableShiftInstancesQuery = { __typename?: 'Query', availableShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, reimbursementTypeKey?: ReimbursementTypeKey | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
 
 export type CheckInMutationVariables = Exact<{
   shiftInstanceId: Scalars['ID']['input'];
@@ -3700,6 +3820,29 @@ export type CheckOutMutationVariables = Exact<{
 
 
 export type CheckOutMutation = { __typename?: 'Mutation', checkOut: { __typename?: 'TimeEntry', id: string } };
+
+export type GetCheckInShiftInstancesQueryVariables = Exact<{
+  startsAfter: Scalars['DateTime']['input'];
+  endsBefore: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetCheckInShiftInstancesQuery = { __typename?: 'Query', checkInShiftInstances: Array<{ __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string } }> };
+
+export type GetCheckInShiftsQueryVariables = Exact<{
+  search?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetCheckInShiftsQuery = { __typename?: 'Query', checkInShifts: Array<{ __typename?: 'Shift', id: string, title: string }> };
+
+export type CheckInInviteToShiftInstanceMutationVariables = Exact<{
+  shiftInstanceId: Scalars['ID']['input'];
+  volunteerId: Scalars['ID']['input'];
+}>;
+
+
+export type CheckInInviteToShiftInstanceMutation = { __typename?: 'Mutation', checkInInviteToShiftInstance: { __typename?: 'ShiftInstance', id: string } };
 
 export type AddTimeEntryMutationVariables = Exact<{
   input: AddTimeEntryInput;
@@ -3762,6 +3905,50 @@ export type GetMyTimeQueryVariables = Exact<{
 
 
 export type GetMyTimeQuery = { __typename?: 'Query', myTime: { __typename?: 'TimeEntryPaginatedResponse', items: Array<{ __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, shiftInstance?: { __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } } } | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+
+export type GetCheckInContextQueryVariables = Exact<{
+  checkInId: Scalars['String']['input'];
+}>;
+
+
+export type GetCheckInContextQuery = { __typename?: 'Query', checkInContext?: { __typename?: 'CheckInContext', volunteer: { __typename?: 'User', id: string, name: string, email: string, image?: string | null }, eligibleOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, name: string }>, openTimeEntries: Array<{ __typename?: 'TimeEntry', id: string, startedAt: string, shiftInstance?: { __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string } } | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } }> } | null };
+
+export type GetCheckInReadinessQueryVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
+  shiftInstanceId: Scalars['ID']['input'];
+}>;
+
+
+export type GetCheckInReadinessQuery = { __typename?: 'Query', checkInReadiness: { __typename?: 'CheckInReadiness', isMember: boolean, openMembershipRequestId?: string | null, shiftInviteStatus?: ShiftInviteStatus | null, isParticipating: boolean, hasOpenTimeEntry: boolean } };
+
+export type GetCheckInVolunteerRequiredFormsQueryVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
+}>;
+
+
+export type GetCheckInVolunteerRequiredFormsQuery = { __typename?: 'Query', checkInVolunteerRequiredForms: Array<{ __typename?: 'RequiredFormWithStatus', order: number, submitted: boolean, submissionId?: string | null, form: { __typename?: 'RequirementForm', id: string, name: string } }> };
+
+export type CheckInVolunteerMutationVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type CheckInVolunteerMutation = { __typename?: 'Mutation', checkInVolunteer: { __typename?: 'TimeEntry', id: string } };
+
+export type CheckInInviteToOrganizationMutationVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
+}>;
+
+
+export type CheckInInviteToOrganizationMutation = { __typename?: 'Mutation', checkInInviteToOrganization: boolean };
+
+export type CheckOutVolunteerMutationVariables = Exact<{
+  timeEntryId: Scalars['ID']['input'];
+}>;
+
+
+export type CheckOutVolunteerMutation = { __typename?: 'Mutation', checkOutVolunteer: { __typename?: 'TimeEntry', id: string } };
 
 export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4236,6 +4423,7 @@ export const VolunteerHomeShiftInstanceFragmentDoc = gql`
     location
     rrule
     maxVolunteers
+    reimbursementTypeKey
     organizationUnit {
       id
       name
@@ -4294,6 +4482,18 @@ export const GetYearlyUsageDocument = gql`
     usedCents
     limitCents
     remainingCents
+  }
+}
+    `;
+export const GetInviteAllowanceEligibilityDocument = gql`
+    query GetInviteAllowanceEligibility($organizationUnitId: ID!, $reimbursementTypeId: ID!, $shiftDurationMinutes: Int!) {
+  inviteAllowanceEligibility(
+    organizationUnitId: $organizationUnitId
+    reimbursementTypeId: $reimbursementTypeId
+    shiftDurationMinutes: $shiftDurationMinutes
+  ) {
+    volunteerId
+    state
   }
 }
     `;
@@ -5056,6 +5256,14 @@ export const GetMyMembershipRequestsDocument = gql`
       rejectionReason
       createdAt
     }
+  }
+}
+    `;
+export const CheckInApproveMembershipRequestDocument = gql`
+    mutation CheckInApproveMembershipRequest($requestId: ID!) {
+  checkInApproveMembershipRequest(requestId: $requestId) {
+    id
+    status
   }
 }
     `;
@@ -6311,6 +6519,7 @@ export const GetShiftDocument = gql`
     originalStartsAt
     durationMinutes
     organizationUnitId
+    reimbursementTypeKey
     requiredFormsCount
     requiredForms {
       ...RequiredFormRefFields
@@ -6775,6 +6984,38 @@ export const CheckOutDocument = gql`
   }
 }
     `;
+export const GetCheckInShiftInstancesDocument = gql`
+    query GetCheckInShiftInstances($startsAfter: DateTime!, $endsBefore: DateTime!) {
+  checkInShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    master {
+      id
+      title
+    }
+  }
+}
+    `;
+export const GetCheckInShiftsDocument = gql`
+    query GetCheckInShifts($search: String) {
+  checkInShifts(search: $search) {
+    id
+    title
+  }
+}
+    `;
+export const CheckInInviteToShiftInstanceDocument = gql`
+    mutation CheckInInviteToShiftInstance($shiftInstanceId: ID!, $volunteerId: ID!) {
+  checkInInviteToShiftInstance(
+    shiftInstanceId: $shiftInstanceId
+    volunteerId: $volunteerId
+  ) {
+    id
+  }
+}
+    `;
 export const AddTimeEntryDocument = gql`
     mutation AddTimeEntry($input: AddTimeEntryInput!) {
   addTimeEntry(input: $input) {
@@ -6958,6 +7199,85 @@ export const GetMyTimeDocument = gql`
   }
 }
     `;
+export const GetCheckInContextDocument = gql`
+    query GetCheckInContext($checkInId: String!) {
+  checkInContext(checkInId: $checkInId) {
+    volunteer {
+      id
+      name
+      email
+      image
+    }
+    eligibleOrganizationUnits {
+      id
+      name
+    }
+    openTimeEntries {
+      id
+      startedAt
+      shiftInstance {
+        id
+        overrideTitle
+        master {
+          id
+          title
+        }
+      }
+      organizationUnit {
+        id
+        name
+        organization {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetCheckInReadinessDocument = gql`
+    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+  checkInReadiness(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
+    isMember
+    openMembershipRequestId
+    shiftInviteStatus
+    isParticipating
+    hasOpenTimeEntry
+  }
+}
+    `;
+export const GetCheckInVolunteerRequiredFormsDocument = gql`
+    query GetCheckInVolunteerRequiredForms($volunteerId: ID!) {
+  checkInVolunteerRequiredForms(volunteerId: $volunteerId) {
+    form {
+      id
+      name
+    }
+    order
+    submitted
+    submissionId
+  }
+}
+    `;
+export const CheckInVolunteerDocument = gql`
+    mutation CheckInVolunteer($volunteerId: ID!, $shiftInstanceId: ID) {
+  checkInVolunteer(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
+    id
+  }
+}
+    `;
+export const CheckInInviteToOrganizationDocument = gql`
+    mutation CheckInInviteToOrganization($volunteerId: ID!) {
+  checkInInviteToOrganization(volunteerId: $volunteerId)
+}
+    `;
+export const CheckOutVolunteerDocument = gql`
+    mutation CheckOutVolunteer($timeEntryId: ID!) {
+  checkOutVolunteer(timeEntryId: $timeEntryId) {
+    id
+  }
+}
+    `;
 export const GetMeDocument = gql`
     query GetMe {
   me {
@@ -7059,6 +7379,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetYearlyUsage(variables: GetYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetYearlyUsageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetYearlyUsageQuery>({ document: GetYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetYearlyUsage', 'query', variables);
+    },
+    GetInviteAllowanceEligibility(variables: GetInviteAllowanceEligibilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetInviteAllowanceEligibilityQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetInviteAllowanceEligibilityQuery>({ document: GetInviteAllowanceEligibilityDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetInviteAllowanceEligibility', 'query', variables);
     },
     GetRosterYearlyUsage(variables: GetRosterYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetRosterYearlyUsageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetRosterYearlyUsageQuery>({ document: GetRosterYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetRosterYearlyUsage', 'query', variables);
@@ -7230,6 +7553,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetMyMembershipRequests(variables: GetMyMembershipRequestsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetMyMembershipRequestsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetMyMembershipRequestsQuery>({ document: GetMyMembershipRequestsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetMyMembershipRequests', 'query', variables);
+    },
+    CheckInApproveMembershipRequest(variables: CheckInApproveMembershipRequestMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckInApproveMembershipRequestMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CheckInApproveMembershipRequestMutation>({ document: CheckInApproveMembershipRequestDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckInApproveMembershipRequest', 'mutation', variables);
     },
     GetOrganization(variables: GetOrganizationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetOrganizationQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetOrganizationQuery>({ document: GetOrganizationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetOrganization', 'query', variables);
@@ -7495,6 +7821,15 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     CheckOut(variables: CheckOutMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckOutMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<CheckOutMutation>({ document: CheckOutDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckOut', 'mutation', variables);
     },
+    GetCheckInShiftInstances(variables: GetCheckInShiftInstancesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetCheckInShiftInstancesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCheckInShiftInstancesQuery>({ document: GetCheckInShiftInstancesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetCheckInShiftInstances', 'query', variables);
+    },
+    GetCheckInShifts(variables?: GetCheckInShiftsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetCheckInShiftsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCheckInShiftsQuery>({ document: GetCheckInShiftsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetCheckInShifts', 'query', variables);
+    },
+    CheckInInviteToShiftInstance(variables: CheckInInviteToShiftInstanceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckInInviteToShiftInstanceMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CheckInInviteToShiftInstanceMutation>({ document: CheckInInviteToShiftInstanceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckInInviteToShiftInstance', 'mutation', variables);
+    },
     AddTimeEntry(variables: AddTimeEntryMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<AddTimeEntryMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<AddTimeEntryMutation>({ document: AddTimeEntryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'AddTimeEntry', 'mutation', variables);
     },
@@ -7518,6 +7853,24 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetMyTime(variables: GetMyTimeQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetMyTimeQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetMyTimeQuery>({ document: GetMyTimeDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetMyTime', 'query', variables);
+    },
+    GetCheckInContext(variables: GetCheckInContextQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetCheckInContextQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCheckInContextQuery>({ document: GetCheckInContextDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetCheckInContext', 'query', variables);
+    },
+    GetCheckInReadiness(variables: GetCheckInReadinessQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetCheckInReadinessQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCheckInReadinessQuery>({ document: GetCheckInReadinessDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetCheckInReadiness', 'query', variables);
+    },
+    GetCheckInVolunteerRequiredForms(variables: GetCheckInVolunteerRequiredFormsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetCheckInVolunteerRequiredFormsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetCheckInVolunteerRequiredFormsQuery>({ document: GetCheckInVolunteerRequiredFormsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetCheckInVolunteerRequiredForms', 'query', variables);
+    },
+    CheckInVolunteer(variables: CheckInVolunteerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckInVolunteerMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CheckInVolunteerMutation>({ document: CheckInVolunteerDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckInVolunteer', 'mutation', variables);
+    },
+    CheckInInviteToOrganization(variables: CheckInInviteToOrganizationMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckInInviteToOrganizationMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CheckInInviteToOrganizationMutation>({ document: CheckInInviteToOrganizationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckInInviteToOrganization', 'mutation', variables);
+    },
+    CheckOutVolunteer(variables: CheckOutVolunteerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckOutVolunteerMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CheckOutVolunteerMutation>({ document: CheckOutVolunteerDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckOutVolunteer', 'mutation', variables);
     },
     GetMe(variables?: GetMeQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetMeQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetMeQuery>({ document: GetMeDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetMe', 'query', variables);

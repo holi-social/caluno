@@ -134,3 +134,10 @@ query GetMyMembershipRequests($limit: Int!, $offset: Int!) {
     }
   }
 }
+
+mutation CheckInApproveMembershipRequest($requestId: ID!) {
+  checkInApproveMembershipRequest(requestId: $requestId) {
+    id
+    status
+  }
+}
