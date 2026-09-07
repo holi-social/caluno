@@ -2,6 +2,8 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { GetShiftsQuery, ShiftInstanceItem } from '@repo/data';
+import { ReimbursementTypeKey } from '@repo/data';
+import { useReimbursementTypes } from '@repo/data/react';
 import {
   Checkbox,
   DatePickerWithTimeRange,
@@ -57,6 +59,9 @@ export const TimeEntryForm = ({
 
   const { open, setOpen } = useFormSheet();
 
+  const tPauschale = useTranslations('TimeEntry.pauschaleType');
+  const reimbursementTypesQuery = useReimbursementTypes();
+
   const schema = clientTimeEntrySchema({
     organizationUnitRequired: tValidation('organizationUnitRequired'),
     shiftInstanceRequired: tValidation('shiftInstanceRequired'),
@@ -64,6 +69,7 @@ export const TimeEntryForm = ({
     startedAtRequired: tValidation('startedAtRequired'),
     endedAtRequired: tValidation('endedAtRequired'),
     timeEntryIdRequired: tValidation('timeEntryIdRequired'),
+    reimbursementTypeRequired: tValidation('reimbursementTypeRequired'),
   });
 
   const {
@@ -80,6 +86,7 @@ export const TimeEntryForm = ({
       shiftInstanceId: '',
       volunteerId: '',
       hasShift: initialValues?.hasShift ?? true,
+      isPaidTime: !!initialValues?.reimbursementTypeId,
       ...initialValues,
     },
   });
@@ -88,6 +95,13 @@ export const TimeEntryForm = ({
   const shiftInstanceId = watch('shiftInstanceId');
   const startedAt = watch('startedAt');
   const endedAt = watch('endedAt');
+  const isPaidTime = watch('isPaidTime');
+  const reimbursementTypeId = watch('reimbursementTypeId');
+
+  const pauschaleLabel = (key: string) =>
+    key === ReimbursementTypeKey.Uebungsleiter
+      ? tPauschale('uebungsleiter')
+      : tPauschale('ehrenamt');
 
   //  When an instance is selected, default the time entry to the instances date range
   //  But don't overwrite any initial range that would be set via the Edit form
@@ -122,6 +136,9 @@ export const TimeEntryForm = ({
     const payload = formData.hasShift
       ? formData
       : { ...formData, shiftId: undefined, shiftInstanceId: undefined };
+    payload.reimbursementTypeId = formData.isPaidTime
+      ? formData.reimbursementTypeId
+      : undefined;
 
     startTransition(async () => {
       const result = await mutate(payload);
@@ -178,6 +195,58 @@ export const TimeEntryForm = ({
             <FieldError>{errors.shiftInstanceId.message}</FieldError>
           )}
         </>
+      )}
+
+      <Field>
+        <label
+          className="flex items-center gap-2 text-sm"
+          htmlFor="is-paid-time"
+        >
+          <Checkbox
+            id="is-paid-time"
+            checked={isPaidTime}
+            onCheckedChange={(checked) => {
+              setValue('isPaidTime', !!checked, { shouldValidate: true });
+              if (!checked) {
+                setValue('reimbursementTypeId', undefined, {
+                  shouldValidate: true,
+                });
+              }
+            }}
+            disabled={pending}
+          />
+          {t('paidTimeLabel')}
+        </label>
+      </Field>
+
+      {isPaidTime && (
+        <Field>
+          <FieldLabel htmlFor="reimbursementTypeId">
+            {t('pauschaleTypeLabel')}{' '}
+            <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Select
+            value={reimbursementTypeId}
+            onValueChange={(value) =>
+              setValue('reimbursementTypeId', value, { shouldValidate: true })
+            }
+            disabled={pending || reimbursementTypesQuery.isLoading}
+          >
+            <SelectTrigger id="reimbursementTypeId">
+              <SelectValue placeholder={t('pauschaleTypePlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {(reimbursementTypesQuery.data ?? []).map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {pauschaleLabel(type.key)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.reimbursementTypeId && (
+            <FieldError>{errors.reimbursementTypeId.message}</FieldError>
+          )}
+        </Field>
       )}
 
       <Field>

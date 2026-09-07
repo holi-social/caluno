@@ -1538,6 +1538,9 @@
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
       "notTiedToShiftLabel": "Not tied to a shift",
+      "paidTimeLabel": "Paid time",
+      "pauschaleTypeLabel": "Pauschale type",
+      "pauschaleTypePlaceholder": "Select a Pauschale type",
       "selectShiftHint": "Select a shift to view available dates",
       "selectShiftLabel": "Select shift",
       "selectShiftPlaceholder": "Select a shift",
@@ -1551,6 +1554,10 @@
     "page": {
       "createButton": "Add time entry",
       "title": "Timesheets"
+    },
+    "pauschaleType": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "uebungsleiter": "Übungsleiterpauschale"
     },
     "picker": {
       "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
@@ -1572,6 +1579,7 @@
     "validation": {
       "endedAtRequired": "End time is required",
       "organizationUnitRequired": "Organization unit is required",
+      "reimbursementTypeRequired": "Pauschale type is required",
       "shiftInstanceRequired": "Shift date is required",
       "startedAtRequired": "Start time is required",
       "timeEntryIdRequired": "Time entry ID is required",
