@@ -11,6 +11,7 @@ export * from './document-template-field.resolver';
 export * from './document-template-mutation.resolver';
 export * from './document-template-query.resolver';
 export * from './document-template-signees.loader';
+export * from './invite-allowance-query.resolver';
 export * from './invoice.loader';
 export * from './invoice-field.resolver';
 export * from './invoice-mutation.resolver';

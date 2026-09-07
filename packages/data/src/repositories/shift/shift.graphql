@@ -15,6 +15,7 @@ query GetShift($id: String!) {
     originalStartsAt
     durationMinutes
     organizationUnitId
+    reimbursementTypeKey
     requiredFormsCount
     requiredForms {
       ...RequiredFormRefFields
@@ -442,6 +443,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     location
     rrule
     maxVolunteers
+    reimbursementTypeKey
     organizationUnit {
       id
       name

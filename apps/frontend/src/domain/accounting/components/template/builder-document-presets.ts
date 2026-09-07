@@ -328,11 +328,15 @@ export function getInvoiceDocument(
         locked: true,
         line: line(
           'jahresdeckel-hinweis-line',
-          '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {contractPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten.',
+          '{volunteerFirstName} {volunteerLastName} hat im Zeitraum {alreadyReceivedPeriod} bereits {alreadyReceivedAmount} vom Jahresdeckel in Höhe von {yearlyLimitAmount} erhalten.',
           [
             bound('jahresdeckel-volunteer-first', 'volunteer_first_name'),
             bound('jahresdeckel-volunteer-last', 'volunteer_last_name'),
-            bound('jahresdeckel-period', 'contract_period'),
+            // The running year-to-date window the amount below is actually summed
+            // over (Jan 1 of this document's period year through its own period
+            // end) — not the document's own (monthly) `contract_period`, which
+            // would state a period that doesn't match the summed amount.
+            bound('jahresdeckel-period', 'already_received_period'),
             bound('jahresdeckel-received', 'already_received_amount'),
             bound('jahresdeckel-limit', 'yearly_limit_amount'),
           ],

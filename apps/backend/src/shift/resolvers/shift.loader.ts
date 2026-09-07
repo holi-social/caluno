@@ -1,5 +1,6 @@
 import { Injectable, Scope } from '@nestjs/common';
 import DataLoader from 'dataloader';
+import type { ReimbursementTypeKey } from '../../accounting/enums';
 import { NotFoundGraphQLError } from '../../graphql/errors';
 import { RegisterLoader } from '../../graphql/interceptors';
 import { OrganizationMapper } from '../../organization/mappers/organization.mapper';
@@ -57,6 +58,24 @@ export class ShiftLoader {
         ),
       ),
   );
+
+  // Keyed by reimbursementTypeId (not shiftId) — many shifts can share the
+  // same Pauschalentyp, so DataLoader dedups the repeated ids.
+  public readonly reimbursementTypeKeyById = new DataLoader<
+    string,
+    ReimbursementTypeKey
+  >(async (reimbursementTypeIds) => {
+    const rows = await this.shiftService.findReimbursementTypeKeysByIds([
+      ...reimbursementTypeIds,
+    ]);
+    const byId = new Map(rows.map((row) => [row.id, row.key]));
+
+    return reimbursementTypeIds.map(
+      (id) =>
+        byId.get(id) ??
+        new NotFoundGraphQLError(`ReimbursementType with ID ${id} not found`),
+    );
+  });
 }
 
 async function settleEach<T>(

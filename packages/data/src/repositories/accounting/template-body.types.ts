@@ -34,6 +34,7 @@ export type DataSourceKey =
   | 'volunteer_tax_id'
   | 'contract_period'
   | 'already_received_amount'
+  | 'already_received_period'
   | 'yearly_limit_amount';
 
 /** Coordinator-typed once, in the builder — reused verbatim on every document generated from this template. */

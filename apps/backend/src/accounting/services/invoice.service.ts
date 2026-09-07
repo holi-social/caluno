@@ -117,8 +117,9 @@ export class InvoiceService {
       eq(schema.timeEntries.volunteerId, volunteerId),
       eq(schema.timeEntries.reimbursementTypeId, reimbursementTypeId),
       isNotNull(schema.timeEntries.endedAt),
-      // Time entries stay claimed once pulled into any invoice, even a
-      // declined one - reissuing means picking up fresh, unclaimed hours.
+      // Time entries stay claimed while tied to a live (non-declined)
+      // invoice. Declining releases the claim (see declineInvoice), so a
+      // released row no longer excludes the entry here.
       isNull(schema.invoiceTimeEntries.id),
     ];
     if (periodStart) {
@@ -133,7 +134,10 @@ export class InvoiceService {
       .from(schema.timeEntries)
       .leftJoin(
         schema.invoiceTimeEntries,
-        eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+        and(
+          eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+          eq(schema.invoiceTimeEntries.released, false),
+        ),
       )
       .where(and(...conditions));
 
@@ -168,7 +172,10 @@ export class InvoiceService {
       .from(schema.timeEntries)
       .leftJoin(
         schema.invoiceTimeEntries,
-        eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+        and(
+          eq(schema.invoiceTimeEntries.timeEntryId, schema.timeEntries.id),
+          eq(schema.invoiceTimeEntries.released, false),
+        ),
       )
       .where(and(...conditions));
 
@@ -498,6 +505,15 @@ export class InvoiceService {
         type: DocumentStatusChange.DECLINED,
         actorUserId: userId,
       });
+
+      // Release the time entries this invoice had claimed. The declined
+      // invoice and its invoiceTimeEntries rows stay around as a record
+      // (and still show what was declined), but the entries themselves
+      // become selectable again for a replacement document.
+      await tx
+        .update(schema.invoiceTimeEntries)
+        .set({ released: true })
+        .where(eq(schema.invoiceTimeEntries.invoiceId, invoiceId));
 
       return declined;
     });
