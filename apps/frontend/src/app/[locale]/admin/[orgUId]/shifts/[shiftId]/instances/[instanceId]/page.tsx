@@ -1,6 +1,6 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
-import { Trash2 } from 'lucide-react';
+import { Megaphone, Trash2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
@@ -8,6 +8,7 @@ import {
   DetailCoverImagePlaceholder,
 } from '@/components/detail-entity-image';
 import { DeleteShiftInstanceDialog } from '@/domain/shift/components/delete-shift-instance-dialog';
+import { SendCallOutDialog } from '@/domain/shift/components/send-call-out-dialog';
 import ShareLinkButton from '@/domain/shift/components/share-link-button';
 import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
 import { ShiftInstanceMetaCard } from '@/domain/shift/components/shift-instance-meta-card';
@@ -49,6 +50,9 @@ export default async function ShiftInstanceDetailPage({
   const title = instance.overrideTitle ?? instance.master.title;
   const imageUrl = instance.master.imageUrl;
   const canAddImage = canManage && !isInstanceInThePast;
+  const lastCallOut = canManage
+    ? await data.shift.findLastCallOutSummary(instanceId)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -66,6 +70,23 @@ export default async function ShiftInstanceDetailPage({
               label={t('instanceDetail.inviteLink')}
             />
           )}
+
+          {canManage ? (
+            <SendCallOutDialog
+              orgUId={orgUId}
+              instanceId={instanceId}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  tooltip={t('instanceDetail.callOutAria')}
+                  disabled={isInstanceInThePast}
+                >
+                  <Megaphone />
+                </Button>
+              }
+            />
+          ) : null}
 
           {canManage ? (
             <DeleteShiftInstanceDialog
@@ -138,6 +159,7 @@ export default async function ShiftInstanceDetailPage({
             actualEndsAt={instance.actualEndsAt}
             createdAt={instance.master.createdAt}
             createdBy={instance.master.createdBy ?? null}
+            lastCallOut={lastCallOut}
           />
         </aside>
       </div>

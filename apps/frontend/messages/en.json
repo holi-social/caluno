@@ -1201,6 +1201,10 @@
         "updateFailedToast": "Failed to update required forms"
       },
       "statusLabel": "Status",
+      "urgentCallLabel": "Urgent Call",
+      "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
+      "urgentCallSentByDate": "on {date}",
+      "urgentCallSentByPrefix": "Sent by",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1238,6 +1242,16 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
+      "callOutAria": "Urgent Call",
+      "callOutCta": "Urgent Call",
+      "callOutDialog": {
+        "confirm": "Urgent Call",
+        "description": "This sends an urgent call to everyone eligible to help with this shift, asking them to join. It won't add anyone to the roster.",
+        "error": "Failed to send the urgent call. {error}",
+        "noRecipients": "Nobody was left to ask — we've emailed you instead.",
+        "success": "Urgent call sent to {count, plural, one {# volunteer} other {# volunteers}}.",
+        "title": "Send an urgent call?"
+      },
       "deleteAria": "Delete",
       "deleteDialog": {
         "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
