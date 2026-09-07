@@ -222,6 +222,26 @@ describe('mapContractToBoardDoc', () => {
     expect(doc.pauschale).toBe('ehrenamt');
     expect(doc.lastActionDate).toBeInstanceOf(Date);
   });
+
+  // VOLI-1246: the admin's document sheet needs to show who declined a
+  // document, alongside the reason and date — the GraphQL fragment already
+  // fetches declinedByUser, so this just has to reach the board doc.
+  it('surfaces who declined the contract', () => {
+    const doc = mapContractToBoardDoc(
+      makeContract({
+        contractStatus: ContractStatus.Declined,
+        declineReason: 'Terms are not acceptable',
+        declinedAt: '2026-03-01T00:00:00.000Z',
+        declinedAtSigneeType: SigneeType.Volunteer,
+        declinedByUser: { id: 'v-1', name: 'Anna Müller' },
+      }),
+      'ehrenamt',
+    );
+    expect(doc.status).toBe('contract-declined');
+    expect(doc.declineReason).toBe('Terms are not acceptable');
+    expect(doc.declinedBy).toBe('Anna Müller');
+    expect(doc.declinedAt).toEqual(new Date('2026-03-01T00:00:00.000Z'));
+  });
 });
 
 describe('mapInvoiceToBoardDoc', () => {
@@ -232,6 +252,24 @@ describe('mapInvoiceToBoardDoc', () => {
     expect(doc.hours).toBe(8);
     expect(doc.periodLabel).toContain('2026');
     expect(doc.pauschale).toBe('ehrenamt');
+  });
+
+  it('surfaces who declined the invoice', () => {
+    const doc = mapInvoiceToBoardDoc(
+      makeInvoice({
+        invoiceStatus: InvoiceStatus.Declined,
+        declineReason: 'Wrong hours',
+        declinedAt: '2026-03-01T00:00:00.000Z',
+        declinedAtSigneeType: SigneeType.Volunteer,
+        declinedByUser: { id: 'v-1', name: 'Anna Müller' },
+      }),
+      'ehrenamt',
+      'de',
+    );
+    expect(doc.status).toBe('timesheet-declined');
+    expect(doc.declineReason).toBe('Wrong hours');
+    expect(doc.declinedBy).toBe('Anna Müller');
+    expect(doc.declinedAt).toEqual(new Date('2026-03-01T00:00:00.000Z'));
   });
 });
 

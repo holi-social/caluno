@@ -6,6 +6,7 @@ import { AppI18nService } from '../../i18n/app-i18n.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
 import { documentAwaitingSignatureTemplate } from '../email/templates/document-awaiting-signature.template';
 import { documentDeclinedByOrgTemplate } from '../email/templates/document-declined-by-org.template';
+import { documentDeclinedByVolunteerTemplate } from '../email/templates/document-declined-by-volunteer.template';
 import { NotificationService } from '../notification.service';
 import type { NotificationEventPayloadMap } from '../notification-event-map';
 import { NotificationEvent } from '../notification-events';
@@ -73,6 +74,37 @@ export class DocumentListener {
           {
             organizationName: payload.organizationName,
             recipientFirstName: recipient.firstName,
+            documentName: this.documentName(
+              recipient.locale,
+              payload.documentKind,
+            ),
+            reason: payload.reason,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER)
+  async handleDocumentDeclinedByVolunteer(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return documentDeclinedByVolunteerTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            recipientFirstName: recipient.firstName,
+            volunteerName: payload.volunteerName,
             documentName: this.documentName(
               recipient.locale,
               payload.documentKind,

@@ -36,6 +36,11 @@ export function volunteersAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/volunteers`;
 }
 
+/** Deep link to the Abrechnungen (reimbursements) admin queue, where a declined document shows up needing correction and reissue. */
+export function reimbursementsAdminUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/accounting/reimbursements`;
+}
+
 /** Deep link to the shifts admin page for managing schedules. */
 export function shiftsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts`;

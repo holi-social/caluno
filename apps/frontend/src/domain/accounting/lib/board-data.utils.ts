@@ -103,6 +103,7 @@ export function mapContractToBoardDoc(
     periodLabel: String(new Date(contract.periodStart).getFullYear()),
     pauschale: type,
     declineReason: contract.declineReason ?? undefined,
+    declinedBy: contract.declinedByUser?.name ?? undefined,
     declinedAt: contract.declinedAt ? new Date(contract.declinedAt) : undefined,
     declinedAtRole: mapDeclinedAtRole(
       contract.declinedAtSigneeType,
@@ -125,6 +126,7 @@ export function mapInvoiceToBoardDoc(
     periodLabel: formatMonthYear(new Date(invoice.periodStart), locale),
     pauschale: type,
     declineReason: invoice.declineReason ?? undefined,
+    declinedBy: invoice.declinedByUser?.name ?? undefined,
     declinedAt: invoice.declinedAt ? new Date(invoice.declinedAt) : undefined,
     declinedAtRole: mapDeclinedAtRole(invoice.declinedAtSigneeType, 'invoice'),
   };
