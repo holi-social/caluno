@@ -126,6 +126,7 @@ export type CreateEventInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   endsAt: Scalars['DateTime']['input'];
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   logoFileId?: InputMaybe<Scalars['String']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -246,6 +247,7 @@ export type CreateShiftInput = {
   imageFileId?: InputMaybe<Scalars['String']['input']>;
   instructions?: InputMaybe<Scalars['String']['input']>;
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;
@@ -312,6 +314,7 @@ export type Event = {
   endsAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   isDeleted: Scalars['Boolean']['output'];
+  joinRequiresApproval: Scalars['Boolean']['output'];
   location?: Maybe<Scalars['String']['output']>;
   logoUrl?: Maybe<Scalars['String']['output']>;
   myInvitedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -340,12 +343,13 @@ export type EventInvite = {
 };
 
 export enum EventInviteStatus {
-  Accepted = 'ACCEPTED',
+  AdminInvited = 'ADMIN_INVITED',
   AdminRejected = 'ADMIN_REJECTED',
-  Cancelled = 'CANCELLED',
-  Invited = 'INVITED',
-  SelfJoined = 'SELF_JOINED',
-  VolunteerRejected = 'VOLUNTEER_REJECTED'
+  AwaitingAdminApproval = 'AWAITING_ADMIN_APPROVAL',
+  Joined = 'JOINED',
+  VolunteerCancelled = 'VOLUNTEER_CANCELLED',
+  VolunteerRejected = 'VOLUNTEER_REJECTED',
+  WaitlistJoined = 'WAITLIST_JOINED'
 }
 
 export type EventOrganizationUnit = {
@@ -2177,6 +2181,7 @@ export type Shift = {
   instances: Array<ShiftInstance>;
   instructions?: Maybe<Scalars['String']['output']>;
   isDeleted: Scalars['Boolean']['output'];
+  joinRequiresApproval: Scalars['Boolean']['output'];
   location?: Maybe<Scalars['String']['output']>;
   maxVolunteers?: Maybe<Scalars['Int']['output']>;
   minVolunteers?: Maybe<Scalars['Int']['output']>;
@@ -2264,12 +2269,13 @@ export type ShiftInvite = {
 };
 
 export enum ShiftInviteStatus {
-  Accepted = 'ACCEPTED',
+  AdminInvited = 'ADMIN_INVITED',
   AdminRejected = 'ADMIN_REJECTED',
-  Cancelled = 'CANCELLED',
-  Invited = 'INVITED',
-  SelfJoined = 'SELF_JOINED',
-  VolunteerRejected = 'VOLUNTEER_REJECTED'
+  AwaitingAdminApproval = 'AWAITING_ADMIN_APPROVAL',
+  Joined = 'JOINED',
+  VolunteerCancelled = 'VOLUNTEER_CANCELLED',
+  VolunteerRejected = 'VOLUNTEER_REJECTED',
+  WaitlistJoined = 'WAITLIST_JOINED'
 }
 
 export type ShiftPaginatedResponse = {
@@ -2337,6 +2343,7 @@ export type UpdateEventInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   endsAt?: InputMaybe<Scalars['DateTime']['input']>;
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   logoFileId?: InputMaybe<Scalars['String']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2439,6 +2446,7 @@ export type UpdateShiftInput = {
   imageFileId?: InputMaybe<Scalars['String']['input']>;
   instructions?: InputMaybe<Scalars['String']['input']>;
   invitedMemberIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  joinRequiresApproval?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;

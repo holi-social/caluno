@@ -881,7 +881,7 @@ describe('ShiftService', () => {
       const invite = await db.query.shiftInstanceInvites.findFirst({
         where: { instanceId, userId },
       });
-      expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(invite?.status).toBe(ShiftInviteStatus.JOINED);
       expect(
         notificationService.notifyShiftInstanceInvited,
       ).not.toHaveBeenCalled();
@@ -919,8 +919,8 @@ describe('ShiftService', () => {
       });
       const selfInvite = invites.find((i) => i.userId === userId);
       const otherInvite = invites.find((i) => i.userId === otherUser.id);
-      expect(selfInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
-      expect(otherInvite?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(selfInvite?.status).toBe(ShiftInviteStatus.JOINED);
+      expect(otherInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
 
       expect(
         notificationService.notifyShiftInstanceInvited,
@@ -985,7 +985,7 @@ describe('ShiftService', () => {
       }
     });
 
-    it('does not emit invite notifications when the transaction rolls back', async () => {
+    it('allows inviting beyond capacity (accept may waitlist)', async () => {
       const shift = await createShift(db, {
         organizationUnitId,
         createdById: userId,
@@ -1003,7 +1003,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instanceId,
         userId: existingUser.id,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.JOINED,
       });
 
       (
@@ -1021,12 +1021,60 @@ describe('ShiftService', () => {
           [newUser.id],
           organizationUnitId,
         ),
-      ).rejects.toThrow(ConflictGraphQLError);
+      ).resolves.toBeDefined();
 
-      expect(
-        notificationService.notifyShiftInstanceInvited,
-      ).not.toHaveBeenCalled();
-      expect(notificationService.notifyShiftInvited).not.toHaveBeenCalled();
+      const invite = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId: newUser.id },
+      });
+      expect(invite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    });
+
+    it('does not emit invite notifications when the transaction rolls back', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const newUser = await createUser(db);
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+      (
+        notificationService.notifyShiftInvited as ReturnType<typeof mock>
+      ).mockClear();
+
+      // biome-ignore lint/complexity/useLiteralKeys: accessing private method for test stubbing
+      const originalCreate = shiftService['createInvitesForInstances'];
+      // biome-ignore lint/complexity/useLiteralKeys: assigning private method for test stubbing
+      shiftService['createInvitesForInstances'] = async () => {
+        throw new ConflictGraphQLError('forced rollback');
+      };
+
+      try {
+        await expect(
+          shiftService.updateMembersForShiftInstance(
+            instanceId,
+            [newUser.id],
+            organizationUnitId,
+          ),
+        ).rejects.toThrow(ConflictGraphQLError);
+
+        expect(
+          notificationService.notifyShiftInstanceInvited,
+        ).not.toHaveBeenCalled();
+        expect(notificationService.notifyShiftInvited).not.toHaveBeenCalled();
+      } finally {
+        // biome-ignore lint/complexity/useLiteralKeys: restoring private method after test stubbing
+        shiftService['createInvitesForInstances'] = originalCreate;
+      }
     });
 
     it('keeps pending invites when re-saving the same member list', async () => {
@@ -1058,7 +1106,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('resurrects a REJECTED invite when re-inviting the member', async () => {
@@ -1089,7 +1137,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('does not throw a spurious capacity error when re-inviting a declined member at capacity', async () => {
@@ -1123,7 +1171,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('does not throw a spurious capacity error when re-inviting to all future instances after a decline', async () => {
@@ -1184,7 +1232,7 @@ describe('ShiftService', () => {
           userId: user.id,
         },
       });
-      expect(anchorInvite?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(anchorInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
 
       const resurrectedFuture = await db.query.shiftInstanceInvites.findFirst({
         where: {
@@ -1192,7 +1240,7 @@ describe('ShiftService', () => {
           userId: user.id,
         },
       });
-      expect(resurrectedFuture?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(resurrectedFuture?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('returns pending invitees via findVolunteers when active statuses are requested', async () => {
@@ -1210,7 +1258,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId,
         userId: user.id,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.ADMIN_INVITED,
       });
 
       const withActiveStatuses = await shiftService.findVolunteers(
@@ -1303,7 +1351,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: oldest.id,
         userId: volunteer.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        status: ShiftInviteStatus.JOINED,
       });
 
       const newStartsAt = daysAgo(7, 8);
@@ -1370,12 +1418,12 @@ describe('ShiftService', () => {
         {
           instanceId: syncTarget.id,
           userId: volunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: manualTarget.id,
           userId: volunteer2.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
       ]);
       await db
@@ -1605,17 +1653,17 @@ describe('ShiftService', () => {
         {
           instanceId: instances[0].id,
           userId: invitedUser.id,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         },
         {
           instanceId: instances[0].id,
           userId: acceptedUser.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: instances[0].id,
           userId: selfJoinedUser.id,
-          status: ShiftInviteStatus.SELF_JOINED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: instances[0].id,
@@ -1637,13 +1685,13 @@ describe('ShiftService', () => {
       );
 
       expect(statusByUserId.get(invitedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_CANCELLED,
       );
       expect(statusByUserId.get(acceptedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_CANCELLED,
       );
       expect(statusByUserId.get(selfJoinedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_CANCELLED,
       );
       expect(statusByUserId.get(rejectedUser.id)).toBe(
         ShiftInviteStatus.VOLUNTEER_REJECTED,
@@ -1672,12 +1720,12 @@ describe('ShiftService', () => {
         {
           instanceId: targetInstance.id,
           userId: sharedVolunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: siblingInstance.id,
           userId: sharedVolunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
       ]);
 
@@ -1697,7 +1745,7 @@ describe('ShiftService', () => {
         .from(schema.shiftInstanceInvites)
         .where(eq(schema.shiftInstanceInvites.instanceId, siblingInstance.id));
       expect(siblingInvites).toHaveLength(1);
-      expect(siblingInvites[0]?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(siblingInvites[0]?.status).toBe(ShiftInviteStatus.JOINED);
     });
 
     it('emits a cancellation notification for volunteers with an active invite', async () => {
@@ -1715,7 +1763,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instances[0].id,
         userId: invitedUser.id,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.ADMIN_INVITED,
       });
 
       (
@@ -1950,17 +1998,17 @@ describe('ShiftService', () => {
           {
             instanceId: anchor.id,
             userId: bothVolunteer.id,
-            status: ShiftInviteStatus.ACCEPTED,
+            status: ShiftInviteStatus.JOINED,
           },
           {
             instanceId: sibling.id,
             userId: bothVolunteer.id,
-            status: ShiftInviteStatus.INVITED,
+            status: ShiftInviteStatus.ADMIN_INVITED,
           },
           {
             instanceId: anchor.id,
             userId: anchorOnlyVolunteer.id,
-            status: ShiftInviteStatus.INVITED,
+            status: ShiftInviteStatus.ADMIN_INVITED,
           },
         ]);
 
@@ -1990,7 +2038,7 @@ describe('ShiftService', () => {
           );
         expect(
           invites.every(
-            (invite) => invite.status === ShiftInviteStatus.CANCELLED,
+            (invite) => invite.status === ShiftInviteStatus.VOLUNTEER_CANCELLED,
           ),
         ).toBe(true);
 

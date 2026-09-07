@@ -42,6 +42,9 @@ export const shifts = snakeCase.table(
       .default(ShiftVisibility.ALL_MEMBERS),
     maxVolunteers: integer('max_volunteers'),
     minVolunteers: integer('min_volunteers'),
+    joinRequiresApproval: boolean('join_requires_approval')
+      .notNull()
+      .default(false),
     eventId: uuid('event_id').references(() => events.id, {
       onDelete: 'set null',
     }),
