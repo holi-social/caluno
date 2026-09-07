@@ -103,6 +103,7 @@ export function mapContractToBoardDoc(
     periodLabel: String(new Date(contract.periodStart).getFullYear()),
     pauschale: type,
     declineReason: contract.declineReason ?? undefined,
+    declinedBy: contract.declinedByUser?.name ?? undefined,
     declinedAt: contract.declinedAt ? new Date(contract.declinedAt) : undefined,
     declinedAtRole: mapDeclinedAtRole(
       contract.declinedAtSigneeType,
@@ -125,6 +126,7 @@ export function mapInvoiceToBoardDoc(
     periodLabel: formatMonthYear(new Date(invoice.periodStart), locale),
     pauschale: type,
     declineReason: invoice.declineReason ?? undefined,
+    declinedBy: invoice.declinedByUser?.name ?? undefined,
     declinedAt: invoice.declinedAt ? new Date(invoice.declinedAt) : undefined,
     declinedAtRole: mapDeclinedAtRole(invoice.declinedAtSigneeType, 'invoice'),
   };
@@ -182,8 +184,18 @@ export interface BuildBoardVolunteersInput {
   year: number;
   locale: string;
   dateRange?: { from?: Date; to?: Date };
-  /** Volunteer ids that still have eligible (unclaimed, completed, in-period) time entries — i.e. they still need a timesheet. */
-  needsTimesheetVolunteers?: ReadonlySet<string>;
+  /**
+   * Volunteer id -> the reimbursement type ids they still have eligible
+   * (unclaimed, completed, in-period) time entries for. A volunteer only
+   * counts as `needsTimesheet` for a type once that type also has an active
+   * (countersigned) contract in place — the Vereinbarung is a precondition
+   * for the Stundennachweis step, not a parallel concern. Without an active
+   * contract, the eligible hours instead surface as a `contract-generate`
+   * row so the volunteer is queued under "Vereinbarungen erstellen" (or, if
+   * a contract already exists but isn't countersigned yet, the real contract
+   * document already queues them under "Vereinbarungen gegenzeichnen").
+   */
+  needsTimesheetVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function buildBoardVolunteers({
@@ -201,6 +213,8 @@ export function buildBoardVolunteers({
       Record<PauschalenType, { used: number; total: number }>
     > = {};
     const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
+    const eligibleTypeIds = needsTimesheetVolunteers?.get(entry.volunteer.id);
+    let hasActiveContractNeedingTimesheet = false;
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -241,6 +255,32 @@ export function buildBoardVolunteers({
           }
         }
       }
+
+      // Eligible hours are only a "Stundennachweis fällig" concern once the
+      // Vereinbarung precondition is satisfied. No countersigned contract ->
+      // the real blocker is creating (or countersigning) the agreement, so
+      // queue them there instead of skipping straight to the timesheet step.
+      if (eligibleTypeIds?.has(usage.reimbursementType.id)) {
+        if (activeContract) {
+          hasActiveContractNeedingTimesheet = true;
+        } else if (contractsForType.length === 0) {
+          // No Vereinbarung exists at all yet — surface a real,
+          // actionable "create contract" row (not the muted
+          // contract-missing placeholder, which is reserved for
+          // already-created documents whose paired contract vanished).
+          documents.push({
+            id: `${entry.volunteer.id}-contract-generate-${type}`,
+            status: 'contract-generate',
+            periodLabel: String(year),
+            pauschale: type,
+          });
+        }
+        // Else: a contract already exists but isn't active yet (awaiting
+        // volunteer/coordinator signature, or declined) — the contract
+        // document pushed above already queues this volunteer under
+        // "Vereinbarungen gegenzeichnen" (or the declined-document flow),
+        // so nothing further needs synthesizing here.
+      }
     }
 
     const primaryType =
@@ -255,8 +295,7 @@ export function buildBoardVolunteers({
       name: entry.volunteer.name,
       initials: getInitials(entry.volunteer.name),
       pauschale: primaryType,
-      needsTimesheet:
-        needsTimesheetVolunteers?.has(entry.volunteer.id) ?? false,
+      needsTimesheet: hasActiveContractNeedingTimesheet,
       usedAmount: centsToEuros(
         entry.usageByType.reduce((sum, u) => sum + u.usedCents, 0),
       ),

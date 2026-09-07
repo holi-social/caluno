@@ -397,7 +397,11 @@
       },
       "preview": {
         "title": "{name}",
-        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar."
+        "unavailable": "Das Dokument ist noch nicht zur Vorschau verfügbar.",
+        "error": "Die Vorschau konnte nicht geladen werden.",
+        "retry": "Erneut versuchen",
+        "errorHelp": "Zu deiner Mitgliedschaft, um Hilfe zu erhalten",
+        "signDisabledHint": "Du kannst erst unterschreiben oder ablehnen, wenn du das Dokument in der Vorschau angesehen hast."
       },
       "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
@@ -1333,6 +1337,12 @@
     },
     "loading": "Wird geladen...",
     "notFound": "Einsatz nicht gefunden.",
+    "paidMarker": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "ehrenamtShort": "Ehrenamt",
+      "uebungsleiter": "Übungsleiterpauschale",
+      "uebungsleiterShort": "Übungsleiter"
+    },
     "page": {
       "createButton": "Einsatz erstellen",
       "subtitle": "Einsatzdetails und Freiwillige",
