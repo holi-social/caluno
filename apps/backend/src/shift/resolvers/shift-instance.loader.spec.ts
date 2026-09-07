@@ -2,8 +2,13 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
+import type { ShiftCallOutService } from '../services/shift-call-out.service';
 import type { ShiftService } from '../shift.service';
 import { ShiftInstanceLoader } from './shift-instance.loader';
+
+const shiftCallOutServiceStub = {
+  getLastCallOutSummaries: jest.fn().mockResolvedValue(new Map()),
+} as unknown as ShiftCallOutService;
 
 describe('ShiftInstanceLoader', () => {
   describe('myInvitedAtByKey', () => {
@@ -14,9 +19,10 @@ describe('ShiftInstanceLoader', () => {
         .mockResolvedValue([
           { shiftInstanceId: 'instance-1', status: 'INVITED', createdAt },
         ]);
-      const loader = new ShiftInstanceLoader({
-        findInviteStatusesForUser,
-      } as unknown as ShiftService);
+      const loader = new ShiftInstanceLoader(
+        { findInviteStatusesForUser } as unknown as ShiftService,
+        shiftCallOutServiceStub,
+      );
 
       const result = await loader.myInvitedAtByKey.load('instance-1:user-1');
 
@@ -28,9 +34,10 @@ describe('ShiftInstanceLoader', () => {
 
     it('returns null when the user has no invite for the instance', async () => {
       const findInviteStatusesForUser = jest.fn().mockResolvedValue([]);
-      const loader = new ShiftInstanceLoader({
-        findInviteStatusesForUser,
-      } as unknown as ShiftService);
+      const loader = new ShiftInstanceLoader(
+        { findInviteStatusesForUser } as unknown as ShiftService,
+        shiftCallOutServiceStub,
+      );
 
       const result = await loader.myInvitedAtByKey.load('instance-1:user-1');
 
@@ -52,9 +59,10 @@ describe('ShiftInstanceLoader', () => {
           createdAt: createdAt2,
         },
       ]);
-      const loader = new ShiftInstanceLoader({
-        findInviteStatusesForUser,
-      } as unknown as ShiftService);
+      const loader = new ShiftInstanceLoader(
+        { findInviteStatusesForUser } as unknown as ShiftService,
+        shiftCallOutServiceStub,
+      );
 
       const [result1, result2] = await Promise.all([
         loader.myInvitedAtByKey.load('instance-1:user-1'),
