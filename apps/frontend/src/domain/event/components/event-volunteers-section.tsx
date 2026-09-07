@@ -122,7 +122,7 @@ export function EventVolunteersSection({
 
     if (action === 'Check in') {
       router.push(
-        `/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`,
+        `/check-in/${invite.user.checkInId}/check-in?orgUId=${orgUId}`,
       );
       return;
     }

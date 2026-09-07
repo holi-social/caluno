@@ -109,7 +109,7 @@ describe('ShiftService.findById', () => {
   });
 });
 
-describe('ShiftService.findShiftsForWeek', () => {
+describe('ShiftService.findInstancesForOrgUnitInRange', () => {
   let app: INestApplication;
   let db: Database;
   let organizationUnitId: string;
