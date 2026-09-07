@@ -175,6 +175,27 @@ const autoSchemaFile =
                   properties: { surface: POSTHOG_SURFACE.AUTH },
                 });
               },
+              onEmailVerified: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_UPDATE,
+                  userId,
+                  properties: {
+                    surface: POSTHOG_SURFACE.AUTH,
+                    source: 'email_verified',
+                    updated_field: 'email_verified',
+                  },
+                });
+              },
+              onPasswordResetCompleted: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_UPDATE,
+                  userId,
+                  properties: {
+                    surface: POSTHOG_SURFACE.AUTH,
+                    source: 'password_reset',
+                  },
+                });
+              },
               sendResetPassword: async ({ email, token, userId, headers }) => {
                 const locale = await userLocaleService.resolveForUser(
                   userId,

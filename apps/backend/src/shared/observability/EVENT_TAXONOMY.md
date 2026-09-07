@@ -59,6 +59,7 @@ Add a noun here before inventing an event.
 | `shift_instance` | Shift Instance |
 | `shift_invite` | Shift Invite |
 | `shift_instance_invite` | Shift Instance Invite |
+| `shift_call_out` | Shift instance call-out email |
 | `event` | Event |
 | `event_invite` | Event Invite |
 | `time_entry` | Time Entry |
@@ -106,7 +107,7 @@ Present tense. Add a verb here before using it in a name.
 | `check_out` | QR/admin check-out |
 | `sign` | contract/invoice signed |
 | `decline` | contract/invoice declined |
-| `send` | OTP / password-reset email dispatched |
+| `send` | OTP, password-reset, or call-out email dispatched |
 | `upload` | file bytes confirmed on object storage |
 
 Do not use `click` or `view`.

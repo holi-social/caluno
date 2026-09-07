@@ -1163,6 +1163,21 @@ export class ShiftService {
         instance,
         [volunteerId],
       );
+      const organizationId = await this.resolveOrganizationId(
+        instance.master.organizationUnitId,
+      );
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE,
+        userId: volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: organizationId,
+          organization_unit_id: instance.master.organizationUnitId,
+          shift_id: instance.master.id,
+          shift_instance_id: shiftInstanceId,
+          source: POSTHOG_JOIN_SOURCE.CHECK_IN,
+        },
+      });
     }
 
     return instance;
@@ -3502,7 +3517,8 @@ export class ShiftService {
           userId,
           properties: {
             surface:
-              source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+              source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
+              source === POSTHOG_JOIN_SOURCE.CHECK_IN
                 ? POSTHOG_SURFACE.BACKOFFICE
                 : POSTHOG_SURFACE.VOLUNTEERING,
             organization_id: await this.resolveOrganizationId(
@@ -4165,6 +4181,35 @@ export class ShiftService {
       .where(eq(schema.shiftInstanceInvites.id, next.id));
 
     void this.notifyShiftInstanceJoined(next.userId, instance.master, instance);
+
+    const organizationId = await this.resolveOrganizationId(
+      instance.master.organizationUnitId,
+    );
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
+      userId: next.userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: instance.master.organizationUnitId,
+        source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+        shift_id: instance.master.id,
+        shift_instance_id: instanceId,
+        invite_status: ShiftInviteStatus.JOINED,
+      },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+      userId: next.userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: instance.master.organizationUnitId,
+        source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+        shift_id: instance.master.id,
+        shift_instance_id: instanceId,
+      },
+    });
   }
 
   private async assertShiftInstanceAcceptanceCapacity(
@@ -4306,7 +4351,9 @@ export class ShiftService {
       userId: input.userId,
       properties: {
         surface:
-          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
+          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN ||
+          input.source === POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE
             ? POSTHOG_SURFACE.BACKOFFICE
             : POSTHOG_SURFACE.VOLUNTEERING,
         organization_id: await this.resolveOrganizationId(
