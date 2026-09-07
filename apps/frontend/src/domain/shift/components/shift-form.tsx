@@ -43,6 +43,10 @@ import { resolveCreateShiftSuccessNavigation } from '../create-shift-flow';
 import { shiftInvitePath } from '../routes';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
+import {
+  type RecurrenceEndMode,
+  RecurrenceEndSelect,
+} from './recurrence-end-select';
 import { RecurrenceSelect } from './recurrence-select';
 
 const NO_REIMBURSEMENT_TYPE = 'none';
@@ -126,6 +130,8 @@ export const ShiftForm = ({
       endTimeRequired: t('validation.endTimeRequired'),
       windowViolation: t('validation.windowViolation'),
       minMaxVolunteers: t('validation.minMaxVolunteers'),
+      recurrenceEndRequired: t('validation.recurrenceEndRequired'),
+      recurrenceEndBeforeStart: t('validation.recurrenceEndBeforeStart'),
     },
     event,
   );
@@ -148,11 +154,15 @@ export const ShiftForm = ({
       recurrenceDays: [],
       imageFileId: undefined,
       ...initialValues,
+      recurrenceEndMode: initialValues?.recurrenceEndsAt ? 'on' : 'never',
     },
   });
 
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
+  const recurrenceDays = watch('recurrenceDays');
+  const recurrenceEndMode = watch('recurrenceEndMode') ?? 'never';
+  const recurrenceEndsAt = watch('recurrenceEndsAt');
 
   const onSubmit = async (formData: ShiftFormValues) => {
     setServerError(undefined);
@@ -251,32 +261,62 @@ export const ShiftForm = ({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
-      <Field>
-        <FieldLabel>
-          {t('form.dateTimeLabel')}
-          <span className="text-destructive"> *</span>
-        </FieldLabel>
-        <DatePickerWithTimeRange
-          value={{ start: startsAt ?? null, end: endsAt ?? null }}
-          onChange={(start, end) => {
-            setValue('startsAt', start as Date, { shouldValidate: true });
-            setValue('endsAt', end as Date, { shouldValidate: true });
-          }}
-          errors={[errors.startsAt?.message, errors.endsAt?.message]}
-          disabled={pending}
-          minDate={event?.startsAt}
-          maxDate={event?.endsAt}
-        />
-      </Field>
+      <div className="space-y-3">
+        <Field>
+          <FieldLabel>
+            {t('form.dateTimeLabel')}
+            <span className="text-destructive"> *</span>
+          </FieldLabel>
+          <DatePickerWithTimeRange
+            value={{ start: startsAt ?? null, end: endsAt ?? null }}
+            onChange={(start, end) => {
+              setValue('startsAt', start as Date, { shouldValidate: true });
+              setValue('endsAt', end as Date, { shouldValidate: true });
+            }}
+            errors={[errors.startsAt?.message, errors.endsAt?.message]}
+            disabled={pending}
+            minDate={event?.startsAt}
+            maxDate={event?.endsAt}
+          />
+        </Field>
 
-      <RecurrenceSelect
-        value={watch('recurrenceDays')}
-        onChange={(days) => {
-          if (event) return;
-          setValue('recurrenceDays', days as ShiftFormValues['recurrenceDays']);
-        }}
-        disabled={!!event || pending}
-      />
+        <RecurrenceSelect
+          value={recurrenceDays}
+          onChange={(days) => {
+            if (event) return;
+            setValue(
+              'recurrenceDays',
+              days as ShiftFormValues['recurrenceDays'],
+            );
+            if (days.length === 0) {
+              setValue('recurrenceEndMode', 'never', { shouldValidate: true });
+              setValue('recurrenceEndsAt', undefined, { shouldValidate: true });
+            }
+          }}
+          disabled={!!event || pending}
+        />
+
+        {(recurrenceDays?.length ?? 0) > 0 && (
+          <RecurrenceEndSelect
+            mode={recurrenceEndMode}
+            date={recurrenceEndsAt}
+            minDate={startsAt}
+            error={errors.recurrenceEndsAt?.message}
+            disabled={!!event || pending}
+            onModeChange={(mode: RecurrenceEndMode) => {
+              setValue('recurrenceEndMode', mode, { shouldValidate: true });
+              if (mode === 'never') {
+                setValue('recurrenceEndsAt', undefined, {
+                  shouldValidate: true,
+                });
+              }
+            }}
+            onDateChange={(date) => {
+              setValue('recurrenceEndsAt', date, { shouldValidate: true });
+            }}
+          />
+        )}
+      </div>
 
       <Field>
         <FieldLabel htmlFor="location">{t('form.locationLabel')}</FieldLabel>
