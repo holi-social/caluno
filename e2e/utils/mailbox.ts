@@ -9,6 +9,7 @@ const MAILBOX_PASSWORD = process.env.MAILBOX_PASSWORD ?? '3%vBBfEM';
 
 const authHeader = `Basic ${Buffer.from(`${MAILBOX_USER}:${MAILBOX_PASSWORD}`).toString('base64')}`;
 
+// biome-ignore lint/complexity/noStaticOnlyClass: namespacing mailbox helpers under a class for a cleaner import surface
 export class Mailbox {
   // Unique recipient per run; Mailpit accepts any domain.
   static uniqueAddress(prefix = 'clippy-e2e'): string {

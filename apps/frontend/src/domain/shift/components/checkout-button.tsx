@@ -5,7 +5,7 @@ import { Timer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { closeTimeEntry } from '@/domain/time-entry/actions';
+import { checkOutVolunteer } from '@/domain/time-entry/actions';
 import { useRouter } from '@/i18n/navigation';
 
 type CheckinFormProps = {
@@ -27,10 +27,9 @@ export const CheckOutButton = ({
     setServerError(null);
 
     startTransition(async () => {
-      const result = await closeTimeEntry({
-        id: timeEntryId,
+      const result = await checkOutVolunteer({
+        timeEntryId,
         organizationUnitId,
-        endedAt: new Date(),
       });
 
       if (result?.serverError) {
