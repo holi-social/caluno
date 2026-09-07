@@ -85,6 +85,10 @@ export function ShiftInstanceVolunteersPanel({
         return t('inviteStatus.cancelled');
       case 'rejected':
         return t('inviteStatus.rejected');
+      case 'requested':
+        return t('inviteStatus.requested');
+      case 'waitlisted':
+        return t('inviteStatus.waitlisted');
       default:
         return state;
     }
@@ -105,6 +109,7 @@ export function ShiftInstanceVolunteersPanel({
     invited: t('inviteStatus.summaryInvited'),
     accepted: t('inviteStatus.summaryAccepted'),
     signedUp: t('inviteStatus.summarySignedUp'),
+    waitlisted: t('inviteStatus.summaryWaitlisted'),
     spots: t('inviteStatus.summarySpots'),
   });
 
