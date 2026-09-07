@@ -203,7 +203,7 @@ query GetCheckInContext($checkInId: String!) {
   }
 }
 
-query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID) {
   checkInReadiness(
     volunteerId: $volunteerId
     shiftInstanceId: $shiftInstanceId
