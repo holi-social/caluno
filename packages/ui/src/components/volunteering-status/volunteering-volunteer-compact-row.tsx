@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { cn } from '../../lib/utils';
 import { getVolunteeringStatusPresentation } from './config';
 import type {
@@ -8,9 +10,10 @@ import { VolunteeringStatusIcon } from './volunteering-status-icon';
 
 export type VolunteeringVolunteerCompactRowProps = {
   name: string;
-  state: ShiftVolunteeringDisplayState;
+  state?: ShiftVolunteeringDisplayState;
   phase?: ShiftVolunteeringPhase;
   completedDuration?: string;
+  action?: ReactNode;
   className?: string;
 };
 
@@ -20,24 +23,33 @@ export function VolunteeringVolunteerCompactRow({
   state,
   phase,
   completedDuration,
+  action,
   className,
 }: VolunteeringVolunteerCompactRowProps) {
-  const { label } = getVolunteeringStatusPresentation(state, {
-    completedDuration,
-    phase,
-  });
+  const label =
+    state == null
+      ? undefined
+      : getVolunteeringStatusPresentation(state, {
+          completedDuration,
+          phase,
+        }).label;
 
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
       <p className="min-w-0 truncate text-base">{name}</p>
-      <VolunteeringStatusIcon
-        state={state}
-        completedDuration={completedDuration}
-        phase={phase}
-        size="md"
-        accessible
-        ariaLabel={`${name}: ${label}`}
-      />
+      <span className="flex shrink-0 items-center gap-1">
+        {action}
+        {state != null && (
+          <VolunteeringStatusIcon
+            state={state}
+            completedDuration={completedDuration}
+            phase={phase}
+            size="md"
+            accessible
+            ariaLabel={label == null ? undefined : `${name}: ${label}`}
+          />
+        )}
+      </span>
     </div>
   );
 }

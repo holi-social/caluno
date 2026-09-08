@@ -1184,9 +1184,13 @@
     },
     "card": {
       "inviteAria": "Einladen",
+      "inviteToShift": "Zum Einsatz einladen",
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "openInstanceAria": "Öffnen"
+      "openInstanceAria": "Öffnen",
+      "waitlist": "Warteliste",
+      "waitlistInviteError": "Einladen fehlgeschlagen",
+      "waitlistInviteSuccess": "Freiwillige:r zum Einsatz eingeladen"
     },
     "checkIn": {
       "checkOut": "Auschecken",
