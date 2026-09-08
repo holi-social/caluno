@@ -637,12 +637,13 @@ function expectedMyJoinStatus(
 
 function expectedJoinEventStatusWithoutInvite(
   membership: MembershipScenario,
+  joinRequiresApproval = false,
 ): JoinStatus {
   switch (membership) {
     case 'none':
       return JoinStatus.PENDING;
     case 'member':
-      return JoinStatus.JOINED;
+      return joinRequiresApproval ? JoinStatus.PENDING : JoinStatus.JOINED;
     case 'pending':
     case 'pending-intended':
       return JoinStatus.PENDING;
@@ -650,6 +651,36 @@ function expectedJoinEventStatusWithoutInvite(
     case 'cancelled':
       return JoinStatus.REJECTED;
   }
+}
+
+function expectedJoinEventStatusWithInvite(
+  membership: MembershipScenario,
+  inviteStatus: EventInviteStatus,
+  joinRequiresApproval = false,
+): JoinStatus {
+  if (inviteStatus === EventInviteStatus.ADMIN_REJECTED) {
+    return JoinStatus.REJECTED;
+  }
+
+  if (
+    inviteStatus === EventInviteStatus.JOINED ||
+    inviteStatus === EventInviteStatus.AWAITING_ADMIN_APPROVAL ||
+    inviteStatus === EventInviteStatus.WAITLIST_JOINED
+  ) {
+    return expectedMyJoinStatus(membership, inviteStatus);
+  }
+
+  if (membership === 'member') {
+    if (joinRequiresApproval) {
+      if (inviteStatus === EventInviteStatus.VOLUNTEER_CANCELLED) {
+        return JoinStatus.JOINED;
+      }
+      return JoinStatus.PENDING;
+    }
+    return JoinStatus.JOINED;
+  }
+
+  return expectedMyJoinStatus(membership, inviteStatus);
 }
 
 async function setupMembershipScenario(
@@ -871,10 +902,10 @@ describe('joinEvent — membership × invite combinations', () => {
     });
   });
 
-  describe('with an existing invite (invite status takes precedence for members)', () => {
+  describe('with an existing invite', () => {
     for (const membership of MEMBERSHIP_SCENARIOS) {
       for (const inviteStatus of Object.values(EventInviteStatus)) {
-        it(`membership=${membership}, invite=${inviteStatus} → ${expectedMyJoinStatus(membership, inviteStatus)}`, async () => {
+        it(`membership=${membership}, invite=${inviteStatus} → ${expectedJoinEventStatusWithInvite(membership, inviteStatus)}`, async () => {
           const user = await createUser(db);
           const event = await createEvent(db, { organizationUnitId });
           await setupMembershipScenario(
@@ -891,10 +922,43 @@ describe('joinEvent — membership × invite combinations', () => {
           });
 
           const status = await joinEvent(event.id, user.id);
-          expect(status).toBe(expectedMyJoinStatus(membership, inviteStatus));
+          expect(status).toBe(
+            expectedJoinEventStatusWithInvite(membership, inviteStatus),
+          );
         });
       }
     }
+  });
+
+  it('membership=member with joinRequiresApproval → PENDING', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const event = await createEvent(db, { organizationUnitId });
+    await db
+      .update(schema.events)
+      .set({ joinRequiresApproval: true })
+      .where(eq(schema.events.id, event.id));
+
+    const status = await joinEvent(event.id, user.id);
+    expect(status).toBe(JoinStatus.PENDING);
+  });
+
+  it('membership=member with ADMIN_INVITED and joinRequiresApproval → PENDING', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const event = await createEvent(db, { organizationUnitId });
+    await db
+      .update(schema.events)
+      .set({ joinRequiresApproval: true })
+      .where(eq(schema.events.id, event.id));
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: user.id,
+      status: EventInviteStatus.ADMIN_INVITED,
+    });
+
+    const status = await joinEvent(event.id, user.id);
+    expect(status).toBe(JoinStatus.PENDING);
   });
 });
 

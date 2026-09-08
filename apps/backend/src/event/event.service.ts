@@ -795,15 +795,11 @@ export class EventService {
     }
 
     const existingInvite = await this.findInvite(eventId, userId);
-    if (existingInvite) {
-      return {
-        status: await this.resolveEventJoinStatus(
-          userId,
-          event.organizationUnitId,
-          existingInvite,
-        ),
-        event,
-      };
+    if (
+      existingInvite &&
+      !isVolunteerJoinResolveSource(existingInvite.status)
+    ) {
+      return this.buildRequestJoinEventResult(userId, event, existingInvite);
     }
 
     const orgUnit = await this.db.query.organizationUnits.findFirst({
@@ -818,6 +814,14 @@ export class EventService {
       userId,
       orgUnit.id,
     );
+
+    if (
+      existingInvite &&
+      isVolunteerJoinResolveSource(existingInvite.status) &&
+      !isAllowed
+    ) {
+      return this.buildRequestJoinEventResult(userId, event, existingInvite);
+    }
 
     if (!isAllowed) {
       const result = await this.membershipService.requestOrgJoin(
@@ -863,10 +867,7 @@ export class EventService {
 
       if (result.status === 'JOINED') {
         await this.joinEvent(userId, eventId, { formsAlreadySatisfied: true });
-        return {
-          status: JoinStatus.JOINED,
-          event,
-        };
+        return this.buildRequestJoinEventResult(userId, event);
       }
 
       return {
@@ -890,9 +891,46 @@ export class EventService {
     }
 
     await this.joinEvent(userId, eventId, { formsAlreadySatisfied: true });
+    return this.buildRequestJoinEventResult(userId, event);
+  }
+
+  private async buildRequestJoinEventResult(
+    userId: string,
+    event: EventEntity,
+    invite?: EventInviteEntity | null,
+    extra?: {
+      membershipRequest?: MembershipRequestEntity;
+      requirementProfile?: RequirementProfileEntity;
+      requirementStatuses?: Array<{
+        requirementId: string;
+        name: string;
+        status: string;
+      }>;
+      requiredForms?: RequiredFormStatus[];
+    },
+  ): Promise<{
+    status: JoinStatus;
+    event: EventEntity;
+    membershipRequest?: MembershipRequestEntity;
+    requirementProfile?: RequirementProfileEntity;
+    requirementStatuses?: Array<{
+      requirementId: string;
+      name: string;
+      status: string;
+    }>;
+    requiredForms?: RequiredFormStatus[];
+  }> {
+    const resolvedInvite =
+      invite === undefined ? await this.findInvite(event.id, userId) : invite;
+
     return {
-      status: JoinStatus.JOINED,
+      status: await this.resolveEventJoinStatus(
+        userId,
+        event.organizationUnitId,
+        resolvedInvite,
+      ),
       event,
+      ...extra,
     };
   }
 
