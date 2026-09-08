@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ScheduleModule } from '@nestjs/schedule';
 import { SentryModule } from '@sentry/nestjs/setup';
 import {
   AuthService,
@@ -68,6 +69,7 @@ const autoSchemaFile =
       delimiter: '.',
       global: true,
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     AppI18nModule,
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
