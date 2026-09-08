@@ -17,6 +17,7 @@ import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useVolunteerDocumentActions } from '../hooks/use-volunteer-document-actions';
 import {
   canDecideDocument,
+  canDecline,
   documentState,
   type PreviewStatus,
   periodLabel,
@@ -245,7 +246,14 @@ export function VolunteerDocumentPreview({
         onOpenChange={setDeclineOpen}
         documentName={t(`names.${nameKey}`)}
         onConfirm={(reason) => {
-          if (currentDocument) decline(currentDocument, reason);
+          // Close the sheet on submit (not only on dismiss): after a decline
+          // the document is no longer awaiting the volunteer's signature, so
+          // the dialog must not reappear and the decline cannot be re-submitted.
+          setDeclineOpen(false);
+          if (!currentDocument || !status) return;
+          if (canDecline(documentState(status))) {
+            decline(currentDocument, reason);
+          }
         }}
       />
     </div>
