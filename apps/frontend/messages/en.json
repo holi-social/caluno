@@ -1231,6 +1231,7 @@
       "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
+      "urgentCallAutomaticBadge": "Automatic",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
