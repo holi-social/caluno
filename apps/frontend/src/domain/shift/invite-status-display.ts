@@ -93,6 +93,20 @@ export function toInviteDisplayState(
   }
 }
 
+export function partitionInvitesByWaitlist<T extends { status: InviteStatus }>(
+  invites: readonly T[],
+): { invites: T[]; waitlisted: T[] } {
+  const waitlisted = invites.filter(
+    (invite) => invite.status === ShiftInviteStatus.WaitlistJoined,
+  );
+  return {
+    invites: invites.filter(
+      (invite) => invite.status !== ShiftInviteStatus.WaitlistJoined,
+    ),
+    waitlisted,
+  };
+}
+
 export type InviteStatusCounts = {
   invited: number;
   accepted: number;

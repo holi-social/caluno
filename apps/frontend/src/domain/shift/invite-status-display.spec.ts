@@ -7,6 +7,7 @@ import {
   canAdminUninvite,
   countInviteDisplayStates,
   formatInviteStatusSummary,
+  partitionInvitesByWaitlist,
   preselectedInviteMemberIds,
   toInviteDisplayState,
 } from './invite-status-display';
@@ -28,6 +29,35 @@ describe('canAdminUninvite', () => {
     expect(canAdminUninvite(EventInviteStatus.AdminInvited)).toBe(true);
     expect(canAdminUninvite(EventInviteStatus.Joined)).toBe(true);
     expect(canAdminUninvite(EventInviteStatus.AdminRejected)).toBe(false);
+  });
+});
+
+describe('partitionInvitesByWaitlist', () => {
+  it('separates waitlisted invites from the rest, preserving order', () => {
+    const invites = [
+      { id: '1', status: ShiftInviteStatus.AdminInvited },
+      { id: '2', status: ShiftInviteStatus.WaitlistJoined },
+      { id: '3', status: ShiftInviteStatus.Joined },
+      { id: '4', status: ShiftInviteStatus.WaitlistJoined },
+    ];
+    expect(partitionInvitesByWaitlist(invites)).toEqual({
+      invites: [
+        { id: '1', status: ShiftInviteStatus.AdminInvited },
+        { id: '3', status: ShiftInviteStatus.Joined },
+      ],
+      waitlisted: [
+        { id: '2', status: ShiftInviteStatus.WaitlistJoined },
+        { id: '4', status: ShiftInviteStatus.WaitlistJoined },
+      ],
+    });
+  });
+
+  it('returns an empty waitlist when nobody is waitlisted', () => {
+    const invites = [{ id: '1', status: ShiftInviteStatus.Joined }];
+    expect(partitionInvitesByWaitlist(invites)).toEqual({
+      invites,
+      waitlisted: [],
+    });
   });
 });
 

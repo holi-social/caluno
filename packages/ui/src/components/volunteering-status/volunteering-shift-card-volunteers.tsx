@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { cn } from '../../lib/utils';
 import {
   Accordion,
@@ -16,8 +18,9 @@ import { VolunteeringVolunteerCompactRow } from './volunteering-volunteer-compac
 export type VolunteeringShiftCardVolunteer = {
   id: string;
   name: string;
-  state: ShiftVolunteeringDisplayState;
+  state?: ShiftVolunteeringDisplayState;
   completedDuration?: string;
+  action?: ReactNode;
 };
 
 export type VolunteeringShiftCardVolunteersProps = {
@@ -60,6 +63,7 @@ export function VolunteeringShiftCardVolunteers({
                 state={volunteer.state}
                 phase={phase}
                 completedDuration={volunteer.completedDuration}
+                action={volunteer.action}
               />
             ))}
           </div>

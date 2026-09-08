@@ -1184,9 +1184,13 @@
     },
     "card": {
       "inviteAria": "Invite",
+      "inviteToShift": "Invite to the shift",
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "openInstanceAria": "Open"
+      "openInstanceAria": "Open",
+      "waitlist": "Waitlist",
+      "waitlistInviteError": "Could not invite volunteer",
+      "waitlistInviteSuccess": "Volunteer invited to the shift"
     },
     "checkIn": {
       "checkOut": "Check-out",
