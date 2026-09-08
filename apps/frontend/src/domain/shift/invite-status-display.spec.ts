@@ -111,7 +111,7 @@ describe('toInviteDisplayState', () => {
       'requested',
     );
     expect(toInviteDisplayState(ShiftInviteStatus.WaitlistJoined)).toBe(
-      'requested',
+      'waitlisted',
     );
     expect(toInviteDisplayState(ShiftInviteStatus.Joined)).toBe('accepted');
     expect(toInviteDisplayState(ShiftInviteStatus.VolunteerRejected)).toBe(
@@ -143,6 +143,42 @@ describe('countInviteDisplayStates', () => {
       declined: 0,
       cancelled: 0,
       rejected: 1,
+      waitlisted: 0,
+    });
+  });
+
+  it('counts waitlisted separately from invited', () => {
+    expect(
+      countInviteDisplayStates([
+        ShiftInviteStatus.AdminInvited,
+        ShiftInviteStatus.WaitlistJoined,
+        ShiftInviteStatus.WaitlistJoined,
+      ]),
+    ).toEqual({
+      invited: 1,
+      accepted: 0,
+      signedUp: 0,
+      declined: 0,
+      cancelled: 0,
+      rejected: 0,
+      waitlisted: 2,
+    });
+  });
+
+  it('still counts approval requests under invited', () => {
+    expect(
+      countInviteDisplayStates([
+        ShiftInviteStatus.AwaitingAdminApproval,
+        ShiftInviteStatus.AwaitingAdminApproval,
+      ]),
+    ).toEqual({
+      invited: 2,
+      accepted: 0,
+      signedUp: 0,
+      declined: 0,
+      cancelled: 0,
+      rejected: 0,
+      waitlisted: 0,
     });
   });
 });
@@ -158,15 +194,41 @@ describe('formatInviteStatusSummary', () => {
           declined: 0,
           cancelled: 0,
           rejected: 0,
+          waitlisted: 0,
         },
         12,
         {
           invited: 'invited',
           accepted: 'accepted',
           signedUp: 'signed up',
+          waitlisted: 'waitlisted',
           spots: 'spots',
         },
       ),
     ).toBe('4 invited · 2 accepted · 1 signed up · 12 spots');
+  });
+
+  it('appends the waitlisted count when present', () => {
+    expect(
+      formatInviteStatusSummary(
+        {
+          invited: 4,
+          accepted: 2,
+          signedUp: 1,
+          declined: 0,
+          cancelled: 0,
+          rejected: 0,
+          waitlisted: 3,
+        },
+        12,
+        {
+          invited: 'invited',
+          accepted: 'accepted',
+          signedUp: 'signed up',
+          waitlisted: 'waitlisted',
+          spots: 'spots',
+        },
+      ),
+    ).toBe('4 invited · 2 accepted · 1 signed up · 3 waitlisted · 12 spots');
   });
 });
