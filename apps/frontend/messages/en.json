@@ -594,6 +594,7 @@
   "Navigation": {
     "admin": "Admin",
     "checkIn": "Check in",
+    "checkVolunteersIn": "Check volunteers in",
     "events": "Events",
     "home": "Home",
     "myTime": "Your records",
@@ -608,8 +609,9 @@
     "roles": "Roles",
     "selectOrganization": "Select organization",
     "shifts": "Shifts",
+    "shortcuts": "Shortcuts",
     "timesheets": "Timesheets",
-    "volunteering": "Volunteering",
+    "volunteeringApp": "Volunteering app",
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
