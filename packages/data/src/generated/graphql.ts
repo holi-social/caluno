@@ -613,11 +613,14 @@ export type JoinShiftInstanceResult = {
 };
 
 export enum JoinStatus {
+  Invited = 'INVITED',
   Joined = 'JOINED',
   None = 'NONE',
   Pending = 'PENDING',
   Rejected = 'REJECTED',
-  RequirementsNeeded = 'REQUIREMENTS_NEEDED'
+  RequirementsNeeded = 'REQUIREMENTS_NEEDED',
+  VolunteerRejected = 'VOLUNTEER_REJECTED',
+  WaitlistJoined = 'WAITLIST_JOINED'
 }
 
 export type ManualBaseline = {
