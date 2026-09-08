@@ -8,6 +8,7 @@ export type ShiftVolunteeringPhase = 'before' | 'during' | 'after';
 export type ShiftVolunteeringDisplayState =
   | 'invited'
   | 'requested'
+  | 'waitlisted'
   | 'accepted'
   | 'signed_up'
   | 'declined'

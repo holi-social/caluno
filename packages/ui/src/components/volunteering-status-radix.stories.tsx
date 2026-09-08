@@ -66,7 +66,7 @@ export const LifecycleReferenceBoard: Story = {
         title="Before shift"
         subtitle="Status depends on how they joined."
         phase="before"
-        states={['invited', 'requested', 'accepted', 'declined']}
+        states={['invited', 'requested', 'waitlisted', 'accepted', 'declined']}
       />
       <LifecycleSection
         title="During shift"
@@ -77,6 +77,7 @@ export const LifecycleReferenceBoard: Story = {
           'not_checked_in',
           'invited',
           'requested',
+          'waitlisted',
           'declined',
         ]}
       />
@@ -105,6 +106,7 @@ export const StatusIcons: Story = {
         [
           'invited',
           'requested',
+          'waitlisted',
           'accepted',
           'declined',
           'checked_in',
@@ -131,6 +133,7 @@ export const StatusBadges: Story = {
         [
           'invited',
           'requested',
+          'waitlisted',
           'accepted',
           'declined',
           'checked_in',
@@ -157,6 +160,7 @@ const sampleVolunteers = [
   { id: '3', name: 'Lena Müller', state: 'declined' as const },
   { id: '4', name: 'Tom Becker', state: 'requested' as const },
   { id: '5', name: 'Sara Klein', state: 'accepted' as const },
+  { id: '6', name: 'Jana Vogel', state: 'waitlisted' as const },
 ];
 
 /** Detail page volunteers card — before shift (matches product mockup). */
@@ -166,7 +170,7 @@ export const DetailPageBeforeShift: Story = {
     <div className="mx-auto max-w-2xl">
       <VolunteeringVolunteerList
         phase="before"
-        summary="5 invited · 12 spots"
+        summary="1 invited · 2 accepted · 1 waitlisted · 12 spots"
         volunteers={sampleVolunteers}
       />
     </div>
@@ -297,6 +301,7 @@ export const ShiftCardVolunteers: Story = {
           { id: '1', name: 'Sofie Gabius', state: 'accepted' },
           { id: '2', name: 'Elia Grams', state: 'accepted' },
           { id: '3', name: 'Rico Schaefer', state: 'declined' },
+          { id: '4', name: 'Mira Wolf', state: 'waitlisted' },
         ]}
       />
     </Card>
@@ -331,6 +336,7 @@ export const SurfaceComparison: Story = {
             volunteers={[
               { id: '1', name: 'Sofie Gabius', state: 'accepted' },
               { id: '2', name: 'Rico Schaefer', state: 'declined' },
+              { id: '3', name: 'Mira Wolf', state: 'waitlisted' },
             ]}
           />
         </Card>

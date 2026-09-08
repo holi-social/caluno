@@ -23,6 +23,7 @@ import { VolunteeringStatusBadge } from './volunteering-status-badge';
 const PASSIVE_DURING_SHIFT: ShiftVolunteeringDisplayState[] = [
   'invited',
   'requested',
+  'waitlisted',
   'declined',
   'rejected',
   'cancelled',
