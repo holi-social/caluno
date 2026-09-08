@@ -46,6 +46,14 @@ export function shiftsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts`;
 }
 
+export function shiftInstanceAdminUrl(
+  organizationUnitId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts/${encodeURIComponent(shiftId)}/instances/${encodeURIComponent(instanceId)}`;
+}
+
 /** Public deep link to a shift, optionally scoped to a specific instance. */
 export function shiftPublicUrl(shiftId: string, instanceId?: string): string {
   const path = `/shifts/${encodeURIComponent(shiftId)}`;

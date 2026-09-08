@@ -184,6 +184,17 @@ export class ContractService {
       return created;
     });
 
+    // Render the unsigned PDF now so the volunteer can preview the document
+    // before they sign it. Previously the file was only produced after the
+    // final signature, so the volunteer was asked to sign/decline content
+    // they could never see (VOLI-1216). Rendering here is best-effort — a
+    // storage/config failure just leaves downloadUrl unset for now.
+    const fullContract = await this.findContract(contract.id);
+    await this.documentRenderingService.renderAndAttachPdf(
+      fullContract,
+      actorUserId,
+    );
+
     this.postHogService.capture({
       event: POSTHOG_EVENT.CONTRACT_CREATE,
       userId: contract.volunteerId || actorUserId,

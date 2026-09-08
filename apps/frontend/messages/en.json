@@ -1231,6 +1231,7 @@
       "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
+      "urgentCallAutomaticBadge": "Automatic",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1583,11 +1584,14 @@
       "paidTimeLabel": "Paid time",
       "pauschaleTypeLabel": "Pauschale type",
       "pauschaleTypePlaceholder": "Select a Pauschale type",
-      "selectShiftHint": "Select a shift to view available dates",
+      "noShiftsMatching": "No shifts match your search.",
+      "noShiftsOnDay": "No shifts on this day.",
+      "selectedShiftInstanceLabel": "Selected: {title} · {range}",
       "selectShiftLabel": "Select shift",
-      "selectShiftPlaceholder": "Select a shift",
       "selectVolunteerLabel": "Select volunteer",
       "selectVolunteerPlaceholder": "Select a volunteer",
+      "shiftDatePlaceholder": "Pick a date",
+      "shiftSearchPlaceholder": "Search shift",
       "startEndTimeLabel": "Start and end time"
     },
     "format": {
@@ -1600,10 +1604,6 @@
     "pauschaleType": {
       "ehrenamt": "Ehrenamtspauschale",
       "uebungsleiter": "Übungsleiterpauschale"
-    },
-    "picker": {
-      "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
-      "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
     },
     "sheet": {
       "createDescription": "Record a new time entry for a volunteer shift session.",
