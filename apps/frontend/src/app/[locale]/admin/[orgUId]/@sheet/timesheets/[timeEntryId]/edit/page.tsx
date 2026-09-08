@@ -15,9 +15,8 @@ export default async function TimeEntryUpdatePage({
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'TimeEntry.sheet' });
 
-  const [entry, shifts, allVolunteers] = await Promise.all([
+  const [entry, allVolunteers] = await Promise.all([
     data.timeEntry.findById(timeEntryId),
-    data.shift.findAll({ limit: 100, offset: 0 }),
     data.organization.findVolunteersByUnit(orgUId),
   ]);
 
@@ -30,7 +29,6 @@ export default async function TimeEntryUpdatePage({
       title={t('editTitle')}
       description={t('editDescription')}
       organizationUnitId={orgUId}
-      shifts={shifts.items}
       volunteers={allVolunteers}
       mutate={updateTimeEntry.bind(null, entry.id)}
       initialValues={{
