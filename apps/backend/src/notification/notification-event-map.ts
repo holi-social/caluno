@@ -13,6 +13,7 @@ import type { MembershipRejectedPayload } from './payloads/membership-rejected.p
 import type { MembershipRemovedPayload } from './payloads/membership-removed.payload';
 import type { MembershipRequestedPayload } from './payloads/membership-requested.payload';
 import type { OrganizationCreatedPayload } from './payloads/organization-created.payload';
+import type { OrganizationUnitInvitedPayload } from './payloads/organization-unit-invited.payload';
 import type { ShiftDetailsChangedPayload } from './payloads/shift-details-changed.payload';
 import type { ShiftInstanceCallOutPayload } from './payloads/shift-instance-call-out.payload';
 import type { ShiftInstanceCallOutNoRecipientsPayload } from './payloads/shift-instance-call-out-no-recipients.payload';
@@ -47,6 +48,7 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT]: ShiftSeriesVolunteerLeftPayload;
   [NotificationEvent.SHIFT_DETAILS_CHANGED]: ShiftDetailsChangedPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;
+  [NotificationEvent.ORGANIZATION_UNIT_INVITED]: OrganizationUnitInvitedPayload;
   [NotificationEvent.SHIFT_INSTANCE_CALL_OUT]: ShiftInstanceCallOutPayload;
   [NotificationEvent.SHIFT_INSTANCE_CALL_OUT_NO_RECIPIENTS]: ShiftInstanceCallOutNoRecipientsPayload;
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;

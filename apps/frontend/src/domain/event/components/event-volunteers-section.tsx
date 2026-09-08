@@ -71,6 +71,10 @@ export function EventVolunteersSection({
         return t('status.cancelled');
       case 'rejected':
         return t('status.rejected');
+      case 'requested':
+        return t('status.requested');
+      case 'waitlisted':
+        return t('status.waitlisted');
       default:
         return state;
     }
@@ -91,6 +95,7 @@ export function EventVolunteersSection({
     invited: tShift('inviteStatus.summaryInvited'),
     accepted: tShift('inviteStatus.summaryAccepted'),
     signedUp: tShift('inviteStatus.summarySignedUp'),
+    waitlisted: tShift('inviteStatus.summaryWaitlisted'),
     spots: tShift('inviteStatus.summarySpots'),
   });
 
@@ -117,7 +122,7 @@ export function EventVolunteersSection({
 
     if (action === 'Check in') {
       router.push(
-        `/admin/${orgUId}/check-in/${invite.user.checkInId}/check-in`,
+        `/check-in/${invite.user.checkInId}/check-in?orgUId=${orgUId}`,
       );
       return;
     }

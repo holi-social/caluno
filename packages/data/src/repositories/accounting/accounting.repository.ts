@@ -11,6 +11,7 @@ import type {
   GetDocumentTemplatesQuery,
   GetEffectiveRatesQuery,
   GetEligibleTimeEntriesForInvoiceQuery,
+  GetInviteAllowanceEligibilityQuery,
   GetInvoiceQuery,
   GetInvoicesQuery,
   GetManualBaselineQuery,
@@ -37,6 +38,8 @@ export type RawEffectiveRate = GetEffectiveRatesQuery['effectiveRates'][number];
 export type RawYearlyUsage = GetYearlyUsageQuery['yearlyUsage'];
 export type RawVolunteerYearlyUsage =
   GetRosterYearlyUsageQuery['rosterYearlyUsage'][number];
+export type RawVolunteerInviteAllowance =
+  GetInviteAllowanceEligibilityQuery['inviteAllowanceEligibility'][number];
 
 export type ContractSummary = GetContractsQuery['contracts'][number];
 export type ContractDetail = GetContractQuery['contract'];
@@ -115,6 +118,15 @@ export class AccountingRepository extends BaseRepository {
       year,
     });
     return data.rosterYearlyUsage;
+  }
+
+  async findInviteAllowanceEligibility(input: {
+    organizationUnitId: string;
+    reimbursementTypeId: string;
+    shiftDurationMinutes: number;
+  }): Promise<RawVolunteerInviteAllowance[]> {
+    const data = await this.sdk.GetInviteAllowanceEligibility(input);
+    return data.inviteAllowanceEligibility;
   }
 
   async findContracts(

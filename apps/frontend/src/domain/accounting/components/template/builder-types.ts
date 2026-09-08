@@ -44,6 +44,7 @@ export const ALWAYS_AVAILABLE_SOURCES: DataSourceKey[] = [
   'document_number',
   'contract_period',
   'already_received_amount',
+  'already_received_period',
   'yearly_limit_amount',
 ];
 
@@ -85,6 +86,7 @@ export const FIELD_ORIGIN: Partial<Record<DataSourceKey, FieldOrigin>> = {
   total_amount: 'generation_time',
   contract_period: 'generation_time',
   already_received_amount: 'generation_time',
+  already_received_period: 'generation_time',
   hourly_rate: 'rate_settings',
   org_name: 'organization_profile',
   org_address: 'organization_profile',
