@@ -1,5 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { User } from '../../user/models/user.model';
+import { ShiftCallOutSource } from '../enums';
 
 /** Summary of the most recent call-out sent for a shift instance. */
 @ObjectType()
@@ -12,6 +13,9 @@ export class ShiftInstanceCallOutSummary {
 
   @Field(() => User)
   sentBy!: User;
+
+  @Field(() => ShiftCallOutSource)
+  source!: ShiftCallOutSource;
 }
 
 /** Outcome of triggering a call-out for a shift instance. */

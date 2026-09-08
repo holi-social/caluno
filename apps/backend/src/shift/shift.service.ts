@@ -174,6 +174,34 @@ export class ShiftService {
     return new Map(rows.map((row) => [row.instanceId, Number(row.total)]));
   }
 
+  /**
+   * Active (not cancelled) instances starting within `windowHours` of `now`
+   * that have an effective minimum staffing requirement (an instance-level
+   * override, or else the series' `minVolunteers`) — candidates for the
+   * understaffed-shift scheduler tick. Instances with no minimum configured
+   * are filtered out in application code since there's nothing to be "below".
+   */
+  async findUnderstaffedCandidateInstances(
+    now: Date,
+    windowHours: number,
+  ): Promise<Array<ShiftInstanceEntity & { master: ShiftEntity }>> {
+    const windowEnd = new Date(now.getTime() + windowHours * 3_600_000);
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        isCancelled: false,
+        actualStartsAt: { gt: now, lte: windowEnd },
+      },
+      with: { master: true },
+    });
+
+    return instances.filter(
+      (instance) =>
+        (instance.overrideMinVolunteers ?? instance.master.minVolunteers) !=
+        null,
+    );
+  }
+
   /** Instances of the given shifts in the org unit, keyed by masterId, ordered by start time. */
   async findInstancesByMasterIds(
     shiftIds: string[],

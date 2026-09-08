@@ -1,3 +1,5 @@
+import { registerEnumType } from '@nestjs/graphql';
+
 export enum ShiftVisibility {
   INVITED_MEMBERS = 'INVITED_MEMBERS',
   ALL_MEMBERS = 'ALL_MEMBERS',
@@ -18,6 +20,20 @@ export enum ShiftInviteStatus {
 export enum ShiftCallOutDeliveryStatus {
   SENT = 'SENT',
   FAILED = 'FAILED',
+}
+
+export enum ShiftCallOutSource {
+  MANUAL = 'MANUAL',
+  AUTOMATIC = 'AUTOMATIC',
+}
+
+registerEnumType(ShiftCallOutSource, {
+  name: 'ShiftCallOutSource',
+});
+
+export enum ShiftManagerNotificationKind {
+  CALL_OUT_SUMMARY = 'CALL_OUT_SUMMARY',
+  REMINDER = 'REMINDER',
 }
 
 export enum RecurrenceDay {

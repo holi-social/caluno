@@ -216,6 +216,7 @@ query GetShiftInstanceCallOutSummary($id: ID!) {
     lastCallOut {
       sentAt
       recipientCount
+      source
       sentBy {
         id
         name
