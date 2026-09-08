@@ -48,7 +48,7 @@ import { ShiftService } from '../shift/shift.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
-import { EventInviteStatus } from './enums';
+import { EventInviteStatus, INVITE_STATUS_TO_JOIN_EVENT_STATUS } from './enums';
 import { CreateEventInput } from './inputs/create-event.input';
 import { UpdateEventInput } from './inputs/update-event.input';
 import type { EventEntity } from './schemas/event.schema';
@@ -795,9 +795,13 @@ export class EventService {
     }
 
     const existingInvite = await this.findInvite(eventId, userId);
-    if (existingInvite?.status === EventInviteStatus.ADMIN_REJECTED) {
+    if (existingInvite) {
       return {
-        status: JoinStatus.REJECTED,
+        status: await this.resolveEventJoinStatus(
+          userId,
+          event.organizationUnitId,
+          existingInvite,
+        ),
         event,
       };
     }
@@ -1029,6 +1033,44 @@ export class EventService {
     }
 
     return updated;
+  }
+
+  /**
+   * Volunteer JoinStatus for an event (GLOSSARY § Join Status).
+   * Org membership wins for non-members; once the user is a member, the
+   * event invite status drives INVITED / PENDING / JOINED / etc.
+   */
+  async resolveEventJoinStatus(
+    userId: string,
+    organizationUnitId: string,
+    invite?: EventInviteEntity | null,
+  ): Promise<JoinStatus> {
+    if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    const membershipState = await this.membershipService.getMembershipState(
+      userId,
+      organizationUnitId,
+    );
+
+    if (membershipState === JoinStatus.REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    if (membershipState === JoinStatus.PENDING) {
+      return JoinStatus.PENDING;
+    }
+
+    if (membershipState === JoinStatus.NONE) {
+      return JoinStatus.NONE;
+    }
+
+    if (invite) {
+      return INVITE_STATUS_TO_JOIN_EVENT_STATUS[invite.status];
+    }
+
+    return JoinStatus.NONE;
   }
 
   async findInvite(
