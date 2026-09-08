@@ -258,7 +258,9 @@
           "accepted": "Accepted",
           "declined": "Declined",
           "cancelled": "Canceled",
-          "rejected": "Rejected"
+          "rejected": "Rejected",
+          "requested": "Requested",
+          "waitlisted": "Waitlisted"
         },
         "actionUninvite": "Uninvite",
         "uninviteSuccess": "Volunteer removed from event",
@@ -1316,14 +1318,17 @@
       "inviteSuccess": "Volunteer invited again",
       "invited": "Invited",
       "rejected": "Rejected",
+      "requested": "Requested",
       "signedUp": "Signed up",
       "summaryAccepted": "accepted",
       "summaryInvited": "invited",
       "summarySignedUp": "signed up",
       "summarySpots": "spots",
+      "summaryWaitlisted": "waitlisted",
       "uninviteError": "Could not remove volunteer",
       "uninviteSuccess": "Volunteer removed from shift",
-      "volunteersTitle": "Volunteers"
+      "volunteersTitle": "Volunteers",
+      "waitlisted": "Waitlisted"
     },
     "join": {
       "accept": "Accept",
