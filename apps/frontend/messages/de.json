@@ -1886,7 +1886,8 @@
         "readyCount": "{count} bereit",
         "lastDownloaded": "zuletzt heruntergeladen von <name>{by}</name> am {at}",
         "neverDownloaded": "noch nicht heruntergeladen",
-        "unknownUser": "unbekannt"
+        "unknownUser": "unbekannt",
+        "downloadError": "Das Paket konnte nicht heruntergeladen werden. Bitte versuche es erneut."
       },
       "batchBar": {
         "selected": "{count} ausgewählt",

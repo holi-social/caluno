@@ -1886,7 +1886,8 @@
         "readyCount": "{count} ready",
         "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
         "neverDownloaded": "not downloaded yet",
-        "unknownUser": "unknown"
+        "unknownUser": "unknown",
+        "downloadError": "The bundle could not be downloaded. Please try again."
       },
       "batchBar": {
         "selected": "{count} selected",
