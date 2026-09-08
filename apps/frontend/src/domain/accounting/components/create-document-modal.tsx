@@ -18,6 +18,7 @@ import {
 import { UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { getDocLineSummary } from '../lib/board-data.utils';
 import { ContractCreationModal } from './contract-creation-modal';
 import {
   DocTypeHeader,
@@ -25,7 +26,7 @@ import {
   type PauschalenType,
 } from './doc-type-header';
 import { InvoiceCreationModal } from './invoice-creation-modal';
-import type { BoardDocument, BoardVolunteer } from './reimbursements-board';
+import type { BoardVolunteer } from './reimbursements-board';
 import { STATUS_META } from './reimbursements-volunteer-group';
 
 type DocKind = 'contract' | 'invoice';
@@ -55,29 +56,6 @@ const LINES: DocLine[] = [
 
 function lineKey(line: DocLine): string {
   return `${line.kind}-${line.pauschale}`;
-}
-
-interface DocLineSummary {
-  count: number;
-  latest?: BoardDocument;
-}
-
-function getDocLineSummary(vol: BoardVolunteer, line: DocLine): DocLineSummary {
-  const prefix = line.kind === 'contract' ? 'contract' : 'timesheet';
-  const matches = vol.documents.filter(
-    (d) =>
-      (d.pauschale ?? vol.pauschale) === line.pauschale &&
-      d.status.startsWith(prefix),
-  );
-  const latest = matches.reduce<BoardDocument | undefined>((acc, d) => {
-    if (!acc) return d;
-    const accDate = acc.lastActionDate?.getTime();
-    const dDate = d.lastActionDate?.getTime();
-    if (dDate === undefined) return acc;
-    if (accDate === undefined) return d;
-    return dDate > accDate ? d : acc;
-  }, undefined);
-  return { count: matches.length, latest };
 }
 
 // Mirrors buildContractMissingDocs' id scheme for contracts.
@@ -130,7 +108,8 @@ export function CreateDocumentModal({
   );
   const existingDoc =
     volunteer && selectedLine
-      ? getDocLineSummary(volunteer, selectedLine).latest
+      ? getDocLineSummary(volunteer, selectedLine.kind, selectedLine.pauschale)
+          .latest
       : undefined;
   const docId =
     volunteer && selectedLine
@@ -208,7 +187,8 @@ export function CreateDocumentModal({
                   {LINES.map((line) => {
                     const { count, latest } = getDocLineSummary(
                       volunteer,
-                      line,
+                      line.kind,
+                      line.pauschale,
                     );
                     const selected =
                       selectedLine && lineKey(selectedLine) === lineKey(line);
