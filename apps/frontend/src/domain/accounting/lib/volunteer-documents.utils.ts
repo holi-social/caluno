@@ -227,6 +227,16 @@ export function canDecideDocument(
   return state === 'awaiting-signature' && previewStatus === 'ready';
 }
 
+/**
+ * A document may be declined only while it is still awaiting the volunteer's
+ * signature. Once it has been declined (or signed / is waiting on the org) a
+ * further decline must not go through — this is the guard against a reopened
+ * decline dialog or a double submit (VOLI-1285).
+ */
+export function canDecline(state: VolunteerDocumentState): boolean {
+  return state === 'awaiting-signature';
+}
+
 // ─── Full mapping ─────────────────────────────────────────────────────────────
 
 export function contractToVolunteerDocument(

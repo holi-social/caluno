@@ -9,6 +9,7 @@ import {
 } from '@repo/data';
 import {
   canDecideDocument,
+  canDecline,
   contractToVolunteerDocument,
   documentLines,
   documentState,
@@ -89,6 +90,18 @@ describe('canDecideDocument', () => {
     expect(canDecideDocument('awaiting-countersignature', 'ready')).toBe(false);
     expect(canDecideDocument('signed', 'ready')).toBe(false);
     expect(canDecideDocument('declined', 'ready')).toBe(false);
+  });
+});
+
+describe('canDecline', () => {
+  it('allows declining only while the document awaits the volunteer signature', () => {
+    expect(canDecline('awaiting-signature')).toBe(true);
+  });
+
+  it('blocks a second decline once the document has been declined, signed or is waiting on the org', () => {
+    expect(canDecline('declined')).toBe(false);
+    expect(canDecline('signed')).toBe(false);
+    expect(canDecline('awaiting-countersignature')).toBe(false);
   });
 });
 

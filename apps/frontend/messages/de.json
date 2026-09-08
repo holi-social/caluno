@@ -1579,11 +1579,14 @@
       "paidTimeLabel": "Bezahlte Zeit",
       "pauschaleTypeLabel": "Pauschalenart",
       "pauschaleTypePlaceholder": "Pauschalenart auswählen",
-      "selectShiftHint": "Wähle einen Einsatz, um verfügbare Termine zu sehen",
+      "noShiftsMatching": "Keine Schicht entspricht deiner Suche.",
+      "noShiftsOnDay": "Keine Schichten an diesem Tag.",
+      "selectedShiftInstanceLabel": "Ausgewählt: {title} · {range}",
       "selectShiftLabel": "Einsatz auswählen",
-      "selectShiftPlaceholder": "Einsatz auswählen",
       "selectVolunteerLabel": "Freiwillige:n auswählen",
       "selectVolunteerPlaceholder": "Freiwillige:n auswählen",
+      "shiftDatePlaceholder": "Datum wählen",
+      "shiftSearchPlaceholder": "Schicht suchen",
       "startEndTimeLabel": "Start- und Endzeit"
     },
     "format": {
@@ -1596,10 +1599,6 @@
     "pauschaleType": {
       "ehrenamt": "Ehrenamtspauschale",
       "uebungsleiter": "Übungsleiterpauschale"
-    },
-    "picker": {
-      "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
-      "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
     },
     "sheet": {
       "createDescription": "Erfasse einen neuen Zeiteintrag für einen Einsatz.",
