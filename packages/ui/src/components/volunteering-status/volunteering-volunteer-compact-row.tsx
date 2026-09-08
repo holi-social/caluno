@@ -10,7 +10,7 @@ import { VolunteeringStatusIcon } from './volunteering-status-icon';
 
 export type VolunteeringVolunteerCompactRowProps = {
   name: string;
-  state?: ShiftVolunteeringDisplayState;
+  state: ShiftVolunteeringDisplayState;
   phase?: ShiftVolunteeringPhase;
   completedDuration?: string;
   action?: ReactNode;
@@ -26,29 +26,24 @@ export function VolunteeringVolunteerCompactRow({
   action,
   className,
 }: VolunteeringVolunteerCompactRowProps) {
-  const label =
-    state == null
-      ? undefined
-      : getVolunteeringStatusPresentation(state, {
-          completedDuration,
-          phase,
-        }).label;
+  const { label } = getVolunteeringStatusPresentation(state, {
+    completedDuration,
+    phase,
+  });
 
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
       <p className="min-w-0 truncate text-base">{name}</p>
       <span className="flex shrink-0 items-center gap-1">
         {action}
-        {state != null && (
-          <VolunteeringStatusIcon
-            state={state}
-            completedDuration={completedDuration}
-            phase={phase}
-            size="md"
-            accessible
-            ariaLabel={label == null ? undefined : `${name}: ${label}`}
-          />
-        )}
+        <VolunteeringStatusIcon
+          state={state}
+          completedDuration={completedDuration}
+          phase={phase}
+          size="md"
+          accessible
+          ariaLabel={`${name}: ${label}`}
+        />
       </span>
     </div>
   );
