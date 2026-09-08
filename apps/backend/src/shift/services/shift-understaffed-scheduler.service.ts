@@ -16,7 +16,7 @@ export class ShiftUnderstaffedSchedulerService {
     private readonly notificationService: ShiftUnderstaffedNotificationService,
   ) {}
 
-  @Cron('*/5 * * * *', { timeZone: 'Europe/Berlin' })
+  @Cron('0 * * * *', { timeZone: 'Europe/Berlin' })
   async handleTick(): Promise<void> {
     try {
       await this.notificationService.runTick();
