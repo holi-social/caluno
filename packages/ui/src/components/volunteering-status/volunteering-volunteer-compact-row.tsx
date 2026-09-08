@@ -34,8 +34,8 @@ export function VolunteeringVolunteerCompactRow({
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
       <p className="min-w-0 truncate text-base">{name}</p>
-      <span className="flex shrink-0 items-center gap-1">
-        {action}
+      {action}
+      {action == null && (
         <VolunteeringStatusIcon
           state={state}
           completedDuration={completedDuration}
@@ -44,7 +44,7 @@ export function VolunteeringVolunteerCompactRow({
           accessible
           ariaLabel={`${name}: ${label}`}
         />
-      </span>
+      )}
     </div>
   );
 }
