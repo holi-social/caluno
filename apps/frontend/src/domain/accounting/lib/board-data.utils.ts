@@ -21,6 +21,43 @@ export type RawContract = ContractSummary;
 export type RawInvoice = InvoiceSummary;
 export type RawVolunteerUsage = RawVolunteerYearlyUsage;
 
+export interface DocLineSummary {
+  count: number;
+  latest?: BoardDocument;
+}
+
+/**
+ * How many of a volunteer's documents fall under a given "document line" (a
+ * kind × pauschale pair) and which one is the most recently touched. Used by
+ * the documents-creation flow to decide whether a document already exists for
+ * that line or whether it should still prompt a "create" ("Not created yet").
+ * A doc is counted for a line by its status prefix (`contract-*` for an
+ * agreement, `timesheet-*` for a timesheet) matching the line's pauschale — so
+ * a volunteer-signed timesheet awaiting countersignature (`timesheet-signing-super`)
+ * counts as created, never as generate (VOLI-1283).
+ */
+export function getDocLineSummary(
+  vol: BoardVolunteer,
+  kind: 'contract' | 'invoice',
+  pauschale: PauschalenType,
+): DocLineSummary {
+  const prefix = kind === 'contract' ? 'contract' : 'timesheet';
+  const matches = vol.documents.filter(
+    (d) =>
+      (d.pauschale ?? vol.pauschale) === pauschale &&
+      d.status.startsWith(prefix),
+  );
+  const latest = matches.reduce<BoardDocument | undefined>((acc, d) => {
+    if (!acc) return d;
+    const accDate = acc.lastActionDate?.getTime();
+    const dDate = d.lastActionDate?.getTime();
+    if (dDate === undefined) return acc;
+    if (accDate === undefined) return d;
+    return dDate > accDate ? d : acc;
+  }, undefined);
+  return { count: matches.length, latest };
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
@@ -158,12 +195,15 @@ export function formatMonthYear(date: Date, locale: string): string {
 }
 
 export function monthsInRange(
-  _year: number,
+  year: number,
   range?: { from?: Date; to?: Date },
 ): Array<{ year: number; month: number }> {
-  const now = new Date();
   if (!range?.from) {
-    return [{ year: now.getFullYear(), month: now.getMonth() }];
+    // All-time: every month of the selected year (boardYear falls back to the
+    // current year when no range is set). Previously only the current month
+    // was returned, so documents whose period fell in any other month never
+    // surfaced — orphaning them from every stage (VOLI-1283).
+    return Array.from({ length: 12 }, (_, month) => ({ year, month }));
   }
   const result: Array<{ year: number; month: number }> = [];
   const from = range.from;
@@ -241,18 +281,23 @@ export function buildBoardVolunteers({
         (c) => c.contractStatus === ContractStatus.Active,
       );
 
-      if (activeContract) {
-        const months = monthsInRange(year, dateRange);
-        for (const { year: y, month } of months) {
-          const invoicesForMonth = invoices.filter(
-            (i) =>
-              i.volunteer.id === entry.volunteer.id &&
-              i.reimbursementType.id === usage.reimbursementType.id &&
-              invoiceInMonth(i, y, month),
-          );
-          for (const invoice of invoicesForMonth) {
-            documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
-          }
+      // An existing timesheet is a real document in the workflow and must be
+      // tracked no matter what the contract currently is — it can be non-
+      // compliant (no active contract, or the contract changed after the
+      // timesheet was created), but it must never be orphaned out of every
+      // stage. The active-contract gate only controls whether the volunteer is
+      // *prompted* to create a new timesheet (see the needsTimesheet flag
+      // below), never whether an existing one shows up (VOLI-1283).
+      const months = monthsInRange(year, dateRange);
+      for (const { year: y, month } of months) {
+        const invoicesForMonth = invoices.filter(
+          (i) =>
+            i.volunteer.id === entry.volunteer.id &&
+            i.reimbursementType.id === usage.reimbursementType.id &&
+            invoiceInMonth(i, y, month),
+        );
+        for (const invoice of invoicesForMonth) {
+          documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
         }
       }
 
