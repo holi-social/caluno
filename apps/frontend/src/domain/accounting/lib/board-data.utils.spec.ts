@@ -13,6 +13,7 @@ import {
   contractPeriodOverlapsYear,
   contractStatusToDocStatus,
   formatMonthYear,
+  getDocLineSummary,
   getInitials,
   invoiceInMonth,
   invoiceStatusToDocStatus,
@@ -310,10 +311,13 @@ describe('formatMonthYear', () => {
 });
 
 describe('monthsInRange', () => {
-  it('returns current month when no range', () => {
+  it('returns all twelve months of the year when no range (all time)', () => {
     const months = monthsInRange(2026, undefined);
-    expect(months.length).toBe(1);
-    expect(months[0]?.year).toBe(new Date().getFullYear());
+    expect(months).toHaveLength(12);
+    expect(months.map((m) => m.month)).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    ]);
+    expect(months.every((m) => m.year === 2026)).toBe(true);
   });
 
   it('returns all months between from and to inclusive', () => {
@@ -463,6 +467,149 @@ describe('buildBoardVolunteers', () => {
     expect(docs.filter((d) => d.status === 'timesheet-generate')).toHaveLength(
       0,
     );
+  });
+
+  // VOLI-1283: a timesheet the volunteer signed (awaiting the supervisor's
+  // countersignature) must surface in the admin board's Sign-timesheets stage
+  // — even when its period is NOT the current month (All-time view).
+  it('surfaces an awaiting-countersignature invoice on All-time regardless of its period month', () => {
+    const year = new Date().getFullYear();
+    // A month in the current year that is guaranteed to differ from the
+    // current month, so the All-time view (no range) must still pick it up.
+    const invoiceMonth = (new Date().getMonth() + 6) % 12;
+    const periodStart = new Date(year, invoiceMonth, 1);
+
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 12_000,
+              limitCents: 84_000,
+              remainingCents: 72_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [
+        makeContract({
+          id: 'c-active',
+          contractStatus: ContractStatus.Active,
+          periodStart: new Date(year, 0, 1).toISOString(),
+          periodEnd: new Date(year, 11, 31).toISOString(),
+        }),
+      ],
+      invoices: [
+        makeInvoice({
+          id: 'i-signed',
+          invoiceStatus: InvoiceStatus.AwaitingSupervisorSignature,
+          periodStart: periodStart.toISOString(),
+          periodEnd: new Date(year, invoiceMonth + 1, 0).toISOString(),
+        }),
+      ],
+      year,
+      locale: 'de',
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'timesheet-signing-super')).toBe(true);
+  });
+
+  // VOLI-1283: an existing timesheet is a real document in the workflow and
+  // must never be orphaned out of every stage — even when the volunteer has no
+  // currently-active contract (e.g. it is still being countersigned).
+  it('surfaces an awaiting-countersignature invoice even when no contract is active', () => {
+    const year = new Date().getFullYear();
+    const invoicesDuring = {
+      from: new Date(year, 0, 1),
+      to: new Date(year, 11, 31),
+    };
+
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 21_300,
+              limitCents: 84_000,
+              remainingCents: 62_700,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      // No ACTIVE contract: only an uncountersigned Vereinbarung exists.
+      contracts: [
+        makeContract({
+          id: 'c-pending',
+          contractStatus: ContractStatus.AwaitingNgoSignature,
+          periodStart: new Date(year, 0, 1).toISOString(),
+          periodEnd: new Date(year, 11, 31).toISOString(),
+        }),
+      ],
+      invoices: [
+        makeInvoice({
+          id: 'i-signed',
+          invoiceStatus: InvoiceStatus.AwaitingSupervisorSignature,
+          periodStart: new Date(year, new Date().getMonth(), 1).toISOString(),
+          periodEnd: new Date(year, new Date().getMonth() + 1, 0).toISOString(),
+        }),
+      ],
+      year,
+      locale: 'de',
+      dateRange: invoicesDuring,
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'timesheet-signing-super')).toBe(true);
+  });
+
+  // VOLI-1283: the documents-creation flow ("Not created yet") keys a
+  // document line off the volunteer's documents — an awaiting-countersignature
+  // invoice must count as already created, not as a fresh create prompt.
+  it('counts an awaiting-countersignature invoice as created in the documents-creation summary', () => {
+    const year = new Date().getFullYear();
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Stefano Cerelli', image: null },
+          usageByType: [
+            {
+              usedCents: 21_300,
+              limitCents: 84_000,
+              remainingCents: 62_700,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [
+        makeContract({
+          id: 'c-active',
+          contractStatus: ContractStatus.Active,
+          periodStart: new Date(year, 0, 1).toISOString(),
+          periodEnd: new Date(year, 11, 31).toISOString(),
+        }),
+      ],
+      invoices: [
+        makeInvoice({
+          id: 'i-signed',
+          invoiceStatus: InvoiceStatus.AwaitingSupervisorSignature,
+          periodStart: new Date(year, new Date().getMonth(), 1).toISOString(),
+          periodEnd: new Date(year, new Date().getMonth() + 1, 0).toISOString(),
+        }),
+      ],
+      year,
+      locale: 'de',
+      dateRange: { from: new Date(year, 0, 1), to: new Date(year, 11, 31) },
+    });
+
+    const vol = volunteers[0];
+    if (!vol) throw new Error('expected a built volunteer');
+    const summary = getDocLineSummary(vol, 'invoice', 'ehrenamt');
+    expect(summary.count).toBeGreaterThan(0);
+    expect(summary.latest?.status).toBe('timesheet-signing-super');
   });
 });
 
