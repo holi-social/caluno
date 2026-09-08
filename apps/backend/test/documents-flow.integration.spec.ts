@@ -1273,6 +1273,68 @@ describe('documents flow — admin + volunteer', () => {
       expect(glyphs).toContain('Unterschrift');
     });
 
+    it('renders the unsigned PDF at creation so the volunteer can preview it before signing', async () => {
+      // A dedicated org so the template body here is the one the renderer sees.
+      const pdfOrg = await setupFlowOrg(db);
+      const pdfOrgHeader = {
+        'x-organization-unit-id': pdfOrg.organizationUnitId,
+      };
+      await db
+        .update(schema.documentTemplates)
+        .set({ body: bodyFor(DocumentKind.CONTRACT) })
+        .where(
+          eq(schema.documentTemplates.organizationId, pdfOrg.organizationId),
+        );
+
+      setAuthMockUserId(pdfOrg.adminId);
+      const { createContract } = await graphqlRequestRequiringData<{
+        createContract: { id: string; contractStatus: string };
+      }>(
+        app,
+        {
+          query: CREATE_CONTRACT,
+          variables: {
+            input: {
+              organizationUnitId: pdfOrg.organizationUnitId,
+              reimbursementTypeId: pdfOrg.reimbursementTypeId,
+              volunteerId: pdfOrg.volunteerId,
+              periodStart: '2026-01-01T00:00:00.000Z',
+              periodEnd: '2027-01-01T00:00:00.000Z',
+            },
+          },
+          headers: pdfOrgHeader,
+        },
+        'createContract',
+      );
+      expect(createContract.contractStatus).toBe(
+        ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
+      );
+
+      // The volunteer can view the document *before* signing: the PDF is
+      // rendered at creation, not only after the final signature (VOLI-1216).
+      const detail = await graphqlRequestRequiringData<{
+        contract: { id: string; downloadUrl: string | null };
+      }>(
+        app,
+        {
+          query: CONTRACT_DETAIL,
+          variables: { id: createContract.id },
+          headers: pdfOrgHeader,
+        },
+        'contract',
+      );
+      if (!process.env.STORAGE_ENDPOINT) {
+        expect(detail.contract.downloadUrl).toBeNull();
+        return;
+      }
+      expect(detail.contract.downloadUrl).not.toBeNull();
+      if (!detail.contract.downloadUrl) throw new Error('unreachable');
+      const pdfResponse = await fetch(detail.contract.downloadUrl);
+      expect(pdfResponse.ok).toBe(true);
+      const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
+      expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
+    });
+
     it('attaches a real PDF for a fully-signed invoice too, with its time-entry table', async () => {
       const pdfOrg = await setupFlowOrg(db);
       const pdfOrgHeader = {

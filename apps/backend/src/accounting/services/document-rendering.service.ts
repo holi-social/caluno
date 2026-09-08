@@ -201,32 +201,47 @@ export class DocumentRenderingService {
     const rows = tableRows ?? [];
     const pageWidth = pdf.page.width - 96;
     const colWidth = pageWidth / Math.max(columns.length, 1);
+    const left = 48;
+    // Vertical whitespace between a row's text and the rule under it, and then
+    // between that rule and the next row. Without an explicit gap the rule is
+    // drawn against the text (VOLI-1216).
+    const rowGap = 6;
+    const afterRuleGap = 4;
 
     const drawRow = (cells: string[], bold: boolean) => {
       const font = bold ? 'Helvetica-Bold' : 'Helvetica';
       pdf.font(font).fontSize(9);
-      const cellY = pdf.y;
+      const rowTop = pdf.y;
       // Compute the tallest cell so the row height fits wrapped text.
       let maxHeight = 14;
       for (const cell of cells) {
         const h = pdf.heightOfString(cell, { width: colWidth - 6 });
         maxHeight = Math.max(maxHeight, h + 4);
       }
+      // Draw the cells at explicit column positions. Explicit x/y calls leave
+      // pdfkit's cursor parked at the last column, so we reset it to the left
+      // margin afterwards — otherwise any content rendered after this table
+      // (the "Bereits erhaltene" note, the signatures) would start from that
+      // stray x and get crammed against the right edge (VOLI-1216).
       for (let i = 0; i < columns.length; i++) {
         pdf
           .font(font)
           .fontSize(9)
-          .text(cells[i] ?? '', 48 + i * colWidth, cellY, {
+          .text(cells[i] ?? '', left + i * colWidth, rowTop, {
             width: colWidth - 6,
             lineGap: 1,
           });
       }
-      pdf.moveDown(maxHeight / 9 + 0.4);
+      pdf.x = pdf.page.margins.left;
+      // Place the row's bottom explicitly (not via move-down arithmetic) so
+      // the rule never overlaps the text.
+      pdf.y = rowTop + maxHeight + rowGap;
       const lineY = pdf.y;
       pdf
-        .moveTo(48, lineY)
-        .lineTo(48 + pageWidth, lineY)
+        .moveTo(left, lineY)
+        .lineTo(left + pageWidth, lineY)
         .stroke();
+      pdf.y = lineY + afterRuleGap;
     };
 
     drawRow(columns, true);
@@ -235,6 +250,7 @@ export class DocumentRenderingService {
       drawRow(row, false);
     }
     pdf.moveDown(0.5);
+    pdf.x = pdf.page.margins.left;
   }
 
   private renderClosing(
@@ -242,6 +258,7 @@ export class DocumentRenderingService {
     body: TemplateBodyShape,
     fieldValues: Record<string, string>,
   ): void {
+    pdf.x = pdf.page.margins.left;
     const closing = body.footer?.closingLine;
     if (closing) {
       pdf.moveDown(1);
@@ -276,8 +293,10 @@ export class DocumentRenderingService {
     ];
 
     pdf.fontSize(10).font('Helvetica');
+    pdf.x = pdf.page.margins.left;
     for (const seat of seats) {
       pdf.text(`${seat.label}: ${seat.name}`);
+      pdf.moveDown(0.5);
       pdf.text(seat.signedAt ? `am ${seat.signedAt}` : '_______________', {
         lineGap: 2,
       });
