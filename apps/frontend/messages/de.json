@@ -258,7 +258,9 @@
           "accepted": "Angenommen",
           "declined": "Abgelehnt",
           "cancelled": "Storniert",
-          "rejected": "Zurückgezogen"
+          "rejected": "Zurückgezogen",
+          "requested": "Angefragt",
+          "waitlisted": "Auf der Warteliste"
         },
         "actionUninvite": "Einladung zurückziehen",
         "uninviteSuccess": "Freiwillige:r von der Veranstaltung entfernt",
@@ -1316,14 +1318,17 @@
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
       "invited": "Eingeladen",
       "rejected": "Zurückgewiesen",
+      "requested": "Angefragt",
       "signedUp": "Selbst angemeldet",
       "summaryAccepted": "angenommen",
       "summaryInvited": "eingeladen",
       "summarySignedUp": "selbst angemeldet",
       "summarySpots": "Plätze",
+      "summaryWaitlisted": "auf der Warteliste",
       "uninviteError": "Entfernen fehlgeschlagen",
       "uninviteSuccess": "Freiwillige:r von dem Einsatz entfernt",
-      "volunteersTitle": "Freiwillige"
+      "volunteersTitle": "Freiwillige",
+      "waitlisted": "Auf der Warteliste"
     },
     "join": {
       "accept": "Annehmen",

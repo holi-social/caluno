@@ -321,6 +321,17 @@ export class InvoiceService {
       return created;
     });
 
+    // Render the unsigned PDF now so the volunteer can preview the document
+    // before they sign it. Previously the file was only produced after the
+    // final signature, so the volunteer was asked to sign/decline content
+    // they could never see (VOLI-1216). Rendering here is best-effort — a
+    // storage/config failure just leaves downloadUrl unset for now.
+    const fullInvoice = await this.findInvoice(invoice.id);
+    await this.documentRenderingService.renderAndAttachPdf(
+      fullInvoice,
+      actorUserId,
+    );
+
     this.postHogService.capture({
       event: POSTHOG_EVENT.INVOICE_CREATE,
       userId: invoice.volunteerId || actorUserId,
