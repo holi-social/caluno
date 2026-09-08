@@ -14,8 +14,7 @@ export default async function CreateTimeEntryPage({
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'TimeEntry.sheet' });
 
-  const [shifts, allVolunteers] = await Promise.all([
-    data.shift.findAll({ limit: 100, offset: 0 }),
+  const [allVolunteers] = await Promise.all([
     data.organization.findVolunteersByUnit(orgUId),
   ]);
 
@@ -24,7 +23,6 @@ export default async function CreateTimeEntryPage({
       title={t('createTitle')}
       description={t('createDescription')}
       organizationUnitId={orgUId}
-      shifts={shifts.items}
       volunteers={allVolunteers}
       mutate={createTimeEntry}
     />
