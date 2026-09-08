@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { GetShiftsQuery, ShiftInstanceItem } from '@repo/data';
 import { ReimbursementTypeKey } from '@repo/data';
 import { useReimbursementTypes } from '@repo/data/react';
 import {
@@ -23,17 +22,15 @@ import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { clientTimeEntrySchema, type TimeEntryFormValues } from '../schemas';
+import type { TimeEntryShiftInstance } from '../shift-instance-options';
 
 import {
   type PickerValue,
   ShiftPicker,
 } from './shift-instance-picker/shift-instance-picker';
 
-type Shift = GetShiftsQuery['shifts']['items'][0];
-
 interface TimeEntryFormProps {
   organizationUnitId: string;
-  shifts: Shift[];
   volunteers?: Array<{ id: string; name: string; email: string }>;
   initialValues?: Partial<TimeEntryFormValues>;
   mutate: (formData: TimeEntryFormValues) => Promise<{ serverError?: string }>;
@@ -43,7 +40,6 @@ interface TimeEntryFormProps {
 
 export const TimeEntryForm = ({
   organizationUnitId,
-  shifts,
   volunteers = [],
   mutate,
   initialValues,
@@ -55,7 +51,8 @@ export const TimeEntryForm = ({
   const tValidation = useTranslations('TimeEntry.validation');
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
-  const [selectedInstance, setSelectedInstance] = useState<ShiftInstanceItem>();
+  const [selectedInstance, setSelectedInstance] =
+    useState<TimeEntryShiftInstance>();
 
   const { open, setOpen } = useFormSheet();
 
@@ -122,7 +119,7 @@ export const TimeEntryForm = ({
   ]);
 
   const handleInstanceSelect = useCallback(
-    (value: PickerValue, instance?: ShiftInstanceItem) => {
+    (value: PickerValue, instance?: TimeEntryShiftInstance) => {
       setValue('shiftId', value.shiftId);
       setValue('shiftInstanceId', value.shiftInstanceId ?? '');
       setSelectedInstance(instance);
@@ -186,10 +183,10 @@ export const TimeEntryForm = ({
       {watch('hasShift') && (
         <>
           <ShiftPicker
-            shifts={shifts}
             value={{ shiftId, shiftInstanceId }}
             onChange={handleInstanceSelect}
             disabled={pending}
+            defaultDate={initialValues?.startedAt ?? null}
           />
           {errors.shiftInstanceId && (
             <FieldError>{errors.shiftInstanceId.message}</FieldError>
