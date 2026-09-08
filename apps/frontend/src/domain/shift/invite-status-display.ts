@@ -100,11 +100,11 @@ export function partitionInvitesByWaitlist<T extends { status: InviteStatus }>(
     (invite) => invite.status === ShiftInviteStatus.WaitlistJoined,
   );
   const invites = volunteers.filter(
-      (invite) => invite.status !== ShiftInviteStatus.WaitlistJoined,
-    )
+    (invite) => invite.status !== ShiftInviteStatus.WaitlistJoined,
+  );
   return {
     invites,
-    waitlisted
+    waitlisted,
   };
 }
 

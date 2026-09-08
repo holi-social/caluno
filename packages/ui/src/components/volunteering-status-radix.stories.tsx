@@ -319,6 +319,7 @@ export const ShiftCardWaitlist: Story = {
           {
             id: '1',
             name: 'Jonas M.',
+            state: 'waitlisted',
             action: (
               <Button
                 size="icon-sm"
@@ -332,6 +333,7 @@ export const ShiftCardWaitlist: Story = {
           {
             id: '2',
             name: 'Mira Wolf',
+            state: 'waitlisted',
             action: (
               <Button
                 size="icon-sm"

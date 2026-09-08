@@ -1,5 +1,3 @@
-'use client';
-
 import type { ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
@@ -18,7 +16,7 @@ import { VolunteeringVolunteerCompactRow } from './volunteering-volunteer-compac
 export type VolunteeringShiftCardVolunteer = {
   id: string;
   name: string;
-  state?: ShiftVolunteeringDisplayState;
+  state: ShiftVolunteeringDisplayState;
   completedDuration?: string;
   action?: ReactNode;
 };

@@ -104,6 +104,25 @@ export function ShiftCard({
     }),
   );
 
+  const waitlistVolunteers: VolunteeringShiftCardVolunteer[] = waitlisted.map(
+    (invite) => ({
+      id: invite.user.id,
+      name: invite.user.name,
+      state: 'waitlisted',
+      action: canManage ? (
+        <Button
+          size="icon-sm"
+          variant="outline"
+          tooltip={t('card.inviteToShift')}
+          disabled={pending}
+          onClick={() => inviteFromWaitlist(invite.user.id)}
+        >
+          <UserPlus className="size-4" />
+        </Button>
+      ) : undefined,
+    }),
+  );
+
   const inviteFromWaitlist = (userId: string) => {
     startTransition(async () => {
       const result = await updateShiftInstanceInviteStatus(
@@ -122,24 +141,6 @@ export function ShiftCard({
       router.refresh();
     });
   };
-
-  const waitlistVolunteers: VolunteeringShiftCardVolunteer[] = waitlisted.map(
-    (invite) => ({
-      id: invite.user.id,
-      name: invite.user.name,
-      action: canManage ? (
-        <Button
-          size="icon-sm"
-          variant="outline"
-          tooltip={t('card.inviteToShift')}
-          disabled={pending}
-          onClick={() => inviteFromWaitlist(invite.user.id)}
-        >
-          <UserPlus className="size-4" />
-        </Button>
-      ) : undefined,
-    }),
-  );
 
   const instanceHref = shiftInstanceDetailPath(
     orgUId,
