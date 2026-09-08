@@ -578,11 +578,14 @@ type JoinShiftInstanceResult {
 }
 
 enum JoinStatus {
+  INVITED
   JOINED
   NONE
   PENDING
   REJECTED
   REQUIREMENTS_NEEDED
+  VOLUNTEER_REJECTED
+  WAITLIST_JOINED
 }
 
 type ManualBaseline {
