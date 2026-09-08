@@ -73,7 +73,7 @@ export function toInviteDisplayState(
       return 'requested';
     case ShiftInviteStatus.WaitlistJoined:
     case EventInviteStatus.WaitlistJoined:
-      return 'requested';
+      return 'waitlisted';
     case ShiftInviteStatus.Joined:
     case EventInviteStatus.Joined:
       return 'accepted';
@@ -100,6 +100,7 @@ export type InviteStatusCounts = {
   declined: number;
   cancelled: number;
   rejected: number;
+  waitlisted: number;
 };
 
 export function countInviteDisplayStates(
@@ -112,6 +113,7 @@ export function countInviteDisplayStates(
     declined: 0,
     cancelled: 0,
     rejected: 0,
+    waitlisted: 0,
   };
 
   for (const status of statuses) {
@@ -135,8 +137,11 @@ export function countInviteDisplayStates(
         counts.rejected += 1;
         break;
       case 'requested':
-        // Count approval/waitlist under invited column for summary until UI splits
+        // Count approval requests under invited for summary until UI splits
         counts.invited += 1;
+        break;
+      case 'waitlisted':
+        counts.waitlisted += 1;
         break;
       default:
         break;
@@ -154,6 +159,7 @@ export function formatInviteStatusSummary(
     invited: string;
     accepted: string;
     signedUp: string;
+    waitlisted: string;
     spots: string;
   },
 ): string {
@@ -162,6 +168,9 @@ export function formatInviteStatusSummary(
     `${counts.accepted} ${labels.accepted}`,
     `${counts.signedUp} ${labels.signedUp}`,
   ];
+  if (counts.waitlisted > 0) {
+    parts.push(`${counts.waitlisted} ${labels.waitlisted}`);
+  }
   if (spots != null) {
     parts.push(`${spots} ${labels.spots}`);
   }
