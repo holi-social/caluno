@@ -131,6 +131,11 @@
     "selectShiftPlaceholder": "Schicht wählen",
     "shiftSearchPlaceholder": "Schichtname",
     "shiftSheetTitle": "Schicht wählen",
+    "shiftlessWarningDuplicateAtSubmit": "Wenn diese Person bereits ein offenes Check-in ohne Schicht hat, schlägt das Check-in mit einer Fehlermeldung fehl.",
+    "shiftlessWarningEmptyTaskCell": "Im PDF des Stundennachweises bleibt die Spalte für die Aufgabe leer, wenn dem Eintrag später keine Notiz hinzugefügt wird.",
+    "shiftlessWarningNoReimbursement": "Diese Stunden erhalten keine Vergütungsart. Sie erscheinen nicht im Stundennachweis bzw. in der Abrechnung, wenn du den Eintrag später nicht bearbeitest.",
+    "shiftlessWarningNoShiftStats": "Die Stunden zählen nur in die Gesamtstunden, nicht in die Kapazität oder Planung einer Schicht.",
+    "shiftlessWarningTitle": "Check-in ohne Schicht",
     "successDialogCloseButton": "Fertig",
     "successDialogTitle": "Erfolgreich eingecheckt",
     "today": "Heute"

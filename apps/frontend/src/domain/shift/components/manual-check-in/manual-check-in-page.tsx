@@ -30,10 +30,12 @@ import {
 import { setCheckInSuccessPayload } from '../../check-in-success-dialog';
 import { AcceptMembershipSheet } from './accept-membership-sheet';
 import { CheckInReadinessCard } from './check-in-readiness-card';
+import { CheckInWithoutShiftWarningCard } from './check-in-without-shift-warning-card';
 import { DateSheet } from './date-sheet';
 import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
 import { ShiftSheet } from './shift-sheet';
+import { shouldShowShiftlessCheckInWarning } from './shiftless-check-in-warning';
 
 type ManualCheckInPageProps = {
   volunteer: {
@@ -134,6 +136,10 @@ export function ManualCheckInPage({
   const showReadinessCard = withoutShift
     ? readinessState === 'notMember' || readinessState === 'pendingMembership'
     : !!selection.shiftInstanceId;
+
+  // Informational only: never gates the check-in button, unlike the
+  // readiness card, which only earns its place while it blocks.
+  const showShiftlessWarning = shouldShowShiftlessCheckInWarning(withoutShift);
 
   // "Sent" is per (org unit) / (shift instance) — tracked as the id it was
   // sent for, so switching to a different unit or instance re-arms the
@@ -247,6 +253,8 @@ export function ManualCheckInPage({
         />
 
         <UserCard user={volunteer} size="lg" />
+
+        {showShiftlessWarning && <CheckInWithoutShiftWarningCard />}
 
         {showReadinessCard && readinessState && (
           <CheckInReadinessCard
