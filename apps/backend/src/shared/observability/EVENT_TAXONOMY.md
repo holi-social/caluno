@@ -124,7 +124,9 @@ Every capture uses this envelope. Extra object ids are allowed; extra PII is not
   event_description: string; // from the registry; callers must not set this
   surface: 'volunteering' | 'backoffice' | 'public' | 'auth';
   organization_id?: string;
+  organization_name?: string; // resolved by PostHogService from organization_id
   organization_unit_id?: string;
+  organization_unit_name?: string; // resolved by PostHogService from organization_unit_id
   source?: string;
   // object ids: shift_id, shift_instance_id, event_id, …
 }
@@ -133,7 +135,8 @@ Every capture uses this envelope. Extra object ids are allowed; extra PII is not
 - snake_case, full glossary words (`organization_id`, not `org_id`, not `organizationId`)
 - booleans: `is_` / `has_`
 - dates: `_date` or `_timestamp`
-- no email, name, form field values, tokens, raw query text
+- no email, person `name`, form field values, tokens, raw query text
+- tenant labels `organization_name` / `organization_unit_name` are allowed; callers send ids only and `PostHogService` fills the names
 - org-scoped events set PostHog group `organization` = `organization_id`
 - `distinctId` is the **subject** of the action (usually the volunteer), not necessarily the admin who clicked
 
