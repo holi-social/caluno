@@ -94,16 +94,17 @@ export function toInviteDisplayState(
 }
 
 export function partitionInvitesByWaitlist<T extends { status: InviteStatus }>(
-  invites: readonly T[],
+  volunteers: readonly T[],
 ): { invites: T[]; waitlisted: T[] } {
-  const waitlisted = invites.filter(
+  const waitlisted = volunteers.filter(
     (invite) => invite.status === ShiftInviteStatus.WaitlistJoined,
   );
-  return {
-    invites: invites.filter(
+  const invites = volunteers.filter(
       (invite) => invite.status !== ShiftInviteStatus.WaitlistJoined,
-    ),
-    waitlisted,
+    )
+  return {
+    invites,
+    waitlisted
   };
 }
 
