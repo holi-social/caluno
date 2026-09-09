@@ -64,6 +64,47 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
   });
 });
 
+describe('TimeTrackingService.inviteVolunteerToOrganization PostHog', () => {
+  it('captures organization_unit_invite for the volunteer after the email is queued', async () => {
+    const capture = jest.fn();
+    const notifyOrganizationUnitInvited = jest.fn();
+    const db = {
+      query: {
+        organizationUnits: {
+          findFirst: jest.fn().mockResolvedValue({
+            id: 'ou-1',
+            name: 'Unit',
+            organizationId: 'org-1',
+          }),
+        },
+      },
+    };
+    const service = new TimeTrackingService(
+      db as never,
+      {} as never,
+      {} as never,
+      { capture } as unknown as PostHogService,
+      {} as never,
+      { findById: jest.fn().mockResolvedValue({ id: 'volunteer-1' }) } as never,
+      { notifyOrganizationUnitInvited } as never,
+    );
+
+    await service.inviteVolunteerToOrganization('ou-1', 'volunteer-1');
+
+    expect(notifyOrganizationUnitInvited).toHaveBeenCalled();
+    expect(capture).toHaveBeenCalledWith({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_INVITE,
+      userId: 'volunteer-1',
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: 'org-1',
+        organization_unit_id: 'ou-1',
+        source: 'check_in',
+      },
+    });
+  });
+});
+
 describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
   it('inherits the instance override over the master shift type', async () => {
     const insertValues = jest.fn().mockReturnValue({

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { ShiftCallOutSource, ShiftVisibility } from '../enums';
 import { ShiftCallOutService } from './shift-call-out.service';
 
@@ -83,6 +84,10 @@ function setup() {
     createTranslator: () => ({ t: (key: string) => key }),
   };
 
+  const postHogService = {
+    capture: async (options: PostHogService) => {},
+  };
+
   const service = new ShiftCallOutService(
     db as never,
     shiftService as never,
@@ -91,6 +96,7 @@ function setup() {
     notificationService as never,
     emailService as never,
     appI18n as never,
+    postHogService as never,
   );
 
   return { service, insertedRows, sentEmails };

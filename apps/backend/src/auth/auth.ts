@@ -70,6 +70,8 @@ export interface AuthConfigOptions {
   onSessionCreated?: (userId: string) => void;
   onSessionDeleted?: (userId: string) => void;
   onUserCreated?: (userId: string) => void;
+  onEmailVerified?: (userId: string) => void;
+  onPasswordResetCompleted?: (userId: string) => void;
   privacyPolicyDirectory?: string;
 }
 
@@ -84,132 +86,168 @@ export const createAuthConfig = ({
   onSessionCreated,
   onSessionDeleted,
   onUserCreated,
+  onEmailVerified,
+  onPasswordResetCompleted,
   privacyPolicyDirectory = defaultPrivacyPolicyDirectory(),
-}: AuthConfigOptions): BetterAuthOptions => ({
-  ...(logger && { logger }),
-  database: drizzleAdapter(database, {
-    schema: {
-      users,
-      sessions,
-      accounts,
-      verifications,
-    },
-    usePlural: true,
-    provider: 'pg',
-  }),
-  user: {
-    additionalFields: {
-      locale: {
-        type: 'string',
-        required: false,
-      },
-      privacyPolicyVersion: {
-        type: 'string',
-        required: false,
-        input: false,
-      },
-      privacyPolicyAcceptedAt: {
-        type: 'date',
-        required: false,
-        input: false,
-      },
-    },
-  },
-  databaseHooks: {
-    user: {
-      create: {
-        before: async (user, ctx) => {
-          const locale = resolveRequestLocale(headersFromRequest(ctx?.request));
+}: AuthConfigOptions): BetterAuthOptions => {
+  const pendingEmailVerified = { flagged: false };
 
-          try {
-            const { version } = resolvePrivacyPolicyDocument(
-              privacyPolicyDirectory,
+  return {
+    ...(logger && { logger }),
+    database: drizzleAdapter(database, {
+      schema: {
+        users,
+        sessions,
+        accounts,
+        verifications,
+      },
+      usePlural: true,
+      provider: 'pg',
+    }),
+    user: {
+      additionalFields: {
+        locale: {
+          type: 'string',
+          required: false,
+        },
+        privacyPolicyVersion: {
+          type: 'string',
+          required: false,
+          input: false,
+        },
+        privacyPolicyAcceptedAt: {
+          type: 'date',
+          required: false,
+          input: false,
+        },
+      },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user, ctx) => {
+            const locale = resolveRequestLocale(
+              headersFromRequest(ctx?.request),
             );
-            return {
-              data: applyPrivacyPolicyAcceptance(
-                {
-                  ...user,
-                  locale,
-                  privacyPolicyAccepted: privacyPolicyAcceptedFromBody(
-                    ctx?.body,
-                  ),
-                },
-                version,
-              ),
-            };
-          } catch (error) {
-            if (error instanceof PrivacyPolicyAcceptanceError) {
-              throw new APIError('BAD_REQUEST', { message: error.message });
+
+            try {
+              const { version } = resolvePrivacyPolicyDocument(
+                privacyPolicyDirectory,
+              );
+              return {
+                data: applyPrivacyPolicyAcceptance(
+                  {
+                    ...user,
+                    locale,
+                    privacyPolicyAccepted: privacyPolicyAcceptedFromBody(
+                      ctx?.body,
+                    ),
+                  },
+                  version,
+                ),
+              };
+            } catch (error) {
+              if (error instanceof PrivacyPolicyAcceptanceError) {
+                throw new APIError('BAD_REQUEST', { message: error.message });
+              }
+              throw error;
             }
-            throw error;
-          }
+          },
+          after: async (user) => {
+            if (typeof user.id === 'string') {
+              onUserCreated?.(user.id);
+            }
+          },
         },
-        after: async (user) => {
-          if (typeof user.id === 'string') {
-            onUserCreated?.(user.id);
-          }
+        update: {
+          before: async (user, ctx) => {
+            if (user.emailVerified !== true) {
+              return;
+            }
+            if (ctx) {
+              Object.assign(ctx, { calunoEmailVerified: true });
+              return;
+            }
+            pendingEmailVerified.flagged = true;
+          },
+          after: async (user, ctx) => {
+            const flaggedOnCtx =
+              ctx != null &&
+              (ctx as { calunoEmailVerified?: boolean }).calunoEmailVerified ===
+                true;
+            const flagged = flaggedOnCtx || pendingEmailVerified.flagged;
+            pendingEmailVerified.flagged = false;
+            if (flagged && typeof user.id === 'string') {
+              onEmailVerified?.(user.id);
+            }
+          },
+        },
+      },
+      session: {
+        create: {
+          after: async (session) => {
+            if (typeof session.userId === 'string') {
+              onSessionCreated?.(session.userId);
+            }
+          },
+        },
+        delete: {
+          after: async (session) => {
+            if (typeof session.userId === 'string') {
+              onSessionDeleted?.(session.userId);
+            }
+          },
         },
       },
     },
-    session: {
-      create: {
-        after: async (session) => {
-          if (typeof session.userId === 'string') {
-            onSessionCreated?.(session.userId);
-          }
+    trustedOrigins,
+    ...(cookieDomain && {
+      advanced: {
+        crossSubDomainCookies: {
+          enabled: true,
+          domain: cookieDomain,
         },
-      },
-      delete: {
-        after: async (session) => {
-          if (typeof session.userId === 'string') {
-            onSessionDeleted?.(session.userId);
-          }
-        },
-      },
-    },
-  },
-  trustedOrigins,
-  ...(cookieDomain && {
-    advanced: {
-      crossSubDomainCookies: {
-        enabled: true,
-        domain: cookieDomain,
-      },
-    },
-  }),
-  emailAndPassword: {
-    enabled: true,
-    minPasswordLength: 6,
-    maxPasswordLength: 128,
-    autoSignIn: false,
-    requireEmailVerification: emailVerificationEnabled,
-    async sendResetPassword({ user, token }, request) {
-      await sendResetPassword({
-        email: user.email,
-        token,
-        userId: user.id,
-        headers: headersFromRequest(request),
-      });
-    },
-  },
-  emailVerification: {
-    sendOnSignUp: emailVerificationEnabled,
-    autoSignInAfterVerification: true,
-  },
-  plugins: [
-    emailOTP({
-      overrideDefaultEmailVerification: true,
-      async sendVerificationOTP({ email, otp, type }, ctx) {
-        await sendVerificationOTP({
-          email,
-          otp,
-          type,
-          headers: headersFromRequest(ctx?.request),
-        });
       },
     }),
-  ],
-});
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 6,
+      maxPasswordLength: 128,
+      autoSignIn: false,
+      requireEmailVerification: emailVerificationEnabled,
+      async sendResetPassword({ user, token }, request) {
+        await sendResetPassword({
+          email: user.email,
+          token,
+          userId: user.id,
+          headers: headersFromRequest(request),
+        });
+      },
+      async onPasswordReset({ user }) {
+        if (typeof user.id === 'string') {
+          onPasswordResetCompleted?.(user.id);
+        }
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: emailVerificationEnabled,
+      autoSignInAfterVerification: true,
+    },
+    plugins: [
+      emailOTP({
+        overrideDefaultEmailVerification: true,
+        async sendVerificationOTP({ email, otp, type }, ctx) {
+          await sendVerificationOTP({
+            email,
+            otp,
+            type,
+            headers: headersFromRequest(ctx?.request),
+          });
+        },
+      }),
+    ],
+  };
+};
 
 export const auth = betterAuth(
   createAuthConfig({

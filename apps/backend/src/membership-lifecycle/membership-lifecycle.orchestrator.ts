@@ -10,7 +10,10 @@ import { SubmitFormInput } from '../requirement-profile/inputs/submit-form.input
 import type { FormSubmissionEntity } from '../requirement-profile/schemas/form-submission.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
 import { RequiredFormService } from '../requirement-profile/services/required-form.service';
-import { POSTHOG_JOIN_SOURCE } from '../shared/observability/posthog.events';
+import {
+  POSTHOG_JOIN_SOURCE,
+  type PostHogJoinSource,
+} from '../shared/observability/posthog.events';
 import { ShiftService } from '../shift/shift.service';
 
 @Injectable()
@@ -29,15 +32,22 @@ export class MembershipLifecycleOrchestrator {
     id: string,
     organizationUnitId: string,
     reviewerId: string,
+    source: 'membership_approve' | 'check_in' = 'membership_approve',
   ): Promise<MembershipRequestEntity> {
     const membershipRequest =
       await this.membershipService.approveMembershipRequest(
         id,
         organizationUnitId,
         reviewerId,
+        source,
       );
 
-    await this.fulfillIntendedJoins(membershipRequest);
+    await this.fulfillIntendedJoins(
+      membershipRequest,
+      source === 'check_in'
+        ? POSTHOG_JOIN_SOURCE.CHECK_IN
+        : POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+    );
 
     return membershipRequest;
   }
@@ -100,6 +110,7 @@ export class MembershipLifecycleOrchestrator {
 
   private async fulfillIntendedJoins(
     membershipRequest: MembershipRequestEntity,
+    joinSource: PostHogJoinSource,
   ): Promise<void> {
     const metadata = (membershipRequest.metadata ??
       {}) as MembershipRequestMetadata;
@@ -118,7 +129,7 @@ export class MembershipLifecycleOrchestrator {
           await this.shiftService.joinShiftInstance(
             membershipRequest.userId,
             instanceId,
-            { source: POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE },
+            { source: joinSource },
           );
         } catch (e) {
           this.logger.warn(
@@ -134,7 +145,7 @@ export class MembershipLifecycleOrchestrator {
           await this.shiftService.joinShift(
             membershipRequest.userId,
             shiftId,
-            POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+            joinSource,
           );
         } catch (e) {
           this.logger.warn(`Failed to auto-join shift ${shiftId}: ${e}`);
@@ -151,7 +162,7 @@ export class MembershipLifecycleOrchestrator {
               membershipRequest.userId,
               eventId,
               {
-                source: POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE,
+                source: joinSource,
               },
             );
           }

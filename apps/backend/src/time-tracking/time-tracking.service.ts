@@ -442,7 +442,7 @@ export class TimeTrackingService {
   ): Promise<void> {
     const organizationUnit = await this.db.query.organizationUnits.findFirst({
       where: { id: organizationUnitId },
-      columns: { id: true, name: true },
+      columns: { id: true, name: true, organizationId: true },
     });
     if (!organizationUnit) {
       throw new NotFoundGraphQLError('Organization unit not found');
@@ -457,6 +457,17 @@ export class TimeTrackingService {
       organizationUnitId,
       organizationUnitName: organizationUnit.name,
       userId: volunteerId,
+    });
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_INVITE,
+      userId: volunteerId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationUnit.organizationId ?? undefined,
+        organization_unit_id: organizationUnitId,
+        source: 'check_in',
+      },
     });
   }
 
