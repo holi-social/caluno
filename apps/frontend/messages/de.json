@@ -1326,6 +1326,8 @@
       "actionInvite": "Einladen",
       "actionUninvite": "Zurückweisen",
       "cancelled": "Zurückgezogen",
+      "capacityBadge": "{filled} / {max} Plätze besetzt",
+      "capacityBadgeNoMax": "{filled} Freiwillige",
       "declined": "Abgelehnt",
       "inviteError": "Einladen fehlgeschlagen",
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
