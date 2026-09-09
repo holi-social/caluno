@@ -97,6 +97,7 @@
     "checkInRunningTitle": "Checkin läuft",
     "checkInSectionDescription": "Checke diese Person für eine neue Schicht ein, ohne die offenen Einträge zu schließen.",
     "checkInSectionTitle": "Neuer Check-in",
+    "checkInWithoutShift": "Check-in ohne Schicht",
     "dateSheetTitle": "Datum wählen",
     "foundOnOtherDays": "An anderen Tagen gefunden",
     "inviteSentConfirmation": "Einladung gesendet",
@@ -130,6 +131,11 @@
     "selectShiftPlaceholder": "Schicht wählen",
     "shiftSearchPlaceholder": "Schichtname",
     "shiftSheetTitle": "Schicht wählen",
+    "shiftlessWarningDuplicateAtSubmit": "Wenn diese Person bereits ein offenes Check-in ohne Schicht hat, schlägt das Check-in mit einer Fehlermeldung fehl.",
+    "shiftlessWarningEmptyTaskCell": "Im PDF des Stundennachweises bleibt die Spalte für die Aufgabe leer, wenn dem Eintrag später keine Notiz hinzugefügt wird.",
+    "shiftlessWarningNoReimbursement": "Diese Stunden erhalten keine Vergütungsart. Sie erscheinen nicht im Stundennachweis bzw. in der Abrechnung, wenn du den Eintrag später nicht bearbeitest.",
+    "shiftlessWarningNoShiftStats": "Die Stunden zählen nur in die Gesamtstunden, nicht in die Kapazität oder Planung einer Schicht.",
+    "shiftlessWarningTitle": "Check-in ohne Schicht",
     "successDialogCloseButton": "Fertig",
     "successDialogTitle": "Erfolgreich eingecheckt",
     "today": "Heute"
@@ -594,6 +600,7 @@
   "Navigation": {
     "admin": "Admin",
     "checkIn": "Einchecken",
+    "checkVolunteersIn": "Freiwillige einchecken",
     "events": "Veranstaltungen",
     "home": "Startseite",
     "myTime": "Deine Nachweise",
@@ -608,8 +615,9 @@
     "roles": "Rollen",
     "selectOrganization": "Organisation auswählen",
     "shifts": "Einsätze",
+    "shortcuts": "Verknüpfungen",
     "timesheets": "Zeiterfassung",
-    "volunteering": "Freiwilligenarbeit",
+    "volunteeringApp": "Freiwilligen-App",
     "volunteers": "Freiwillige",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
@@ -1478,6 +1486,9 @@
     },
     "validation": {
       "endTimeRequired": "Endzeit ist erforderlich",
+      "endMustBeLaterThanStart": "Die Endzeit muss nach der Startzeit liegen",
+      "continuesIntoNextDay": "Dieser Einsatz geht in den nächsten Tag über.",
+      "shorterThan24Hours": "Der Einsatz muss kürzer als 24 Stunden sein.",
       "instanceClearRecurrenceUnsupported": "Die Wiederholung kannst du hier nicht entfernen. Bearbeite sie auf der Seite „Einsatz bearbeiten“.",
       "instanceDateMismatch": "Das Datum passt nicht zu diesem Termin. Öffne das Bearbeitungsformular bitte noch einmal.",
       "instanceRecurrenceConflict": "Die neue Wiederholung enthält den Wochentag dieses Termins nicht. Passe die Wiederholung an oder bearbeite einen anderen Termin.",
@@ -1795,6 +1806,7 @@
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
       "periodLabel": "Zeitraum",
+      "yearLabel": "Jahr",
       "periodPicker": {
         "allTime": "Gesamter Zeitraum",
         "thisMonth": "Dieser Monat",
@@ -1824,7 +1836,6 @@
         "contractSigning": "Vereinbarungen gegenzeichnen",
         "timesheetGenerate": "Stundennachweise erstellen",
         "timesheetSigning": "Stundennachweise gegenzeichnen",
-        "needsTimesheet": "Stundennachweis fällig",
         "readyToGo": "Bereit zur Abgabe"
       },
       "toolbar": {
@@ -1840,6 +1851,8 @@
         "allDoneHint": "Keine offenen Dokumente in diesem Zeitraum.",
         "filtered": "Keine Einträge in dieser Kategorie."
       },
+      "loadError": "Abrechnungen konnten nicht geladen werden.",
+      "loadErrorHint": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
       "resetPrototype": "Prototyp zurücksetzen",
       "resetPrototypeToast": "Prototyp-Daten zurückgesetzt.",
       "createDocumentModal": {
@@ -1991,7 +2004,9 @@
         "sendErrorTitle": "Vertrag konnte nicht gesendet werden",
         "sendError": "Der Vertrag konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Vertragsvorlage erstellen",
-        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
+        "orgProfileErrorTitle": "Organisationsprofil vervollständigen",
+        "orgProfileErrorDescription": "Ihrer Organisation fehlen Angaben, die für dieses Dokument benötigt werden. Ergänzen Sie sie, um fortzufahren.",
+        "editProfileCta": "Profil bearbeiten",
         "hoursUnitMonth": "Monat",
         "hoursUnitWeek": "Woche",
         "hoursUnitHint": "pro {unit}",
@@ -2015,7 +2030,9 @@
         "sendErrorTitle": "Stundennachweis konnte nicht gesendet werden",
         "sendError": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Stundennachweis-Vorlage erstellen",
-        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
+        "orgProfileErrorTitle": "Organisationsprofil vervollständigen",
+        "orgProfileErrorDescription": "Ihrer Organisation fehlen Angaben, die für dieses Dokument benötigt werden. Ergänzen Sie sie, um fortzufahren.",
+        "editProfileCta": "Profil bearbeiten",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {

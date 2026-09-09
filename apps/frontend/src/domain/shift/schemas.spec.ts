@@ -12,6 +12,8 @@ const messages = {
   minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
   recurrenceEndRequired: 'End date is required',
   recurrenceEndBeforeStart: 'End date cannot be before the start date',
+  endMustBeLaterThanStart: 'End time must be later than start time',
+  shorterThan24Hours: 'Shift must be shorter than 24 hours.',
 };
 
 function baseShift(overrides: Record<string, unknown> = {}) {
@@ -146,6 +148,48 @@ describe('shiftFormSchema recurrence end', () => {
       }),
     );
     expect(result.success).toBe(true);
+  });
+});
+
+describe('shiftFormSchema overnight duration', () => {
+  it('accepts an overnight span under 24 hours', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        startsAt: new Date('2026-09-11T18:00:00.000Z'),
+        endsAt: new Date('2026-09-11T23:00:00.000Z'),
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects equal start and end', () => {
+    const at = new Date('2026-09-11T18:00:00.000Z');
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ startsAt: at, endsAt: new Date(at.getTime()) }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'endsAt',
+      );
+      expect(issue?.message).toBe(messages.endMustBeLaterThanStart);
+    }
+  });
+
+  it('rejects a 24-hour span', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        startsAt: new Date('2026-09-11T18:00:00.000Z'),
+        endsAt: new Date('2026-09-12T18:00:00.000Z'),
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'endsAt',
+      );
+      expect(issue?.message).toBe(messages.shorterThan24Hours);
+    }
   });
 });
 

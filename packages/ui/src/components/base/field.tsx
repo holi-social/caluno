@@ -239,6 +239,30 @@ function FieldError({
   );
 }
 
+function FieldWarning({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<'div'>) {
+  if (!children) {
+    return null;
+  }
+
+  return (
+    <div
+      role="status"
+      data-slot="field-warning"
+      className={cn(
+        'text-amber-600 dark:text-amber-500 text-sm font-normal',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
 export {
   Field,
   FieldContent,
@@ -250,4 +274,5 @@ export {
   FieldSeparator,
   FieldSet,
   FieldTitle,
+  FieldWarning,
 };

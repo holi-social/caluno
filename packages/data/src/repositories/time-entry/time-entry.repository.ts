@@ -86,7 +86,7 @@ export class TimeEntryRepository extends BaseRepository {
   async getCheckInReadiness(
     organizationUnitId: string,
     volunteerId: string,
-    shiftInstanceId: string,
+    shiftInstanceId: string | null,
   ): Promise<GetCheckInReadinessQuery['checkInReadiness']> {
     const data = await this.sdk.GetCheckInReadiness(
       { volunteerId, shiftInstanceId },
