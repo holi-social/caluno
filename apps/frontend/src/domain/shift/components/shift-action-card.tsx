@@ -4,7 +4,7 @@ import {
   JoinStatus,
   type PublicShiftInstance,
   ShiftInviteStatus,
-  type ShiftVisibility,
+  ShiftVisibility,
 } from '@repo/data';
 import type { RequiredForm } from '@repo/data/react';
 import { Badge, Card } from '@repo/ui';
@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   CheckIcon,
   ClockIcon,
+  HourglassIcon,
   UsersIcon,
   XIcon,
 } from 'lucide-react';
@@ -106,6 +107,7 @@ export function ShiftActionCard({
       ? null
       : Math.max(0, selected.spotsLeft - (justJoined ? 1 : 0));
   const full = spotsLeft === 0;
+  const showWaitlistCta = full && visibility === ShiftVisibility.AllMembers;
   const unlimited = spotsLeft == null;
   const resolvedMax = max ?? (spotsLeft != null ? filled + spotsLeft : filled);
 
@@ -122,18 +124,24 @@ export function ShiftActionCard({
       case ShiftInviteStatus.Joined:
         return t('cancelUntilNote', { date: longDate });
       case ShiftInviteStatus.VolunteerCancelled:
-        return t('cancelledNote', { date: longDate });
+        return showWaitlistCta
+          ? t('waitlistNote')
+          : t('cancelledNote', { date: longDate });
       case ShiftInviteStatus.VolunteerRejected:
-        return t('declinedNote');
+        return showWaitlistCta ? t('waitlistNote') : t('declinedNote');
       case ShiftInviteStatus.AwaitingAdminApproval:
         return t('pendingNote');
       case ShiftInviteStatus.WaitlistJoined:
-        return t('fullNote');
+        return t('waitlistNote');
       default:
         if (effectiveMembershipState === JoinStatus.Pending) {
           return t('pendingNote');
         }
-        return full ? t('fullNote') : t('signUpNote');
+        return full
+          ? showWaitlistCta
+            ? t('waitlistNote')
+            : t('fullNote')
+          : t('signUpNote');
     }
   };
 
@@ -175,10 +183,17 @@ export function ShiftActionCard({
           {t('acceptedBadge')}
         </Badge>
       )}
-      {inviteStatus === ShiftInviteStatus.VolunteerCancelled && (
-        <Badge variant="secondary" className="gap-1">
-          <XIcon className="size-3.5" />
-          {t('cancelledBadge')}
+      {inviteStatus === ShiftInviteStatus.VolunteerCancelled &&
+        !showWaitlistCta && (
+          <Badge variant="secondary" className="gap-1">
+            <XIcon className="size-3.5" />
+            {t('cancelledBadge')}
+          </Badge>
+        )}
+      {inviteStatus === ShiftInviteStatus.WaitlistJoined && (
+        <Badge variant="outline" className="gap-1 bg-accent">
+          <HourglassIcon className="size-3.5" />
+          {t('waitlistBadge')}
         </Badge>
       )}
 

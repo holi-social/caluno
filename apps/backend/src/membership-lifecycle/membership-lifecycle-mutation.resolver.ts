@@ -58,6 +58,7 @@ export class MembershipLifecycleMutationResolver {
         requestId,
         context.organizationUnitId,
         session.user.id,
+        'check_in',
       );
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }

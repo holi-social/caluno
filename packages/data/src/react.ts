@@ -55,6 +55,7 @@ export * from './react/hooks/use-my-shift-instances';
 export * from './react/hooks/use-my-shift-instances-infinite';
 export * from './react/hooks/use-organization-volunteers';
 export * from './react/hooks/use-organizations';
+export * from './react/hooks/use-paid-shift-signup-volunteers';
 export * from './react/hooks/use-pending-signee';
 export * from './react/hooks/use-reimbursement-types';
 export * from './react/hooks/use-required-forms';
@@ -91,6 +92,7 @@ export type {
   RawBundleDownloadStatus,
   RawEffectiveRate,
   RawManualBaseline,
+  RawPaidShiftSignupVolunteer,
   RawPendingSignee,
   RawReimbursementType,
   RawVolunteerNeedsTimesheet,

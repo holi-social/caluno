@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { PostHogService } from '../../shared/observability/posthog.service';
 import { ShiftCallOutSource, ShiftVisibility } from '../enums';
 import { ShiftCallOutService } from './shift-call-out.service';
 
@@ -83,6 +84,10 @@ function setup() {
     createTranslator: () => ({ t: (key: string) => key }),
   };
 
+  const postHogService = {
+    capture: async (options: PostHogService) => {},
+  };
+
   const service = new ShiftCallOutService(
     db as never,
     shiftService as never,
@@ -91,6 +96,7 @@ function setup() {
     notificationService as never,
     emailService as never,
     appI18n as never,
+    postHogService as never,
   );
 
   return { service, insertedRows, sentEmails };
@@ -136,5 +142,92 @@ describe('ShiftCallOutService.sendCallOut', () => {
     for (const row of insertedRows) {
       expect(row.source).toBe(ShiftCallOutSource.AUTOMATIC);
     }
+  });
+});
+
+describe('ShiftCallOutService.getCallOutHistory', () => {
+  const t1 = new Date('2026-09-01T10:00:00.000Z');
+  const t2 = new Date('2026-09-02T10:00:00.000Z');
+
+  function historyService(rows: Array<Record<string, unknown>>) {
+    const db = {
+      select: () => ({
+        from: () => ({ where: async () => rows }),
+      }),
+    };
+    return new ShiftCallOutService(
+      db as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+  }
+
+  it('groups recipient rows of the same send into one batch and returns newest first', async () => {
+    const service = historyService([
+      // instance-1, oldest send (2 recipients)
+      { instanceId: INSTANCE_ID, sentAt: t1, sentById: 'm1', source: 'MANUAL' },
+      { instanceId: INSTANCE_ID, sentAt: t1, sentById: 'm1', source: 'MANUAL' },
+      // instance-1, newest AUTOMATIC send (1 recipient)
+      {
+        instanceId: INSTANCE_ID,
+        sentAt: t2,
+        sentById: 'm2',
+        source: 'AUTOMATIC',
+      },
+    ]);
+
+    const history = await service.getCallOutHistory([INSTANCE_ID]);
+
+    expect(history.get(INSTANCE_ID)).toEqual([
+      {
+        sentAt: t2,
+        recipientCount: 1,
+        source: 'AUTOMATIC',
+        sentById: 'm2',
+      },
+      {
+        sentAt: t1,
+        recipientCount: 2,
+        source: 'MANUAL',
+        sentById: 'm1',
+      },
+    ]);
+  });
+
+  it('returns an empty list for an instance with no call-outs', async () => {
+    const service = historyService([
+      {
+        instanceId: 'other-instance',
+        sentAt: t1,
+        sentById: 'm1',
+        source: 'MANUAL',
+      },
+    ]);
+
+    const history = await service.getCallOutHistory([INSTANCE_ID]);
+
+    expect(history.get(INSTANCE_ID)).toEqual([]);
+  });
+
+  it('returns only the most recent batch from getLastCallOutSummaries', async () => {
+    const service = historyService([
+      { instanceId: INSTANCE_ID, sentAt: t1, sentById: 'm1', source: 'MANUAL' },
+      { instanceId: INSTANCE_ID, sentAt: t2, sentById: 'm1', source: 'MANUAL' },
+      { instanceId: INSTANCE_ID, sentAt: t2, sentById: 'm1', source: 'MANUAL' },
+    ]);
+
+    const summaries = await service.getLastCallOutSummaries([INSTANCE_ID]);
+
+    expect(summaries.get(INSTANCE_ID)).toEqual({
+      sentAt: t2,
+      recipientCount: 2,
+      source: 'MANUAL',
+      sentById: 'm1',
+    });
   });
 });

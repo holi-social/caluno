@@ -11,6 +11,7 @@ import {
   type GetCheckInShiftsQuery,
   type GetMyShiftInstancesQuery,
   type GetPublicShiftInstancesQuery,
+  type GetShiftInstanceCallOutHistoryQuery,
   type GetShiftInstanceCallOutSummaryQuery,
   type GetShiftInstanceQuery,
   type GetShiftInstancesQuery,
@@ -221,6 +222,17 @@ export class ShiftRepository extends BaseRepository {
   > {
     const data = await this.sdk.GetShiftInstanceCallOutSummary({ id });
     return data.shiftInstance.lastCallOut ?? null;
+  }
+
+  async findCallOutHistory(
+    id: string,
+  ): Promise<
+    NonNullable<
+      GetShiftInstanceCallOutHistoryQuery['shiftInstance']
+    >['callOuts']
+  > {
+    const data = await this.sdk.GetShiftInstanceCallOutHistory({ id });
+    return data.shiftInstance.callOuts ?? [];
   }
 
   async sendCallOut(

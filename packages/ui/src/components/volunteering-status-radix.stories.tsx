@@ -308,6 +308,48 @@ export const ShiftCardVolunteers: Story = {
   ),
 };
 
+export const ShiftCardWaitlist: Story = {
+  name: 'Shift card / waitlist accordion',
+  render: () => (
+    <Card className="mx-auto max-w-xs gap-1 overflow-hidden rounded-xl px-2 pb-2 pt-4 shadow-sm">
+      <VolunteeringShiftCardVolunteers
+        sectionLabel="Waitlist"
+        phase="before"
+        volunteers={[
+          {
+            id: '1',
+            name: 'Jonas M.',
+            state: 'waitlisted',
+            action: (
+              <Button
+                size="icon-sm"
+                variant="outline"
+                tooltip="Invite to the shift"
+              >
+                <UserPlus className="size-4" />
+              </Button>
+            ),
+          },
+          {
+            id: '2',
+            name: 'Mira Wolf',
+            state: 'waitlisted',
+            action: (
+              <Button
+                size="icon-sm"
+                variant="outline"
+                tooltip="Invite to the shift"
+              >
+                <UserPlus className="size-4" />
+              </Button>
+            ),
+          },
+        ]}
+      />
+    </Card>
+  ),
+};
+
 /** Invite sheet — searchable member list with status icons. */
 export const InviteMemberPanel: Story = {
   name: 'Invite panel / member list',
