@@ -44,9 +44,7 @@ type ShiftInstanceVolunteersPanelProps = {
   instanceId: string;
   invites: InstanceInvite[];
   spotsLeft: number | null | undefined;
-  /** Joined invites only — waitlisted and pending are excluded. */
   filledCount: number;
-  /** Effective capacity: instance override ?? shift max. */
   maxVolunteers: number | null | undefined;
   canManage: boolean;
   isInstanceInThePast: boolean;
