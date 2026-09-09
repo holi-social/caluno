@@ -152,6 +152,7 @@ export const ShiftForm = ({
       location: defaultLocation ?? '',
       instructions: '',
       openShift: true,
+      joinRequiresApproval: false,
       invitedMemberIds: [],
       recurrenceDays: [],
       imageFileId: undefined,
@@ -392,6 +393,27 @@ export const ShiftForm = ({
             id="openShift"
             checked={watch('openShift')}
             onCheckedChange={(checked) => setValue('openShift', checked)}
+            disabled={pending}
+          />
+        </Field>
+
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldLabel htmlFor="joinRequiresApproval">
+              {t('form.approvalRequiredLabel')}
+            </FieldLabel>
+
+            <FieldDescription>
+              {t('form.approvalRequiredDescription')}
+            </FieldDescription>
+          </FieldContent>
+
+          <Switch
+            id="joinRequiresApproval"
+            checked={watch('joinRequiresApproval')}
+            onCheckedChange={(checked) =>
+              setValue('joinRequiresApproval', checked)
+            }
             disabled={pending}
           />
         </Field>
