@@ -97,6 +97,11 @@ export class InvoiceService {
     if (filter.periodEnd) {
       conditions.push(lt(schema.invoices.periodStart, filter.periodEnd));
     }
+    if (filter.organizationUnitId) {
+      conditions.push(
+        eq(schema.invoices.organizationUnitId, filter.organizationUnitId),
+      );
+    }
 
     const rows = await this.db
       .select({ invoice: schema.invoices })
@@ -319,6 +324,28 @@ export class InvoiceService {
     input: CreateInvoiceInput,
     actorUserId: string,
   ): Promise<InvoiceEntity> {
+    return this.createInvoiceDocument(
+      organizationId,
+      input,
+      actorUserId,
+      false,
+    );
+  }
+
+  async createDraftInvoice(
+    organizationId: string,
+    input: CreateInvoiceInput,
+    actorUserId: string,
+  ): Promise<InvoiceEntity> {
+    return this.createInvoiceDocument(organizationId, input, actorUserId, true);
+  }
+
+  private async createInvoiceDocument(
+    organizationId: string,
+    input: CreateInvoiceInput,
+    actorUserId: string,
+    asDraft: boolean,
+  ): Promise<InvoiceEntity> {
     if (input.timeEntryIds.length === 0) {
       throw new BadRequestGraphQLError(
         'At least one time entry must be selected',
@@ -424,7 +451,9 @@ export class InvoiceService {
           volunteerId: input.volunteerId,
           reimbursementTypeId: input.reimbursementTypeId,
           organizationUnitId: input.organizationUnitId,
-          invoiceStatus: this.nextInvoiceStatus(orderedSignees[0].signeeType),
+          invoiceStatus: asDraft
+            ? InvoiceStatus.DRAFT
+            : this.nextInvoiceStatus(orderedSignees[0].signeeType),
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,
           totalAmountCents,
@@ -461,6 +490,10 @@ export class InvoiceService {
 
       return created;
     });
+
+    if (asDraft) {
+      return invoice;
+    }
 
     // Render the unsigned PDF now so the volunteer can preview the document
     // before they sign it. Previously the file was only produced after the

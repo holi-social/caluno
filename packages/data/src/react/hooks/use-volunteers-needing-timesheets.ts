@@ -18,5 +18,6 @@ export function useVolunteersNeedingTimesheets(input: {
     queryFn: () => repository.findVolunteersNeedingTimesheets(input),
     staleTime: 30 * 1000,
     enabled: !!input.periodStart || !!input.periodEnd,
+    refetchOnMount: 'always',
   });
 }

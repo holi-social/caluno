@@ -42,6 +42,7 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-1',
@@ -87,6 +88,7 @@ describe('TimeTrackingService.inviteVolunteerToOrganization PostHog', () => {
       {} as never,
       { findById: jest.fn().mockResolvedValue({ id: 'volunteer-1' }) } as never,
       { notifyOrganizationUnitInvited } as never,
+      { emit: jest.fn() } as never,
     );
 
     await service.inviteVolunteerToOrganization('ou-1', 'volunteer-1');
@@ -140,6 +142,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-1',
@@ -189,6 +192,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-2',
@@ -233,6 +237,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-3',
@@ -269,6 +274,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: null,
@@ -308,6 +314,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
 
     const readiness = await service.getCheckInReadiness(
@@ -340,6 +347,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       {} as never,
+      { emit: jest.fn() } as never,
     );
 
     await service.getCheckInReadiness('volunteer-1', 'si-1', 'ou-1');

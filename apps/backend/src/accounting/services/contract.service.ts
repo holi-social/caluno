@@ -88,6 +88,11 @@ export class ContractService {
     if (filter.periodEnd) {
       conditions.push(lt(schema.contracts.periodStart, filter.periodEnd));
     }
+    if (filter.organizationUnitId) {
+      conditions.push(
+        eq(schema.contracts.organizationUnitId, filter.organizationUnitId),
+      );
+    }
 
     const rows = await this.db
       .select({ contract: schema.contracts })

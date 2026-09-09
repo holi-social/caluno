@@ -23,6 +23,7 @@ export function useInvoices(filter?: InvoiceFilterInput) {
     queryKey: ['accounting', 'invoices', filter],
     queryFn: () => repository.findInvoices(filter),
     staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 }
 
