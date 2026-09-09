@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { cn } from '../../lib/utils';
 import { getVolunteeringStatusPresentation } from './config';
 import type {
@@ -11,6 +13,7 @@ export type VolunteeringVolunteerCompactRowProps = {
   state: ShiftVolunteeringDisplayState;
   phase?: ShiftVolunteeringPhase;
   completedDuration?: string;
+  action?: ReactNode;
   className?: string;
 };
 
@@ -20,6 +23,7 @@ export function VolunteeringVolunteerCompactRow({
   state,
   phase,
   completedDuration,
+  action,
   className,
 }: VolunteeringVolunteerCompactRowProps) {
   const { label } = getVolunteeringStatusPresentation(state, {
@@ -30,14 +34,17 @@ export function VolunteeringVolunteerCompactRow({
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
       <p className="min-w-0 truncate text-base">{name}</p>
-      <VolunteeringStatusIcon
-        state={state}
-        completedDuration={completedDuration}
-        phase={phase}
-        size="md"
-        accessible
-        ariaLabel={`${name}: ${label}`}
-      />
+      {action}
+      {action == null && (
+        <VolunteeringStatusIcon
+          state={state}
+          completedDuration={completedDuration}
+          phase={phase}
+          size="md"
+          accessible
+          ariaLabel={`${name}: ${label}`}
+        />
+      )}
     </div>
   );
 }
