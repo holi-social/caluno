@@ -60,6 +60,17 @@ const CHECK_IN_READINESS = `
   }
 `;
 
+const CHECK_IN_READINESS_WITHOUT_SHIFT = `
+  query CheckInReadinessWithoutShift($volunteerId: ID!, $shiftInstanceId: ID) {
+    checkInReadiness(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
+      isMember
+      openMembershipRequestId
+      shiftInviteStatus
+      isParticipating
+    }
+  }
+`;
+
 describe('checkInReadiness query', () => {
   let app: INestApplication;
   let db: Database;
@@ -247,6 +258,57 @@ describe('checkInReadiness query', () => {
     });
 
     expect(response.errors?.[0]?.message).toContain('not found');
+  });
+
+  it('reports only the membership facts when no shift instance is given', async () => {
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, unitId);
+
+    const data = await graphqlRequestRequiringData<{
+      checkInReadiness: {
+        isMember: boolean;
+        openMembershipRequestId: string | null;
+        shiftInviteStatus: string | null;
+        isParticipating: boolean;
+      };
+    }>(
+      app,
+      {
+        query: CHECK_IN_READINESS_WITHOUT_SHIFT,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: null },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInReadiness',
+    );
+
+    expect(data.checkInReadiness).toEqual({
+      isMember: true,
+      openMembershipRequestId: null,
+      shiftInviteStatus: null,
+      isParticipating: false,
+    });
+  });
+
+  it('reports the pending membership request when no shift instance is given', async () => {
+    const volunteer = await createUser(db);
+    const request = await createMembershipRequest(db, {
+      userId: volunteer.id,
+      organizationUnitId: unitId,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      checkInReadiness: { openMembershipRequestId: string | null };
+    }>(
+      app,
+      {
+        query: CHECK_IN_READINESS_WITHOUT_SHIFT,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: null },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInReadiness',
+    );
+
+    expect(data.checkInReadiness.openMembershipRequestId).toBe(request.id);
   });
 });
 

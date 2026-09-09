@@ -245,3 +245,69 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
     expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
   });
 });
+
+describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
+  const membershipService = () => ({
+    isMemberOfUnitOrAncestor: jest.fn().mockResolvedValue(true),
+    findPendingMembershipRequest: jest.fn().mockResolvedValue({ id: 'mr-1' }),
+  });
+  const shiftService = () => ({
+    findInstanceById: jest.fn().mockResolvedValue({ id: 'si-1' }),
+    findInviteStatusesForUser: jest.fn(),
+    hasOpenTimeEntry: jest.fn(),
+  });
+
+  it('reports the membership facts and skips the shift lookups', async () => {
+    const shift = shiftService();
+    const service = new TimeTrackingService(
+      {} as never,
+      membershipService() as never,
+      shift as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    const readiness = await service.getCheckInReadiness(
+      'volunteer-1',
+      null,
+      'ou-1',
+    );
+
+    expect(readiness).toEqual({
+      isMember: true,
+      openMembershipRequestId: 'mr-1',
+      shiftInviteStatus: null,
+      isParticipating: false,
+      hasOpenTimeEntry: false,
+    });
+    expect(shift.findInstanceById).not.toHaveBeenCalled();
+    expect(shift.findInviteStatusesForUser).not.toHaveBeenCalled();
+    expect(shift.hasOpenTimeEntry).not.toHaveBeenCalled();
+  });
+
+  it('still queries the shift facts when an instance is given', async () => {
+    const shift = shiftService();
+    shift.findInviteStatusesForUser.mockResolvedValue([]);
+    shift.hasOpenTimeEntry.mockResolvedValue(true);
+    const service = new TimeTrackingService(
+      {} as never,
+      membershipService() as never,
+      shift as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    await service.getCheckInReadiness('volunteer-1', 'si-1', 'ou-1');
+
+    expect(shift.findInstanceById).toHaveBeenCalledWith('si-1', 'ou-1');
+    expect(shift.findInviteStatusesForUser).toHaveBeenCalledWith(
+      'volunteer-1',
+      ['si-1'],
+    );
+    expect(shift.hasOpenTimeEntry).toHaveBeenCalledWith('si-1', 'volunteer-1');
+  });
+});

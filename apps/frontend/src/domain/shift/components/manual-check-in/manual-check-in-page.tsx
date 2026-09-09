@@ -30,10 +30,12 @@ import {
 import { setCheckInSuccessPayload } from '../../check-in-success-dialog';
 import { AcceptMembershipSheet } from './accept-membership-sheet';
 import { CheckInReadinessCard } from './check-in-readiness-card';
+import { CheckInWithoutShiftWarningCard } from './check-in-without-shift-warning-card';
 import { DateSheet } from './date-sheet';
 import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
 import { ShiftSheet } from './shift-sheet';
+import { shouldShowShiftlessCheckInWarning } from './shiftless-check-in-warning';
 
 type ManualCheckInPageProps = {
   volunteer: {
@@ -66,6 +68,10 @@ export function ManualCheckInPage({
     selectedInstance: null,
   }));
   const [didPreselect, setDidPreselect] = useState(false);
+  // Kept beside the selection rather than in it: the date/shift the user
+  // already picked survives untouched while the rows are hidden, so
+  // unchecking the box brings them back exactly as they were.
+  const [withoutShift, setWithoutShift] = useState(false);
   const [openSheet, setOpenSheet] = useState<
     'orgUnit' | 'date' | 'shift' | 'acceptMembership' | null
   >(null);
@@ -95,20 +101,45 @@ export function ManualCheckInPage({
     }
   }
 
-  // Readiness: enabled only once a shift instance is chosen. Every mutator
-  // in check-in-selection.ts writes shiftInstanceId and selectedInstance
-  // together, so they never disagree about which instance is current.
+  // Without a shift the whole flow — the readiness query, the mutation and
+  // the success payload — runs on a null instance, so it is resolved once
+  // here instead of at each call site.
+  const effectiveShiftInstanceId = withoutShift
+    ? null
+    : selection.shiftInstanceId;
+  const effectiveInstance = withoutShift ? null : selection.selectedInstance;
+
+  // Readiness: enabled once a shift instance is chosen, or as soon as the
+  // without-shift box is ticked, where a null instance is the point and only
+  // the membership facts come back. Every mutator in check-in-selection.ts
+  // writes shiftInstanceId and selectedInstance together, so they never
+  // disagree about which instance is current.
   const { data: readiness } = useCheckInReadiness(
     selection.orgUnitId,
     volunteer.id,
-    selection.shiftInstanceId,
+    effectiveShiftInstanceId,
+    { enabled: withoutShift || !!selection.shiftInstanceId },
   );
   const readinessState = readiness
-    ? resolveCheckInReadiness({
-        ...readiness,
-        openMembershipRequestId: readiness.openMembershipRequestId ?? null,
-      })
+    ? resolveCheckInReadiness(
+        {
+          ...readiness,
+          openMembershipRequestId: readiness.openMembershipRequestId ?? null,
+        },
+        { requiresShift: !withoutShift },
+      )
     : null;
+
+  // Without a shift there is nothing to be ready *for*, so the card earns its
+  // place only while it is blocking: not a member, or a membership request
+  // still waiting on an admin. The green ready banner stays hidden there.
+  const showReadinessCard = withoutShift
+    ? readinessState === 'notMember' || readinessState === 'pendingMembership'
+    : !!selection.shiftInstanceId;
+
+  // Informational only: never gates the check-in button, unlike the
+  // readiness card, which only earns its place while it blocks.
+  const showShiftlessWarning = shouldShowShiftlessCheckInWarning(withoutShift);
 
   // "Sent" is per (org unit) / (shift instance) — tracked as the id it was
   // sent for, so switching to a different unit or instance re-arms the
@@ -153,7 +184,7 @@ export function ManualCheckInPage({
       const result = await checkInVolunteer({
         organizationUnitId: selection.orgUnitId,
         volunteerId: volunteer.id,
-        shiftInstanceId: selection.shiftInstanceId,
+        shiftInstanceId: effectiveShiftInstanceId,
       });
 
       if (result?.serverError) {
@@ -164,8 +195,8 @@ export function ManualCheckInPage({
         return;
       }
 
-      const startsAt = selection.selectedInstance
-        ? new Date(selection.selectedInstance.actualStartsAt)
+      const startsAt = effectiveInstance
+        ? new Date(effectiveInstance.actualStartsAt)
         : null;
       const isToday =
         !!startsAt && startsAt.toDateString() === new Date().toDateString();
@@ -173,11 +204,11 @@ export function ManualCheckInPage({
       setCheckInSuccessPayload({
         volunteerName: volunteer.name,
         volunteerImage: volunteer.image ?? null,
-        shiftTitle: selection.selectedInstance?.title ?? null,
-        timeRange: selection.selectedInstance
+        shiftTitle: effectiveInstance?.title ?? null,
+        timeRange: effectiveInstance
           ? formatTimeRange(
-              selection.selectedInstance.actualStartsAt,
-              selection.selectedInstance.actualEndsAt,
+              effectiveInstance.actualStartsAt,
+              effectiveInstance.actualEndsAt,
             )
           : null,
         dateLabel: startsAt
@@ -211,6 +242,8 @@ export function ManualCheckInPage({
         <ShiftInstanceStepper
           selection={selection}
           orgUnits={orgUnits}
+          withoutShift={withoutShift}
+          onWithoutShiftChange={setWithoutShift}
           onOpenOrgUnit={() => setOpenSheet('orgUnit')}
           onOpenDate={() => {
             setVisibleMonth(selection.date ?? new Date());
@@ -221,7 +254,9 @@ export function ManualCheckInPage({
 
         <UserCard user={volunteer} size="lg" />
 
-        {selection.shiftInstanceId && readinessState && (
+        {showShiftlessWarning && <CheckInWithoutShiftWarningCard />}
+
+        {showReadinessCard && readinessState && (
           <CheckInReadinessCard
             state={readinessState}
             checkInId={checkInId}
