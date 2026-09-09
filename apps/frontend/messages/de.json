@@ -1801,6 +1801,7 @@
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
       "periodLabel": "Zeitraum",
+      "yearLabel": "Jahr",
       "periodPicker": {
         "allTime": "Gesamter Zeitraum",
         "thisMonth": "Dieser Monat",
@@ -1830,7 +1831,6 @@
         "contractSigning": "Vereinbarungen gegenzeichnen",
         "timesheetGenerate": "Stundennachweise erstellen",
         "timesheetSigning": "Stundennachweise gegenzeichnen",
-        "needsTimesheet": "Stundennachweis fällig",
         "readyToGo": "Bereit zur Abgabe"
       },
       "toolbar": {
@@ -1846,6 +1846,8 @@
         "allDoneHint": "Keine offenen Dokumente in diesem Zeitraum.",
         "filtered": "Keine Einträge in dieser Kategorie."
       },
+      "loadError": "Abrechnungen konnten nicht geladen werden.",
+      "loadErrorHint": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
       "resetPrototype": "Prototyp zurücksetzen",
       "resetPrototypeToast": "Prototyp-Daten zurückgesetzt.",
       "createDocumentModal": {
@@ -1997,7 +1999,9 @@
         "sendErrorTitle": "Vertrag konnte nicht gesendet werden",
         "sendError": "Der Vertrag konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Vertragsvorlage erstellen",
-        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
+        "orgProfileErrorTitle": "Organisationsprofil vervollständigen",
+        "orgProfileErrorDescription": "Ihrer Organisation fehlen Angaben, die für dieses Dokument benötigt werden. Ergänzen Sie sie, um fortzufahren.",
+        "editProfileCta": "Profil bearbeiten",
         "hoursUnitMonth": "Monat",
         "hoursUnitWeek": "Woche",
         "hoursUnitHint": "pro {unit}",
@@ -2021,7 +2025,9 @@
         "sendErrorTitle": "Stundennachweis konnte nicht gesendet werden",
         "sendError": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Stundennachweis-Vorlage erstellen",
-        "completeOrgProfileCta": "Organisationsprofil vervollständigen",
+        "orgProfileErrorTitle": "Organisationsprofil vervollständigen",
+        "orgProfileErrorDescription": "Ihrer Organisation fehlen Angaben, die für dieses Dokument benötigt werden. Ergänzen Sie sie, um fortzufahren.",
+        "editProfileCta": "Profil bearbeiten",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Stundennachweiszeitraum",
         "periodPicker": {
