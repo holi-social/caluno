@@ -477,10 +477,15 @@ export class TimeTrackingService {
    * an open membership request against the exact unit, the volunteer's
    * invite status on the specific shift instance, and whether the volunteer
    * already has an open time entry for that instance.
+   *
+   * `shiftInstanceId` is null when checking in without a shift: only the two
+   * membership facts exist then, and the shift-scoped ones are reported as
+   * absent rather than looked up against a null id. Deciding that shift
+   * participation does not apply in that mode is the caller's job.
    */
   async getCheckInReadiness(
     volunteerId: string,
-    shiftInstanceId: string,
+    shiftInstanceId: string | null,
     organizationUnitId: string,
   ): Promise<{
     isMember: boolean;
@@ -490,10 +495,13 @@ export class TimeTrackingService {
     hasOpenTimeEntry: boolean;
   }> {
     // Scoped lookup throws NotFound for foreign/missing instances.
-    await this.shiftService.findInstanceById(
-      shiftInstanceId,
-      organizationUnitId,
-    );
+    // No instance in without-shift mode: there is nothing to scope against.
+    if (shiftInstanceId) {
+      await this.shiftService.findInstanceById(
+        shiftInstanceId,
+        organizationUnitId,
+      );
+    }
 
     const [isMember, pendingRequest, inviteStatuses, hasOpenTimeEntry] =
       await Promise.all([
@@ -505,10 +513,14 @@ export class TimeTrackingService {
           volunteerId,
           organizationUnitId,
         ),
-        this.shiftService.findInviteStatusesForUser(volunteerId, [
-          shiftInstanceId,
-        ]),
-        this.shiftService.hasOpenTimeEntry(shiftInstanceId, volunteerId),
+        shiftInstanceId
+          ? this.shiftService.findInviteStatusesForUser(volunteerId, [
+              shiftInstanceId,
+            ])
+          : [],
+        shiftInstanceId
+          ? this.shiftService.hasOpenTimeEntry(shiftInstanceId, volunteerId)
+          : false,
       ]);
 
     const shiftInviteStatus = inviteStatuses[0]?.status ?? null;

@@ -471,6 +471,13 @@ type FormSubmissionValue {
   value: String!
 }
 
+enum InviteAllowanceState {
+  ELIGIBLE
+  NEARLY_EXHAUSTED
+  NO_AGREEMENT
+  WOULD_EXCEED
+}
+
 type Invoice {
   createdAt: DateTime!
   declineReason: String
@@ -516,13 +523,6 @@ type InvoiceSignature {
   signedByUser: User
   signeeType: SigneeType!
   updatedAt: DateTime
-}
-
-enum InviteAllowanceState {
-  ELIGIBLE
-  NEARLY_EXHAUSTED
-  NO_AGREEMENT
-  WOULD_EXCEED
 }
 
 enum InvoiceStatus {
@@ -864,7 +864,7 @@ type Query {
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   bundleDownloadStatus(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus
   checkInContext(checkInId: String!): CheckInContext
-  checkInReadiness(shiftInstanceId: ID!, volunteerId: ID!): CheckInReadiness!
+  checkInReadiness(shiftInstanceId: ID, volunteerId: ID!): CheckInReadiness!
   checkInShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
   checkInShifts(search: String): [Shift!]!
   checkInVolunteerRequiredForms(volunteerId: ID!): [RequiredFormWithStatus!]!
@@ -884,11 +884,7 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
-  inviteAllowanceEligibility(
-    organizationUnitId: ID!
-    reimbursementTypeId: ID!
-    shiftDurationMinutes: Int!
-  ): [VolunteerInviteAllowance!]!
+  inviteAllowanceEligibility(organizationUnitId: ID!, reimbursementTypeId: ID!, shiftDurationMinutes: Int!): [VolunteerInviteAllowance!]!
   invoice(id: ID!): Invoice!
   invoices(filter: InvoiceFilterInput): [Invoice!]!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
@@ -1245,6 +1241,11 @@ type Shift {
   visibility: ShiftVisibility!
 }
 
+enum ShiftCallOutSource {
+  AUTOMATIC
+  MANUAL
+}
+
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
@@ -1283,6 +1284,7 @@ type ShiftInstanceCallOutSummary {
   recipientCount: Int!
   sentAt: DateTime!
   sentBy: User!
+  source: ShiftCallOutSource!
 }
 
 type ShiftInstanceInvite {

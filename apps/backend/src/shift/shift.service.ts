@@ -63,7 +63,10 @@ import type { ShiftInstanceEntity } from './schemas/shift-instance.schema';
 import type { ShiftInviteEntity } from './schemas/shift-invite.schema';
 import { propagateShiftInviteStatusToFutureInstances } from './shift-invite-propagation';
 import { startOfTodayInAppTimeZone } from './utils/app-time';
-import { getDurationMinutes } from './utils/duration';
+import {
+  getDurationMinutes,
+  isValidShiftDurationMinutes,
+} from './utils/duration';
 import { parseRruleDays, parseRruleUntil } from './utils/parse-rrule';
 import { expandShift } from './utils/rrule-expander';
 import { localDateKey, syncShiftInstances } from './utils/shift-instance-sync';
@@ -172,6 +175,34 @@ export class ShiftService {
       .groupBy(schema.shiftInstanceInvites.instanceId);
 
     return new Map(rows.map((row) => [row.instanceId, Number(row.total)]));
+  }
+
+  /**
+   * Active (not cancelled) instances starting within `windowHours` of `now`
+   * that have an effective minimum staffing requirement (an instance-level
+   * override, or else the series' `minVolunteers`) — candidates for the
+   * understaffed-shift scheduler tick. Instances with no minimum configured
+   * are filtered out in application code since there's nothing to be "below".
+   */
+  async findUnderstaffedCandidateInstances(
+    now: Date,
+    windowHours: number,
+  ): Promise<Array<ShiftInstanceEntity & { master: ShiftEntity }>> {
+    const windowEnd = new Date(now.getTime() + windowHours * 3_600_000);
+
+    const instances = await this.db.query.shiftInstances.findMany({
+      where: {
+        isCancelled: false,
+        actualStartsAt: { gt: now, lte: windowEnd },
+      },
+      with: { master: true },
+    });
+
+    return instances.filter(
+      (instance) =>
+        (instance.overrideMinVolunteers ?? instance.master.minVolunteers) !=
+        null,
+    );
   }
 
   /** Instances of the given shifts in the org unit, keyed by masterId, ordered by start time. */
@@ -618,6 +649,21 @@ export class ShiftService {
     return condition;
   }
 
+  /** Weekplan inclusion is start-in-window so an overnight end past weekEnd stays on the start week. */
+  private buildWeekStartDateCondition(
+    startsAfter: Date | null,
+    endsBefore: Date | null,
+  ): Record<string, unknown> {
+    const actualStartsAt: { gte?: Date; lt?: Date } = {};
+    if (startsAfter) {
+      actualStartsAt.gte = startsAfter;
+    }
+    if (endsBefore) {
+      actualStartsAt.lt = endsBefore;
+    }
+    return actualStartsAt.gte || actualStartsAt.lt ? { actualStartsAt } : {};
+  }
+
   async findAvailableShiftInstances(
     userId: string,
     startsAfter: Date | null,
@@ -840,6 +886,14 @@ export class ShiftService {
       .map(([id]) => id);
   }
 
+  private requireValidDuration(start: Date, end: Date): number {
+    const durationMinutes = getDurationMinutes(start, end);
+    if (!isValidShiftDurationMinutes(durationMinutes)) {
+      throw new BadRequestGraphQLError('shift_duration_out_of_range');
+    }
+    return durationMinutes;
+  }
+
   private async assertShiftWindowValid(
     startsAt: Date,
     endsAt: Date,
@@ -872,7 +926,7 @@ export class ShiftService {
       requiredFormIds,
       ...shiftInput
     } = input;
-    const durationMinutes = getDurationMinutes(
+    const durationMinutes = this.requireValidDuration(
       shiftInput.startsAt,
       shiftInput.endsAt,
     );
@@ -1603,6 +1657,8 @@ export class ShiftService {
     instance: ShiftInstanceEntity & { master: ShiftEntity },
     input: UpdateShiftInstanceInput,
   ): Promise<ShiftInstanceEntity> {
+    this.requireValidDuration(input.startsAt, input.endsAt);
+
     const startsAtChanged =
       input.startsAt.getTime() !== instance.actualStartsAt.getTime();
 
@@ -1684,7 +1740,10 @@ export class ShiftService {
       throw new ConflictGraphQLError('shift_instance_date_mismatch');
     }
 
-    const durationMinutes = getDurationMinutes(input.startsAt, input.endsAt);
+    const durationMinutes = this.requireValidDuration(
+      input.startsAt,
+      input.endsAt,
+    );
     const newOriginalStartsAt = this.applyTimeOfDay(
       shift.originalStartsAt,
       input.startsAt,
@@ -1826,7 +1885,6 @@ export class ShiftService {
         );
     } else {
       const startTime = this.toTimeOfDayString(input.startsAt);
-      const endTime = this.toTimeOfDayString(input.endsAt);
 
       await tx
         .update(schema.shiftInstances)
@@ -1839,7 +1897,7 @@ export class ShiftService {
           overrideReimbursementTypeId: null,
           isException: false,
           actualStartsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval`,
-          actualEndsAt: sql`date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${endTime}::interval`,
+          actualEndsAt: sql`(date_trunc('day', ${schema.shiftInstances.actualStartsAt}) + ${startTime}::interval) + (${durationMinutes}::int * interval '1 minute')`,
         })
         .where(
           and(
@@ -2399,7 +2457,7 @@ export class ShiftService {
       if (hasValuesToUpdate) {
         const durationMinutes =
           input.endsAt && input.startsAt
-            ? getDurationMinutes(input.startsAt, input.endsAt)
+            ? this.requireValidDuration(input.startsAt, input.endsAt)
             : undefined;
 
         const imageUrl =
@@ -2638,7 +2696,7 @@ export class ShiftService {
     const shiftIds = shifts.map((s) => s.id);
     if (shiftIds.length === 0) return [];
 
-    const dateCondition = this.buildMyShiftDateCondition(
+    const dateCondition = this.buildWeekStartDateCondition(
       startsAfter,
       endsBefore,
     );

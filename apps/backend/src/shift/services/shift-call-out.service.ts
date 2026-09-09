@@ -21,6 +21,7 @@ import {
 import { PostHogService } from '../../shared/observability/posthog.service';
 import {
   ShiftCallOutDeliveryStatus,
+  ShiftCallOutSource,
   ShiftInviteStatus,
   ShiftVisibility,
 } from '../enums';
@@ -33,10 +34,18 @@ export interface ShiftCallOutResult {
   sentToManagerFallback: boolean;
 }
 
+export interface SendCallOutOptions {
+  /** MANUAL (default) for the admin-triggered send path; AUTOMATIC for the understaffed-shift scheduler. */
+  source?: ShiftCallOutSource;
+  /** User ids to exclude from this specific send even if otherwise eligible (e.g. someone who just cancelled). */
+  excludeUserIds?: string[];
+}
+
 export interface ShiftCallOutSummary {
   sentAt: Date;
   recipientCount: number;
   sentById: string;
+  source: ShiftCallOutSource;
 }
 
 type ShiftInstanceWithMaster = ShiftInstanceEntity & { master: ShiftEntity };
@@ -61,7 +70,9 @@ export class ShiftCallOutService {
     instanceId: string,
     organizationUnitId: string,
     actorUserId: string,
+    options: SendCallOutOptions = {},
   ): Promise<ShiftCallOutResult> {
+    const { source = ShiftCallOutSource.MANUAL, excludeUserIds = [] } = options;
     const instance = await this.shiftService.findInstanceById(
       instanceId,
       organizationUnitId,
@@ -79,7 +90,7 @@ export class ShiftCallOutService {
     }
 
     const [recipientUserIds, organizationUnit] = await Promise.all([
-      this.resolveRecipients(instance),
+      this.resolveRecipients(instance, excludeUserIds),
       this.findOrganizationUnit(instance.master.organizationUnitId),
     ]);
 
@@ -110,6 +121,7 @@ export class ShiftCallOutService {
       organizationUnit,
       recipientUserIds,
       actorUserId,
+      source,
     );
 
     this.captureCallOutSend({
@@ -137,13 +149,19 @@ export class ShiftCallOutService {
         instanceId: schema.shiftCallOutRecipients.instanceId,
         sentAt: schema.shiftCallOutRecipients.sentAt,
         sentById: schema.shiftCallOutRecipients.sentById,
+        source: schema.shiftCallOutRecipients.source,
       })
       .from(schema.shiftCallOutRecipients)
       .where(inArray(schema.shiftCallOutRecipients.instanceId, instanceIds));
 
     const byInstance = new Map<
       string,
-      { sentAt: Date; count: number; sentById: string }
+      {
+        sentAt: Date;
+        count: number;
+        sentById: string;
+        source: ShiftCallOutSource;
+      }
     >();
     for (const row of rows) {
       const existing = byInstance.get(row.instanceId);
@@ -152,6 +170,7 @@ export class ShiftCallOutService {
           sentAt: row.sentAt,
           count: 1,
           sentById: row.sentById,
+          source: row.source,
         });
       } else if (row.sentAt.getTime() === existing.sentAt.getTime()) {
         existing.count += 1;
@@ -160,9 +179,9 @@ export class ShiftCallOutService {
 
     return new Map(
       [...byInstance.entries()].map(
-        ([instanceId, { sentAt, count, sentById }]) => [
+        ([instanceId, { sentAt, count, sentById, source }]) => [
           instanceId,
-          { sentAt, recipientCount: count, sentById },
+          { sentAt, recipientCount: count, sentById, source },
         ],
       ),
     );
@@ -206,15 +225,20 @@ export class ShiftCallOutService {
 
   private async resolveRecipients(
     instance: ShiftInstanceWithMaster,
+    excludeUserIds: string[] = [],
   ): Promise<string[]> {
     const resolvedStatuses = await this.resolveInviteStatuses(instance);
+    const excluded = new Set(excludeUserIds);
 
     if (instance.master.visibility === ShiftVisibility.INVITED_MEMBERS) {
       // ADMIN_INVITED = the ball is in the volunteer's court (unanswered).
       // AWAITING_ADMIN_APPROVAL means they already responded and it's the
       // admin who owes an action, so it's deliberately excluded here.
       return [...resolvedStatuses.entries()]
-        .filter(([, status]) => status === ShiftInviteStatus.ADMIN_INVITED)
+        .filter(
+          ([userId, status]) =>
+            status === ShiftInviteStatus.ADMIN_INVITED && !excluded.has(userId),
+        )
         .map(([userId]) => userId);
     }
 
@@ -231,11 +255,13 @@ export class ShiftCallOutService {
     // already took action themselves (joined, waitlisted, or awaiting admin
     // approval) — skip them, except VOLUNTEER_CANCELLED: they backed out
     // after joining, which isn't a refusal to help, so they're still
-    // eligible to be re-asked.
+    // eligible to be re-asked (unless explicitly excluded, e.g. by the
+    // automatic scheduler for whoever just cancelled).
     return members
       .map((member) => member.id)
       .filter((userId) => {
         if (managerIds.has(userId)) return false;
+        if (excluded.has(userId)) return false;
         const status = resolvedStatuses.get(userId);
         return (
           status === undefined ||
@@ -266,6 +292,7 @@ export class ShiftCallOutService {
     },
     recipientUserIds: string[],
     actorUserId: string,
+    source: ShiftCallOutSource,
   ): Promise<void> {
     const recipients =
       await this.notificationService.resolveUsersNotificationData(
@@ -326,6 +353,7 @@ export class ShiftCallOutService {
         recipientId: result.userId,
         sentById: actorUserId,
         status: result.status,
+        source,
         sentAt,
       })),
     );
