@@ -634,6 +634,7 @@ export class MembershipService {
     id: string,
     organizationUnitId: string,
     reviewerId: string,
+    source: 'membership_approve' | 'check_in' = 'membership_approve',
   ): Promise<MembershipRequestEntity> {
     const { membershipRequest, organizationUnit } = await this.db.transaction(
       async (tx) => {
@@ -755,7 +756,7 @@ export class MembershipService {
             organization_id: organizationUnit.organizationId,
             organization_unit_id: organizationUnitId,
             membership_request_id: membershipRequest.id,
-            source: 'membership_approve',
+            source,
           },
         });
         this.postHogService.capture({
@@ -765,7 +766,7 @@ export class MembershipService {
             surface: POSTHOG_SURFACE.BACKOFFICE,
             organization_id: organizationUnit.organizationId,
             organization_unit_id: organizationUnitId,
-            source: 'membership_approve',
+            source,
           },
         });
         const membershipCount = await this.countUserMembershipsInOrganization(
@@ -780,7 +781,7 @@ export class MembershipService {
               surface: POSTHOG_SURFACE.BACKOFFICE,
               organization_id: organizationUnit.organizationId,
               organization_unit_id: organizationUnitId,
-              source: 'membership_approve',
+              source,
             },
           });
         }
@@ -938,6 +939,23 @@ export class MembershipService {
         identity.organizationUnitId,
       );
       return { row: deleted, identity };
+    });
+
+    const orgUnit = row.organizationUnitId
+      ? await this.db.query.organizationUnits.findFirst({
+          where: { id: row.organizationUnitId },
+        })
+      : undefined;
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
+      userId: identity.userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: orgUnit?.organizationId ?? undefined,
+        organization_unit_id: row.organizationUnitId ?? undefined,
+        membership_id: row.id,
+        source: 'admin',
+      },
     });
 
     void this.notifyMembershipRemoved(
