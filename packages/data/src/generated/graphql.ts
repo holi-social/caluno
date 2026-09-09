@@ -109,6 +109,7 @@ export enum ContractStatus {
   AwaitingNgoSignature = 'AWAITING_NGO_SIGNATURE',
   AwaitingVolunteerSignature = 'AWAITING_VOLUNTEER_SIGNATURE',
   Declined = 'DECLINED',
+  Draft = 'DRAFT',
   Expired = 'EXPIRED'
 }
 
