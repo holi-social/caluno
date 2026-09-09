@@ -1957,6 +1957,7 @@
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
           "timesheetGenerate": "Create timesheet",
+          "timesheetDraft": "Draft",
           "timesheetSigningVol": "Waiting for signature",
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",

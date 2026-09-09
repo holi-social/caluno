@@ -572,6 +572,7 @@ export enum InvoiceStatus {
   AwaitingSupervisorSignature = 'AWAITING_SUPERVISOR_SIGNATURE',
   AwaitingVolunteerSignature = 'AWAITING_VOLUNTEER_SIGNATURE',
   Declined = 'DECLINED',
+  Draft = 'DRAFT',
   Ready = 'READY'
 }
 
