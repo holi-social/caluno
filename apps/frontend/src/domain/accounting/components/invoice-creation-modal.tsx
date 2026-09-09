@@ -252,7 +252,7 @@ export function InvoiceCreationModal({
   // Seed the editable fields once from the loaded profile/template, then leave
   // them alone — later re-renders shouldn't clobber a coordinator's edits.
   useEffect(() => {
-    if (!dataReady || !template || derivedFields) return;
+    if (!dataReady || !template || derivedFields || !volunteerName) return;
     const profileData = (profileQuery.data?.data ?? {}) as Record<
       string,
       unknown
