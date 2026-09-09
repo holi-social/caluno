@@ -23,6 +23,7 @@ export function ReimbursementsPageHeader({
 
   // Period filter — defaults to "all time" (no range = any document at any time)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [year, setYear] = useState(() => new Date().getFullYear());
   const [createDocOpen, setCreateDocOpen] = useState(false);
 
   return (
@@ -46,7 +47,12 @@ export function ReimbursementsPageHeader({
         orgUId={orgUId}
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
-        onReadyToGoSelected={() => setDateRange(thisMonthRange())}
+        year={year}
+        onYearChange={setYear}
+        onReadyToGoSelected={() => {
+          setDateRange(thisMonthRange());
+          setYear(new Date().getFullYear());
+        }}
         createDocOpen={createDocOpen}
         onCreateDocOpenChange={setCreateDocOpen}
       />
