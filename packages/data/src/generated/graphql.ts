@@ -122,6 +122,7 @@ export type ContractStatusChange = {
 };
 
 export type CreateContractInput = {
+  fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
   periodStart: Scalars['DateTime']['input'];
@@ -177,6 +178,7 @@ export type CreateFormBlockInput = {
 };
 
 export type CreateInvoiceInput = {
+  fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
   periodStart: Scalars['DateTime']['input'];
@@ -281,6 +283,11 @@ export type CreateTemplateSigneeInput = {
   order: Scalars['Int']['input'];
   requiredPermissionId?: InputMaybe<Scalars['ID']['input']>;
   signeeType: SigneeType;
+};
+
+export type DocumentFieldOverrideInput = {
+  fieldId: Scalars['String']['input'];
+  value: Scalars['String']['input'];
 };
 
 export enum DocumentKind {

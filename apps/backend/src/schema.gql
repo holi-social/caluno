@@ -97,6 +97,7 @@ type ContractStatusChange {
 }
 
 input CreateContractInput {
+  fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -152,6 +153,7 @@ input CreateFormBlockInput {
 }
 
 input CreateInvoiceInput {
+  fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -262,6 +264,11 @@ input CreateTemplateSigneeInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input DocumentFieldOverrideInput {
+  fieldId: String!
+  value: String!
+}
 
 enum DocumentKind {
   CONTRACT
