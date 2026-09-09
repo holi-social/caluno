@@ -86,6 +86,76 @@ describe('MembershipService.approveMembershipRequest PostHog', () => {
       }),
     );
   });
+
+  it('records check_in as the approve source for door approval', async () => {
+    const capture = jest.fn();
+    const service = createService({
+      membershipCount: 1,
+      posthog: { capture },
+    });
+
+    await service.approveMembershipRequest(
+      'req-1',
+      'ou-1',
+      'reviewer-1',
+      'check_in',
+    );
+
+    expect(capture).toHaveBeenCalledWith({
+      event: POSTHOG_EVENT.MEMBERSHIP_REQUEST_APPROVE,
+      userId: 'user-1',
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: 'org-1',
+        organization_unit_id: 'ou-1',
+        membership_request_id: 'req-1',
+        source: 'check_in',
+      },
+    });
+  });
+});
+
+describe('MembershipService.removeMembership PostHog', () => {
+  it('captures organization_unit_leave with admin source', async () => {
+    const capture = jest.fn();
+    const db = {
+      transaction: jest.fn().mockResolvedValue({
+        row: { id: 'mem-1', organizationUnitId: 'ou-1' },
+        identity: { userId: 'user-1', organizationUnitId: 'ou-1' },
+      }),
+      query: {
+        organizationUnits: {
+          findFirst: jest.fn().mockResolvedValue({
+            id: 'ou-1',
+            organizationId: 'org-1',
+          }),
+        },
+      },
+    };
+    const service = new MembershipService(
+      db as never,
+      {} as never,
+      {} as never,
+      { notifyMembershipRemoved: jest.fn() } as never,
+      {} as never,
+      {} as never,
+      { capture } as unknown as PostHogService,
+    );
+
+    await service.removeMembership('mem-1', 'ou-1');
+
+    expect(capture).toHaveBeenCalledWith({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
+      userId: 'user-1',
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: 'org-1',
+        organization_unit_id: 'ou-1',
+        membership_id: 'mem-1',
+        source: 'admin',
+      },
+    });
+  });
 });
 
 function createRequestOrgJoinService(existingStatus: string) {

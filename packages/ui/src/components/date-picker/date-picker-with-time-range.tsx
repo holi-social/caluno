@@ -3,7 +3,6 @@
 import {
   Button,
   Calendar,
-  FieldError,
   Input,
   Popover,
   PopoverContent,
@@ -12,7 +11,19 @@ import {
 import { format, startOfDay } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
+import { FieldError, FieldWarning } from '../base/field';
 import { buildDateRangeDisabledMatcher } from './date-range-matcher';
+import {
+  applyTimeToDate,
+  classifyTimeRange,
+  resolveTimeRangeOnDate,
+} from './time-range';
+
+export type DatePickerWithTimeRangeMessages = {
+  endMustBeLaterThanStart?: string;
+  continuesIntoNextDay?: string;
+  shorterThan24Hours?: string;
+};
 
 export type Props = {
   disabled?: boolean;
@@ -21,18 +32,13 @@ export type Props = {
   onChange: (start: Date | null, end: Date | null) => void;
   minDate?: Date;
   maxDate?: Date;
+  allowOvernight?: boolean;
+  messages?: DatePickerWithTimeRangeMessages;
 };
 
 const getTimeString = (date: Date | null | undefined): string => {
   if (!date) return '';
   return format(date, 'HH:mm');
-};
-
-const applyTimeToDate = (date: Date, timeStr: string): Date => {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const result = new Date(date);
-  result.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-  return result;
 };
 
 const applyDateToTime = (date: Date, timeOrigin: Date): Date => {
@@ -48,6 +54,8 @@ export const DatePickerWithTimeRange = ({
   errors = [],
   minDate,
   maxDate,
+  allowOvernight = false,
+  messages = {},
 }: Props) => {
   const [pickedDate, setPickedDate] = useState<Date | null>(() =>
     value.start ? startOfDay(value.start) : null,
@@ -57,15 +65,29 @@ export const DatePickerWithTimeRange = ({
 
   const timeInputsDisabled = disabled || !calendarDate;
 
-  const endBeforeStartError =
-    value.start && value.end && value.end <= value.start
-      ? 'End time must be later than start time'
-      : null;
+  const kind =
+    value.start && value.end ? classifyTimeRange(value.start, value.end) : 'ok';
+
+  const endMustBeLaterThanStart =
+    messages.endMustBeLaterThanStart ??
+    'End time must be later than start time';
+  const continuesIntoNextDay = messages.continuesIntoNextDay;
+  const shorterThan24Hours = messages.shorterThan24Hours;
+
+  const emitResolved = (startTime: string, endTime: string) => {
+    if (!calendarDate) return;
+    const { start, end } = resolveTimeRangeOnDate(
+      calendarDate,
+      startTime,
+      endTime,
+      { allowOvernight },
+    );
+    onChange(start, end);
+  };
 
   const handleDateSelect = (date: Date | undefined) => {
     setPickedDate(date ? startOfDay(date) : null);
 
-    // Reset start and end time when date is cleared
     if (!date) {
       onChange(null, null);
       return;
@@ -75,10 +97,23 @@ export const DatePickerWithTimeRange = ({
       const now = new Date();
       now.setSeconds(0, 0);
       const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-      onChange(
-        applyTimeToDate(date, format(now, 'HH:mm')),
-        applyTimeToDate(date, format(oneHourLater, 'HH:mm')),
+      const { start, end } = resolveTimeRangeOnDate(
+        date,
+        format(now, 'HH:mm'),
+        format(oneHourLater, 'HH:mm'),
+        { allowOvernight },
       );
+      onChange(start, end);
+      return;
+    }
+
+    const startTime = value.start ? format(value.start, 'HH:mm') : undefined;
+    const endTime = value.end ? format(value.end, 'HH:mm') : undefined;
+    if (startTime && endTime) {
+      const { start, end } = resolveTimeRangeOnDate(date, startTime, endTime, {
+        allowOvernight,
+      });
+      onChange(start, end);
       return;
     }
 
@@ -90,18 +125,30 @@ export const DatePickerWithTimeRange = ({
 
   const handleStartTimeChange = (timeStr: string) => {
     if (!calendarDate) return;
-    onChange(
-      timeStr ? applyTimeToDate(calendarDate, timeStr) : null,
-      value.end,
-    );
+    if (!timeStr) {
+      onChange(null, value.end);
+      return;
+    }
+    const endTime = getTimeString(value.end);
+    if (!endTime) {
+      onChange(applyTimeToDate(calendarDate, timeStr), value.end);
+      return;
+    }
+    emitResolved(timeStr, endTime);
   };
 
   const handleEndTimeChange = (timeStr: string) => {
     if (!calendarDate) return;
-    onChange(
-      value.start,
-      timeStr ? applyTimeToDate(calendarDate, timeStr) : null,
-    );
+    if (!timeStr) {
+      onChange(value.start, null);
+      return;
+    }
+    const startTime = getTimeString(value.start);
+    if (!startTime) {
+      onChange(value.start, applyTimeToDate(calendarDate, timeStr));
+      return;
+    }
+    emitResolved(startTime, timeStr);
   };
 
   return (
@@ -153,7 +200,15 @@ export const DatePickerWithTimeRange = ({
       {errors.map((error) =>
         error ? <FieldError key={error}>{error}</FieldError> : null,
       )}
-      {endBeforeStartError && <FieldError>{endBeforeStartError}</FieldError>}
+      {kind === 'endNotAfterStart' && !errors.some(Boolean) && (
+        <FieldError>{endMustBeLaterThanStart}</FieldError>
+      )}
+      {kind === 'tooLong' && !errors.some(Boolean) && shorterThan24Hours && (
+        <FieldError>{shorterThan24Hours}</FieldError>
+      )}
+      {kind === 'overnight' && allowOvernight && continuesIntoNextDay && (
+        <FieldWarning>{continuesIntoNextDay}</FieldWarning>
+      )}
     </div>
   );
 };

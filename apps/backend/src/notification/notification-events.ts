@@ -27,6 +27,14 @@ export const NotificationEvent = {
   SHIFT_INSTANCE_CALL_OUT: 'notification.shift-instance.call-out',
   SHIFT_INSTANCE_CALL_OUT_NO_RECIPIENTS:
     'notification.shift-instance.call-out-no-recipients',
+  SHIFT_INSTANCE_CALL_OUT_SUMMARY:
+    'notification.shift-instance.call-out-summary',
+  SHIFT_INSTANCE_UNDERSTAFFED_REMINDER:
+    'notification.shift-instance.understaffed-reminder',
+  // Not routed through the emitter/listener — the weekly cron sends directly
+  // via EmailService. The event constant exists only to label the
+  // resolveUserNotificationData "user not found" warning.
+  VOLUNTEER_DIGEST_SENT: 'notification.volunteer.digest-sent',
   EVENT_INVITED: 'notification.event.invited',
   EVENT_JOINED: 'notification.event.joined',
   EVENT_CANCELLED: 'notification.event.cancelled',

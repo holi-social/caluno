@@ -352,10 +352,9 @@ describe('buildBoardVolunteers', () => {
     });
     expect(volunteers).toHaveLength(1);
     expect(volunteers[0]?.documents).toEqual([]);
-    expect(volunteers[0]?.needsTimesheet).toBe(false);
   });
 
-  it('flags a volunteer with eligible time entries and an active contract as needing a timesheet', () => {
+  it('does not synthesize a contract-generate row when an active contract exists', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [
@@ -364,28 +363,29 @@ describe('buildBoardVolunteers', () => {
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(true);
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
+    expect(docs.some((d) => d.status === 'contract-active')).toBe(true);
   });
 
-  it('queues a volunteer with eligible hours but no Vereinbarung under contract-generate, not needs-timesheet', () => {
+  it('queues a volunteer with eligible hours but no Vereinbarung under contract-generate', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [],
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(false);
     const docs = volunteers[0]?.documents ?? [];
     expect(docs).toHaveLength(1);
     expect(docs[0]?.status).toBe('contract-generate');
     expect(docs[0]?.pauschale).toBe('ehrenamt');
   });
 
-  it('queues a volunteer with eligible hours and an uncountersigned Vereinbarung under contract-signing, not needs-timesheet', () => {
+  it('queues a volunteer with eligible hours and an uncountersigned Vereinbarung under contract-signing', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [
@@ -397,9 +397,8 @@ describe('buildBoardVolunteers', () => {
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(false);
     const docs = volunteers[0]?.documents ?? [];
     expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
     expect(docs.some((d) => d.status === 'contract-signing-coord')).toBe(true);

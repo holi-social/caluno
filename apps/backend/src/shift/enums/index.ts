@@ -1,3 +1,6 @@
+import { registerEnumType } from '@nestjs/graphql';
+import { JoinStatus } from '../../shared/enums/join-status.enum';
+
 export enum ShiftVisibility {
   INVITED_MEMBERS = 'INVITED_MEMBERS',
   ALL_MEMBERS = 'ALL_MEMBERS',
@@ -15,9 +18,37 @@ export enum ShiftInviteStatus {
   ADMIN_REJECTED = 'ADMIN_REJECTED',
 }
 
+/** Maps shift-instance invite status to volunteer JoinStatus (GLOSSARY § Join Status). */
+export const INVITE_STATUS_TO_JOIN_SHIFT_STATUS: Record<
+  ShiftInviteStatus,
+  JoinStatus
+> = {
+  [ShiftInviteStatus.ADMIN_INVITED]: JoinStatus.INVITED,
+  [ShiftInviteStatus.AWAITING_ADMIN_APPROVAL]: JoinStatus.PENDING,
+  [ShiftInviteStatus.WAITLIST_JOINED]: JoinStatus.WAITLIST_JOINED,
+  [ShiftInviteStatus.JOINED]: JoinStatus.JOINED,
+  [ShiftInviteStatus.VOLUNTEER_REJECTED]: JoinStatus.VOLUNTEER_REJECTED,
+  [ShiftInviteStatus.VOLUNTEER_CANCELLED]: JoinStatus.VOLUNTEER_REJECTED,
+  [ShiftInviteStatus.ADMIN_REJECTED]: JoinStatus.REJECTED,
+};
+
 export enum ShiftCallOutDeliveryStatus {
   SENT = 'SENT',
   FAILED = 'FAILED',
+}
+
+export enum ShiftCallOutSource {
+  MANUAL = 'MANUAL',
+  AUTOMATIC = 'AUTOMATIC',
+}
+
+registerEnumType(ShiftCallOutSource, {
+  name: 'ShiftCallOutSource',
+});
+
+export enum ShiftManagerNotificationKind {
+  CALL_OUT_SUMMARY = 'CALL_OUT_SUMMARY',
+  REMINDER = 'REMINDER',
 }
 
 export enum RecurrenceDay {

@@ -216,6 +216,7 @@ query GetShiftInstanceCallOutSummary($id: ID!) {
     lastCallOut {
       sentAt
       recipientCount
+      source
       sentBy {
         id
         name
@@ -230,6 +231,7 @@ mutation JoinShiftInstance($instanceId: String!) {
     status
     shiftInstance {
       id
+      myInviteStatus
       actualStartsAt
       actualEndsAt
       overrideTitle

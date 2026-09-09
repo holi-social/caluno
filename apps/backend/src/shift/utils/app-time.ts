@@ -48,3 +48,8 @@ export function startOfTodayInAppTimeZone(now: Date = new Date()): Date {
   // naive UTC-midnight instant equals the offset at local midnight.
   return new Date(utcMidnight - timeZoneOffsetMs(new Date(utcMidnight)));
 }
+
+/** Hours from `now` until `target` (negative once `target` is in the past). Both are absolute instants, so no timezone handling is needed here. */
+export function hoursUntil(target: Date, now: Date = new Date()): number {
+  return (target.getTime() - now.getTime()) / 3_600_000;
+}

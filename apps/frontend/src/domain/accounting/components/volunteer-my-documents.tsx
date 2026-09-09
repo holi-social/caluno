@@ -21,6 +21,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useVolunteerDocumentActions } from '../hooks/use-volunteer-document-actions';
 import {
+  canDecline,
   contractToVolunteerDocument,
   invoiceToVolunteerDocument,
   type VolunteerDocument,
@@ -194,7 +195,9 @@ export function VolunteerMyDocuments() {
         }}
         documentName={declineName}
         onConfirm={(reason) => {
-          if (declineTarget) decline(declineTarget, reason);
+          if (declineTarget && canDecline(declineTarget.state)) {
+            decline(declineTarget, reason);
+          }
           setDeclineTarget(null);
         }}
       />

@@ -19,6 +19,26 @@ interface ShiftSchemaMessages {
   minMaxVolunteers: string;
   recurrenceEndRequired?: string;
   recurrenceEndBeforeStart?: string;
+  endMustBeLaterThanStart?: string;
+  shorterThan24Hours?: string;
+}
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function durationRefines<T extends z.ZodType<{ startsAt: Date; endsAt: Date }>>(
+  schema: T,
+  t: ShiftSchemaMessages,
+) {
+  return schema
+    .refine((d) => d.endsAt.getTime() > d.startsAt.getTime(), {
+      message:
+        t.endMustBeLaterThanStart ?? 'End time must be later than start time',
+      path: ['endsAt'],
+    })
+    .refine((d) => d.endsAt.getTime() - d.startsAt.getTime() < MS_PER_DAY, {
+      message: t.shorterThan24Hours ?? 'Shift must be shorter than 24 hours.',
+      path: ['endsAt'],
+    });
 }
 
 function shiftShape(t: ShiftSchemaMessages) {
@@ -45,7 +65,7 @@ export function shiftFormSchema(
   t: ShiftSchemaMessages,
   event?: { startsAt: Date; endsAt: Date },
 ) {
-  return shiftShape(t)
+  return durationRefines(shiftShape(t), t)
     .refine(
       (d) => {
         if (!event) return true;
@@ -92,13 +112,17 @@ export const serverShiftFormSchema = shiftFormSchema({
   minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
   recurrenceEndRequired: 'End date is required',
   recurrenceEndBeforeStart: 'End date cannot be before the start date',
+  endMustBeLaterThanStart: 'End time must be later than start time',
+  shorterThan24Hours: 'Shift must be shorter than 24 hours.',
 });
 
 export type ShiftFormValues = z.infer<typeof serverShiftFormSchema>;
 
 export function editShiftInstanceFormSchema(t: ShiftSchemaMessages) {
-  return shiftShape(t)
-    .extend({ applyToAllFuture: z.boolean().optional() })
+  return durationRefines(
+    shiftShape(t).extend({ applyToAllFuture: z.boolean().optional() }),
+    t,
+  )
     .refine(
       (d) => {
         if (d.minVolunteers == null || d.maxVolunteers == null) return true;
