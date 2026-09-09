@@ -2335,6 +2335,7 @@ export type ShiftInstance = {
   __typename?: 'ShiftInstance';
   actualEndsAt: Scalars['DateTime']['output'];
   actualStartsAt: Scalars['DateTime']['output'];
+  callOuts?: Maybe<Array<ShiftInstanceCallOutSummary>>;
   filledCount: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   invite?: Maybe<ShiftInstanceInvite>;
@@ -3754,6 +3755,13 @@ export type GetShiftInstanceCallOutSummaryQueryVariables = Exact<{
 
 
 export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, source: ShiftCallOutSource, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
+
+export type GetShiftInstanceCallOutHistoryQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetShiftInstanceCallOutHistoryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, callOuts?: Array<{ __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, source: ShiftCallOutSource, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } }> | null } };
 
 export type JoinShiftInstanceMutationVariables = Exact<{
   instanceId: Scalars['String']['input'];
@@ -6780,6 +6788,23 @@ export const GetShiftInstanceCallOutSummaryDocument = gql`
   }
 }
     `;
+export const GetShiftInstanceCallOutHistoryDocument = gql`
+    query GetShiftInstanceCallOutHistory($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    callOuts {
+      sentAt
+      recipientCount
+      source
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+    `;
 export const JoinShiftInstanceDocument = gql`
     mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
@@ -7839,6 +7864,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetShiftInstanceCallOutSummary(variables: GetShiftInstanceCallOutSummaryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetShiftInstanceCallOutSummaryQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetShiftInstanceCallOutSummaryQuery>({ document: GetShiftInstanceCallOutSummaryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetShiftInstanceCallOutSummary', 'query', variables);
+    },
+    GetShiftInstanceCallOutHistory(variables: GetShiftInstanceCallOutHistoryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetShiftInstanceCallOutHistoryQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetShiftInstanceCallOutHistoryQuery>({ document: GetShiftInstanceCallOutHistoryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetShiftInstanceCallOutHistory', 'query', variables);
     },
     JoinShiftInstance(variables: JoinShiftInstanceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<JoinShiftInstanceMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<JoinShiftInstanceMutation>({ document: JoinShiftInstanceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'JoinShiftInstance', 'mutation', variables);

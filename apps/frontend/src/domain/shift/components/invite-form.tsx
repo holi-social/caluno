@@ -154,6 +154,7 @@ export function InviteShiftForm({
 
   const instanceStartDate = new Date(selectedInstance.actualStartsAt);
   const instanceEndDate = new Date(selectedInstance.actualEndsAt);
+  const isInstanceInThePast = instanceEndDate.getTime() < Date.now();
 
   const formattedDays = shift.isRecurring
     ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(
@@ -205,16 +206,18 @@ export function InviteShiftForm({
               <p className="text-sm text-muted-foreground">
                 {t('inviteForm.managingLabel')}
               </p>
-              <SendCallOutDialog
-                orgUId={orgUId}
-                instanceId={instanceId}
-                trigger={
-                  <Button type="button" variant="outline" size="sm">
-                    <Megaphone />
-                    {t('instanceDetail.callOutCta')}
-                  </Button>
-                }
-              />
+              {!isInstanceInThePast ? (
+                <SendCallOutDialog
+                  orgUId={orgUId}
+                  instanceId={instanceId}
+                  trigger={
+                    <Button type="button" variant="outline" size="sm">
+                      <Megaphone />
+                      {t('instanceDetail.callOutCta')}
+                    </Button>
+                  }
+                />
+              ) : null}
             </div>
             <ShiftInstanceSummaryCard
               title={shift.title}

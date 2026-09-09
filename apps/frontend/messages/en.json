@@ -1244,6 +1244,7 @@
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
       "urgentCallAutomaticBadge": "Automatic",
+      "urgentCallHistoryCount": "{count, plural, one {# call} other {# calls}}",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1285,7 +1286,6 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
-      "callOutAria": "Urgent Call",
       "callOutCta": "Urgent Call",
       "callOutDialog": {
         "confirm": "Urgent Call",

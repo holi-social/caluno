@@ -1244,6 +1244,7 @@
       "urgentCallSentByDate": "am {date}",
       "urgentCallSentByPrefix": "Gesendet von",
       "urgentCallAutomaticBadge": "Automatisch",
+      "urgentCallHistoryCount": "{count, plural, one {# Aufruf} other {# Aufrufe}}",
       "visibilityLabel": "Sichtbarkeit"
     },
     "editInstanceForm": {
@@ -1285,7 +1286,6 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
-      "callOutAria": "Dringender Aufruf",
       "callOutCta": "Dringender Aufruf",
       "callOutDialog": {
         "confirm": "Dringender Aufruf",

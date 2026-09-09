@@ -1266,6 +1266,7 @@ enum ShiftCallOutSource {
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
+  callOuts: [ShiftInstanceCallOutSummary!]
   filledCount: Int!
   id: ID!
   invite(userId: String!): ShiftInstanceInvite
