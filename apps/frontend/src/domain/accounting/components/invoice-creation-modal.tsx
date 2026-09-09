@@ -293,7 +293,11 @@ export function InvoiceCreationModal({
     0,
   );
   const selectedAmount = selectedHours * ratePerHour;
-  const projectedAfter = usedBeforeAmount + selectedAmount;
+  const usedBefore =
+    yearlyUsageQuery.data?.usedCents !== undefined
+      ? centsToEuros(yearlyUsageQuery.data.usedCents)
+      : usedBeforeAmount;
+  const projectedAfter = usedBefore + selectedAmount;
 
   const toggleLine = (id: string) => {
     setCheckedIds((prev) => {
@@ -597,7 +601,7 @@ export function InvoiceCreationModal({
               </div>
             </InfoPanel>
             <InvoiceCapCard
-              usedBefore={usedBeforeAmount}
+              usedBefore={usedBefore}
               projectedAfter={projectedAfter}
               total={totalCapAmount}
             />
@@ -606,7 +610,7 @@ export function InvoiceCreationModal({
                 volunteerId={volunteerId}
                 reimbursementTypeId={reimbursementType.id}
                 year={period.from?.getFullYear() ?? new Date().getFullYear()}
-                usedBefore={usedBeforeAmount}
+                usedBefore={usedBefore}
                 selectedAmount={selectedAmount}
               />
             )}
