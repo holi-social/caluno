@@ -34,7 +34,6 @@ import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services/file.service';
 import {
   createCompletedTimeEntry,
-  createDocumentTemplate,
   createReimbursementType,
   createTwoStepTemplate,
 } from './factories/accounting.factory';
@@ -189,6 +188,13 @@ describe('InvoiceService', () => {
       requiredPermissionId: permission.id,
       signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
     });
+    const contractTemplate = await createTwoStepTemplate(db, {
+      organizationId: organization.id,
+      reimbursementTypeId: reimbursementType.id,
+      kind: DocumentKind.CONTRACT,
+      requiredPermissionId: permission.id,
+      signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+    });
     const volunteer = await createUser(db);
     const timeEntry = await createCompletedTimeEntry(db, {
       organizationUnitId: root.id,
@@ -205,6 +211,7 @@ describe('InvoiceService', () => {
       volunteer,
       supervisor,
       timeEntry,
+      contractTemplate,
     };
   };
 
@@ -668,13 +675,8 @@ describe('InvoiceService', () => {
         volunteer,
         supervisor,
         timeEntry,
+        contractTemplate,
       } = await setup();
-      const contractTemplate = await createDocumentTemplate(db, {
-        organizationId: organization.id,
-        reimbursementTypeId: reimbursementType.id,
-        kind: DocumentKind.CONTRACT,
-        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
-      });
       await db.insert(schema.contracts).values({
         documentTemplateId: contractTemplate.id,
         volunteerId: volunteer.id,
@@ -699,6 +701,82 @@ describe('InvoiceService', () => {
       );
 
       expect(invoice.isNonCompliant).toBe(false);
+    });
+
+    it('auto-creates a DRAFT contract when the volunteer has no contract', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(1);
+      expect(contracts[0].contractStatus).toBe(ContractStatus.DRAFT);
+    });
+
+    it('does not create a second draft contract for the same volunteer, type and year', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const secondEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: timeEntry.organizationUnitId,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-02T09:00:00.000Z'),
+        endedAt: new Date('2026-07-02T13:00:00.000Z'),
+      });
+
+      const input = {
+        organizationUnitId: null,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        periodStart: new Date('2026-07-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+      };
+      await service.createInvoice(
+        organization.id,
+        { ...input, timeEntryIds: [timeEntry.id] },
+        supervisor.id,
+      );
+      await service.createInvoice(
+        organization.id,
+        { ...input, timeEntryIds: [secondEntry.id] },
+        supervisor.id,
+      );
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(1);
+      expect(contracts[0].contractStatus).toBe(ContractStatus.DRAFT);
     });
 
     it('claims the time entry so it cannot be pulled into a second invoice', async () => {

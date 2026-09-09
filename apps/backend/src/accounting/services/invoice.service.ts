@@ -21,6 +21,7 @@ import type {
   PendingSignee,
 } from '../accounting.types';
 import {
+  ContractStatus,
   DocumentKind,
   DocumentStatusChange,
   InvoiceStatus,
@@ -275,6 +276,34 @@ export class InvoiceService {
       input.volunteerId,
       input.reimbursementTypeId,
     );
+
+    if (!activeContract) {
+      const contractYear = input.periodStart.getUTCFullYear();
+      const yearStart = new Date(Date.UTC(contractYear, 0, 1));
+      const yearEnd = new Date(Date.UTC(contractYear + 1, 0, 1));
+      const existingContract = await this.db.query.contracts.findFirst({
+        where: {
+          volunteerId: input.volunteerId,
+          reimbursementTypeId: input.reimbursementTypeId,
+          contractStatus: { ne: ContractStatus.DECLINED },
+          periodEnd: { gte: yearStart },
+          periodStart: { lt: yearEnd },
+        },
+      });
+      if (!existingContract) {
+        await this.contractService.createDraftContract(
+          organizationId,
+          {
+            organizationUnitId: input.organizationUnitId,
+            volunteerId: input.volunteerId,
+            reimbursementTypeId: input.reimbursementTypeId,
+            periodStart: yearStart,
+            periodEnd: yearEnd,
+          },
+          actorUserId,
+        );
+      }
+    }
 
     const invoice = await this.db.transaction(async (tx) => {
       const [created] = await tx
