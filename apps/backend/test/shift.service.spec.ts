@@ -9,6 +9,7 @@ import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { BadRequestGraphQLError } from '../src/graphql/errors/bad-request.error';
 import { ConflictGraphQLError } from '../src/graphql/errors/conflict.error';
 import { ForbiddenGraphQLError } from '../src/graphql/errors/forbidden.error';
 import { NotFoundGraphQLError } from '../src/graphql/errors/not-found.error';
@@ -2245,6 +2246,114 @@ describe('ShiftService', () => {
           disabledUnit.id,
         ),
       ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+  });
+
+  describe('overnight shifts', () => {
+    it('stores a 5-hour duration when end is the next morning', async () => {
+      const startsAt = new Date('2026-09-18T20:00:00.000Z');
+      const endsAt = new Date('2026-09-19T01:00:00.000Z');
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Night watch',
+        startsAt,
+        endsAt,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.durationMinutes).toBe(300);
+      const [instance] = await getInstances(shift.id);
+      expect(instance?.actualEndsAt.getTime()).toBe(endsAt.getTime());
+    });
+
+    it('expands a weekly Friday overnight series onto Saturday mornings', async () => {
+      const startsAt = new Date('2026-09-18T20:00:00.000Z');
+      const endsAt = new Date('2026-09-19T01:00:00.000Z');
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Friday night',
+        startsAt,
+        endsAt,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3',
+      } as never);
+
+      const instances = await getInstances(shift.id);
+      expect(instances.length).toBeGreaterThan(0);
+      for (const instance of instances) {
+        expect(
+          instance.actualEndsAt.getTime() - instance.actualStartsAt.getTime(),
+        ).toBe(5 * 60 * 60 * 1000);
+      }
+    });
+
+    it('rejects a zero-length shift', async () => {
+      const startsAt = new Date(Date.now() + 100000);
+      await expect(
+        shiftService.create(userId, organizationUnitId, {
+          title: 'Zero length',
+          startsAt,
+          endsAt: new Date(startsAt.getTime()),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        } as never),
+      ).rejects.toThrow(BadRequestGraphQLError);
+    });
+
+    it('rejects a 24-hour shift', async () => {
+      const startsAt = new Date(Date.now() + 100000);
+      await expect(
+        shiftService.create(userId, organizationUnitId, {
+          title: 'Too long',
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + 24 * 60 * 60 * 1000),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        } as never),
+      ).rejects.toThrow(BadRequestGraphQLError);
+    });
+
+    it('keeps overnight ends when applying a time edit to all future instances', async () => {
+      const startsAt = new Date(Date.now() + 3 * 24 * 3600_000);
+      startsAt.setUTCMinutes(0, 0, 0);
+      startsAt.setUTCHours(20);
+      const sameDayEnd = new Date(startsAt.getTime() + 2 * 3600_000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt: sameDayEnd,
+        rrule: DAILY_RRULE,
+      });
+      const instances = await getInstances(shift.id);
+      const [anchor] = instances;
+      if (!anchor) {
+        throw new Error('Expected createShift to expand an instance');
+      }
+
+      const overnightEnd = new Date(
+        anchor.actualStartsAt.getTime() + 5 * 3600_000,
+      );
+      await shiftService.updateShiftInstance(
+        anchor.id,
+        {
+          title: shift.title,
+          startsAt: anchor.actualStartsAt,
+          endsAt: overnightEnd,
+          visibility: shift.visibility,
+        } as never,
+        organizationUnitId,
+        { applyToAllFuture: true },
+      );
+
+      const refreshed = await getInstances(shift.id);
+      const future = refreshed.filter(
+        (instance) =>
+          !instance.isCancelled &&
+          instance.actualStartsAt.getTime() >= anchor.actualStartsAt.getTime(),
+      );
+      expect(future.length).toBeGreaterThan(1);
+      for (const instance of future) {
+        expect(
+          instance.actualEndsAt.getTime() - instance.actualStartsAt.getTime(),
+        ).toBe(5 * 60 * 60 * 1000);
+      }
     });
   });
 });
