@@ -30,6 +30,7 @@ import type { ShiftInvitedPayload } from './payloads/shift-invited.payload';
 import type { ShiftSeriesLeftPayload } from './payloads/shift-series-left.payload';
 import type { ShiftSeriesRemovedPayload } from './payloads/shift-series-removed.payload';
 import type { ShiftSeriesVolunteerLeftPayload } from './payloads/shift-series-volunteer-left.payload';
+import type { VolunteerDigestSentPayload } from './payloads/volunteer-digest-sent.payload';
 
 export interface NotificationEventPayloadMap {
   [NotificationEvent.ORGANIZATION_CREATED]: OrganizationCreatedPayload;
@@ -63,4 +64,5 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.DOCUMENT_AWAITING_SIGNATURE]: DocumentAwaitingSignaturePayload;
   [NotificationEvent.DOCUMENT_DECLINED_BY_ORG]: DocumentDeclinedByOrgPayload;
   [NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER]: DocumentDeclinedByVolunteerPayload;
+  [NotificationEvent.VOLUNTEER_DIGEST_SENT]: VolunteerDigestSentPayload;
 }
