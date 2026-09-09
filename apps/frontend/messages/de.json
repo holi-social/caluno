@@ -1252,6 +1252,8 @@
     },
     "eventBadge": "Veranstaltung",
     "form": {
+      "approvalRequiredDescription": "Jeder kann anfragen und wartet auf deine Freigabe.",
+      "approvalRequiredLabel": "Freigabe erforderlich",
       "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
       "dateTimeLabel": "Datum und Uhrzeit",
       "imageLabel": "Bild",

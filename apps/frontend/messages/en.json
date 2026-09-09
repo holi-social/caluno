@@ -1252,6 +1252,8 @@
     },
     "eventBadge": "Event",
     "form": {
+      "approvalRequiredDescription": "Anyone can request. They wait until you approve.",
+      "approvalRequiredLabel": "Approval required",
       "chooseDays": "Choose which days this shift repeats",
       "dateTimeLabel": "Date and time",
       "imageLabel": "Image",
