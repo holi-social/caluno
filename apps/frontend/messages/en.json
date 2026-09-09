@@ -456,6 +456,17 @@
       "downloadUnavailableNote": "PDF not available yet."
     }
   },
+  "IdVerification": {
+    "page": {
+      "title": "ID verification",
+      "subtitle": "Manage ID verification for {orgName}."
+    },
+    "card": {
+      "label": "Enable ID verification",
+      "description": "When enabled, supervisors are prompted to check a volunteer's ID at check-in. Verification is optional and never blocks check-in.",
+      "updateError": "Could not save the ID verification setting."
+    }
+  },
   "MembershipRequest": {
     "actions": {
       "approve": "Approve",
@@ -603,6 +614,7 @@
     "checkVolunteersIn": "Check volunteers in",
     "events": "Events",
     "home": "Home",
+    "idVerification": "ID verification",
     "myTime": "Your records",
     "orgUnits": "Org units",
     "organizationSettings": "Organization settings",

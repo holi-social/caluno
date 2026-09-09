@@ -456,6 +456,17 @@
       "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
   },
+  "IdVerification": {
+    "page": {
+      "title": "Ausweisprüfung",
+      "subtitle": "Ausweisprüfung für {orgName} verwalten."
+    },
+    "card": {
+      "label": "Ausweisprüfung aktivieren",
+      "description": "Wenn aktiviert, werden Betreuer beim Check-in aufgefordert, den Ausweis eines Freiwilligen zu prüfen. Die Prüfung ist optional und blockiert den Check-in nicht.",
+      "updateError": "Die Einstellung konnte nicht gespeichert werden."
+    }
+  },
   "MembershipRequest": {
     "actions": {
       "approve": "Genehmigen",
@@ -603,6 +614,7 @@
     "checkVolunteersIn": "Freiwillige einchecken",
     "events": "Veranstaltungen",
     "home": "Startseite",
+    "idVerification": "Ausweisprüfung",
     "myTime": "Deine Nachweise",
     "orgUnits": "Organisationseinheiten",
     "organizationSettings": "Organisationseinstellungen",
