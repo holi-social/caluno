@@ -1369,6 +1369,7 @@
       "leftWaitlist": "Du hast die Warteliste verlassen.",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "pendingApproval": "Warte auf Freigabe",
+      "withdrewApproval": "Du hast deine Anfrage zurückgezogen.",
       "pendingCta": "Anfrage ausstehend",
       "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde.",
       "reenter": "Erneut beitreten",
@@ -1517,6 +1518,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Angenommen",
+    "pendingApprovalBadge": "Warte auf Freigabe",
     "back": "Zurück",
     "cancelUntilNote": "Du kannst bis {date} absagen.",
     "cancelledBadge": "Abgesagt",
