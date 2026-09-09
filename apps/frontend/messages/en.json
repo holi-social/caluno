@@ -1866,7 +1866,16 @@
         "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
         "viewVolunteer": "View volunteer",
         "createButton": "Create {kind}",
-        "createButtonEmpty": "Create new document"
+        "createButtonEmpty": "Create new document",
+        "contractState": {
+          "none": "No contract yet",
+          "awaiting-signature": "Awaiting signature",
+          "awaiting-countersignature": "Awaiting countersignature",
+          "active": "Active",
+          "declined": "Declined"
+        },
+        "latestTimesheet": "Latest timesheet · {date}",
+        "noTimesheetYet": "No timesheet yet"
       },
       "bundle": {
         "actionLabel": "Download bundle",
