@@ -2047,6 +2047,16 @@
           "value": "{before} → {after}",
           "subline": "von {total} Jahresdeckel"
         },
+        "manualCap": {
+          "title": "Anfangsbetrag",
+          "editButtonLabel": "Anfangsbetrag bearbeiten",
+          "saveButtonLabel": "Anfangsbetrag speichern",
+          "cancelButtonLabel": "Abbrechen",
+          "inputLabel": "Anfangsbetrag in Euro",
+          "projectedAfter": "Nach diesem Stundennachweis: {after}",
+          "successToast": "Anfangsbetrag gespeichert.",
+          "errorToast": "Der Anfangsbetrag konnte nicht gespeichert werden. Bitte erneut versuchen."
+        },
         "hoursCard": {
           "title": "Abrechenbare Stunden",
           "rowCheckboxLabel": "{shiftName} in diesen Stundennachweis aufnehmen",

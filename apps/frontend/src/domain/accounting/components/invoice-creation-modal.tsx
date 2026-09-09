@@ -39,6 +39,7 @@ import {
 import { EligibleHoursCard } from './eligible-hours-card';
 import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
+import { ManualCapEditor } from './manual-cap-editor';
 import type { DateRange } from './period-picker';
 import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
 import { getKnownOrgValues } from './template/builder-document-presets';
@@ -600,6 +601,15 @@ export function InvoiceCreationModal({
               projectedAfter={projectedAfter}
               total={totalCapAmount}
             />
+            {reimbursementType && (
+              <ManualCapEditor
+                volunteerId={volunteerId}
+                reimbursementTypeId={reimbursementType.id}
+                year={period.from?.getFullYear() ?? new Date().getFullYear()}
+                usedBefore={usedBeforeAmount}
+                selectedAmount={selectedAmount}
+              />
+            )}
             <EligibleHoursCard
               lines={lines}
               selectedIds={checkedIds}
