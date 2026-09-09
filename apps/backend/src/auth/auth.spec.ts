@@ -314,6 +314,92 @@ describe('createAuthConfig', () => {
     expect(onSessionDeleted).toHaveBeenCalledWith('user-1');
   });
 
+  it('calls onEmailVerified after a user update that sets emailVerified', async () => {
+    const onEmailVerified = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onEmailVerified,
+    });
+
+    const beforeUpdate = config.databaseHooks?.user?.update?.before;
+    const afterUpdate = config.databaseHooks?.user?.update?.after;
+    expect(beforeUpdate).toBeDefined();
+    expect(afterUpdate).toBeDefined();
+
+    const ctx = {};
+    await beforeUpdate?.({ emailVerified: true }, ctx as never);
+    await afterUpdate?.(
+      {
+        id: 'user-1',
+        email: 'volunteer@example.com',
+        name: 'Volunteer',
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      ctx as never,
+    );
+
+    expect(onEmailVerified).toHaveBeenCalledWith('user-1');
+  });
+
+  it('does not call onEmailVerified when the update is unrelated', async () => {
+    const onEmailVerified = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onEmailVerified,
+    });
+
+    const beforeUpdate = config.databaseHooks?.user?.update?.before;
+    const afterUpdate = config.databaseHooks?.user?.update?.after;
+
+    const ctx = {};
+    await beforeUpdate?.({ image: 'https://example.com/a.png' }, ctx as never);
+    await afterUpdate?.(
+      {
+        id: 'user-1',
+        email: 'volunteer@example.com',
+        name: 'Volunteer',
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      ctx as never,
+    );
+
+    expect(onEmailVerified).not.toHaveBeenCalled();
+  });
+
+  it('calls onPasswordResetCompleted after a successful password reset', async () => {
+    const onPasswordResetCompleted = jest.fn();
+    const config = createAuthConfig({
+      database: {},
+      trustedOrigins: [],
+      sendVerificationOTP: jest.fn(),
+      sendResetPassword: jest.fn(),
+      onPasswordResetCompleted,
+    });
+
+    await config.emailAndPassword?.onPasswordReset?.({
+      user: {
+        id: 'user-1',
+        email: 'volunteer@example.com',
+        name: 'Volunteer',
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    expect(onPasswordResetCompleted).toHaveBeenCalledWith('user-1');
+  });
+
   it('does not throw after user create when onUserCreated is omitted', async () => {
     const config = createAuthConfig({
       database: {},

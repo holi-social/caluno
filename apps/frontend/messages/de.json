@@ -1192,9 +1192,13 @@
     },
     "card": {
       "inviteAria": "Einladen",
+      "inviteToShift": "Zum Einsatz einladen",
       "invited": "Eingeladen",
       "noVolunteers": "Noch keine Freiwilligen eingeladen",
-      "openInstanceAria": "Öffnen"
+      "openInstanceAria": "Öffnen",
+      "waitlist": "Warteliste",
+      "waitlistInviteError": "Einladen fehlgeschlagen",
+      "waitlistInviteSuccess": "Freiwillige:r zum Einsatz eingeladen"
     },
     "checkIn": {
       "checkOut": "Auschecken",
@@ -1240,6 +1244,7 @@
       "urgentCallSentByDate": "am {date}",
       "urgentCallSentByPrefix": "Gesendet von",
       "urgentCallAutomaticBadge": "Automatisch",
+      "urgentCallHistoryCount": "{count, plural, one {# Aufruf} other {# Aufrufe}}",
       "visibilityLabel": "Sichtbarkeit"
     },
     "editInstanceForm": {
@@ -1283,7 +1288,6 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
-      "callOutAria": "Dringender Aufruf",
       "callOutCta": "Dringender Aufruf",
       "callOutDialog": {
         "confirm": "Dringender Aufruf",
@@ -1324,6 +1328,8 @@
       "actionInvite": "Einladen",
       "actionUninvite": "Zurückweisen",
       "cancelled": "Zurückgezogen",
+      "capacityBadge": "{filled} / {max} Plätze besetzt",
+      "capacityBadgeNoMax": "{filled} Freiwillige",
       "declined": "Abgelehnt",
       "inviteError": "Einladen fehlgeschlagen",
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
@@ -1357,7 +1363,10 @@
       "joinShift": "Einsatz beitreten",
       "joined": "Du bist dem Einsatz beigetreten",
       "joining": "Wird beigetreten...",
+      "joinWaitlist": "Auf die Warteliste",
       "keepShift": "Einsatz behalten",
+      "leaveWaitlist": "Warteliste verlassen",
+      "leftWaitlist": "Du hast die Warteliste verlassen.",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "pendingApproval": "Warte auf Freigabe",
       "pendingCta": "Anfrage ausstehend",
@@ -1369,7 +1378,7 @@
       "requirementsFallback": "Anforderungsprofil-Oberfläche (noch zu implementieren)",
       "requirementsNeeded": "Noch zu erledigen: {missing}{hasCompleted, select, yes { (bereits erledigt: {completed})} other {}}",
       "unexpected": "Unerwartete Antwort vom Server",
-      "waitlisted": "Auf der Warteliste"
+      "waitlistJoined": "Du bist auf der Warteliste. Wir schreiben dir per E-Mail, wenn ein Platz frei wird."
     },
     "loading": "Wird geladen...",
     "notFound": "Einsatz nicht gefunden.",
@@ -1544,6 +1553,8 @@
     "spotsFull": "· ausgebucht",
     "spotsTaken": "{filled} von {max} belegt",
     "timeLabel": "Zeit",
+    "waitlistBadge": "Du bist auf der Warteliste",
+    "waitlistNote": "Wird ein Platz frei, schreiben wir dir eine E-Mail, damit du ihn übernehmen kannst.",
     "whatYouDoHeading": "Was du tun wirst",
     "whenWhereHeading": "Wann & Wo"
   },
@@ -1863,14 +1874,24 @@
         "documentCount": "{count, plural, =1 {1 Dokument} other {# Dokumente}}",
         "viewVolunteer": "Freiwillige/n ansehen",
         "createButton": "{kind} erstellen",
-        "createButtonEmpty": "Neues Dokument erstellen"
+        "createButtonEmpty": "Neues Dokument erstellen",
+        "contractState": {
+          "none": "Noch keine Vereinbarung",
+          "awaiting-signature": "Wartet auf Unterschrift",
+          "awaiting-countersignature": "Wartet auf Gegenzeichnung",
+          "active": "Aktiv",
+          "declined": "Abgelehnt"
+        },
+        "latestTimesheet": "Letzter Stundennachweis · {date}",
+        "noTimesheetYet": "Noch kein Stundennachweis"
       },
       "bundle": {
         "actionLabel": "Paket herunterladen",
         "readyCount": "{count} bereit",
         "lastDownloaded": "zuletzt heruntergeladen von <name>{by}</name> am {at}",
         "neverDownloaded": "noch nicht heruntergeladen",
-        "unknownUser": "unbekannt"
+        "unknownUser": "unbekannt",
+        "downloadError": "Das Paket konnte nicht heruntergeladen werden. Bitte versuche es erneut."
       },
       "batchBar": {
         "selected": "{count} ausgewählt",
@@ -1879,7 +1900,8 @@
         "bundleAll": "Alle Pakete herunterladen",
         "mixed": "Gemischte Auswahl",
         "clearSelection": "Abbrechen",
-        "bundleDownloadToast": "{count, plural, =1 {Paket-Download gestartet.} other {{count} Paket-Downloads gestartet.}}"
+        "bundleDownloadToast": "{count, plural, =1 {Paket-Download gestartet.} other {{count} Paket-Downloads gestartet.}}",
+        "bundleDownloadErrorToast": "Paket-Download fehlgeschlagen. Bitte erneut versuchen."
       },
       "actionToasts": {
         "create": "{count, plural, =1 {Für {name} erstellt.} other {{count} erstellt.}}",
@@ -1934,10 +1956,12 @@
         },
         "statusLabel": {
           "contractGenerate": "Vereinbarung erstellen",
+          "contractDraft": "Entwurf",
           "contractSigningVol": "Wartet auf Gegenzeichnung",
           "contractSigningCoord": "Gegenzeichnung erforderlich",
           "contractActive": "Aktive Vereinbarung",
           "timesheetGenerate": "Stundennachweis erstellen",
+          "timesheetDraft": "Entwurf",
           "timesheetSigningVol": "Wartet auf Gegenzeichnung",
           "timesheetSigningSuper": "Supervisorunterschrift",
           "timesheetReady": "Bereit zur Abgabe",
@@ -2042,6 +2066,16 @@
           "title": "Jahresdeckel",
           "value": "{before} → {after}",
           "subline": "von {total} Jahresdeckel"
+        },
+        "manualCap": {
+          "title": "Anfangsbetrag",
+          "editButtonLabel": "Anfangsbetrag bearbeiten",
+          "saveButtonLabel": "Anfangsbetrag speichern",
+          "cancelButtonLabel": "Abbrechen",
+          "inputLabel": "Anfangsbetrag in Euro",
+          "projectedAfter": "Nach diesem Stundennachweis: {after}",
+          "successToast": "Anfangsbetrag gespeichert.",
+          "errorToast": "Der Anfangsbetrag konnte nicht gespeichert werden. Bitte erneut versuchen."
         },
         "hoursCard": {
           "title": "Abrechenbare Stunden",
@@ -2157,6 +2191,7 @@
           "contract-lifespan": "Vereinbarungslaufzeit",
           "tasks": "Tätigkeitsbeschreibung",
           "hours-amount": "Stundenzahl",
+          "hours-unit": "Stundeneinheit",
           "freeform-text": "Freitext",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger",

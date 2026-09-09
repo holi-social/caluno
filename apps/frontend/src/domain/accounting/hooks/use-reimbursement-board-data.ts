@@ -3,6 +3,7 @@
 import {
   useContracts,
   useInvoices,
+  usePaidShiftSignupVolunteers,
   useRosterYearlyUsage,
   useVolunteersNeedingTimesheets,
 } from '@repo/data/react';
@@ -47,6 +48,7 @@ export function useReimbursementBoardData({
     periodStart,
     periodEnd,
   });
+  const paidShiftQuery = usePaidShiftSignupVolunteers(resolvedYear);
 
   const volunteers = useMemo(() => {
     if (!rosterQuery.data) return [];
@@ -60,6 +62,14 @@ export function useReimbursementBoardData({
       types.add(entry.reimbursementType.id);
       eligibleHoursVolunteers.set(entry.volunteer.id, types);
     }
+    // Volunteer id -> reimbursement type ids they signed up to a paid shift
+    // for but have no contract/invoice yet.
+    const paidShiftVolunteers = new Map<string, Set<string>>();
+    for (const entry of paidShiftQuery.data ?? []) {
+      const types = paidShiftVolunteers.get(entry.volunteer.id) ?? new Set();
+      types.add(entry.reimbursementType.id);
+      paidShiftVolunteers.set(entry.volunteer.id, types);
+    }
     return buildBoardVolunteers({
       rosterUsage: rosterQuery.data,
       contracts: contractsQuery.data ?? [],
@@ -68,12 +78,14 @@ export function useReimbursementBoardData({
       locale,
       dateRange,
       eligibleHoursVolunteers,
+      paidShiftVolunteers,
     });
   }, [
     rosterQuery.data,
     contractsQuery.data,
     invoicesQuery.data,
     needsTimesheetQuery.data,
+    paidShiftQuery.data,
     resolvedYear,
     locale,
     dateRange,
@@ -82,14 +94,16 @@ export function useReimbursementBoardData({
   return {
     volunteers,
     isLoading:
-      rosterQuery.isLoading ||
-      contractsQuery.isLoading ||
-      invoicesQuery.isLoading ||
-      needsTimesheetQuery.isLoading,
+      rosterQuery.isFetching ||
+      contractsQuery.isFetching ||
+      invoicesQuery.isFetching ||
+      needsTimesheetQuery.isFetching ||
+      paidShiftQuery.isFetching,
     error:
       rosterQuery.error ??
       contractsQuery.error ??
       invoicesQuery.error ??
-      needsTimesheetQuery.error,
+      needsTimesheetQuery.error ??
+      paidShiftQuery.error,
   };
 }

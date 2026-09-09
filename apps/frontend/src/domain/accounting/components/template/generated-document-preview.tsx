@@ -13,6 +13,8 @@ interface SignatureLineProps {
   unsignedLabel: string;
 }
 
+const AMOUNT_COLUMN_LABEL = 'Betrag';
+
 function SignatureLine({ label, unsignedLabel }: SignatureLineProps) {
   return (
     <div>
@@ -260,6 +262,11 @@ export function GeneratedDocumentPreview({
           {templateDoc.blocks.map((block): ReactNode => {
             if (block.kind === 'table') {
               const rows = tableRows ?? [];
+              const columns =
+                tableRows !== undefined &&
+                block.columns[block.columns.length - 1] !== AMOUNT_COLUMN_LABEL
+                  ? [...block.columns, AMOUNT_COLUMN_LABEL]
+                  : block.columns;
               return (
                 <div key={block.id}>
                   <p className="mb-2 text-sm font-semibold italic text-muted-foreground">
@@ -268,7 +275,7 @@ export function GeneratedDocumentPreview({
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr className="bg-muted">
-                        {block.columns.map((col) => (
+                        {columns.map((col) => (
                           <th
                             key={col}
                             className="border border-border px-2 py-1 text-left font-medium"
@@ -282,7 +289,7 @@ export function GeneratedDocumentPreview({
                       {rows.length === 0 && (
                         <tr>
                           <td
-                            colSpan={block.columns.length}
+                            colSpan={columns.length}
                             className="border border-border px-2 py-2 text-center text-muted-foreground"
                           >
                             <Gap />
@@ -294,7 +301,7 @@ export function GeneratedDocumentPreview({
                         <tr key={i}>
                           {row.map((cell, j) => (
                             <td
-                              key={block.columns[j] ?? j}
+                              key={columns[j] ?? j}
                               className="border border-border px-2 py-1"
                             >
                               {cell}
@@ -306,7 +313,7 @@ export function GeneratedDocumentPreview({
                         <tr className="font-semibold">
                           {tableTotalRow.map((cell, i) => (
                             <td
-                              key={block.columns[i] ?? cell}
+                              key={columns[i] ?? cell}
                               className="border border-border px-2 py-1"
                             >
                               {cell}
@@ -318,7 +325,7 @@ export function GeneratedDocumentPreview({
                         <tr className="text-muted-foreground">
                           {tableNoteRow.map((cell, i) => (
                             <td
-                              key={block.columns[i] ?? cell}
+                              key={columns[i] ?? cell}
                               className="border border-border px-2 py-1"
                             >
                               {cell}

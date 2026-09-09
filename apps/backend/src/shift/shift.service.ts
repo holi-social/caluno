@@ -54,7 +54,12 @@ import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { UserService } from '../user/user.service';
 import { slugify } from '../utils/slug.util';
-import { ShiftInviteStatus, ShiftVisibility, SortOrder } from './enums';
+import {
+  INVITE_STATUS_TO_JOIN_SHIFT_STATUS,
+  ShiftInviteStatus,
+  ShiftVisibility,
+  SortOrder,
+} from './enums';
 import { CreateShiftInput } from './inputs/create-shift.input';
 import { UpdateShiftInput } from './inputs/update-shift.input';
 import { UpdateShiftInstanceInput } from './inputs/update-shift-instance.input';
@@ -1217,6 +1222,21 @@ export class ShiftService {
         instance,
         [volunteerId],
       );
+      const organizationId = await this.resolveOrganizationId(
+        instance.master.organizationUnitId,
+      );
+      this.postHogService.capture({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE,
+        userId: volunteerId,
+        properties: {
+          surface: POSTHOG_SURFACE.BACKOFFICE,
+          organization_id: organizationId,
+          organization_unit_id: instance.master.organizationUnitId,
+          shift_id: instance.master.id,
+          shift_instance_id: shiftInstanceId,
+          source: POSTHOG_JOIN_SOURCE.CHECK_IN,
+        },
+      });
     }
 
     return instance;
@@ -3406,27 +3426,27 @@ export class ShiftService {
     });
 
     if (existingInvite) {
-      if (isParticipatingShiftInviteStatus(existingInvite.status)) {
-        return;
-      }
-
       if (
+        isParticipatingShiftInviteStatus(existingInvite.status) ||
         existingInvite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL ||
-        existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED
+        existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED ||
+        existingInvite.status === ShiftInviteStatus.ADMIN_REJECTED
       ) {
         return;
       }
 
       if (
         existingInvite.status === ShiftInviteStatus.VOLUNTEER_CANCELLED ||
-        existingInvite.status === ShiftInviteStatus.VOLUNTEER_REJECTED
+        existingInvite.status === ShiftInviteStatus.VOLUNTEER_REJECTED ||
+        existingInvite.status === ShiftInviteStatus.ADMIN_INVITED
       ) {
         const targetStatus = resolveVolunteerJoinTargetStatus({
           joinRequiresApproval: shift.joinRequiresApproval,
           hasAvailableSeat: hasSeat,
           allowWaitlist: true,
           considerApproval:
-            existingInvite.status === ShiftInviteStatus.VOLUNTEER_REJECTED,
+            existingInvite.status === ShiftInviteStatus.VOLUNTEER_REJECTED ||
+            existingInvite.status === ShiftInviteStatus.ADMIN_INVITED,
         }) as ShiftInviteStatus;
 
         this.assertInviteStatusTransition(existingInvite.status, targetStatus);
@@ -3560,7 +3580,8 @@ export class ShiftService {
           userId,
           properties: {
             surface:
-              source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+              source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
+              source === POSTHOG_JOIN_SOURCE.CHECK_IN
                 ? POSTHOG_SURFACE.BACKOFFICE
                 : POSTHOG_SURFACE.VOLUNTEERING,
             organization_id: await this.resolveOrganizationId(
@@ -3575,6 +3596,96 @@ export class ShiftService {
     }
 
     return shift;
+  }
+
+  async findInstanceInvite(
+    instanceId: string,
+    userId: string,
+  ): Promise<ShiftInstanceInviteEntity | undefined> {
+    return this.db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId },
+    });
+  }
+
+  /**
+   * Volunteer JoinStatus for a shift instance (GLOSSARY § Join Status).
+   * Org membership wins for non-members; once the user is a member, the
+   * shift-instance invite status drives INVITED / PENDING / JOINED / etc.
+   */
+  async resolveShiftJoinStatus(
+    userId: string,
+    organizationUnitId: string,
+    invite?: ShiftInstanceInviteEntity | null,
+  ): Promise<JoinStatus> {
+    if (invite?.status === ShiftInviteStatus.ADMIN_REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    const membershipState = await this.membershipService.getMembershipState(
+      userId,
+      organizationUnitId,
+    );
+
+    if (membershipState === JoinStatus.REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    if (membershipState === JoinStatus.PENDING) {
+      return JoinStatus.PENDING;
+    }
+
+    if (membershipState === JoinStatus.NONE) {
+      return JoinStatus.NONE;
+    }
+
+    if (invite) {
+      return INVITE_STATUS_TO_JOIN_SHIFT_STATUS[invite.status];
+    }
+
+    return JoinStatus.NONE;
+  }
+
+  private async buildRequestJoinShiftInstanceResult(
+    userId: string,
+    shiftInstance: ShiftInstanceEntity,
+    organizationUnitId: string,
+    invite?: ShiftInstanceInviteEntity | null,
+    extra?: {
+      membershipRequest?: MembershipRequestEntity;
+      requirementProfile?: RequirementProfileEntity;
+      requirementStatuses?: Array<{
+        requirementId: string;
+        name: string;
+        status: string;
+      }>;
+      requiredForms?: RequiredFormStatus[];
+    },
+  ): Promise<{
+    status: JoinStatus;
+    shiftInstance: ShiftInstanceEntity;
+    membershipRequest?: MembershipRequestEntity;
+    requirementProfile?: RequirementProfileEntity;
+    requirementStatuses?: Array<{
+      requirementId: string;
+      name: string;
+      status: string;
+    }>;
+    requiredForms?: RequiredFormStatus[];
+  }> {
+    const resolvedInvite =
+      invite === undefined
+        ? await this.findInstanceInvite(shiftInstance.id, userId)
+        : invite;
+
+    return {
+      status: await this.resolveShiftJoinStatus(
+        userId,
+        organizationUnitId,
+        resolvedInvite,
+      ),
+      shiftInstance,
+      ...extra,
+    };
   }
 
   async requestJoinShiftInstance(
@@ -3621,10 +3732,37 @@ export class ShiftService {
       throw new NotFoundGraphQLError('Organization unit not found');
     }
 
+    const existingInvite = await this.findInstanceInvite(instanceId, userId);
+
+    if (
+      existingInvite &&
+      !isVolunteerJoinResolveSource(existingInvite.status)
+    ) {
+      return this.buildRequestJoinShiftInstanceResult(
+        userId,
+        instance,
+        shift.organizationUnitId,
+        existingInvite,
+      );
+    }
+
     const isAllowed = await this.membershipService.isMemberOfUnitOrAncestor(
       userId,
       orgUnit.id,
     );
+
+    if (
+      existingInvite &&
+      isVolunteerJoinResolveSource(existingInvite.status) &&
+      !isAllowed
+    ) {
+      return this.buildRequestJoinShiftInstanceResult(
+        userId,
+        instance,
+        shift.organizationUnitId,
+        existingInvite,
+      );
+    }
 
     if (!isAllowed) {
       const result = await this.membershipService.requestOrgJoin(
@@ -3679,21 +3817,22 @@ export class ShiftService {
         };
       }
 
-      if (result.status === 'PENDING') {
-        return {
-          status: JoinStatus.PENDING,
-          shiftInstance: instance,
-          membershipRequest: result.membershipRequest,
-        };
+      if (result.status === 'JOINED') {
+        await this.joinShiftInstance(userId, instanceId, {
+          status: ShiftInviteStatus.JOINED,
+          formsAlreadySatisfied: true,
+        });
+        return this.buildRequestJoinShiftInstanceResult(
+          userId,
+          instance,
+          shift.organizationUnitId,
+        );
       }
 
-      await this.joinShiftInstance(userId, instanceId, {
-        status: ShiftInviteStatus.JOINED,
-        formsAlreadySatisfied: true,
-      });
       return {
-        status: JoinStatus.JOINED,
+        status: JoinStatus.PENDING,
         shiftInstance: instance,
+        membershipRequest: result.membershipRequest,
       };
     }
     await this.formSubmissionService.shareSubmissionsWithOrgUnit(userId, {
@@ -3721,10 +3860,11 @@ export class ShiftService {
       status: ShiftInviteStatus.JOINED,
       formsAlreadySatisfied: true,
     });
-    return {
-      status: JoinStatus.JOINED,
-      shiftInstance: instance,
-    };
+    return this.buildRequestJoinShiftInstanceResult(
+      userId,
+      instance,
+      shift.organizationUnitId,
+    );
   }
 
   async updateShiftInviteStatus(
@@ -4223,6 +4363,35 @@ export class ShiftService {
       .where(eq(schema.shiftInstanceInvites.id, next.id));
 
     void this.notifyShiftInstanceJoined(next.userId, instance.master, instance);
+
+    const organizationId = await this.resolveOrganizationId(
+      instance.master.organizationUnitId,
+    );
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
+      userId: next.userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: instance.master.organizationUnitId,
+        source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+        shift_id: instance.master.id,
+        shift_instance_id: instanceId,
+        invite_status: ShiftInviteStatus.JOINED,
+      },
+    });
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+      userId: next.userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: organizationId,
+        organization_unit_id: instance.master.organizationUnitId,
+        source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+        shift_id: instance.master.id,
+        shift_instance_id: instanceId,
+      },
+    });
   }
 
   private async assertShiftInstanceAcceptanceCapacity(
@@ -4364,7 +4533,9 @@ export class ShiftService {
       userId: input.userId,
       properties: {
         surface:
-          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE
+          input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
+          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN ||
+          input.source === POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE
             ? POSTHOG_SURFACE.BACKOFFICE
             : POSTHOG_SURFACE.VOLUNTEERING,
         organization_id: await this.resolveOrganizationId(

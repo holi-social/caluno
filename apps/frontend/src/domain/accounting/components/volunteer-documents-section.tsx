@@ -43,7 +43,7 @@ export function VolunteerDocumentsSection({
   const t = useTranslations('MembershipDetail.documents');
   const { formatDate } = useFormatting();
   const router = useRouter();
-  const { sign, decline, download } = useVolunteerDocumentActions();
+  const { decline, download } = useVolunteerDocumentActions();
 
   const contractsQuery = useMyContracts({}, organizationUnitId);
   const invoicesQuery = useMyInvoices({}, organizationUnitId);
@@ -71,10 +71,6 @@ export function VolunteerDocumentsSection({
   }, [contractsQuery.data, invoicesQuery.data, formatDate]);
 
   const isLoading = contractsQuery.isLoading || invoicesQuery.isLoading;
-
-  function handleSign(document: VolunteerDocument) {
-    sign(document);
-  }
 
   function handleDeclineConfirm(reason: string) {
     if (!declineTarget) return;
@@ -123,7 +119,6 @@ export function VolunteerDocumentsSection({
             <VolunteerDocumentCard
               key={`${document.kind}-${document.id}`}
               document={document}
-              onSign={handleSign}
               onDecline={setDeclineTarget}
               onDownload={handleDownload}
               onOpen={handleOpen}

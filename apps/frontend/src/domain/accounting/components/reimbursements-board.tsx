@@ -51,6 +51,7 @@ import type { SigneeRole } from './template/types';
 
 export type DocStatus =
   | 'contract-generate'
+  | 'contract-draft'
   | 'contract-signing-vol'
   | 'contract-signing-coord'
   | 'contract-active'
@@ -61,6 +62,7 @@ export type DocStatus =
   // manual "Create contract" action.
   | 'contract-missing'
   | 'timesheet-generate'
+  | 'timesheet-draft'
   | 'timesheet-signing-vol'
   | 'timesheet-signing-super'
   | 'timesheet-ready'
@@ -287,13 +289,13 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
   if (!tile) return false;
   switch (tile) {
     case 'contract-generate':
-      return status === 'contract-generate';
+      return status === 'contract-generate' || status === 'contract-draft';
     case 'contract-signing':
       return (
         status === 'contract-signing-vol' || status === 'contract-signing-coord'
       );
     case 'timesheet-generate':
-      return status === 'timesheet-generate';
+      return status === 'timesheet-generate' || status === 'timesheet-draft';
     case 'timesheet-signing':
       return (
         status === 'timesheet-signing-vol' ||
@@ -496,6 +498,7 @@ export function ReimbursementsBoard({
     }
     if (
       pair.doc.status === 'timesheet-generate' ||
+      pair.doc.status === 'timesheet-draft' ||
       pair.doc.status === 'timesheet-declined'
     ) {
       setInvoiceCreationTarget(pair);
@@ -828,9 +831,9 @@ export function ReimbursementsBoard({
       ) : (
         <ReimbursementsTable
           vols={sortedFilteredVols}
+          orgUId={orgUId}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestCreate={handleRequestCreate}
-          onRequestSign={handleSign}
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}
