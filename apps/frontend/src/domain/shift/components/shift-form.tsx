@@ -132,6 +132,8 @@ export const ShiftForm = ({
       minMaxVolunteers: t('validation.minMaxVolunteers'),
       recurrenceEndRequired: t('validation.recurrenceEndRequired'),
       recurrenceEndBeforeStart: t('validation.recurrenceEndBeforeStart'),
+      endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+      shorterThan24Hours: t('validation.shorterThan24Hours'),
     },
     event,
   );
@@ -172,6 +174,11 @@ export const ShiftForm = ({
 
       if (result.serverError === 'shift_window_violation') {
         setError('endsAt', { message: t('validation.windowViolation') });
+        return;
+      }
+
+      if (result.serverError === 'shift_duration_out_of_range') {
+        setError('endsAt', { message: t('validation.shorterThan24Hours') });
         return;
       }
 
@@ -277,6 +284,12 @@ export const ShiftForm = ({
             disabled={pending}
             minDate={event?.startsAt}
             maxDate={event?.endsAt}
+            allowOvernight
+            messages={{
+              endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+              continuesIntoNextDay: t('validation.continuesIntoNextDay'),
+              shorterThan24Hours: t('validation.shorterThan24Hours'),
+            }}
           />
         </Field>
 

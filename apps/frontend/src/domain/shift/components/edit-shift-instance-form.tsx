@@ -124,6 +124,8 @@ export const EditShiftInstanceForm = ({
     minMaxVolunteers: t('validation.minMaxVolunteers'),
     recurrenceEndRequired: t('validation.recurrenceEndRequired'),
     recurrenceEndBeforeStart: t('validation.recurrenceEndBeforeStart'),
+    endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+    shorterThan24Hours: t('validation.shorterThan24Hours'),
   });
 
   const {
@@ -170,6 +172,7 @@ export const EditShiftInstanceForm = ({
         shift_instance_recurrence_conflict: t(
           'validation.instanceRecurrenceConflict',
         ),
+        shift_duration_out_of_range: t('validation.shorterThan24Hours'),
       };
 
       if (result.serverError) {
@@ -266,6 +269,12 @@ export const EditShiftInstanceForm = ({
             disabled={pending}
             minDate={applyToAllFuture ? instanceDate : undefined}
             maxDate={applyToAllFuture ? instanceDate : undefined}
+            allowOvernight
+            messages={{
+              endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+              continuesIntoNextDay: t('validation.continuesIntoNextDay'),
+              shorterThan24Hours: t('validation.shorterThan24Hours'),
+            }}
           />
         </Field>
 
