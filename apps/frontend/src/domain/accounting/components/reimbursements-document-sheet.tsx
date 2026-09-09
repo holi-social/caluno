@@ -36,7 +36,11 @@ import { toast } from 'sonner';
 import { useSession } from '@/lib/auth';
 import { formatEuro } from '@/lib/formatting/formats';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { mapSignatureToSignee } from '../lib/board-data.utils';
+import {
+  contractStatusToDocStatus,
+  invoiceStatusToDocStatus,
+  mapSignatureToSignee,
+} from '../lib/board-data.utils';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import { DeclineReasonDialog } from './decline-reason-dialog';
 import { getPauschaleKey, TYPE_COLOR } from './doc-type-header';
@@ -44,6 +48,7 @@ import { LimitHeadroomBar } from './limit-headroom-bar';
 import type {
   BoardDocument,
   BoardVolunteer,
+  DocStatus,
   DocVolPair,
 } from './reimbursements-board';
 import { isTimesheetNonCompliant } from './reimbursements-board';
@@ -411,15 +416,27 @@ export function DocumentSheet({
 
   if (!doc || !vol) return null;
 
+  const detail = isContract ? contractDetail : invoiceDetail;
+  const currentStatus: DocStatus | undefined = isContract
+    ? contractDetail
+      ? contractStatusToDocStatus(contractDetail.contractStatus)
+      : undefined
+    : invoiceDetail
+      ? invoiceStatusToDocStatus(invoiceDetail.invoiceStatus)
+      : undefined;
+  const effectiveDoc: BoardDocument = currentStatus
+    ? { ...doc, status: currentStatus }
+    : doc;
+
   const isDeclined =
-    doc.status === 'contract-declined' || doc.status === 'timesheet-declined';
+    effectiveDoc.status === 'contract-declined' ||
+    effectiveDoc.status === 'timesheet-declined';
   const kindLabel = t(
     `kindLabel.${isContract ? 'contract' : 'timesheet'}` as Parameters<
       typeof t
     >[0],
   );
-  const detail = isContract ? contractDetail : invoiceDetail;
-  const steps = buildDocSteps(doc, signees, isContract, vol.name, ts);
+  const steps = buildDocSteps(effectiveDoc, signees, isContract, vol.name, ts);
   const timeline = buildTimeline(doc, detail, ts);
 
   const periodLabel = formatDate(selectedDate, {
@@ -436,14 +453,14 @@ export function DocumentSheet({
   };
 
   const actionKey =
-    doc.status === 'contract-generate' ||
-    doc.status === 'timesheet-generate' ||
-    doc.status === 'contract-declined' ||
-    doc.status === 'timesheet-declined' ||
-    doc.status === 'contract-missing'
+    effectiveDoc.status === 'contract-generate' ||
+    effectiveDoc.status === 'timesheet-generate' ||
+    effectiveDoc.status === 'contract-declined' ||
+    effectiveDoc.status === 'timesheet-declined' ||
+    effectiveDoc.status === 'contract-missing'
       ? 'create'
-      : doc.status === 'contract-signing-coord' ||
-          doc.status === 'timesheet-signing-super'
+      : effectiveDoc.status === 'contract-signing-coord' ||
+          effectiveDoc.status === 'timesheet-signing-super'
         ? 'countersign'
         : null;
 
@@ -543,6 +560,18 @@ export function DocumentSheet({
         </SheetHeader>
 
         <div className="flex flex-col gap-6 px-6 py-6 flex-1 min-h-0 overflow-y-auto">
+          {/* PDF preview */}
+          {detail?.downloadUrl && (
+            <section>
+              <iframe
+                key={detail.downloadUrl}
+                src={detail.downloadUrl}
+                title={ts('pdfView')}
+                className="h-72 w-full rounded-lg border border-border bg-card"
+              />
+            </section>
+          )}
+
           {/* Pipeline tracker */}
           <section>
             <p className="text-sm font-semibold text-muted-foreground mb-4">
@@ -791,10 +820,10 @@ export function DocumentSheet({
                 onClick={() => {
                   if (actionKey === 'create') {
                     onRequestCreate({ doc, vol });
+                    onOpenChange(false);
                   } else {
                     onRequestSign({ doc, vol });
                   }
-                  onOpenChange(false);
                 }}
               >
                 {t(`actions.${actionKey}` as Parameters<typeof t>[0])}
