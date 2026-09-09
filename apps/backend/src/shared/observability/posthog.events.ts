@@ -84,7 +84,9 @@ export type PostHogAction = (typeof POSTHOG_ACTIONS)[number];
 export type PostHogCaptureProperties = {
   surface: PostHogSurface;
   organization_id?: string;
+  organization_name?: string;
   organization_unit_id?: string;
+  organization_unit_name?: string;
   source?: string;
   [key: string]: string | number | boolean | undefined;
 };
