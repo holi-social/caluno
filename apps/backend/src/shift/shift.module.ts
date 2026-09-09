@@ -28,6 +28,8 @@ import { ShiftRequiredFormsLoader } from './resolvers/shift-required-forms.loade
 import { ShiftCallOutService } from './services/shift-call-out.service';
 import { ShiftUnderstaffedNotificationService } from './services/shift-understaffed-notification.service';
 import { ShiftUnderstaffedSchedulerService } from './services/shift-understaffed-scheduler.service';
+import { VolunteerDigestService } from './services/volunteer-digest.service';
+import { VolunteerDigestSchedulerService } from './services/volunteer-digest-scheduler.service';
 import { ShiftService } from './shift.service';
 
 @Module({
@@ -47,6 +49,8 @@ import { ShiftService } from './shift.service';
     ShiftCallOutService,
     ShiftUnderstaffedNotificationService,
     ShiftUnderstaffedSchedulerService,
+    VolunteerDigestService,
+    VolunteerDigestSchedulerService,
     AccountingOrgAccessService,
     ShiftQueryResolver,
     ShiftMapper,
