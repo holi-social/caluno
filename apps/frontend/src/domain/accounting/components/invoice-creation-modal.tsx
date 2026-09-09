@@ -336,6 +336,7 @@ export function InvoiceCreationModal({
       // Surface the real server error (e.g. "No invoice template configured
       // for reimbursement type …") instead of a generic "try again", and keep
       // the modal open so the coordinator can act on the reason.
+      toast.error(t('sendErrorToast', { name: volunteerName }));
       if (error instanceof Error) {
         setSendError(error.message || null);
         setSendErrorCode(

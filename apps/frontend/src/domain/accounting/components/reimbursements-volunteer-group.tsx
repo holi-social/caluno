@@ -201,6 +201,9 @@ function BundleDownloadButton({
                   t('batchBar.bundleDownloadToast', { count: readyCount }),
                 );
               },
+              onError: () => {
+                toast.error(t('batchBar.bundleDownloadErrorToast'));
+              },
             },
           );
         }}

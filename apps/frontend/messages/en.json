@@ -1882,7 +1882,8 @@
         "bundleAll": "Download all bundles",
         "mixed": "Mixed selection",
         "clearSelection": "Clear",
-        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}",
+        "bundleDownloadErrorToast": "Bundle download failed. Please try again."
       },
       "actionToasts": {
         "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
