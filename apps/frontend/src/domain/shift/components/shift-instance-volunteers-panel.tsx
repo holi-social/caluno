@@ -194,7 +194,7 @@ export function ShiftInstanceVolunteersPanel({
       summary={summary}
       headerAction={
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">
+          <Badge variant="outline">
             {maxVolunteers != null
               ? t('inviteStatus.capacityBadge', {
                   filled: filledCount,
@@ -211,7 +211,7 @@ export function ShiftInstanceVolunteersPanel({
                   orgUId={orgUId}
                   instanceId={instanceId}
                   trigger={
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="md">
                       <Megaphone />
                       {t('instanceDetail.callOutCta')}
                     </Button>
