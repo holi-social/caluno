@@ -834,7 +834,6 @@ export function ReimbursementsBoard({
           orgUId={orgUId}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestCreate={handleRequestCreate}
-          onRequestSign={handleSign}
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}

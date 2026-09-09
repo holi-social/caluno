@@ -44,7 +44,6 @@ const KIND_ICON: Record<'contract' | 'invoice', typeof FileUserIcon> = {
 
 interface VolunteerDocumentCardProps {
   document: VolunteerDocument;
-  onSign: (document: VolunteerDocument) => void;
   onDecline: (document: VolunteerDocument) => void;
   onDownload: (document: VolunteerDocument) => void;
   onOpen: (document: VolunteerDocument) => void;
@@ -52,7 +51,6 @@ interface VolunteerDocumentCardProps {
 
 export function VolunteerDocumentCard({
   document,
-  onSign,
   onDecline,
   onDownload,
   onOpen,
@@ -181,10 +179,9 @@ export function VolunteerDocumentCard({
           <>
             <Button
               className="w-full"
-              disabled={missingProfileFields}
               onClick={(e) => {
                 e.stopPropagation();
-                onSign(document);
+                onOpen(document);
               }}
             >
               <SignatureIcon />

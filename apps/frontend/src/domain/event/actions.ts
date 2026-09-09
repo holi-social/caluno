@@ -135,6 +135,7 @@ export const createEventShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
+      joinRequiresApproval: parsedInput.joinRequiresApproval ?? false,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       eventId,

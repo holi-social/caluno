@@ -43,7 +43,7 @@ export function VolunteerMyDocuments() {
   const tNames = useTranslations('MembershipDetail.documents.names');
   const { formatDate } = useFormatting();
   const router = useRouter();
-  const { sign, decline, download } = useVolunteerDocumentActions();
+  const { decline, download } = useVolunteerDocumentActions();
 
   const myDocumentsQuery = useMyDocuments();
 
@@ -157,7 +157,6 @@ export function VolunteerMyDocuments() {
                     <VolunteerDocumentCard
                       key={`${document.kind}-${document.id}`}
                       document={document}
-                      onSign={sign}
                       onDecline={setDeclineTarget}
                       onDownload={download}
                       onOpen={handleOpen(group.membershipId)}
