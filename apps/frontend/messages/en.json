@@ -2047,6 +2047,16 @@
           "value": "{before} → {after}",
           "subline": "of {total} yearly cap"
         },
+        "manualCap": {
+          "title": "Initial amount",
+          "editButtonLabel": "Edit initial amount",
+          "saveButtonLabel": "Save initial amount",
+          "cancelButtonLabel": "Cancel",
+          "inputLabel": "Initial amount in euros",
+          "projectedAfter": "Projected after this invoice: {after}",
+          "successToast": "Initial amount saved.",
+          "errorToast": "The initial amount couldn't be saved. Please try again."
+        },
         "hoursCard": {
           "title": "Eligible hours",
           "rowCheckboxLabel": "Include {shiftName} in this invoice",
