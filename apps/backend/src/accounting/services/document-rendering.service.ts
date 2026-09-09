@@ -313,37 +313,64 @@ export class DocumentRenderingService {
 
     pdf.x = pdf.page.margins.left;
     for (const seat of seats) {
-      pdf.fontSize(10).font('Helvetica').text(seat.label);
-      pdf.moveDown(0.5);
-
-      const boxX = pdf.page.margins.left;
-      const boxTop = pdf.y;
-      const boxWidth = 260;
-      const boxHeight = 32;
-      pdf
-        .lineWidth(1)
-        .roundedRect(boxX, boxTop, boxWidth, boxHeight, 4)
-        .stroke();
-
-      pdf
-        .font('Helvetica')
-        .fontSize(11)
-        .text(seat.name, boxX + 10, boxTop + 8, {
-          width: boxWidth - 20,
-        });
-
-      pdf.x = pdf.page.margins.left;
-      pdf.y = boxTop + boxHeight + 6;
-      pdf
-        .fontSize(9)
-        .font('Helvetica')
-        .text(this.signatureTimestampLine(seat.signedAt), { lineGap: 2 });
-      pdf.moveDown(0.75);
+      this.renderSignatureSeat(pdf, seat);
     }
   }
 
-  private signatureTimestampLine(signedAt: string | undefined): string {
-    return signedAt ? `am ${signedAt}` : '_______________';
+  private renderSignatureSeat(
+    pdf: PDFKit.PDFDocument,
+    seat: { label: string; name: string; signedAt: string | undefined },
+  ): void {
+    pdf.fontSize(10).font('Helvetica').text(seat.label);
+    pdf.moveDown(0.5);
+
+    const left = pdf.page.margins.left;
+    const top = pdf.y;
+    const width = 260;
+    const height = 34;
+
+    pdf.lineWidth(1);
+    if (seat.signedAt) {
+      // HelloSign-style: the signing date sits in a gap in the top border —
+      // the border stops, shows the short date, then continues.
+      pdf.font('Helvetica').fontSize(8);
+      const timestamp = seat.signedAt;
+      const labelWidth = pdf.widthOfString(timestamp);
+      const gapStart = left + 12;
+      const gapEnd = gapStart + labelWidth + 6;
+
+      pdf.moveTo(left, top).lineTo(gapStart, top);
+      pdf.moveTo(gapEnd, top).lineTo(left + width, top);
+      pdf
+        .moveTo(left, top)
+        .lineTo(left, top + height)
+        .lineTo(left + width, top + height)
+        .lineTo(left + width, top);
+      pdf.stroke();
+
+      pdf
+        .font('Helvetica')
+        .fontSize(8)
+        .text(timestamp, gapStart + 3, top + 3, { lineBreak: false });
+    } else {
+      pdf
+        .moveTo(left, top)
+        .lineTo(left + width, top)
+        .lineTo(left + width, top + height)
+        .lineTo(left, top + height)
+        .lineTo(left, top)
+        .stroke();
+    }
+
+    pdf
+      .font('Helvetica')
+      .fontSize(11)
+      .text(seat.name, left + 10, top + 11, {
+        width: width - 20,
+      });
+
+    pdf.x = pdf.page.margins.left;
+    pdf.y = top + height + 10;
   }
 
   private invoiceTotalRowCells(totalAmountCents: number): string[] {
