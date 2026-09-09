@@ -67,6 +67,8 @@ export function getInitials(name: string): string {
 
 export function contractStatusToDocStatus(status: ContractStatus): DocStatus {
   switch (status) {
+    case ContractStatus.Draft:
+      return 'contract-draft';
     case ContractStatus.AwaitingVolunteerSignature:
       return 'contract-signing-vol';
     case ContractStatus.AwaitingNgoSignature:

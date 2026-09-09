@@ -139,6 +139,12 @@ describe('contractStatusToDocStatus', () => {
       'contract-declined',
     );
   });
+
+  it('maps ContractStatus.Draft to contract-draft', () => {
+    expect(contractStatusToDocStatus(ContractStatus.Draft)).toBe(
+      'contract-draft',
+    );
+  });
 });
 
 describe('invoiceStatusToDocStatus', () => {

@@ -1937,6 +1937,7 @@
         },
         "statusLabel": {
           "contractGenerate": "Vereinbarung erstellen",
+          "contractDraft": "Entwurf",
           "contractSigningVol": "Wartet auf Gegenzeichnung",
           "contractSigningCoord": "Gegenzeichnung erforderlich",
           "contractActive": "Aktive Vereinbarung",

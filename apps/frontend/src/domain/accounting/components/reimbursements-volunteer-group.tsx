@@ -59,6 +59,11 @@ export const STATUS_META: Record<DocStatus, StatusMeta> = {
     actionKey: 'create',
     isYourAction: true,
   },
+  'contract-draft': {
+    labelKey: 'contractDraft',
+    actionKey: 'create',
+    isYourAction: true,
+  },
   'contract-signing-vol': {
     labelKey: 'contractSigningVol',
     actionKey: null,
@@ -137,6 +142,7 @@ function abbreviateName(name: string): string {
 
 const STATUS_SORT_ORDER: DocStatus[] = [
   'contract-generate',
+  'contract-draft',
   'timesheet-generate',
   'contract-missing',
   'contract-signing-coord',
