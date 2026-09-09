@@ -174,17 +174,12 @@ export function JoinShiftButton({
         const result = await joinShiftInstance.mutateAsync(instanceId);
 
         if (result.status === JoinStatus.Joined) {
-          // The server resolves a full shift to the waitlist but still
-          // reports JOINED, so trust the refetched invite status.
-          const resolvedInviteStatus =
-            result.shiftInstance.myInviteStatus ?? ShiftInviteStatus.Joined;
-          if (resolvedInviteStatus === ShiftInviteStatus.WaitlistJoined) {
-            toast.success(t('join.waitlistJoined'));
-            onInviteStatusChange?.(ShiftInviteStatus.WaitlistJoined);
-          } else {
-            toast.success(t('join.joined'));
-            onInviteStatusChange?.(ShiftInviteStatus.Joined);
-          }
+          toast.success(t('join.joined'));
+          onInviteStatusChange?.(ShiftInviteStatus.Joined);
+          if (isAuto) router.push('/');
+        } else if (result.status === JoinStatus.WaitlistJoined) {
+          toast.success(t('join.waitlistJoined'));
+          onInviteStatusChange?.(ShiftInviteStatus.WaitlistJoined);
           if (isAuto) router.push('/');
         } else if (result.status === JoinStatus.Pending) {
           toast.success(t('join.pending'));
