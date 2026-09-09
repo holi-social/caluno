@@ -2161,6 +2161,7 @@
           "contract-lifespan": "Contract period",
           "tasks": "Task description",
           "hours-amount": "Hours",
+          "hours-unit": "Hours unit",
           "freeform-text": "Freeform text",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger",
