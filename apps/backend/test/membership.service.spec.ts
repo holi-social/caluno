@@ -55,6 +55,7 @@ describe('MembershipService', () => {
       {} as RequiredFormService,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
+      {} as never,
     );
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
