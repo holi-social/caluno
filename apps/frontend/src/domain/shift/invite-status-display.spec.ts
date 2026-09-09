@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
 import {
+  adminChipTargetStatuses,
   adminReinviteTargetStatus,
+  adminRowActions,
   adminUninviteTargetStatus,
   canAdminReinvite,
   canAdminUninvite,
@@ -230,5 +232,63 @@ describe('formatInviteStatusSummary', () => {
         },
       ),
     ).toBe('4 invited · 2 accepted · 1 signed up · 3 waitlisted · 12 spots');
+  });
+});
+
+describe('adminRowActions', () => {
+  it('scopes row buttons to the volunteer status (VOLI-1257)', () => {
+    expect(adminRowActions(ShiftInviteStatus.AwaitingAdminApproval)).toEqual([
+      'Approve',
+    ]);
+    expect(adminRowActions(ShiftInviteStatus.AdminRejected)).toEqual([
+      'Invite',
+    ]);
+  });
+
+  it('gives every other status no admin row buttons', () => {
+    expect(adminRowActions(ShiftInviteStatus.AdminInvited)).toEqual([]);
+    expect(adminRowActions(ShiftInviteStatus.Joined)).toEqual([]);
+    expect(adminRowActions(ShiftInviteStatus.WaitlistJoined)).toEqual([]);
+    expect(adminRowActions(ShiftInviteStatus.VolunteerRejected)).toEqual([]);
+    expect(adminRowActions(ShiftInviteStatus.VolunteerCancelled)).toEqual([]);
+  });
+});
+
+describe('adminChipTargetStatuses', () => {
+  it('offers only rejected from invited', () => {
+    expect(adminChipTargetStatuses(ShiftInviteStatus.AdminInvited)).toEqual([
+      ShiftInviteStatus.AdminRejected,
+    ]);
+  });
+
+  it('offers joined and rejected from pending approval', () => {
+    expect(
+      adminChipTargetStatuses(ShiftInviteStatus.AwaitingAdminApproval),
+    ).toEqual([ShiftInviteStatus.Joined, ShiftInviteStatus.AdminRejected]);
+  });
+
+  it('offers only rejected from joined and invite-back from rejected', () => {
+    expect(adminChipTargetStatuses(ShiftInviteStatus.Joined)).toEqual([
+      ShiftInviteStatus.AdminRejected,
+    ]);
+    expect(adminChipTargetStatuses(ShiftInviteStatus.AdminRejected)).toEqual([
+      ShiftInviteStatus.AdminInvited,
+    ]);
+  });
+
+  it('keeps waitlisted targets to joined and rejected', () => {
+    expect(adminChipTargetStatuses(ShiftInviteStatus.WaitlistJoined)).toEqual([
+      ShiftInviteStatus.Joined,
+      ShiftInviteStatus.AdminRejected,
+    ]);
+  });
+
+  it('renders volunteer-declined and cancelled rows as plain badges', () => {
+    expect(
+      adminChipTargetStatuses(ShiftInviteStatus.VolunteerRejected),
+    ).toEqual([]);
+    expect(
+      adminChipTargetStatuses(ShiftInviteStatus.VolunteerCancelled),
+    ).toEqual([]);
   });
 });

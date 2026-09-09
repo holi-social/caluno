@@ -1,5 +1,8 @@
 import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
-import type { ShiftVolunteeringDisplayState } from '@repo/ui';
+import type {
+  ShiftVolunteeringDisplayState,
+  VolunteeringActionLabel,
+} from '@repo/ui';
 
 /** Shared invite-status values for shift + event (identical GraphQL enums). */
 export type InviteStatus = ShiftInviteStatus | EventInviteStatus;
@@ -42,6 +45,38 @@ export function adminReinviteTargetStatus<S extends InviteStatus>(
     return null;
   }
   return ShiftInviteStatus.AdminInvited as S;
+}
+
+export function adminRowActions(
+  status: InviteStatus,
+): VolunteeringActionLabel[] {
+  switch (toInviteDisplayState(status)) {
+    case 'requested':
+      return ['Approve'];
+    case 'rejected':
+      return ['Invite'];
+    default:
+      return [];
+  }
+}
+
+export function adminChipTargetStatuses(
+  status: ShiftInviteStatus,
+): ShiftInviteStatus[] {
+  switch (status) {
+    case ShiftInviteStatus.AdminInvited:
+      return [ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.AwaitingAdminApproval:
+      return [ShiftInviteStatus.Joined, ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.Joined:
+      return [ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.WaitlistJoined:
+      return [ShiftInviteStatus.Joined, ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.AdminRejected:
+      return [ShiftInviteStatus.AdminInvited];
+    default:
+      return [];
+  }
 }
 
 /**
