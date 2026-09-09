@@ -594,6 +594,7 @@
   "Navigation": {
     "admin": "Admin",
     "checkIn": "Einchecken",
+    "checkVolunteersIn": "Freiwillige einchecken",
     "events": "Veranstaltungen",
     "home": "Startseite",
     "myTime": "Deine Nachweise",
@@ -608,8 +609,9 @@
     "roles": "Rollen",
     "selectOrganization": "Organisation auswählen",
     "shifts": "Einsätze",
+    "shortcuts": "Verknüpfungen",
     "timesheets": "Zeiterfassung",
-    "volunteering": "Freiwilligenarbeit",
+    "volunteeringApp": "Freiwilligen-App",
     "volunteers": "Freiwillige",
     "accounting": "Buchhaltung",
     "reimbursements": "Abrechnungen",
