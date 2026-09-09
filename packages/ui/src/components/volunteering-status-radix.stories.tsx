@@ -7,8 +7,8 @@ import {
   VolunteeringLifecyclePanel,
   VolunteeringMemberListPanel,
   VolunteeringShiftCardVolunteers,
-  VolunteeringStatusBadge,
   VolunteeringStatusIcon,
+  VolunteeringStatusLabel,
   VolunteeringVolunteerList,
   VolunteeringVolunteerRow,
 } from '@/components/volunteering-status';
@@ -144,7 +144,7 @@ export const StatusBadges: Story = {
           'requested_never_responded',
         ] as const
       ).map((state) => (
-        <VolunteeringStatusBadge
+        <VolunteeringStatusLabel
           key={state}
           state={state}
           completedDuration={state === 'completed' ? '3h 57m' : undefined}
