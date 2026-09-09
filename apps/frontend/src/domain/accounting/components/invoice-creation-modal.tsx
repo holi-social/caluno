@@ -12,15 +12,19 @@ import {
   useReimbursementTypes,
   useYearlyUsage,
 } from '@repo/data/react';
+import { Input } from '@repo/ui';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
 import { useRouter } from '@/i18n/navigation';
-import { formatEuro } from '@/lib/formatting/formats';
+import {
+  type DerivedField,
+  deriveEditableFields,
+} from '../lib/creation-fields';
 import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
-import { centsToEuros } from '../lib/money';
+import { centsToEuros, formatHourlyRate } from '../lib/money';
 import {
   apiDocumentKindFor,
   reimbursementTypeKeyFor,
@@ -34,6 +38,7 @@ import {
 import { EligibleHoursCard } from './eligible-hours-card';
 import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
+import { ManualCapEditor } from './manual-cap-editor';
 import type { DateRange } from './period-picker';
 import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
 import { getKnownOrgValues } from './template/builder-document-presets';
@@ -43,12 +48,6 @@ import type {
 } from './template/builder-types';
 import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
-
-/** "Anna Müller" -> { first: "Anna", last: "Müller" } — matches the Vorname/Nachname fields the invoice text binds separately. */
-function splitName(name: string): { first: string; last: string } {
-  const [first, ...rest] = name.trim().split(/\s+/);
-  return { first: first ?? name, last: rest.join(' ') };
-}
 
 /** "05.07.2026, 09:00–13:00" -> { begin: "05.07.2026, 09:00", end: "05.07.2026, 13:00" } — the table's Beginn/Ende columns need separate timestamps, `EligibleHourLine` stores one combined string. */
 function splitDateTimeRange(dateTime: string): { begin: string; end: string } {
@@ -83,16 +82,6 @@ function formatDocumentNumber(
   }
 }
 
-interface NameFieldState {
-  value: string;
-  provenance: 'profile' | 'override';
-}
-
-interface IbanFieldState {
-  value: string | null;
-  provenance: 'profile' | 'override' | 'gap';
-}
-
 interface InvoiceCreationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -123,6 +112,9 @@ export function InvoiceCreationModal({
 }: InvoiceCreationModalProps) {
   const t = useTranslations('Accounting.reimbursements.invoiceModal');
   const tFields = useTranslations('Accounting.templates.builder.dataSources');
+  const tManual = useTranslations(
+    'Accounting.templates.builder.manualFieldLabels',
+  );
   const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
   const tPeriod = useTranslations(
     'Accounting.reimbursements.invoiceModal.periodPicker',
@@ -165,9 +157,11 @@ export function InvoiceCreationModal({
   const contractTemplate = contractTemplateQuery.data
     ? parseTemplateBody(contractTemplateQuery.data.body)
     : null;
-  const [nameField, setNameField] = useState<NameFieldState | null>(null);
-  const [addressField, setAddressField] = useState<IbanFieldState | null>(null);
-  const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
+
+  const [derivedFields, setDerivedFields] = useState<DerivedField[] | null>(
+    null,
+  );
+  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
@@ -195,9 +189,8 @@ export function InvoiceCreationModal({
   // is targeted — everything gets re-seeded from the freshly loaded data below.
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset keyed on identity change, not a dependency read by the effect body
   useEffect(() => {
-    setNameField(null);
-    setAddressField(null);
-    setIbanField(null);
+    setDerivedFields(null);
+    setEditedValues({});
     setPeriod(thisMonthRange());
   }, [volunteerId, docId]);
 
@@ -256,24 +249,18 @@ export function InvoiceCreationModal({
         ? 'loaded'
         : 'loading';
 
-  // Seed the editable fields once from the loaded profile, then leave them
-  // alone — later re-renders shouldn't clobber a coordinator's edits.
+  // Seed the editable fields once from the loaded profile/template, then leave
+  // them alone — later re-renders shouldn't clobber a coordinator's edits.
   useEffect(() => {
-    if (!volunteerId || !volunteerName || nameField || !profileLoaded) return;
+    if (!dataReady || !template || derivedFields || !volunteerName) return;
     const profileData = (profileQuery.data?.data ?? {}) as Record<
       string,
       unknown
     >;
-    const address =
-      typeof profileData.address === 'string' ? profileData.address : null;
-    const iban = typeof profileData.iban === 'string' ? profileData.iban : null;
-    setNameField({ value: volunteerName, provenance: 'profile' });
-    setAddressField({
-      value: address,
-      provenance: address ? 'profile' : 'gap',
-    });
-    setIbanField({ value: iban, provenance: iban ? 'profile' : 'gap' });
-  }, [volunteerId, volunteerName, nameField, profileLoaded, profileQuery.data]);
+    setDerivedFields(
+      deriveEditableFields(template, profileData, volunteerName),
+    );
+  }, [dataReady, template, derivedFields, profileQuery.data, volunteerName]);
 
   // Rendered unconditionally (per the ContractCreationModal precedent) so the
   // Dialog can drive its own open/close animation; nothing below needs the
@@ -288,13 +275,28 @@ export function InvoiceCreationModal({
   )
     return null;
 
+  const isEdited = (fieldId: string) => Object.hasOwn(editedValues, fieldId);
+  const currentValue = (
+    fieldId: string,
+    fallback: string | null,
+  ): string | null =>
+    isEdited(fieldId) ? (editedValues[fieldId] ?? null) : fallback;
+
+  const handleFieldChange = (fieldId: string) => (value: string) => {
+    setEditedValues((prev) => ({ ...prev, [fieldId]: value }));
+  };
+
   const selectedLines = lines.filter((line) => checkedIds.has(line.id));
   const selectedHours = selectedLines.reduce(
     (sum, line) => sum + line.hours,
     0,
   );
   const selectedAmount = selectedHours * ratePerHour;
-  const projectedAfter = usedBeforeAmount + selectedAmount;
+  const usedBefore =
+    yearlyUsageQuery.data?.usedCents !== undefined
+      ? centsToEuros(yearlyUsageQuery.data.usedCents)
+      : usedBeforeAmount;
+  const projectedAfter = usedBefore + selectedAmount;
 
   const toggleLine = (id: string) => {
     setCheckedIds((prev) => {
@@ -318,6 +320,14 @@ export function InvoiceCreationModal({
         periodStart: (period.from ?? new Date()).toISOString(),
         periodEnd: (period.to ?? period.from ?? new Date()).toISOString(),
         timeEntryIds: selectedLines.map((line) => line.id),
+        fieldOverrides: (derivedFields ?? []).flatMap((field) =>
+          isEdited(field.fieldId)
+            ? field.fieldIds.map((id) => ({
+                fieldId: id,
+                value: editedValues[field.fieldId] ?? '',
+              }))
+            : [],
+        ),
       });
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
@@ -326,6 +336,7 @@ export function InvoiceCreationModal({
       // Surface the real server error (e.g. "No invoice template configured
       // for reimbursement type …") instead of a generic "try again", and keep
       // the modal open so the coordinator can act on the reason.
+      toast.error(t('sendErrorToast', { name: volunteerName }));
       if (error instanceof Error) {
         setSendError(error.message || null);
         setSendErrorCode(
@@ -369,8 +380,6 @@ export function InvoiceCreationModal({
     ? getManualFieldValue(template, 'kostenstelle')
     : undefined;
 
-  const { first, last } = splitName(nameField?.value ?? volunteerName);
-
   const values: Partial<Record<DataSourceKey, string>> = {
     ...getKnownOrgValues({
       pauschale,
@@ -383,10 +392,6 @@ export function InvoiceCreationModal({
         effectiveRate?.reimbursementType.yearlyLimitCents ??
         reimbursementType?.yearlyLimitCents,
     }),
-    volunteer_first_name: first,
-    volunteer_last_name: last,
-    volunteer_address: addressField?.value ?? undefined,
-    volunteer_iban: ibanField?.value ?? undefined,
     generated_date: format(new Date(), 'dd.MM.yyyy'),
     document_number:
       template?.invoiceNumberFormat && template
@@ -417,6 +422,11 @@ export function InvoiceCreationModal({
           )} €`
         : undefined,
   };
+  for (const field of derivedFields ?? []) {
+    if (field.kind !== 'bound' || !field.source) continue;
+    const value = currentValue(field.fieldId, field.value);
+    if (value) values[field.source] = value;
+  }
 
   const tableBlock = template?.blocks.find((b) => b.kind === 'table');
   const firstColumnSource =
@@ -442,6 +452,7 @@ export function InvoiceCreationModal({
       end,
       `${line.hours}h`,
       `${ratePerHour.toFixed(2)} €`,
+      formatHourlyRate(line.hours * ratePerHour),
     ];
   });
   const tableTotalRow = [
@@ -449,11 +460,12 @@ export function InvoiceCreationModal({
     '',
     'Summe',
     `${selectedHours}h`,
-    formatEuro(selectedAmount),
+    '',
+    formatHourlyRate(selectedAmount),
   ];
   // The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
   // stated on every invoice regardless, never computed from the total.
-  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '0,00 €'];
+  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '', '0,00 €'];
 
   return (
     <DocumentCreationDialog
@@ -529,40 +541,44 @@ export function InvoiceCreationModal({
         )
       }
       fields={
-        nameField &&
-        addressField &&
-        ibanField && (
+        derivedFields && (
           <>
-            <AccountingProfileFieldCard
-              label={t('nameFieldLabel')}
-              value={nameField.value}
-              provenance={nameField.provenance}
-              volunteerName={volunteerName}
-              docType="invoice"
-              onSave={(value) =>
-                setNameField({ value, provenance: 'override' })
-              }
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_address')}
-              value={addressField.value}
-              provenance={addressField.provenance}
-              volunteerName={volunteerName}
-              docType="invoice"
-              onSave={(value) =>
-                setAddressField({ value, provenance: 'override' })
-              }
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_iban')}
-              value={ibanField.value}
-              provenance={ibanField.provenance}
-              volunteerName={volunteerName}
-              docType="invoice"
-              onSave={(value) =>
-                setIbanField({ value, provenance: 'override' })
-              }
-            />
+            {derivedFields.map((field) =>
+              field.kind === 'bound' ? (
+                <AccountingProfileFieldCard
+                  key={field.fieldId}
+                  label={tFields(
+                    field.labelKey as Parameters<typeof tFields>[0],
+                  )}
+                  value={currentValue(field.fieldId, field.value)}
+                  provenance={
+                    isEdited(field.fieldId)
+                      ? 'override'
+                      : field.provenance === 'template'
+                        ? 'gap'
+                        : field.provenance
+                  }
+                  volunteerName={volunteerName}
+                  docType="invoice"
+                  onSave={handleFieldChange(field.fieldId)}
+                />
+              ) : (
+                <InfoPanel
+                  key={field.fieldId}
+                  title={tManual(
+                    field.labelKey as Parameters<typeof tManual>[0],
+                  )}
+                >
+                  <Input
+                    className="mt-2"
+                    value={currentValue(field.fieldId, field.value) ?? ''}
+                    onChange={(e) =>
+                      handleFieldChange(field.fieldId)(e.target.value)
+                    }
+                  />
+                </InfoPanel>
+              ),
+            )}
             <InfoPanel title={t('periodFieldLabel')}>
               <div className="mt-2">
                 <PeriodPicker
@@ -587,10 +603,19 @@ export function InvoiceCreationModal({
               </div>
             </InfoPanel>
             <InvoiceCapCard
-              usedBefore={usedBeforeAmount}
+              usedBefore={usedBefore}
               projectedAfter={projectedAfter}
               total={totalCapAmount}
             />
+            {reimbursementType && (
+              <ManualCapEditor
+                volunteerId={volunteerId}
+                reimbursementTypeId={reimbursementType.id}
+                year={period.from?.getFullYear() ?? new Date().getFullYear()}
+                usedBefore={usedBefore}
+                selectedAmount={selectedAmount}
+              />
+            )}
             <EligibleHoursCard
               lines={lines}
               selectedIds={checkedIds}

@@ -51,6 +51,7 @@ import type { SigneeRole } from './template/types';
 
 export type DocStatus =
   | 'contract-generate'
+  | 'contract-draft'
   | 'contract-signing-vol'
   | 'contract-signing-coord'
   | 'contract-active'
@@ -287,7 +288,7 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
   if (!tile) return false;
   switch (tile) {
     case 'contract-generate':
-      return status === 'contract-generate';
+      return status === 'contract-generate' || status === 'contract-draft';
     case 'contract-signing':
       return (
         status === 'contract-signing-vol' || status === 'contract-signing-coord'

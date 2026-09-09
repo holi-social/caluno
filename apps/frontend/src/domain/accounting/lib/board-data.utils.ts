@@ -58,6 +58,66 @@ export function getDocLineSummary(
   return { count: matches.length, latest };
 }
 
+export type ContractPickerState =
+  | 'none'
+  | 'awaiting-signature'
+  | 'awaiting-countersignature'
+  | 'active'
+  | 'declined';
+
+export interface PickerContractAnnotation {
+  pauschale: PauschalenType;
+  state: ContractPickerState;
+}
+
+export interface PickerAnnotations {
+  contracts: PickerContractAnnotation[];
+  latestTimesheetDate?: Date;
+}
+
+const PICKER_PAUSCHALEN: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
+
+export function getContractStateForPicker(
+  vol: BoardVolunteer,
+  pauschale: PauschalenType,
+): ContractPickerState {
+  const { latest } = getDocLineSummary(vol, 'contract', pauschale);
+  switch (latest?.status) {
+    case 'contract-active':
+      return 'active';
+    case 'contract-declined':
+      return 'declined';
+    case 'contract-signing-coord':
+      return 'awaiting-countersignature';
+    case 'contract-draft':
+    case 'contract-signing-vol':
+      return 'awaiting-signature';
+    default:
+      return 'none';
+  }
+}
+
+export function getLatestTimesheetDate(vol: BoardVolunteer): Date | undefined {
+  const dates = PICKER_PAUSCHALEN.map(
+    (pauschale) =>
+      getDocLineSummary(vol, 'invoice', pauschale).latest?.lastActionDate,
+  ).filter((d): d is Date => d instanceof Date);
+  if (dates.length === 0) return undefined;
+  return dates.reduce((latest, d) =>
+    d.getTime() > latest.getTime() ? d : latest,
+  );
+}
+
+export function getPickerAnnotations(vol: BoardVolunteer): PickerAnnotations {
+  return {
+    contracts: PICKER_PAUSCHALEN.map((pauschale) => ({
+      pauschale,
+      state: getContractStateForPicker(vol, pauschale),
+    })),
+    latestTimesheetDate: getLatestTimesheetDate(vol),
+  };
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
@@ -67,6 +127,8 @@ export function getInitials(name: string): string {
 
 export function contractStatusToDocStatus(status: ContractStatus): DocStatus {
   switch (status) {
+    case ContractStatus.Draft:
+      return 'contract-draft';
     case ContractStatus.AwaitingVolunteerSignature:
       return 'contract-signing-vol';
     case ContractStatus.AwaitingNgoSignature:
@@ -231,6 +293,7 @@ export interface BuildBoardVolunteersInput {
    * contract at all for that type yet.
    */
   eligibleHoursVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
+  paidShiftVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function buildBoardVolunteers({
@@ -241,6 +304,7 @@ export function buildBoardVolunteers({
   locale,
   dateRange,
   eligibleHoursVolunteers,
+  paidShiftVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -249,6 +313,7 @@ export function buildBoardVolunteers({
     > = {};
     const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
     const eligibleTypeIds = eligibleHoursVolunteers?.get(entry.volunteer.id);
+    const paidShiftTypeIds = paidShiftVolunteers?.get(entry.volunteer.id);
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -289,14 +354,24 @@ export function buildBoardVolunteers({
             invoiceInMonth(i, y, month),
         );
         for (const invoice of invoicesForMonth) {
-          documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
+          const doc = mapInvoiceToBoardDoc(invoice, type, locale);
+          if (invoice.invoiceStatus !== InvoiceStatus.Declined) {
+            const limit = limits[type];
+            doc.isOverCap =
+              limit !== undefined &&
+              limit.used + centsToEuros(invoice.totalAmountCents) > limit.total;
+          }
+          documents.push(doc);
         }
       }
 
       // Eligible hours with no contract yet mean the real blocker is creating
       // the Vereinbarung, so queue the volunteer under "Create contracts"
       // rather than anywhere downstream.
-      if (eligibleTypeIds?.has(usage.reimbursementType.id)) {
+      if (
+        eligibleTypeIds?.has(usage.reimbursementType.id) ||
+        paidShiftTypeIds?.has(usage.reimbursementType.id)
+      ) {
         if (!activeContract && contractsForType.length === 0) {
           // No Vereinbarung exists at all yet — surface a real,
           // actionable "create contract" row (not the muted

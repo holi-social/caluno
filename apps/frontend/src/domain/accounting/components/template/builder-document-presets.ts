@@ -316,6 +316,7 @@ export function getInvoiceDocument(
           'Ende',
           'Stunden gesamt',
           'Stundensatz',
+          'Betrag',
         ],
         previewRowCount: 10,
         firstColumnSource: 'agreement_task_description',

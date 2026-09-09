@@ -109,6 +109,7 @@ export enum ContractStatus {
   AwaitingNgoSignature = 'AWAITING_NGO_SIGNATURE',
   AwaitingVolunteerSignature = 'AWAITING_VOLUNTEER_SIGNATURE',
   Declined = 'DECLINED',
+  Draft = 'DRAFT',
   Expired = 'EXPIRED'
 }
 
@@ -121,6 +122,7 @@ export type ContractStatusChange = {
 };
 
 export type CreateContractInput = {
+  fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
   periodStart: Scalars['DateTime']['input'];
@@ -176,6 +178,7 @@ export type CreateFormBlockInput = {
 };
 
 export type CreateInvoiceInput = {
+  fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
   periodStart: Scalars['DateTime']['input'];
@@ -280,6 +283,11 @@ export type CreateTemplateSigneeInput = {
   order: Scalars['Int']['input'];
   requiredPermissionId?: InputMaybe<Scalars['ID']['input']>;
   signeeType: SigneeType;
+};
+
+export type DocumentFieldOverrideInput = {
+  fieldId: Scalars['String']['input'];
+  value: Scalars['String']['input'];
 };
 
 export enum DocumentKind {
@@ -1348,6 +1356,12 @@ export type PaginationInfo = {
   total: Scalars['Int']['output'];
 };
 
+export type PaidShiftSignupVolunteer = {
+  __typename?: 'PaidShiftSignupVolunteer';
+  reimbursementType: ReimbursementType;
+  volunteer: User;
+};
+
 export type PendingSignee = {
   __typename?: 'PendingSignee';
   eligibleUserIds?: Maybe<Array<Scalars['String']['output']>>;
@@ -1457,6 +1471,7 @@ export type Query = {
   organizationUnitTypes: Array<OrganizationUnitType>;
   organizationUnits: OrganizationUnitPaginatedResponse;
   organizations: OrganizationPaginatedResponse;
+  paidShiftSignupVolunteers: Array<PaidShiftSignupVolunteer>;
   pendingContractSignee?: Maybe<PendingSignee>;
   pendingInvoiceSignee?: Maybe<PendingSignee>;
   permissionGroups: Array<PermissionGroup>;
@@ -1811,6 +1826,11 @@ export type QueryOrganizationUnitsArgs = {
 export type QueryOrganizationsArgs = {
   limit?: Scalars['Int']['input'];
   offset?: Scalars['Int']['input'];
+};
+
+
+export type QueryPaidShiftSignupVolunteersArgs = {
+  year: Scalars['Int']['input'];
 };
 
 
@@ -2801,6 +2821,13 @@ export type GetVolunteersNeedingTimesheetsQueryVariables = Exact<{
 
 
 export type GetVolunteersNeedingTimesheetsQuery = { __typename?: 'Query', volunteersNeedingTimesheets: Array<{ __typename?: 'VolunteerNeedsTimesheet', eligibleHours: number, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> };
+
+export type GetPaidShiftSignupVolunteersQueryVariables = Exact<{
+  year: Scalars['Int']['input'];
+}>;
+
+
+export type GetPaidShiftSignupVolunteersQuery = { __typename?: 'Query', paidShiftSignupVolunteers: Array<{ __typename?: 'PaidShiftSignupVolunteer', volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> };
 
 export type GetEligibleTimeEntriesForInvoiceQueryVariables = Exact<{
   volunteerId: Scalars['ID']['input'];
@@ -4638,6 +4665,20 @@ export const GetVolunteersNeedingTimesheetsDocument = gql`
       key
     }
     eligibleHours
+  }
+}
+    `;
+export const GetPaidShiftSignupVolunteersDocument = gql`
+    query GetPaidShiftSignupVolunteers($year: Int!) {
+  paidShiftSignupVolunteers(year: $year) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
   }
 }
     `;
@@ -7432,6 +7473,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetVolunteersNeedingTimesheets(variables?: GetVolunteersNeedingTimesheetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetVolunteersNeedingTimesheetsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetVolunteersNeedingTimesheetsQuery>({ document: GetVolunteersNeedingTimesheetsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetVolunteersNeedingTimesheets', 'query', variables);
+    },
+    GetPaidShiftSignupVolunteers(variables: GetPaidShiftSignupVolunteersQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetPaidShiftSignupVolunteersQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetPaidShiftSignupVolunteersQuery>({ document: GetPaidShiftSignupVolunteersDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetPaidShiftSignupVolunteers', 'query', variables);
     },
     GetEligibleTimeEntriesForInvoice(variables: GetEligibleTimeEntriesForInvoiceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetEligibleTimeEntriesForInvoiceQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetEligibleTimeEntriesForInvoiceQuery>({ document: GetEligibleTimeEntriesForInvoiceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetEligibleTimeEntriesForInvoice', 'query', variables);
