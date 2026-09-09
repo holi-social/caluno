@@ -1,7 +1,6 @@
 import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
-import { ShiftInviteStatus } from '../enums';
 import { shifts } from './shift.schema';
 import { shiftInviteStatusEnum } from './shift-instance-invite.schema';
 
@@ -15,9 +14,7 @@ export const shiftInvites = pgTable(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'restrict' })
       .notNull(),
-    status: shiftInviteStatusEnum('status')
-      .notNull()
-      .default(ShiftInviteStatus.ADMIN_INVITED),
+    status: shiftInviteStatusEnum('status').notNull(),
     ...timestampColumns,
   },
   (table) => [

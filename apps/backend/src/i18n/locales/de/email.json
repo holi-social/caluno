@@ -450,5 +450,22 @@
   "documentNames": {
     "agreement": "Zusatzvereinbarung",
     "timesheet": "Stundennachweis"
+  },
+  "volunteerDigest": {
+    "heading": "Deine Woche im Überblick",
+    "greeting": "Hallo {firstName}, das steht diese Woche für dich an.",
+    "myShiftsHeading": "Deine Einsätze",
+    "myShiftsSeeAll": "Alle deine Einsätze ansehen",
+    "pendingInvitesHeading": "Wartet auf deine Antwort",
+    "pendingInvitesSeeAll": "Alle Einladungen ansehen",
+    "needsVolunteersHeading": "Einsätze, die noch Freiwillige brauchen",
+    "needsVolunteersSeeAll": "Alle offenen Einsätze ansehen",
+    "rowWhen": "{date} · {timeRange}",
+    "reasonNeedsMore": "Braucht noch {count} weitere Freiwillige",
+    "reasonNoVolunteersYet": "Noch keine Freiwilligen",
+    "reasonHasRoom": "Hat noch Platz für weitere Freiwillige",
+    "subject": "Deine Woche im Überblick auf {brandName}",
+    "previewText": "Deine Einsätze, Einladungen und offene Einsätze für die kommende Woche.",
+    "footerNote": "Du erhältst diese wöchentliche Übersicht, weil du Mitglied einer Organisation auf {brandName} bist."
   }
 }

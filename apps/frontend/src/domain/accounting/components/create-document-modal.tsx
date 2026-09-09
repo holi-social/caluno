@@ -18,7 +18,11 @@ import {
 import { UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getDocLineSummary } from '../lib/board-data.utils';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  getDocLineSummary,
+  getPickerAnnotations,
+} from '../lib/board-data.utils';
 import { ContractCreationModal } from './contract-creation-modal';
 import {
   DocTypeHeader,
@@ -44,6 +48,7 @@ interface DocLine {
 interface VolunteerOption {
   value: string;
   label: string;
+  volunteer: BoardVolunteer;
 }
 
 // Grouped by Pauschale type, not by kind.
@@ -86,6 +91,7 @@ export function CreateDocumentModal({
   const tCommon = useTranslations('Common');
   const tDocs = useTranslations('Accounting.reimbursements.docs');
   const tSections = useTranslations('Accounting.templates.sections');
+  const { formatDate } = useFormatting();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [volunteerId, setVolunteerId] = useState<string | null>(null);
@@ -103,7 +109,7 @@ export function CreateDocumentModal({
 
   const volunteer = volunteers.find((v) => v.id === volunteerId) ?? null;
   const volunteerOptions = useMemo(
-    () => volunteers.map((v) => ({ value: v.id, label: v.name })),
+    () => volunteers.map((v) => ({ value: v.id, label: v.name, volunteer: v })),
     [volunteers],
   );
   const existingDoc =
@@ -169,11 +175,39 @@ export function CreateDocumentModal({
                   {t('createDocumentModal.noVolunteersFound')}
                 </ComboboxEmpty>
                 <ComboboxList>
-                  {(option: VolunteerOption) => (
-                    <ComboboxItem key={option.value} value={option}>
-                      {option.label}
-                    </ComboboxItem>
-                  )}
+                  {(option: VolunteerOption) => {
+                    const annotations = getPickerAnnotations(option.volunteer);
+                    return (
+                      <ComboboxItem key={option.value} value={option}>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate">{option.label}</span>
+                          {annotations.contracts.map((annotation) => (
+                            <span
+                              key={annotation.pauschale}
+                              className="truncate text-xs text-muted-foreground"
+                            >
+                              {tSections(getPauschaleKey(annotation.pauschale))}
+                              {': '}
+                              {t(
+                                `createDocumentModal.contractState.${annotation.state}` as Parameters<
+                                  typeof t
+                                >[0],
+                              )}
+                            </span>
+                          ))}
+                          <span className="truncate text-xs text-muted-foreground">
+                            {annotations.latestTimesheetDate
+                              ? t('createDocumentModal.latestTimesheet', {
+                                  date: formatDate(
+                                    annotations.latestTimesheetDate,
+                                  ),
+                                })
+                              : t('createDocumentModal.noTimesheetYet')}
+                          </span>
+                        </div>
+                      </ComboboxItem>
+                    );
+                  }}
                 </ComboboxList>
               </ComboboxContent>
             </Combobox>

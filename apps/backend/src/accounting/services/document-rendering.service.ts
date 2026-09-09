@@ -24,6 +24,8 @@ type RenderableDocument = ContractWithRelations | InvoiceWithRelations;
 
 const EUR = '€';
 
+const AMOUNT_COLUMN = 'Betrag';
+
 /** Human label for the reimbursement type key rendered for the `pauschalen_type` source. */
 const PAUSCHALE_TYPE_LABELS: Record<string, string> = {
   EHRENAMT: 'Ehrenamtspauschale',
@@ -101,11 +103,17 @@ export class DocumentRenderingService {
     }
     const resolved = await this.resolveValues(document);
     const body = (template.body ?? {}) as TemplateBodyShape;
-    const fieldValues = this.buildFieldValueMap(body, resolved);
+    const fieldValues = this.buildFieldValueMap(
+      body,
+      resolved,
+      document.fieldOverrides ?? {},
+    );
     const tableRows =
       'invoiceTimeEntries' in document
         ? await this.resolveInvoiceTableRows(document)
         : undefined;
+    const totalAmountCents =
+      'totalAmountCents' in document ? document.totalAmountCents : undefined;
 
     return new Promise<Buffer>((resolve, reject) => {
       const pdf = new PDFDocument({ size: 'A4', margin: 48 });
@@ -115,7 +123,7 @@ export class DocumentRenderingService {
       pdf.on('error', reject);
 
       this.renderHeader(pdf, body, fieldValues);
-      this.renderBlocks(pdf, body, fieldValues, tableRows);
+      this.renderBlocks(pdf, body, fieldValues, tableRows, totalAmountCents);
       this.renderClosing(pdf, body, fieldValues);
       this.renderSignatures(pdf, document, resolved);
       pdf.end();
@@ -163,11 +171,12 @@ export class DocumentRenderingService {
     body: TemplateBodyShape,
     fieldValues: Record<string, string>,
     tableRows: string[][] | undefined,
+    totalAmountCents: number | undefined,
   ): void {
     for (const block of body.blocks ?? []) {
       if (block.enabled === false) continue;
       if (block.kind === 'table') {
-        this.renderTableBlock(pdf, block, tableRows);
+        this.renderTableBlock(pdf, block, tableRows, totalAmountCents);
         continue;
       }
       if (block.title) {
@@ -192,12 +201,18 @@ export class DocumentRenderingService {
     pdf: PDFKit.PDFDocument,
     block: TemplateBlockShape,
     tableRows: string[][] | undefined,
+    totalAmountCents: number | undefined,
   ): void {
     if (block.title) {
       pdf.fontSize(12).font('Helvetica-Bold').text(block.title);
       pdf.moveDown(0.25);
     }
-    const columns = block.columns ?? [];
+    const isInvoiceTable = tableRows !== undefined;
+    const baseColumns = block.columns ?? [];
+    const columns =
+      isInvoiceTable && baseColumns[baseColumns.length - 1] !== AMOUNT_COLUMN
+        ? [...baseColumns, AMOUNT_COLUMN]
+        : baseColumns;
     const rows = tableRows ?? [];
     const pageWidth = pdf.page.width - 96;
     const colWidth = pageWidth / Math.max(columns.length, 1);
@@ -249,6 +264,10 @@ export class DocumentRenderingService {
       if (pdf.y > pdf.page.height - 120) pdf.addPage();
       drawRow(row, false);
     }
+    if (isInvoiceTable && totalAmountCents !== undefined) {
+      if (pdf.y > pdf.page.height - 120) pdf.addPage();
+      drawRow(this.invoiceTotalRowCells(totalAmountCents), true);
+    }
     pdf.moveDown(0.5);
     pdf.x = pdf.page.margins.left;
   }
@@ -292,16 +311,70 @@ export class DocumentRenderingService {
       },
     ];
 
-    pdf.fontSize(10).font('Helvetica');
     pdf.x = pdf.page.margins.left;
     for (const seat of seats) {
-      pdf.text(`${seat.label}: ${seat.name}`);
-      pdf.moveDown(0.5);
-      pdf.text(seat.signedAt ? `am ${seat.signedAt}` : '_______________', {
-        lineGap: 2,
-      });
-      pdf.moveDown(0.75);
+      this.renderSignatureSeat(pdf, seat);
     }
+  }
+
+  private renderSignatureSeat(
+    pdf: PDFKit.PDFDocument,
+    seat: { label: string; name: string; signedAt: string | undefined },
+  ): void {
+    pdf.fontSize(10).font('Helvetica').text(seat.label);
+    pdf.moveDown(0.5);
+
+    const left = pdf.page.margins.left;
+    const top = pdf.y;
+    const width = 260;
+    const height = 34;
+
+    pdf.lineWidth(1);
+    if (seat.signedAt) {
+      // HelloSign-style: the signing date sits in a gap in the top border —
+      // the border stops, shows the short date, then continues.
+      pdf.font('Helvetica').fontSize(8);
+      const timestamp = seat.signedAt;
+      const labelWidth = pdf.widthOfString(timestamp);
+      const gapStart = left + 12;
+      const gapEnd = gapStart + labelWidth + 6;
+
+      pdf.moveTo(left, top).lineTo(gapStart, top);
+      pdf.moveTo(gapEnd, top).lineTo(left + width, top);
+      pdf
+        .moveTo(left, top)
+        .lineTo(left, top + height)
+        .lineTo(left + width, top + height)
+        .lineTo(left + width, top);
+      pdf.stroke();
+
+      pdf
+        .font('Helvetica')
+        .fontSize(8)
+        .text(timestamp, gapStart + 3, top + 3, { lineBreak: false });
+    } else {
+      pdf
+        .moveTo(left, top)
+        .lineTo(left + width, top)
+        .lineTo(left + width, top + height)
+        .lineTo(left, top + height)
+        .lineTo(left, top)
+        .stroke();
+    }
+
+    pdf
+      .font('Helvetica')
+      .fontSize(11)
+      .text(seat.name, left + 10, top + 11, {
+        width: width - 20,
+      });
+
+    pdf.x = pdf.page.margins.left;
+    pdf.y = top + height + 10;
+  }
+
+  private invoiceTotalRowCells(totalAmountCents: number): string[] {
+    return ['', '', 'Gesamtbetrag', '', '', this.formatEuro(totalAmountCents)];
   }
 
   private signatureDateFor(
@@ -319,6 +392,7 @@ export class DocumentRenderingService {
   private buildFieldValueMap(
     body: TemplateBodyShape,
     resolved: Record<string, string>,
+    overrides: Record<string, string>,
   ): Record<string, string> {
     const values: Record<string, string> = {};
     const collect = (fields?: TemplateFieldShape[]) => {
@@ -342,6 +416,11 @@ export class DocumentRenderingService {
       for (const line of block.lines ?? []) collect(line.fields);
     }
     if (body.footer?.closingLine) collect(body.footer.closingLine.fields);
+    for (const [fieldId, value] of Object.entries(overrides)) {
+      if (value) {
+        values[fieldId] = value;
+      }
+    }
     return values;
   }
 
@@ -576,13 +655,18 @@ export class DocumentRenderingService {
         const end = entry.endedAt
           ? this.formatDateTime(new Date(entry.endedAt))
           : '';
-        const hours = this.hoursBetween(entry.startedAt, entry.endedAt);
+        const hours = this.hoursBetweenValue(entry.startedAt, entry.endedAt);
+        const amountCents =
+          hours !== undefined && rateCents !== undefined
+            ? Math.round(hours * rateCents)
+            : undefined;
         return [
           shiftTitle ?? entry.notes ?? '',
           begin,
           end,
-          `${hours}h`,
+          hours !== undefined ? `${this.formatHours(hours)}h` : '',
           rateCents !== undefined ? `${this.formatRate(rateCents)} €` : '',
+          amountCents !== undefined ? this.formatEuro(amountCents) : '',
         ];
       });
     } catch (error) {
@@ -595,9 +679,15 @@ export class DocumentRenderingService {
     }
   }
 
-  private hoursBetween(startedAt: Date | null, endedAt: Date | null): string {
-    if (!startedAt || !endedAt) return '';
-    const hours = (endedAt.getTime() - startedAt.getTime()) / 3_600_000;
+  private hoursBetweenValue(
+    startedAt: Date | null,
+    endedAt: Date | null,
+  ): number | undefined {
+    if (!startedAt || !endedAt) return undefined;
+    return (endedAt.getTime() - startedAt.getTime()) / 3_600_000;
+  }
+
+  private formatHours(hours: number): string {
     return `${Math.round(hours * 100) / 100}`.replace('.', ',');
   }
 

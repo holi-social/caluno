@@ -22,6 +22,7 @@ import {
   Skeleton,
 } from '@repo/ui';
 import {
+  AlertCircleIcon,
   ArrowUpDownIcon,
   CheckCircle2Icon,
   ChevronRightIcon,
@@ -50,6 +51,7 @@ import type { SigneeRole } from './template/types';
 
 export type DocStatus =
   | 'contract-generate'
+  | 'contract-draft'
   | 'contract-signing-vol'
   | 'contract-signing-coord'
   | 'contract-active'
@@ -60,6 +62,7 @@ export type DocStatus =
   // manual "Create contract" action.
   | 'contract-missing'
   | 'timesheet-generate'
+  | 'timesheet-draft'
   | 'timesheet-signing-vol'
   | 'timesheet-signing-super'
   | 'timesheet-ready'
@@ -77,7 +80,6 @@ export type TileFilter =
   | 'contract-signing'
   | 'timesheet-generate'
   | 'timesheet-signing'
-  | 'needs-timesheet'
   | 'ready-to-go'
   | null;
 
@@ -91,8 +93,15 @@ const TILE_IDS: Exclude<TileFilter, null>[] = [
   'contract-signing',
   'timesheet-generate',
   'timesheet-signing',
-  'needs-timesheet',
   'ready-to-go',
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  CURRENT_YEAR - 2,
+  CURRENT_YEAR - 1,
+  CURRENT_YEAR,
+  CURRENT_YEAR + 1,
 ];
 
 export interface BoardDocument {
@@ -128,8 +137,6 @@ export interface BoardVolunteer {
   limits?: Partial<Record<PauschalenType, PauschalenLimit>>;
   /** Maps each pauschale type the volunteer is eligible for to its reimbursement type id. */
   reimbursementTypeIds?: Partial<Record<PauschalenType, string>>;
-  /** True when the volunteer still has eligible (unclaimed, completed, in-period) time entries — i.e. the org still needs to create their timesheet. */
-  needsTimesheet: boolean;
   documents: BoardDocument[];
 }
 
@@ -282,13 +289,13 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
   if (!tile) return false;
   switch (tile) {
     case 'contract-generate':
-      return status === 'contract-generate';
+      return status === 'contract-generate' || status === 'contract-draft';
     case 'contract-signing':
       return (
         status === 'contract-signing-vol' || status === 'contract-signing-coord'
       );
     case 'timesheet-generate':
-      return status === 'timesheet-generate';
+      return status === 'timesheet-generate' || status === 'timesheet-draft';
     case 'timesheet-signing':
       return (
         status === 'timesheet-signing-vol' ||
@@ -297,7 +304,6 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
     case 'ready-to-go':
       return status === 'timesheet-ready';
     default:
-      // 'needs-timesheet' is a volunteer-level flag, not a document status.
       return false;
   }
 }
@@ -307,9 +313,6 @@ function countActionableForTile(
   volunteers: BoardVolunteer[],
   tile: Exclude<TileFilter, null>,
 ): number {
-  if (tile === 'needs-timesheet') {
-    return volunteers.filter((vol) => vol.needsTimesheet).length;
-  }
   return volunteers.reduce(
     (sum, vol) =>
       sum +
@@ -325,9 +328,6 @@ const TILE_DOC_TYPE: Record<Exclude<TileFilter, null>, DocTypeFilter> = {
   'contract-signing': 'contract',
   'timesheet-generate': 'timesheet',
   'timesheet-signing': 'timesheet',
-  // 'needs-timesheet' counts volunteers by their own flag, not documents —
-  // so it never narrows the doc-type dropdown to a single kind.
-  'needs-timesheet': 'all',
   // Ready-to-go is the terminal bundling stage — leave the doc-type filter
   // on "all"; the tile's own row-builder (getReadyToGoDocs) scopes the
   // table to ready timesheets + their contract row, not this dropdown.
@@ -336,9 +336,6 @@ const TILE_DOC_TYPE: Record<Exclude<TileFilter, null>, DocTypeFilter> = {
 
 function countForTile(volunteers: BoardVolunteer[], tile: TileFilter): number {
   if (!tile) return 0;
-  if (tile === 'needs-timesheet') {
-    return volunteers.filter((vol) => vol.needsTimesheet).length;
-  }
   return volunteers.reduce(
     (sum, vol) =>
       sum + vol.documents.filter((d) => matchesTile(d.status, tile)).length,
@@ -363,13 +360,6 @@ function applyFilters(
   range: DateRange | undefined,
 ): BoardVolunteer[] {
   return volunteers.filter((vol) => {
-    if (tile === 'needs-timesheet') {
-      if (!vol.needsTimesheet) return false;
-      if (pauschale !== 'all' && vol.pauschale !== pauschale) return false;
-      if (search && !vol.name.toLowerCase().includes(search.toLowerCase()))
-        return false;
-      return true;
-    }
     if (vol.documents.length === 0) return false;
     if (
       pauschale !== 'all' &&
@@ -448,6 +438,8 @@ interface ReimbursementsBoardProps {
   /** Owned by the page header — see reimbursements-page-header.tsx. */
   dateRange: DateRange | undefined;
   onDateRangeChange: (range: DateRange | undefined) => void;
+  year: number;
+  onYearChange: (year: number) => void;
   /** Fired when the "Ready to go" tile is selected — the page header narrows its own range to this month. */
   onReadyToGoSelected: () => void;
   createDocOpen: boolean;
@@ -458,15 +450,18 @@ export function ReimbursementsBoard({
   orgUId,
   dateRange,
   onDateRangeChange,
+  year,
+  onYearChange,
   onReadyToGoSelected,
   createDocOpen,
   onCreateDocOpenChange,
 }: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
 
-  const { volunteers, isLoading } = useReimbursementBoardData({
+  const { volunteers, isLoading, error } = useReimbursementBoardData({
     orgUId,
     dateRange,
+    year,
   });
 
   const signContract = useSignContract();
@@ -503,6 +498,7 @@ export function ReimbursementsBoard({
     }
     if (
       pair.doc.status === 'timesheet-generate' ||
+      pair.doc.status === 'timesheet-draft' ||
       pair.doc.status === 'timesheet-declined'
     ) {
       setInvoiceCreationTarget(pair);
@@ -563,7 +559,6 @@ export function ReimbursementsBoard({
     'contract-signing': t('tiles.contractSigning'),
     'timesheet-generate': t('tiles.timesheetGenerate'),
     'timesheet-signing': t('tiles.timesheetSigning'),
-    'needs-timesheet': t('tiles.needsTimesheet'),
     'ready-to-go': t('tiles.readyToGo'),
   };
 
@@ -576,9 +571,6 @@ export function ReimbursementsBoard({
     () =>
       volunteers.filter((v) => {
         if (pauschale === 'all') return true;
-        // A needs-timesheet volunteer may have no document for the type they
-        // need a timesheet for, so match their primary pauschale instead.
-        if (v.needsTimesheet) return v.pauschale === pauschale;
         return v.documents.some(
           (d) => (d.pauschale ?? v.pauschale) === pauschale,
         );
@@ -653,10 +645,23 @@ export function ReimbursementsBoard({
     return <ReimbursementsBoardSkeleton />;
   }
 
+  if (error) {
+    return (
+      <Empty className="border-border py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <AlertCircleIcon className="size-5 text-destructive" />
+          </EmptyMedia>
+          <EmptyTitle>{t('loadError')}</EmptyTitle>
+          <EmptyDescription>{t('loadErrorHint')}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-24">
-      {/* Calendar only — nothing else belongs in this row */}
-      <div className="flex justify-start">
+      <div className="flex flex-wrap items-center gap-3">
         <PeriodPicker
           value={dateRange}
           onChange={onDateRangeChange}
@@ -685,6 +690,24 @@ export function ReimbursementsBoard({
           align="start"
           className="h-10 gap-2 shrink-0"
         />
+        <Select
+          value={String(year)}
+          onValueChange={(v) => onYearChange(Number(v))}
+        >
+          <SelectTrigger
+            className="h-10 min-w-28 shrink-0"
+            aria-label={t('yearLabel')}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {YEAR_OPTIONS.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Pipeline steps (connected filter tiles) */}
@@ -710,8 +733,7 @@ export function ReimbursementsBoard({
                 id === 'contract-generate' ||
                 id === 'timesheet-generate' ||
                 id === 'contract-signing' ||
-                id === 'timesheet-signing' ||
-                id === 'needs-timesheet'
+                id === 'timesheet-signing'
                   ? tileActionableCounts[id]
                   : undefined
               }
@@ -809,6 +831,7 @@ export function ReimbursementsBoard({
       ) : (
         <ReimbursementsTable
           vols={sortedFilteredVols}
+          orgUId={orgUId}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestCreate={handleRequestCreate}
           onRequestSign={handleSign}

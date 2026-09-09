@@ -9,6 +9,10 @@ import {
   type PostHogEventName,
 } from './posthog.events';
 import { PostHogDistinctSecretService } from './posthog-distinct-secret.service';
+import {
+  PostHogOrgLabelService,
+  type PostHogOrgLabels,
+} from './posthog-org-label.service';
 
 export const POSTHOG_CLIENT = Symbol('POSTHOG_CLIENT');
 
@@ -55,6 +59,7 @@ export class PostHogService implements OnApplicationShutdown {
     @Inject(POSTHOG_CLIENT)
     private readonly client: PostHogCaptureClient | null,
     private readonly distinctSecrets: PostHogDistinctSecretService,
+    private readonly orgLabels: PostHogOrgLabelService,
   ) {
     if (!this.client) {
       this.logger.warn(
@@ -85,6 +90,7 @@ export class PostHogService implements OnApplicationShutdown {
       const definition = POSTHOG_EVENT_REGISTRY[input.event];
       const { properties, droppedKeys } = omitForbiddenPostHogProperties({
         ...input.properties,
+        ...(await this.resolveOrgLabels(input.properties)),
         event_description: definition.description,
       });
       if (droppedKeys.length > 0) {
@@ -106,6 +112,26 @@ export class PostHogService implements OnApplicationShutdown {
         'PostHog capture failed',
         error instanceof Error ? error.stack : undefined,
       );
+    }
+  }
+
+  private async resolveOrgLabels(
+    properties: PostHogCaptureProperties,
+  ): Promise<PostHogOrgLabels> {
+    if (!properties.organization_id && !properties.organization_unit_id) {
+      return {};
+    }
+    try {
+      return await this.orgLabels.resolve({
+        organizationId: properties.organization_id,
+        organizationUnitId: properties.organization_unit_id,
+      });
+    } catch (error) {
+      this.logger.warn(
+        'Failed to resolve PostHog organization labels',
+        error instanceof Error ? error.stack : undefined,
+      );
+      return {};
     }
   }
 }

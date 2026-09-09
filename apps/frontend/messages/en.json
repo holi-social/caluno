@@ -97,6 +97,7 @@
     "checkInRunningTitle": "Checkin running",
     "checkInSectionDescription": "Check this volunteer in for a new shift without closing the open entries.",
     "checkInSectionTitle": "New check-in",
+    "checkInWithoutShift": "Check in without shift",
     "dateSheetTitle": "Select date",
     "foundOnOtherDays": "Found on other days",
     "inviteSentConfirmation": "Invitation sent",
@@ -130,6 +131,11 @@
     "selectShiftPlaceholder": "Select the shift",
     "shiftSearchPlaceholder": "Shift name",
     "shiftSheetTitle": "Select shift",
+    "shiftlessWarningDuplicateAtSubmit": "If this volunteer already has an open check-in without a shift, the check-in will fail with an error.",
+    "shiftlessWarningEmptyTaskCell": "The Stundennachweis PDF shows an empty task column unless notes are added to the entry.",
+    "shiftlessWarningNoReimbursement": "These hours get no reimbursement type. They won't enter the Stundennachweis or payment pipeline unless you edit the entry later.",
+    "shiftlessWarningNoShiftStats": "The hours count toward general totals only, not toward any shift's capacity or planning.",
+    "shiftlessWarningTitle": "Checking in without a shift",
     "successDialogCloseButton": "Done",
     "successDialogTitle": "Successfully checked in",
     "today": "Today"
@@ -594,6 +600,7 @@
   "Navigation": {
     "admin": "Admin",
     "checkIn": "Check in",
+    "checkVolunteersIn": "Check volunteers in",
     "events": "Events",
     "home": "Home",
     "myTime": "Your records",
@@ -608,8 +615,9 @@
     "roles": "Roles",
     "selectOrganization": "Select organization",
     "shifts": "Shifts",
+    "shortcuts": "Shortcuts",
     "timesheets": "Timesheets",
-    "volunteering": "Volunteering",
+    "volunteeringApp": "Volunteering app",
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
@@ -1184,9 +1192,13 @@
     },
     "card": {
       "inviteAria": "Invite",
+      "inviteToShift": "Invite to the shift",
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "openInstanceAria": "Open"
+      "openInstanceAria": "Open",
+      "waitlist": "Waitlist",
+      "waitlistInviteError": "Could not invite volunteer",
+      "waitlistInviteSuccess": "Volunteer invited to the shift"
     },
     "checkIn": {
       "checkOut": "Check-out",
@@ -1232,6 +1244,7 @@
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
       "urgentCallAutomaticBadge": "Automatic",
+      "urgentCallHistoryCount": "{count, plural, one {# call} other {# calls}}",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1273,7 +1286,6 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
-      "callOutAria": "Urgent Call",
       "callOutCta": "Urgent Call",
       "callOutDialog": {
         "confirm": "Urgent Call",
@@ -1317,6 +1329,8 @@
       "approveWaitlistedSuccess": "Shift is full — volunteer added to the waitlist",
       "cancelled": "Canceled",
       "changeStatusAria": "Change volunteer status",
+      "capacityBadge": "{filled} / {max} spots filled",
+      "capacityBadgeNoMax": "{filled} volunteers",
       "declined": "Declined",
       "declineSuccess": "Volunteer declined",
       "invited": "Invited",
@@ -1349,7 +1363,10 @@
       "joinShift": "Join shift",
       "joined": "You have joined the shift",
       "joining": "Joining...",
+      "joinWaitlist": "Join the waitlist",
       "keepShift": "Keep shift",
+      "leaveWaitlist": "Leave the waitlist",
+      "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingApproval": "Waiting for approval",
       "pendingCta": "Request pending",
@@ -1361,7 +1378,7 @@
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
       "unexpected": "Unexpected response from server",
-      "waitlisted": "On waitlist"
+      "waitlistJoined": "You're on the waitlist. We'll email you if a spot opens up."
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
@@ -1477,6 +1494,9 @@
     },
     "validation": {
       "endTimeRequired": "End time is required",
+      "endMustBeLaterThanStart": "End time must be later than start time",
+      "continuesIntoNextDay": "This shift continues into the next day.",
+      "shorterThan24Hours": "Shift must be shorter than 24 hours.",
       "instanceClearRecurrenceUnsupported": "You can't remove the recurrence here. Edit it on the Edit shift page instead.",
       "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
       "instanceRecurrenceConflict": "The new recurrence doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence.",
@@ -1533,6 +1553,8 @@
     "spotsFull": "· full",
     "spotsTaken": "{filled} of {max} spots taken",
     "timeLabel": "Time",
+    "waitlistBadge": "You're on the waitlist",
+    "waitlistNote": "If a spot opens up, we'll email you so you can claim it.",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & where"
   },
@@ -1792,6 +1814,7 @@
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
       "periodLabel": "Period",
+      "yearLabel": "Year",
       "periodPicker": {
         "allTime": "All time",
         "thisMonth": "This month",
@@ -1821,7 +1844,6 @@
         "contractSigning": "Sign contracts",
         "timesheetGenerate": "Create timesheets",
         "timesheetSigning": "Sign timesheets",
-        "needsTimesheet": "Timesheet needed",
         "readyToGo": "Ready to go"
       },
       "toolbar": {
@@ -1837,6 +1859,8 @@
         "allDoneHint": "No open documents in this period.",
         "filtered": "No entries in this category."
       },
+      "loadError": "Reimbursements could not be loaded.",
+      "loadErrorHint": "Something went wrong. Please try again.",
       "resetPrototype": "Reset prototype",
       "resetPrototypeToast": "Prototype data reset.",
       "createDocumentModal": {
@@ -1850,14 +1874,24 @@
         "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
         "viewVolunteer": "View volunteer",
         "createButton": "Create {kind}",
-        "createButtonEmpty": "Create new document"
+        "createButtonEmpty": "Create new document",
+        "contractState": {
+          "none": "No contract yet",
+          "awaiting-signature": "Awaiting signature",
+          "awaiting-countersignature": "Awaiting countersignature",
+          "active": "Active",
+          "declined": "Declined"
+        },
+        "latestTimesheet": "Latest timesheet · {date}",
+        "noTimesheetYet": "No timesheet yet"
       },
       "bundle": {
         "actionLabel": "Download bundle",
         "readyCount": "{count} ready",
         "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
         "neverDownloaded": "not downloaded yet",
-        "unknownUser": "unknown"
+        "unknownUser": "unknown",
+        "downloadError": "The bundle could not be downloaded. Please try again."
       },
       "batchBar": {
         "selected": "{count} selected",
@@ -1866,7 +1900,8 @@
         "bundleAll": "Download all bundles",
         "mixed": "Mixed selection",
         "clearSelection": "Clear",
-        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}",
+        "bundleDownloadErrorToast": "Bundle download failed. Please try again."
       },
       "actionToasts": {
         "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
@@ -1921,10 +1956,12 @@
         },
         "statusLabel": {
           "contractGenerate": "Create contract",
+          "contractDraft": "Draft",
           "contractSigningVol": "Waiting for signature",
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
           "timesheetGenerate": "Create timesheet",
+          "timesheetDraft": "Draft",
           "timesheetSigningVol": "Waiting for signature",
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",
@@ -1988,7 +2025,9 @@
         "sendErrorTitle": "Couldn't send the contract",
         "sendError": "The contract couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create a contract template",
-        "completeOrgProfileCta": "Complete your organization profile",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -2012,7 +2051,9 @@
         "sendErrorTitle": "Couldn't send the invoice",
         "sendError": "The invoice couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create an invoice template",
-        "completeOrgProfileCta": "Complete your organization profile",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
@@ -2025,6 +2066,16 @@
           "title": "Yearly cap",
           "value": "{before} → {after}",
           "subline": "of {total} yearly cap"
+        },
+        "manualCap": {
+          "title": "Initial amount",
+          "editButtonLabel": "Edit initial amount",
+          "saveButtonLabel": "Save initial amount",
+          "cancelButtonLabel": "Cancel",
+          "inputLabel": "Initial amount in euros",
+          "projectedAfter": "Projected after this invoice: {after}",
+          "successToast": "Initial amount saved.",
+          "errorToast": "The initial amount couldn't be saved. Please try again."
         },
         "hoursCard": {
           "title": "Eligible hours",
@@ -2140,6 +2191,7 @@
           "contract-lifespan": "Contract period",
           "tasks": "Task description",
           "hours-amount": "Hours",
+          "hours-unit": "Hours unit",
           "freeform-text": "Freeform text",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger",

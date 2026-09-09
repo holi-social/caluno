@@ -1,6 +1,6 @@
 'use client';
 
-import { DataError, parseTemplateBody } from '@repo/data';
+import { DataError, PermissionKey, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -8,19 +8,24 @@ import {
   useCurrentOrg,
   useEffectiveRates,
   useOrgUId,
+  usePermissions,
   useReimbursementTypes,
 } from '@repo/data/react';
 import { Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
 import { useRouter } from '@/i18n/navigation';
+import {
+  type DerivedField,
+  deriveEditableFields,
+} from '../lib/creation-fields';
 import { contractPeriodForLifespan } from '../lib/creation-modal.utils';
 import {
   apiDocumentKindFor,
   reimbursementTypeKeyFor,
 } from '../lib/reimbursement-type-mapping';
-import type { ProfileFieldProvenance } from './accounting-profile-field-card';
 import { AccountingProfileFieldCard } from './accounting-profile-field-card';
 import { getPauschaleKey, type PauschalenType } from './doc-type-header';
 import {
@@ -32,19 +37,6 @@ import { getKnownOrgValues } from './template/builder-document-presets';
 import type { DataSourceKey } from './template/builder-types';
 import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
-
-type ProfileFieldKey = 'address' | 'iban' | 'bic' | 'dob';
-
-interface ProfileFieldState {
-  value: string | null;
-  provenance: ProfileFieldProvenance;
-}
-
-/** "Anna Müller" -> { first: "Anna", last: "Müller" } — matches the Vorname/Nachname fields the contract text binds separately. */
-function splitName(name: string): { first: string; last: string } {
-  const [first, ...rest] = name.trim().split(/\s+/);
-  return { first: first ?? name, last: rest.join(' ') };
-}
 
 interface ContractCreationModalProps {
   open: boolean;
@@ -76,6 +68,7 @@ export function ContractCreationModal({
   const orgUId = useOrgUId();
   const org = useCurrentOrg();
   const router = useRouter();
+  const permissionsQuery = usePermissions();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -102,12 +95,10 @@ export function ContractCreationModal({
 
   const createContract = useCreateContract();
 
-  const [fields, setFields] = useState<Record<
-    ProfileFieldKey,
-    ProfileFieldState
-  > | null>(null);
-  const [lifespan, setLifespan] = useState('');
-  const [hoursAmount, setHoursAmount] = useState('');
+  const [derivedFields, setDerivedFields] = useState<DerivedField[] | null>(
+    null,
+  );
+  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
@@ -116,9 +107,8 @@ export function ContractCreationModal({
   // the fields get re-seeded from the freshly loaded profile/template below.
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset keyed on identity change, not a dependency read by the effect body
   useEffect(() => {
-    setFields(null);
-    setLifespan('');
-    setHoursAmount('');
+    setDerivedFields(null);
+    setEditedValues({});
   }, [volunteerId, pauschale]);
 
   const profileLoaded = !!volunteerId && profileQuery.isSuccess;
@@ -166,46 +156,41 @@ export function ContractCreationModal({
   // leave them alone — further re-renders (e.g. rate data arriving late)
   // shouldn't clobber anything the coordinator already edited.
   useEffect(() => {
-    if (!dataReady || !templateDoc || fields) return;
+    if (!dataReady || !templateDoc || derivedFields || !volunteerName) return;
     const profileData = (profileQuery.data?.data ?? {}) as Record<
       string,
       unknown
     >;
-    const address =
-      typeof profileData.address === 'string' ? profileData.address : null;
-    const iban = typeof profileData.iban === 'string' ? profileData.iban : null;
-    const dob =
-      typeof profileData['birth-date'] === 'string'
-        ? profileData['birth-date']
-        : null;
-    setFields({
-      address: { value: address, provenance: address ? 'profile' : 'gap' },
-      iban: { value: iban, provenance: iban ? 'profile' : 'gap' },
-      // No BIC field exists in the requirement-profile system yet (see
-      // system-profile-fields.ts) — always a gap until that's added.
-      bic: { value: null, provenance: 'gap' },
-      dob: { value: dob, provenance: dob ? 'profile' : 'gap' },
-    });
-    setLifespan(getManualFieldValue(templateDoc, 'contract-lifespan') ?? '');
-    setHoursAmount(getManualFieldValue(templateDoc, 'hours-amount') ?? '');
-  }, [dataReady, templateDoc, fields, profileQuery.data]);
+    setDerivedFields(
+      deriveEditableFields(templateDoc, profileData, volunteerName),
+    );
+  }, [dataReady, templateDoc, derivedFields, profileQuery.data, volunteerName]);
 
   // Rendered unconditionally (per the DocumentSheet precedent) so the Dialog
   // can drive its own open/close animation; nothing below needs the nullable
   // identity props once past this guard.
   if (!volunteerId || !volunteerName || !pauschale) return null;
 
-  const handleFieldSave = (key: ProfileFieldKey) => (value: string) => {
-    setFields((prev) =>
-      prev ? { ...prev, [key]: { value, provenance: 'override' } } : prev,
-    );
+  const isEdited = (fieldId: string) => Object.hasOwn(editedValues, fieldId);
+  const currentValue = (
+    fieldId: string,
+    fallback: string | null,
+  ): string | null =>
+    isEdited(fieldId) ? (editedValues[fieldId] ?? null) : fallback;
+
+  const handleFieldChange = (fieldId: string) => (value: string) => {
+    setEditedValues((prev) => ({ ...prev, [fieldId]: value }));
   };
 
   const handleSend = async () => {
-    if (!reimbursementType) return;
+    if (!reimbursementType || !templateDoc) return;
     setIsSending(true);
     setSendError(null);
     setSendErrorCode(null);
+    const lifespan =
+      (isEdited('contract-lifespan')
+        ? editedValues['contract-lifespan']
+        : getManualFieldValue(templateDoc, 'contract-lifespan')) ?? '';
     const { periodStart, periodEnd } = contractPeriodForLifespan(lifespan);
     try {
       await createContract.mutateAsync({
@@ -214,6 +199,14 @@ export function ContractCreationModal({
         volunteerId,
         periodStart,
         periodEnd,
+        fieldOverrides: (derivedFields ?? []).flatMap((field) =>
+          isEdited(field.fieldId)
+            ? field.fieldIds.map((id) => ({
+                fieldId: id,
+                value: editedValues[field.fieldId] ?? '',
+              }))
+            : [],
+        ),
       });
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
@@ -222,6 +215,7 @@ export function ContractCreationModal({
       // Surface the real server error (e.g. "No contract template configured
       // for reimbursement type …") instead of a generic "try again", and keep
       // the modal open so the coordinator can act on the reason.
+      toast.error(t('sendErrorToast', { name: volunteerName }));
       if (error instanceof Error) {
         setSendError(error.message || null);
         setSendErrorCode(
@@ -240,22 +234,19 @@ export function ContractCreationModal({
   const sendErrorIsOrgProfile = /organization is missing/i.test(
     sendError ?? '',
   );
-  const completeOrgProfileCta = () =>
-    router.push(`/admin/${orgUId}/settings/org-units`);
+  const canEditOrg =
+    permissionsQuery.data?.some((p) => p.key === PermissionKey.OrgEdit) ??
+    false;
+  const editOrgProfileCta = () =>
+    router.push(
+      `/admin/${orgUId}/settings/org-units?sheet=${ORG_UNIT_EDIT_SHEET_ID}&id=${orgUId}`,
+    );
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
       typeof tPauschale
     >[0],
   );
-
-  // Baked into the template, not chosen per document — shown as read-only context next to the amount input.
-  const hoursUnit = templateDoc
-    ? (getManualFieldValue(templateDoc, 'hours-unit') ?? 'Monat')
-    : 'Monat';
-  const hoursUnitLabel =
-    hoursUnit === 'Woche' ? t('hoursUnitWeek') : t('hoursUnitMonth');
-  const { first, last } = splitName(volunteerName);
 
   const values: Partial<Record<DataSourceKey, string>> = {
     ...getKnownOrgValues({
@@ -269,14 +260,20 @@ export function ContractCreationModal({
         effectiveRate?.reimbursementType.yearlyLimitCents ??
         reimbursementType?.yearlyLimitCents,
     }),
-    volunteer_first_name: first,
-    volunteer_last_name: last,
-    volunteer_address: fields?.address.value ?? undefined,
-    volunteer_dob: fields?.dob.value ?? undefined,
-    volunteer_iban: fields?.iban.value ?? undefined,
-    volunteer_bic: fields?.bic.value ?? undefined,
     generated_date: new Date().toLocaleDateString('de-DE'),
   };
+  for (const field of derivedFields ?? []) {
+    if (field.kind !== 'bound' || !field.source) continue;
+    const value = currentValue(field.fieldId, field.value);
+    if (value) values[field.source] = value;
+  }
+
+  const manualOverrides: Record<string, string> = {};
+  for (const field of derivedFields ?? []) {
+    if (field.kind !== 'manual') continue;
+    const value = currentValue(field.fieldId, field.value);
+    if (value) manualOverrides[field.fieldId] = value;
+  }
 
   return (
     <DocumentCreationDialog
@@ -285,31 +282,46 @@ export function ContractCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={sendError ? t('sendErrorTitle') : t('loadErrorTitle')}
+      errorTitle={
+        sendErrorIsOrgProfile
+          ? t('orgProfileErrorTitle')
+          : sendError
+            ? t('sendErrorTitle')
+            : t('loadErrorTitle')
+      }
       errorDescription={
-        sendError
-          ? t('sendError', { name: volunteerName })
-          : t('loadError', { name: volunteerName })
+        sendErrorIsOrgProfile
+          ? t('orgProfileErrorDescription')
+          : sendError
+            ? t('sendError', { name: volunteerName })
+            : t('loadError', { name: volunteerName })
       }
       errorMessage={
-        sendError ??
-        (loadError instanceof Error ? loadError.message : undefined)
+        sendErrorIsOrgProfile
+          ? undefined
+          : (sendError ??
+            (loadError instanceof Error ? loadError.message : undefined))
       }
       errorCtaLabel={
-        noContractTemplate || sendErrorIsNoTemplate
-          ? t('noTemplateCta')
-          : sendErrorIsOrgProfile
-            ? t('completeOrgProfileCta')
+        sendErrorIsOrgProfile
+          ? canEditOrg
+            ? t('editProfileCta')
+            : undefined
+          : noContractTemplate || sendErrorIsNoTemplate
+            ? t('noTemplateCta')
             : undefined
       }
       errorCtaAction={
-        noContractTemplate || sendErrorIsNoTemplate
-          ? createTemplateCta
-          : sendErrorIsOrgProfile
-            ? completeOrgProfileCta
+        sendErrorIsOrgProfile
+          ? canEditOrg
+            ? editOrgProfileCta
+            : undefined
+          : noContractTemplate || sendErrorIsNoTemplate
+            ? createTemplateCta
             : undefined
       }
-      fieldsSkeletonKeys={['address', 'iban', 'dob', 'lifespan', 'hours']}
+      errorCtaCentered={sendErrorIsOrgProfile}
+      fieldsSkeletonKeys={['lifespan', 'hours', 'name', 'iban', 'bic']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
       sendingLabel={t('sending')}
@@ -329,73 +341,40 @@ export function ContractCreationModal({
             signerRightLabel={t('preview.signatureCoordinator')}
             unsignedLabel={t('preview.unsigned')}
             values={values}
-            manualOverrides={{
-              'contract-lifespan': lifespan,
-              'hours-amount': hoursAmount,
-            }}
+            manualOverrides={manualOverrides}
           />
         )
       }
-      fields={
-        fields && (
-          <>
-            <InfoPanel title={tManual('contract-lifespan')}>
-              <Input
-                className="mt-2"
-                value={lifespan}
-                onChange={(e) => setLifespan(e.target.value)}
-                placeholder="MM/JJJJ"
-              />
-            </InfoPanel>
-            <InfoPanel title={tManual('hours-amount')}>
-              <div className="mt-2 flex items-center gap-2">
-                <Input
-                  type="number"
-                  min="0"
-                  value={hoursAmount}
-                  onChange={(e) => setHoursAmount(e.target.value)}
-                  className="flex-1"
-                />
-                <span className="text-sm text-muted-foreground">
-                  {t('hoursUnitHint', { unit: hoursUnitLabel })}
-                </span>
-              </div>
-            </InfoPanel>
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_address')}
-              value={fields.address.value}
-              provenance={fields.address.provenance}
-              volunteerName={volunteerName}
-              docType="contract"
-              onSave={handleFieldSave('address')}
+      fields={derivedFields?.map((field) =>
+        field.kind === 'bound' ? (
+          <AccountingProfileFieldCard
+            key={field.fieldId}
+            label={tFields(field.labelKey as Parameters<typeof tFields>[0])}
+            value={currentValue(field.fieldId, field.value)}
+            provenance={
+              isEdited(field.fieldId)
+                ? 'override'
+                : field.provenance === 'template'
+                  ? 'gap'
+                  : field.provenance
+            }
+            volunteerName={volunteerName}
+            docType="contract"
+            onSave={handleFieldChange(field.fieldId)}
+          />
+        ) : (
+          <InfoPanel
+            key={field.fieldId}
+            title={tManual(field.labelKey as Parameters<typeof tManual>[0])}
+          >
+            <Input
+              className="mt-2"
+              value={currentValue(field.fieldId, field.value) ?? ''}
+              onChange={(e) => handleFieldChange(field.fieldId)(e.target.value)}
             />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_iban')}
-              value={fields.iban.value}
-              provenance={fields.iban.provenance}
-              volunteerName={volunteerName}
-              docType="contract"
-              onSave={handleFieldSave('iban')}
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_bic')}
-              value={fields.bic.value}
-              provenance={fields.bic.provenance}
-              volunteerName={volunteerName}
-              docType="contract"
-              onSave={handleFieldSave('bic')}
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_dob')}
-              value={fields.dob.value}
-              provenance={fields.dob.provenance}
-              volunteerName={volunteerName}
-              docType="contract"
-              onSave={handleFieldSave('dob')}
-            />
-          </>
-        )
-      }
+          </InfoPanel>
+        ),
+      )}
     />
   );
 }

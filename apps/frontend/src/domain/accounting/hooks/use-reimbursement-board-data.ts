@@ -3,6 +3,7 @@
 import {
   useContracts,
   useInvoices,
+  usePaidShiftSignupVolunteers,
   useRosterYearlyUsage,
   useVolunteersNeedingTimesheets,
 } from '@repo/data/react';
@@ -14,22 +15,27 @@ import { boardYear, buildBoardVolunteers } from '../lib/board-data.utils';
 interface UseReimbursementBoardDataInput {
   orgUId: string;
   dateRange?: DateRange;
+  year?: number;
 }
 
 export function useReimbursementBoardData({
   orgUId,
   dateRange,
+  year,
 }: UseReimbursementBoardDataInput) {
   const locale = useLocale();
-  const year = boardYear(dateRange);
+  const resolvedYear = year ?? boardYear(dateRange);
 
-  const periodStart = useMemo(() => new Date(year, 0, 1).toISOString(), [year]);
+  const periodStart = useMemo(
+    () => new Date(resolvedYear, 0, 1).toISOString(),
+    [resolvedYear],
+  );
   const periodEnd = useMemo(
-    () => new Date(year + 1, 0, 1).toISOString(),
-    [year],
+    () => new Date(resolvedYear + 1, 0, 1).toISOString(),
+    [resolvedYear],
   );
 
-  const rosterQuery = useRosterYearlyUsage(orgUId, year);
+  const rosterQuery = useRosterYearlyUsage(orgUId, resolvedYear);
   const contractsQuery = useContracts({
     periodStart,
     periodEnd,
@@ -42,36 +48,45 @@ export function useReimbursementBoardData({
     periodStart,
     periodEnd,
   });
+  const paidShiftQuery = usePaidShiftSignupVolunteers(resolvedYear);
 
   const volunteers = useMemo(() => {
     if (!rosterQuery.data) return [];
     // Volunteer id -> reimbursement type ids they have eligible hours for.
-    // Kept per-type (not just per-volunteer) so a volunteer with an active
-    // contract for one pauschale but none for another isn't wrongly
-    // fast-tracked to "Stundennachweis fällig" for the type that still
-    // needs a Vereinbarung — see buildBoardVolunteers.
-    const needsTimesheetVolunteers = new Map<string, Set<string>>();
+    // Used to synthesize a `contract-generate` row when a volunteer has
+    // eligible hours but no contract yet — see buildBoardVolunteers.
+    const eligibleHoursVolunteers = new Map<string, Set<string>>();
     for (const entry of needsTimesheetQuery.data ?? []) {
       const types =
-        needsTimesheetVolunteers.get(entry.volunteer.id) ?? new Set();
+        eligibleHoursVolunteers.get(entry.volunteer.id) ?? new Set();
       types.add(entry.reimbursementType.id);
-      needsTimesheetVolunteers.set(entry.volunteer.id, types);
+      eligibleHoursVolunteers.set(entry.volunteer.id, types);
+    }
+    // Volunteer id -> reimbursement type ids they signed up to a paid shift
+    // for but have no contract/invoice yet.
+    const paidShiftVolunteers = new Map<string, Set<string>>();
+    for (const entry of paidShiftQuery.data ?? []) {
+      const types = paidShiftVolunteers.get(entry.volunteer.id) ?? new Set();
+      types.add(entry.reimbursementType.id);
+      paidShiftVolunteers.set(entry.volunteer.id, types);
     }
     return buildBoardVolunteers({
       rosterUsage: rosterQuery.data,
       contracts: contractsQuery.data ?? [],
       invoices: invoicesQuery.data ?? [],
-      year,
+      year: resolvedYear,
       locale,
       dateRange,
-      needsTimesheetVolunteers,
+      eligibleHoursVolunteers,
+      paidShiftVolunteers,
     });
   }, [
     rosterQuery.data,
     contractsQuery.data,
     invoicesQuery.data,
     needsTimesheetQuery.data,
-    year,
+    paidShiftQuery.data,
+    resolvedYear,
     locale,
     dateRange,
   ]);
@@ -82,11 +97,13 @@ export function useReimbursementBoardData({
       rosterQuery.isLoading ||
       contractsQuery.isLoading ||
       invoicesQuery.isLoading ||
-      needsTimesheetQuery.isLoading,
+      needsTimesheetQuery.isLoading ||
+      paidShiftQuery.isLoading,
     error:
       rosterQuery.error ??
       contractsQuery.error ??
       invoicesQuery.error ??
-      needsTimesheetQuery.error,
+      needsTimesheetQuery.error ??
+      paidShiftQuery.error,
   };
 }

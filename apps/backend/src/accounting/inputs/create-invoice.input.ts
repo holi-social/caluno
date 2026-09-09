@@ -1,4 +1,5 @@
 import { Field, ID, InputType } from '@nestjs/graphql';
+import { DocumentFieldOverrideInput } from './document-field-override.input';
 
 @InputType()
 export class CreateInvoiceInput {
@@ -21,4 +22,7 @@ export class CreateInvoiceInput {
 
   @Field(() => Date)
   periodEnd!: Date;
+
+  @Field(() => [DocumentFieldOverrideInput], { nullable: true })
+  fieldOverrides?: DocumentFieldOverrideInput[] | null;
 }

@@ -9,7 +9,9 @@ import { RequirementProfileModule } from '../requirement-profile/requirement-pro
 import { StorageModule } from '../storage/storage.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
+import { AccountingController } from './accounting.controller';
 import './enums/register-graphql-enums';
+import { TimeEntryClosedListener } from './listeners/time-entry-closed.listener';
 import {
   ContractMapper,
   ContractSignatureMapper,
@@ -53,6 +55,7 @@ import {
 } from './resolvers';
 import {
   AccountingOrgAccessService,
+  BundleDownloadService,
   ContractService,
   DocumentNotificationService,
   DocumentProfileRequirementService,
@@ -78,8 +81,11 @@ import {
     NotificationModule,
     RequirementProfileModule,
   ],
+  controllers: [AccountingController],
   providers: [
+    TimeEntryClosedListener,
     AccountingOrgAccessService,
+    BundleDownloadService,
     VolunteerDocumentsService,
     ReimbursementRateService,
     DocumentTemplateService,

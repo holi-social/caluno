@@ -7,14 +7,21 @@ import {
   ReimbursementTypeKey,
   SigneeType,
 } from '@repo/data';
+import type {
+  BoardDocument,
+  BoardVolunteer,
+} from '../components/reimbursements-board';
 import {
   boardYear,
   buildBoardVolunteers,
   contractPeriodOverlapsYear,
   contractStatusToDocStatus,
   formatMonthYear,
+  getContractStateForPicker,
   getDocLineSummary,
   getInitials,
+  getLatestTimesheetDate,
+  getPickerAnnotations,
   invoiceInMonth,
   invoiceStatusToDocStatus,
   mapContractToBoardDoc,
@@ -137,6 +144,12 @@ describe('contractStatusToDocStatus', () => {
     );
     expect(contractStatusToDocStatus(ContractStatus.Declined)).toBe(
       'contract-declined',
+    );
+  });
+
+  it('maps ContractStatus.Draft to contract-draft', () => {
+    expect(contractStatusToDocStatus(ContractStatus.Draft)).toBe(
+      'contract-draft',
     );
   });
 });
@@ -352,10 +365,9 @@ describe('buildBoardVolunteers', () => {
     });
     expect(volunteers).toHaveLength(1);
     expect(volunteers[0]?.documents).toEqual([]);
-    expect(volunteers[0]?.needsTimesheet).toBe(false);
   });
 
-  it('flags a volunteer with eligible time entries and an active contract as needing a timesheet', () => {
+  it('does not synthesize a contract-generate row when an active contract exists', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [
@@ -364,28 +376,29 @@ describe('buildBoardVolunteers', () => {
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(true);
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
+    expect(docs.some((d) => d.status === 'contract-active')).toBe(true);
   });
 
-  it('queues a volunteer with eligible hours but no Vereinbarung under contract-generate, not needs-timesheet', () => {
+  it('queues a volunteer with eligible hours but no Vereinbarung under contract-generate', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [],
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(false);
     const docs = volunteers[0]?.documents ?? [];
     expect(docs).toHaveLength(1);
     expect(docs[0]?.status).toBe('contract-generate');
     expect(docs[0]?.pauschale).toBe('ehrenamt');
   });
 
-  it('queues a volunteer with eligible hours and an uncountersigned Vereinbarung under contract-signing, not needs-timesheet', () => {
+  it('queues a volunteer with eligible hours and an uncountersigned Vereinbarung under contract-signing', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [noDocsVolunteer],
       contracts: [
@@ -397,12 +410,58 @@ describe('buildBoardVolunteers', () => {
       invoices: [],
       year: 2026,
       locale: 'de',
-      needsTimesheetVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
     });
-    expect(volunteers[0]?.needsTimesheet).toBe(false);
     const docs = volunteers[0]?.documents ?? [];
     expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
     expect(docs.some((d) => d.status === 'contract-signing-coord')).toBe(true);
+  });
+
+  it('queues a volunteer with a paid-shift signup but no Vereinbarung under contract-generate', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      paidShiftVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs).toHaveLength(1);
+    expect(docs[0]?.status).toBe('contract-generate');
+    expect(docs[0]?.id).toBe('v-1-contract-generate-ehrenamt');
+  });
+
+  it('does not synthesize a contract-generate row for a paid-shift signup with an active contract', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [
+        makeContract({ id: 'c-active', contractStatus: ContractStatus.Active }),
+      ],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      paidShiftVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
+    expect(docs.some((d) => d.status === 'contract-active')).toBe(true);
+  });
+
+  it('dedupes the contract-generate row when a volunteer has both eligible hours and a paid-shift signup', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      paidShiftVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.filter((d) => d.status === 'contract-generate')).toHaveLength(
+      1,
+    );
   });
 
   it('maps the active contract and skips timesheet placeholders when there is no invoice', () => {
@@ -568,6 +627,102 @@ describe('buildBoardVolunteers', () => {
   // VOLI-1283: the documents-creation flow ("Not created yet") keys a
   // document line off the volunteer's documents — an awaiting-countersignature
   // invoice must count as already created, not as a fresh create prompt.
+  it('flags a timesheet as over-cap regardless of its status', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 90_000,
+              limitCents: 100_000,
+              remainingCents: 10_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [],
+      invoices: [
+        makeInvoice({
+          id: 'i-over',
+          totalAmountCents: 20_000,
+          invoiceStatus: InvoiceStatus.AwaitingVolunteerSignature,
+        }),
+      ],
+      year: 2026,
+      locale: 'de',
+    });
+    const doc = volunteers[0]?.documents.find(
+      (d) => d.status === 'timesheet-signing-vol',
+    );
+    expect(doc?.isOverCap).toBe(true);
+  });
+
+  it('does not flag a timesheet when used plus amount stays within the cap', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 90_000,
+              limitCents: 100_000,
+              remainingCents: 10_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [],
+      invoices: [
+        makeInvoice({
+          id: 'i-under',
+          totalAmountCents: 5_000,
+          invoiceStatus: InvoiceStatus.Ready,
+        }),
+      ],
+      year: 2026,
+      locale: 'de',
+    });
+    const doc = volunteers[0]?.documents.find(
+      (d) => d.status === 'timesheet-ready',
+    );
+    expect(doc?.isOverCap).toBe(false);
+  });
+
+  it('ignores declined invoices for the cap check', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 90_000,
+              limitCents: 100_000,
+              remainingCents: 10_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [],
+      invoices: [
+        makeInvoice({
+          id: 'i-declined',
+          totalAmountCents: 20_000,
+          invoiceStatus: InvoiceStatus.Declined,
+        }),
+      ],
+      year: 2026,
+      locale: 'de',
+    });
+    const doc = volunteers[0]?.documents.find(
+      (d) => d.status === 'timesheet-declined',
+    );
+    expect(doc?.isOverCap).toBeUndefined();
+  });
+
   it('counts an awaiting-countersignature invoice as created in the documents-creation summary', () => {
     const year = new Date().getFullYear();
     const volunteers = buildBoardVolunteers({
@@ -618,5 +773,182 @@ describe('boardYear', () => {
     expect(boardYear({ from: new Date(2025, 0, 1) })).toBe(2025);
     expect(boardYear({ to: new Date(2024, 0, 1) })).toBe(2024);
     expect(boardYear(undefined)).toBe(new Date().getFullYear());
+  });
+});
+
+function makeVol(documents: BoardDocument[] = []): BoardVolunteer {
+  return {
+    id: 'v-1',
+    name: 'Anna Müller',
+    initials: 'AM',
+    pauschale: 'ehrenamt',
+    usedAmount: 0,
+    totalCap: 840,
+    documents,
+  };
+}
+
+describe('getContractStateForPicker', () => {
+  it('returns none when the volunteer has no contract for the pauschale', () => {
+    const vol = makeVol([]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('none');
+    expect(getContractStateForPicker(vol, 'uebungsleiter')).toBe('none');
+  });
+
+  it('returns active for a fully-signed contract', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-active',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('active');
+    expect(getContractStateForPicker(vol, 'uebungsleiter')).toBe('none');
+  });
+
+  it('returns declined for a declined contract', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-declined',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('declined');
+  });
+
+  it('returns awaiting-countersignature for a coordinator-signed contract', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-signing-coord',
+        periodLabel: '2026',
+        pauschale: 'uebungsleiter',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'uebungsleiter')).toBe(
+      'awaiting-countersignature',
+    );
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('none');
+  });
+
+  it('returns awaiting-signature for created-but-not-signed contracts', () => {
+    const draft = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-draft',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(draft, 'ehrenamt')).toBe(
+      'awaiting-signature',
+    );
+
+    const signingVol = makeVol([
+      {
+        id: 'c-2',
+        status: 'contract-signing-vol',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(signingVol, 'ehrenamt')).toBe(
+      'awaiting-signature',
+    );
+  });
+
+  it('treats synthesized placeholders as none', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-generate',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+      {
+        id: 'c-2',
+        status: 'contract-missing',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('none');
+  });
+});
+
+describe('getLatestTimesheetDate', () => {
+  it('returns undefined when there are no timesheets', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-active',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getLatestTimesheetDate(vol)).toBeUndefined();
+  });
+
+  it('returns the most recent timesheet date across pauschales', () => {
+    const vol = makeVol([
+      {
+        id: 'i-1',
+        status: 'timesheet-ready',
+        periodLabel: 'July 2026',
+        pauschale: 'ehrenamt',
+        lastActionDate: new Date('2026-07-15T00:00:00.000Z'),
+      },
+      {
+        id: 'i-2',
+        status: 'timesheet-ready',
+        periodLabel: 'June 2026',
+        pauschale: 'uebungsleiter',
+        lastActionDate: new Date('2026-06-10T00:00:00.000Z'),
+      },
+    ]);
+    expect(getLatestTimesheetDate(vol)?.getTime()).toBe(
+      new Date('2026-07-15T00:00:00.000Z').getTime(),
+    );
+  });
+});
+
+describe('getPickerAnnotations', () => {
+  it('returns annotations for both pauschales and the latest timesheet date', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-active',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+      {
+        id: 'i-1',
+        status: 'timesheet-ready',
+        periodLabel: 'July 2026',
+        pauschale: 'ehrenamt',
+        lastActionDate: new Date('2026-07-15T00:00:00.000Z'),
+      },
+    ]);
+    const annotations = getPickerAnnotations(vol);
+    expect(annotations.contracts).toHaveLength(2);
+    expect(
+      annotations.contracts.find((c) => c.pauschale === 'ehrenamt')?.state,
+    ).toBe('active');
+    expect(
+      annotations.contracts.find((c) => c.pauschale === 'uebungsleiter')?.state,
+    ).toBe('none');
+    expect(annotations.latestTimesheetDate?.getTime()).toBe(
+      new Date('2026-07-15T00:00:00.000Z').getTime(),
+    );
+  });
+
+  it('leaves latestTimesheetDate undefined when there is no timesheet', () => {
+    expect(
+      getPickerAnnotations(makeVol([])).latestTimesheetDate,
+    ).toBeUndefined();
   });
 });

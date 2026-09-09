@@ -17,20 +17,23 @@ export function getCurrentWeekStart(reference: Date): Date {
   return startOfWeek(reference, { weekStartsOn: 1, ...appTz });
 }
 
+export function getWeekRange(reference: Date): {
+  weekStart: Date;
+  weekEnd: Date;
+} {
+  const weekStart = getCurrentWeekStart(reference);
+  return { weekStart, weekEnd: addDays(weekStart, 7, appTz) };
+}
+
 export function getDaysForWeek(weekStart: Date): Date[] {
   return Array.from({ length: 7 }, (_, index) =>
     addDays(weekStart, index, appTz),
   );
 }
 
-export function getDayInstances(
-  day: Date,
-  instances: Array<{
-    id: string;
-    actualStartsAt: string;
-    actualEndsAt: string;
-  }>,
-): Array<{ id: string; actualStartsAt: string; actualEndsAt: string }> {
+export function getDayInstances<
+  T extends { actualStartsAt: string; actualEndsAt: string },
+>(day: Date, instances: T[]): T[] {
   return instances.filter((instance) =>
     isSameDay(new Date(instance.actualStartsAt), day, appTz),
   );

@@ -10,6 +10,7 @@ import {
 } from './posthog.client';
 import { POSTHOG_CLIENT, PostHogService } from './posthog.service';
 import { PostHogDistinctSecretService } from './posthog-distinct-secret.service';
+import { PostHogOrgLabelService } from './posthog-org-label.service';
 import { SentryExceptionFilter } from './sentry-exception.filter';
 
 @Global()
@@ -32,6 +33,7 @@ import { SentryExceptionFilter } from './sentry-exception.filter';
       useFactory: () => createPostHogClient(),
     },
     PostHogDistinctSecretService,
+    PostHogOrgLabelService,
     PostHogService,
     {
       provide: APP_INTERCEPTOR,

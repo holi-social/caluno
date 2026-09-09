@@ -59,6 +59,10 @@ export const invoices = snakeCase.table('invoices', {
   }).notNull(),
   isNonCompliant: boolean('is_non_compliant').notNull().default(false),
   resolvedBody: jsonb('resolved_body').$type<InvoiceBody>().notNull(),
+  fieldOverrides: jsonb('field_overrides')
+    .$type<Record<string, string>>()
+    .notNull()
+    .default({}),
   declineReason: text('decline_reason'),
   declinedByUserId: text('declined_by_user_id').references(() => users.id, {
     onDelete: 'restrict',

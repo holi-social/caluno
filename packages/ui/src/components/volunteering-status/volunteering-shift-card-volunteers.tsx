@@ -1,4 +1,4 @@
-'use client';
+import type { ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import {
@@ -18,6 +18,7 @@ export type VolunteeringShiftCardVolunteer = {
   name: string;
   state: ShiftVolunteeringDisplayState;
   completedDuration?: string;
+  action?: ReactNode;
 };
 
 export type VolunteeringShiftCardVolunteersProps = {
@@ -60,6 +61,7 @@ export function VolunteeringShiftCardVolunteers({
                 state={volunteer.state}
                 phase={phase}
                 completedDuration={volunteer.completedDuration}
+                action={volunteer.action}
               />
             ))}
           </div>

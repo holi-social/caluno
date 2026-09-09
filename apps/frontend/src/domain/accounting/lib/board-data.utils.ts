@@ -58,6 +58,66 @@ export function getDocLineSummary(
   return { count: matches.length, latest };
 }
 
+export type ContractPickerState =
+  | 'none'
+  | 'awaiting-signature'
+  | 'awaiting-countersignature'
+  | 'active'
+  | 'declined';
+
+export interface PickerContractAnnotation {
+  pauschale: PauschalenType;
+  state: ContractPickerState;
+}
+
+export interface PickerAnnotations {
+  contracts: PickerContractAnnotation[];
+  latestTimesheetDate?: Date;
+}
+
+const PICKER_PAUSCHALEN: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
+
+export function getContractStateForPicker(
+  vol: BoardVolunteer,
+  pauschale: PauschalenType,
+): ContractPickerState {
+  const { latest } = getDocLineSummary(vol, 'contract', pauschale);
+  switch (latest?.status) {
+    case 'contract-active':
+      return 'active';
+    case 'contract-declined':
+      return 'declined';
+    case 'contract-signing-coord':
+      return 'awaiting-countersignature';
+    case 'contract-draft':
+    case 'contract-signing-vol':
+      return 'awaiting-signature';
+    default:
+      return 'none';
+  }
+}
+
+export function getLatestTimesheetDate(vol: BoardVolunteer): Date | undefined {
+  const dates = PICKER_PAUSCHALEN.map(
+    (pauschale) =>
+      getDocLineSummary(vol, 'invoice', pauschale).latest?.lastActionDate,
+  ).filter((d): d is Date => d instanceof Date);
+  if (dates.length === 0) return undefined;
+  return dates.reduce((latest, d) =>
+    d.getTime() > latest.getTime() ? d : latest,
+  );
+}
+
+export function getPickerAnnotations(vol: BoardVolunteer): PickerAnnotations {
+  return {
+    contracts: PICKER_PAUSCHALEN.map((pauschale) => ({
+      pauschale,
+      state: getContractStateForPicker(vol, pauschale),
+    })),
+    latestTimesheetDate: getLatestTimesheetDate(vol),
+  };
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
@@ -67,6 +127,8 @@ export function getInitials(name: string): string {
 
 export function contractStatusToDocStatus(status: ContractStatus): DocStatus {
   switch (status) {
+    case ContractStatus.Draft:
+      return 'contract-draft';
     case ContractStatus.AwaitingVolunteerSignature:
       return 'contract-signing-vol';
     case ContractStatus.AwaitingNgoSignature:
@@ -83,6 +145,8 @@ export function contractStatusToDocStatus(status: ContractStatus): DocStatus {
 
 export function invoiceStatusToDocStatus(status: InvoiceStatus): DocStatus {
   switch (status) {
+    case InvoiceStatus.Draft:
+      return 'timesheet-draft';
     case InvoiceStatus.AwaitingVolunteerSignature:
       return 'timesheet-signing-vol';
     case InvoiceStatus.AwaitingSupervisorSignature:
@@ -226,16 +290,12 @@ export interface BuildBoardVolunteersInput {
   dateRange?: { from?: Date; to?: Date };
   /**
    * Volunteer id -> the reimbursement type ids they still have eligible
-   * (unclaimed, completed, in-period) time entries for. A volunteer only
-   * counts as `needsTimesheet` for a type once that type also has an active
-   * (countersigned) contract in place — the Vereinbarung is a precondition
-   * for the Stundennachweis step, not a parallel concern. Without an active
-   * contract, the eligible hours instead surface as a `contract-generate`
-   * row so the volunteer is queued under "Vereinbarungen erstellen" (or, if
-   * a contract already exists but isn't countersigned yet, the real contract
-   * document already queues them under "Vereinbarungen gegenzeichnen").
+   * (unclaimed, completed, in-period) time entries for. Used to synthesize a
+   * `contract-generate` row when a volunteer has eligible hours but no
+   * contract at all for that type yet.
    */
-  needsTimesheetVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
+  eligibleHoursVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
+  paidShiftVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function buildBoardVolunteers({
@@ -245,7 +305,8 @@ export function buildBoardVolunteers({
   year,
   locale,
   dateRange,
-  needsTimesheetVolunteers,
+  eligibleHoursVolunteers,
+  paidShiftVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -253,8 +314,8 @@ export function buildBoardVolunteers({
       Record<PauschalenType, { used: number; total: number }>
     > = {};
     const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
-    const eligibleTypeIds = needsTimesheetVolunteers?.get(entry.volunteer.id);
-    let hasActiveContractNeedingTimesheet = false;
+    const eligibleTypeIds = eligibleHoursVolunteers?.get(entry.volunteer.id);
+    const paidShiftTypeIds = paidShiftVolunteers?.get(entry.volunteer.id);
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -285,9 +346,7 @@ export function buildBoardVolunteers({
       // tracked no matter what the contract currently is — it can be non-
       // compliant (no active contract, or the contract changed after the
       // timesheet was created), but it must never be orphaned out of every
-      // stage. The active-contract gate only controls whether the volunteer is
-      // *prompted* to create a new timesheet (see the needsTimesheet flag
-      // below), never whether an existing one shows up (VOLI-1283).
+      // stage (VOLI-1283).
       const months = monthsInRange(year, dateRange);
       for (const { year: y, month } of months) {
         const invoicesForMonth = invoices.filter(
@@ -297,18 +356,25 @@ export function buildBoardVolunteers({
             invoiceInMonth(i, y, month),
         );
         for (const invoice of invoicesForMonth) {
-          documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
+          const doc = mapInvoiceToBoardDoc(invoice, type, locale);
+          if (invoice.invoiceStatus !== InvoiceStatus.Declined) {
+            const limit = limits[type];
+            doc.isOverCap =
+              limit !== undefined &&
+              limit.used + centsToEuros(invoice.totalAmountCents) > limit.total;
+          }
+          documents.push(doc);
         }
       }
 
-      // Eligible hours are only a "Stundennachweis fällig" concern once the
-      // Vereinbarung precondition is satisfied. No countersigned contract ->
-      // the real blocker is creating (or countersigning) the agreement, so
-      // queue them there instead of skipping straight to the timesheet step.
-      if (eligibleTypeIds?.has(usage.reimbursementType.id)) {
-        if (activeContract) {
-          hasActiveContractNeedingTimesheet = true;
-        } else if (contractsForType.length === 0) {
+      // Eligible hours with no contract yet mean the real blocker is creating
+      // the Vereinbarung, so queue the volunteer under "Create contracts"
+      // rather than anywhere downstream.
+      if (
+        eligibleTypeIds?.has(usage.reimbursementType.id) ||
+        paidShiftTypeIds?.has(usage.reimbursementType.id)
+      ) {
+        if (!activeContract && contractsForType.length === 0) {
           // No Vereinbarung exists at all yet — surface a real,
           // actionable "create contract" row (not the muted
           // contract-missing placeholder, which is reserved for
@@ -340,7 +406,6 @@ export function buildBoardVolunteers({
       name: entry.volunteer.name,
       initials: getInitials(entry.volunteer.name),
       pauschale: primaryType,
-      needsTimesheet: hasActiveContractNeedingTimesheet,
       usedAmount: centsToEuros(
         entry.usageByType.reduce((sum, u) => sum + u.usedCents, 0),
       ),

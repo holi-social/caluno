@@ -25,6 +25,7 @@ import {
   SigneeType,
 } from '../enums';
 import type { CreateContractInput } from '../inputs/create-contract.input';
+import { toFieldOverridesMap } from '../inputs/document-field-override.input';
 import type { ContractEntity } from '../schemas/contract.schema';
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
 import { DocumentNotificationService } from './document-notification.service';
@@ -86,6 +87,11 @@ export class ContractService {
     }
     if (filter.periodEnd) {
       conditions.push(lt(schema.contracts.periodStart, filter.periodEnd));
+    }
+    if (filter.organizationUnitId) {
+      conditions.push(
+        eq(schema.contracts.organizationUnitId, filter.organizationUnitId),
+      );
     }
 
     const rows = await this.db
@@ -163,6 +169,7 @@ export class ContractService {
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,
           resolvedBody: structuredClone(template.body),
+          fieldOverrides: toFieldOverridesMap(input.fieldOverrides),
         })
         .returning();
 
@@ -219,6 +226,56 @@ export class ContractService {
     }
 
     return contract;
+  }
+
+  async createDraftContract(
+    organizationId: string,
+    input: CreateContractInput,
+    actorUserId: string,
+  ): Promise<ContractEntity> {
+    const template = await this.documentTemplateService.findActiveTemplate(
+      organizationId,
+      input.reimbursementTypeId,
+      DocumentKind.CONTRACT,
+      input.organizationUnitId,
+    );
+    const orderedSignees =
+      await this.documentTemplateService.findOrderedTemplateSignees(
+        template.id,
+      );
+
+    return this.db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(schema.contracts)
+        .values({
+          documentTemplateId: template.id,
+          volunteerId: input.volunteerId,
+          reimbursementTypeId: input.reimbursementTypeId,
+          organizationUnitId: input.organizationUnitId,
+          contractStatus: ContractStatus.DRAFT,
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
+          resolvedBody: structuredClone(template.body),
+        })
+        .returning();
+
+      await tx.insert(schema.contractSignatures).values(
+        orderedSignees.map((signee) => ({
+          contractId: created.id,
+          order: signee.order,
+          signeeType: signee.signeeType,
+          requiredPermissionId: signee.requiredPermissionId,
+        })),
+      );
+
+      await tx.insert(schema.contractStatusChanges).values({
+        contractId: created.id,
+        type: DocumentStatusChange.CREATED,
+        actorUserId,
+      });
+
+      return created;
+    });
   }
 
   async signContract(
