@@ -1,4 +1,4 @@
-import { Args, Context, ID, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, ID, Int, Query, Resolver } from '@nestjs/graphql';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { AuthService } from '../../auth/auth.service';
 import { PERMISSIONS } from '../../auth/constants';
@@ -17,6 +17,7 @@ import type { InvoiceFilter } from '../accounting.types';
 import { InvoiceFilterInput } from '../inputs/invoice-filter.input';
 import { InvoiceMapper, ReimbursementTypeMapper } from '../mappers';
 import { Invoice } from '../models/invoice.model';
+import { PaidShiftSignupVolunteer } from '../models/paid-shift-signup-volunteer.model';
 import { PendingSignee } from '../models/pending-signee.model';
 import { VolunteerNeedsTimesheet } from '../models/volunteer-needs-timesheet.model';
 import {
@@ -174,6 +175,54 @@ export class InvoiceQueryResolver {
         reimbursementType:
           this.reimbursementTypeMapper.toModelOrThrow(reimbursementType),
         eligibleHours: row.eligibleHours,
+      };
+    });
+  }
+
+  @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
+  @Query(() => [PaidShiftSignupVolunteer])
+  async paidShiftSignupVolunteers(
+    @Args('year', { type: () => Int }) year: number,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<PaidShiftSignupVolunteer[]> {
+    const organizationId =
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+        context.organizationUnitId,
+      );
+    const rows = await this.invoiceService.findPaidShiftSignupVolunteers(
+      organizationId,
+      year,
+    );
+    if (rows.length === 0) return [];
+
+    const [users, reimbursementTypes] = await Promise.all([
+      this.userService.findByIds(rows.map((row) => row.volunteerId)),
+      this.reimbursementRateService.findReimbursementTypes(),
+    ]);
+    const userById = new Map(users.map((user) => [user.id, user]));
+    const reimbursementTypeById = new Map(
+      reimbursementTypes.map((type) => [type.id, type]),
+    );
+
+    return rows.map((row) => {
+      const user = userById.get(row.volunteerId);
+      const reimbursementType = reimbursementTypeById.get(
+        row.reimbursementTypeId,
+      );
+      if (!user) {
+        throw new NotFoundGraphQLError(
+          `Volunteer with ID ${row.volunteerId} not found`,
+        );
+      }
+      if (!reimbursementType) {
+        throw new NotFoundGraphQLError(
+          `Reimbursement type with ID ${row.reimbursementTypeId} not found`,
+        );
+      }
+      return {
+        volunteer: this.userMapper.toModelOrThrow(user),
+        reimbursementType:
+          this.reimbursementTypeMapper.toModelOrThrow(reimbursementType),
       };
     });
   }

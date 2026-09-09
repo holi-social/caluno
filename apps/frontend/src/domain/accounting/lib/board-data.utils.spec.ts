@@ -410,6 +410,53 @@ describe('buildBoardVolunteers', () => {
     expect(docs.some((d) => d.status === 'contract-signing-coord')).toBe(true);
   });
 
+  it('queues a volunteer with a paid-shift signup but no Vereinbarung under contract-generate', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      paidShiftVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs).toHaveLength(1);
+    expect(docs[0]?.status).toBe('contract-generate');
+    expect(docs[0]?.id).toBe('v-1-contract-generate-ehrenamt');
+  });
+
+  it('does not synthesize a contract-generate row for a paid-shift signup with an active contract', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [
+        makeContract({ id: 'c-active', contractStatus: ContractStatus.Active }),
+      ],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      paidShiftVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.some((d) => d.status === 'contract-generate')).toBe(false);
+    expect(docs.some((d) => d.status === 'contract-active')).toBe(true);
+  });
+
+  it('dedupes the contract-generate row when a volunteer has both eligible hours and a paid-shift signup', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [noDocsVolunteer],
+      contracts: [],
+      invoices: [],
+      year: 2026,
+      locale: 'de',
+      eligibleHoursVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+      paidShiftVolunteers: new Map([['v-1', new Set(['rt-ehrenamt'])]]),
+    });
+    const docs = volunteers[0]?.documents ?? [];
+    expect(docs.filter((d) => d.status === 'contract-generate')).toHaveLength(
+      1,
+    );
+  });
+
   it('maps the active contract and skips timesheet placeholders when there is no invoice', () => {
     const volunteers = buildBoardVolunteers({
       rosterUsage: [

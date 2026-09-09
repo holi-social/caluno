@@ -233,6 +233,7 @@ export interface BuildBoardVolunteersInput {
    * contract at all for that type yet.
    */
   eligibleHoursVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
+  paidShiftVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function buildBoardVolunteers({
@@ -243,6 +244,7 @@ export function buildBoardVolunteers({
   locale,
   dateRange,
   eligibleHoursVolunteers,
+  paidShiftVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -251,6 +253,7 @@ export function buildBoardVolunteers({
     > = {};
     const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
     const eligibleTypeIds = eligibleHoursVolunteers?.get(entry.volunteer.id);
+    const paidShiftTypeIds = paidShiftVolunteers?.get(entry.volunteer.id);
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -305,7 +308,10 @@ export function buildBoardVolunteers({
       // Eligible hours with no contract yet mean the real blocker is creating
       // the Vereinbarung, so queue the volunteer under "Create contracts"
       // rather than anywhere downstream.
-      if (eligibleTypeIds?.has(usage.reimbursementType.id)) {
+      if (
+        eligibleTypeIds?.has(usage.reimbursementType.id) ||
+        paidShiftTypeIds?.has(usage.reimbursementType.id)
+      ) {
         if (!activeContract && contractsForType.length === 0) {
           // No Vereinbarung exists at all yet — surface a real,
           // actionable "create contract" row (not the muted

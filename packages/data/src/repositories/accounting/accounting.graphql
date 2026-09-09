@@ -308,6 +308,19 @@ query GetVolunteersNeedingTimesheets(
   }
 }
 
+query GetPaidShiftSignupVolunteers($year: Int!) {
+  paidShiftSignupVolunteers(year: $year) {
+    volunteer {
+      id
+      name
+    }
+    reimbursementType {
+      id
+      key
+    }
+  }
+}
+
 query GetEligibleTimeEntriesForInvoice(
   $volunteerId: ID!
   $reimbursementTypeId: ID!

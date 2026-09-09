@@ -13,6 +13,7 @@ import {
   POSTHOG_SURFACE,
 } from '../../shared/observability/posthog.events';
 import { PostHogService } from '../../shared/observability/posthog.service';
+import { ShiftInviteStatus } from '../../shift/enums';
 import type { TimeEntryEntity } from '../../time-tracking/schemas/time-entry.schema';
 import type {
   EligibleTimesheetVolunteer,
@@ -201,6 +202,115 @@ export class InvoiceService {
         eligibleHours: Math.round(eligibleHours * 100) / 100,
       };
     });
+  }
+
+  /**
+   * Volunteers who signed up for (JOINED) a paid shift instance in the given
+   * year but have no contract or invoice for that reimbursement type yet.
+   * Scoped org-wide: a shift counts when its organization unit belongs to
+   * `organizationId`, mirroring how the accounting board scopes contracts and
+   * invoices to the organization rather than a single unit.
+   *
+   * "Paid" = the instance's effective reimbursement type is non-null
+   * (`shiftInstances.overrideReimbursementTypeId ?? shifts.reimbursementTypeId`).
+   * Returns one row per (volunteer, reimbursement type), excluding any pair
+   * that already has a non-declined contract or an invoice overlapping the
+   * requested year — those are already surfaced by the contract/invoice maps.
+   */
+  async findPaidShiftSignupVolunteers(
+    organizationId: string,
+    year: number,
+  ): Promise<Array<{ volunteerId: string; reimbursementTypeId: string }>> {
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+
+    const rows = await this.db
+      .select({
+        volunteerId: schema.shiftInstanceInvites.userId,
+        overrideReimbursementTypeId:
+          schema.shiftInstances.overrideReimbursementTypeId,
+        shiftReimbursementTypeId: schema.shifts.reimbursementTypeId,
+      })
+      .from(schema.shiftInstanceInvites)
+      .innerJoin(
+        schema.shiftInstances,
+        eq(schema.shiftInstances.id, schema.shiftInstanceInvites.instanceId),
+      )
+      .innerJoin(
+        schema.shifts,
+        eq(schema.shifts.id, schema.shiftInstances.masterId),
+      )
+      .innerJoin(
+        schema.organizationUnits,
+        eq(schema.organizationUnits.id, schema.shifts.organizationUnitId),
+      )
+      .where(
+        and(
+          eq(schema.shiftInstanceInvites.status, ShiftInviteStatus.JOINED),
+          eq(schema.shiftInstances.isCancelled, false),
+          eq(schema.organizationUnits.organizationId, organizationId),
+          gte(schema.shiftInstances.actualStartsAt, yearStart),
+          lt(schema.shiftInstances.actualStartsAt, yearEnd),
+        ),
+      );
+
+    const signups = new Map<
+      string,
+      { volunteerId: string; reimbursementTypeId: string }
+    >();
+    for (const row of rows) {
+      const reimbursementTypeId =
+        row.overrideReimbursementTypeId ?? row.shiftReimbursementTypeId;
+      if (!reimbursementTypeId) continue;
+      const key = `${row.volunteerId}:${reimbursementTypeId}`;
+      if (!signups.has(key)) {
+        signups.set(key, { volunteerId: row.volunteerId, reimbursementTypeId });
+      }
+    }
+    if (signups.size === 0) return [];
+
+    const entries = [...signups.values()];
+    const volunteerIds = [
+      ...new Set(entries.map((entry) => entry.volunteerId)),
+    ];
+    const reimbursementTypeIds = [
+      ...new Set(entries.map((entry) => entry.reimbursementTypeId)),
+    ];
+
+    const [contracts, invoices] = await Promise.all([
+      this.db.query.contracts.findMany({
+        where: {
+          volunteerId: { in: volunteerIds },
+          reimbursementTypeId: { in: reimbursementTypeIds },
+          contractStatus: { ne: ContractStatus.DECLINED },
+          periodStart: { lt: yearEnd },
+          periodEnd: { gt: yearStart },
+        },
+        columns: { volunteerId: true, reimbursementTypeId: true },
+      }),
+      this.db.query.invoices.findMany({
+        where: {
+          volunteerId: { in: volunteerIds },
+          reimbursementTypeId: { in: reimbursementTypeIds },
+          periodStart: { lt: yearEnd },
+          periodEnd: { gt: yearStart },
+        },
+        columns: { volunteerId: true, reimbursementTypeId: true },
+      }),
+    ]);
+
+    const excluded = new Set<string>();
+    for (const contract of contracts) {
+      excluded.add(`${contract.volunteerId}:${contract.reimbursementTypeId}`);
+    }
+    for (const invoice of invoices) {
+      excluded.add(`${invoice.volunteerId}:${invoice.reimbursementTypeId}`);
+    }
+
+    return entries.filter(
+      (entry) =>
+        !excluded.has(`${entry.volunteerId}:${entry.reimbursementTypeId}`),
+    );
   }
 
   async createInvoice(

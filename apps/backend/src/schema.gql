@@ -822,6 +822,11 @@ type PaginationInfo {
   total: Int!
 }
 
+type PaidShiftSignupVolunteer {
+  reimbursementType: ReimbursementType!
+  volunteer: User!
+}
+
 type PendingSignee {
   eligibleUserIds: [String!]
   permissionKey: String
@@ -926,6 +931,7 @@ type Query {
   organizationUnitTypes: [OrganizationUnitType!]!
   organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  paidShiftSignupVolunteers(year: Int!): [PaidShiftSignupVolunteer!]!
   pendingContractSignee(contractId: ID!): PendingSignee
   pendingInvoiceSignee(invoiceId: ID!): PendingSignee
   permissionGroups: [PermissionGroup!]!

@@ -15,6 +15,7 @@ import type {
   GetInvoiceQuery,
   GetInvoicesQuery,
   GetManualBaselineQuery,
+  GetPaidShiftSignupVolunteersQuery,
   GetPendingContractSigneeQuery,
   GetReimbursementTypesQuery,
   GetRosterYearlyUsageQuery,
@@ -54,6 +55,8 @@ export type EligibleTimeEntry =
   GetEligibleTimeEntriesForInvoiceQuery['eligibleTimeEntriesForInvoice'][number];
 export type RawVolunteerNeedsTimesheet =
   GetVolunteersNeedingTimesheetsQuery['volunteersNeedingTimesheets'][number];
+export type RawPaidShiftSignupVolunteer =
+  GetPaidShiftSignupVolunteersQuery['paidShiftSignupVolunteers'][number];
 
 export type DocumentTemplateSummary =
   GetDocumentTemplatesQuery['documentTemplates'][number];
@@ -219,6 +222,13 @@ export class AccountingRepository extends BaseRepository {
   }): Promise<RawVolunteerNeedsTimesheet[]> {
     const data = await this.sdk.GetVolunteersNeedingTimesheets(input);
     return data.volunteersNeedingTimesheets;
+  }
+
+  async findPaidShiftSignupVolunteers(
+    year: number,
+  ): Promise<RawPaidShiftSignupVolunteer[]> {
+    const data = await this.sdk.GetPaidShiftSignupVolunteers({ year });
+    return data.paidShiftSignupVolunteers;
   }
 
   async createInvoice(input: CreateInvoiceInput): Promise<InvoiceSummary> {
