@@ -18,6 +18,11 @@ query GetOrganizationUnitMemberships {
       description
       isInternal
     }
+    idVerifiedAt
+    idVerifiedBy {
+      id
+      name
+    }
   }
 }
 
@@ -107,5 +112,22 @@ query MyMembership($id: ID!) {
       id
       name
     }
+  }
+}
+
+mutation SetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
+  setMembershipIdVerified(membershipId: $membershipId, verified: $verified) {
+    id
+    idVerifiedAt
+  }
+}
+
+mutation CheckInSetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
+  checkInSetMembershipIdVerified(
+    membershipId: $membershipId
+    verified: $verified
+  ) {
+    id
+    idVerifiedAt
   }
 }

@@ -54,6 +54,7 @@ query GetOrganizationUnit($id: String!) {
     city
     zipCode
     legalRep
+    idVerificationEnabled
     organizationId
     requiredForms {
       form {
@@ -327,6 +328,7 @@ mutation UpdateOrganizationUnit(
     city
     zipCode
     legalRep
+    idVerificationEnabled
     parent {
       id
     }
