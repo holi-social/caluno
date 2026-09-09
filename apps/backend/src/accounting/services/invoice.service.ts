@@ -286,7 +286,7 @@ export class InvoiceService {
           volunteerId: input.volunteerId,
           reimbursementTypeId: input.reimbursementTypeId,
           contractStatus: { ne: ContractStatus.DECLINED },
-          periodEnd: { gte: yearStart },
+          periodEnd: { gt: yearStart },
           periodStart: { lt: yearEnd },
         },
       });

@@ -779,6 +779,51 @@ describe('InvoiceService', () => {
       expect(contracts[0].contractStatus).toBe(ContractStatus.DRAFT);
     });
 
+    it('drafts for the following year despite a prior-year contract ending Jan 1', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+        contractTemplate,
+      } = await setup();
+      await db.insert(schema.contracts).values({
+        documentTemplateId: contractTemplate.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        contractStatus: ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
+        periodStart: new Date('2026-01-01T00:00:00.000Z'),
+        periodEnd: new Date('2027-01-01T00:00:00.000Z'),
+        resolvedBody: { header: {}, blocks: [], footer: {} },
+      });
+
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2027-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2027-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(2);
+      const drafts = contracts.filter(
+        (c) => c.contractStatus === ContractStatus.DRAFT,
+      );
+      expect(drafts).toHaveLength(1);
+    });
+
     it('claims the time entry so it cannot be pulled into a second invoice', async () => {
       const {
         organization,
