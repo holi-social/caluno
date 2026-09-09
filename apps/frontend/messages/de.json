@@ -1866,7 +1866,16 @@
         "documentCount": "{count, plural, =1 {1 Dokument} other {# Dokumente}}",
         "viewVolunteer": "Freiwillige/n ansehen",
         "createButton": "{kind} erstellen",
-        "createButtonEmpty": "Neues Dokument erstellen"
+        "createButtonEmpty": "Neues Dokument erstellen",
+        "contractState": {
+          "none": "Noch keine Vereinbarung",
+          "awaiting-signature": "Wartet auf Unterschrift",
+          "awaiting-countersignature": "Wartet auf Gegenzeichnung",
+          "active": "Aktiv",
+          "declined": "Abgelehnt"
+        },
+        "latestTimesheet": "Letzter Stundennachweis · {date}",
+        "noTimesheetYet": "Noch kein Stundennachweis"
       },
       "bundle": {
         "actionLabel": "Paket herunterladen",

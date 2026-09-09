@@ -58,6 +58,66 @@ export function getDocLineSummary(
   return { count: matches.length, latest };
 }
 
+export type ContractPickerState =
+  | 'none'
+  | 'awaiting-signature'
+  | 'awaiting-countersignature'
+  | 'active'
+  | 'declined';
+
+export interface PickerContractAnnotation {
+  pauschale: PauschalenType;
+  state: ContractPickerState;
+}
+
+export interface PickerAnnotations {
+  contracts: PickerContractAnnotation[];
+  latestTimesheetDate?: Date;
+}
+
+const PICKER_PAUSCHALEN: PauschalenType[] = ['ehrenamt', 'uebungsleiter'];
+
+export function getContractStateForPicker(
+  vol: BoardVolunteer,
+  pauschale: PauschalenType,
+): ContractPickerState {
+  const { latest } = getDocLineSummary(vol, 'contract', pauschale);
+  switch (latest?.status) {
+    case 'contract-active':
+      return 'active';
+    case 'contract-declined':
+      return 'declined';
+    case 'contract-signing-coord':
+      return 'awaiting-countersignature';
+    case 'contract-draft':
+    case 'contract-signing-vol':
+      return 'awaiting-signature';
+    default:
+      return 'none';
+  }
+}
+
+export function getLatestTimesheetDate(vol: BoardVolunteer): Date | undefined {
+  const dates = PICKER_PAUSCHALEN.map(
+    (pauschale) =>
+      getDocLineSummary(vol, 'invoice', pauschale).latest?.lastActionDate,
+  ).filter((d): d is Date => d instanceof Date);
+  if (dates.length === 0) return undefined;
+  return dates.reduce((latest, d) =>
+    d.getTime() > latest.getTime() ? d : latest,
+  );
+}
+
+export function getPickerAnnotations(vol: BoardVolunteer): PickerAnnotations {
+  return {
+    contracts: PICKER_PAUSCHALEN.map((pauschale) => ({
+      pauschale,
+      state: getContractStateForPicker(vol, pauschale),
+    })),
+    latestTimesheetDate: getLatestTimesheetDate(vol),
+  };
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';

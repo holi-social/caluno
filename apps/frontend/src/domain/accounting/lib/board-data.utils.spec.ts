@@ -7,14 +7,21 @@ import {
   ReimbursementTypeKey,
   SigneeType,
 } from '@repo/data';
+import type {
+  BoardDocument,
+  BoardVolunteer,
+} from '../components/reimbursements-board';
 import {
   boardYear,
   buildBoardVolunteers,
   contractPeriodOverlapsYear,
   contractStatusToDocStatus,
   formatMonthYear,
+  getContractStateForPicker,
   getDocLineSummary,
   getInitials,
+  getLatestTimesheetDate,
+  getPickerAnnotations,
   invoiceInMonth,
   invoiceStatusToDocStatus,
   mapContractToBoardDoc,
@@ -766,5 +773,182 @@ describe('boardYear', () => {
     expect(boardYear({ from: new Date(2025, 0, 1) })).toBe(2025);
     expect(boardYear({ to: new Date(2024, 0, 1) })).toBe(2024);
     expect(boardYear(undefined)).toBe(new Date().getFullYear());
+  });
+});
+
+function makeVol(documents: BoardDocument[] = []): BoardVolunteer {
+  return {
+    id: 'v-1',
+    name: 'Anna Müller',
+    initials: 'AM',
+    pauschale: 'ehrenamt',
+    usedAmount: 0,
+    totalCap: 840,
+    documents,
+  };
+}
+
+describe('getContractStateForPicker', () => {
+  it('returns none when the volunteer has no contract for the pauschale', () => {
+    const vol = makeVol([]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('none');
+    expect(getContractStateForPicker(vol, 'uebungsleiter')).toBe('none');
+  });
+
+  it('returns active for a fully-signed contract', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-active',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('active');
+    expect(getContractStateForPicker(vol, 'uebungsleiter')).toBe('none');
+  });
+
+  it('returns declined for a declined contract', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-declined',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('declined');
+  });
+
+  it('returns awaiting-countersignature for a coordinator-signed contract', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-signing-coord',
+        periodLabel: '2026',
+        pauschale: 'uebungsleiter',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'uebungsleiter')).toBe(
+      'awaiting-countersignature',
+    );
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('none');
+  });
+
+  it('returns awaiting-signature for created-but-not-signed contracts', () => {
+    const draft = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-draft',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(draft, 'ehrenamt')).toBe(
+      'awaiting-signature',
+    );
+
+    const signingVol = makeVol([
+      {
+        id: 'c-2',
+        status: 'contract-signing-vol',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(signingVol, 'ehrenamt')).toBe(
+      'awaiting-signature',
+    );
+  });
+
+  it('treats synthesized placeholders as none', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-generate',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+      {
+        id: 'c-2',
+        status: 'contract-missing',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getContractStateForPicker(vol, 'ehrenamt')).toBe('none');
+  });
+});
+
+describe('getLatestTimesheetDate', () => {
+  it('returns undefined when there are no timesheets', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-active',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+    ]);
+    expect(getLatestTimesheetDate(vol)).toBeUndefined();
+  });
+
+  it('returns the most recent timesheet date across pauschales', () => {
+    const vol = makeVol([
+      {
+        id: 'i-1',
+        status: 'timesheet-ready',
+        periodLabel: 'July 2026',
+        pauschale: 'ehrenamt',
+        lastActionDate: new Date('2026-07-15T00:00:00.000Z'),
+      },
+      {
+        id: 'i-2',
+        status: 'timesheet-ready',
+        periodLabel: 'June 2026',
+        pauschale: 'uebungsleiter',
+        lastActionDate: new Date('2026-06-10T00:00:00.000Z'),
+      },
+    ]);
+    expect(getLatestTimesheetDate(vol)?.getTime()).toBe(
+      new Date('2026-07-15T00:00:00.000Z').getTime(),
+    );
+  });
+});
+
+describe('getPickerAnnotations', () => {
+  it('returns annotations for both pauschales and the latest timesheet date', () => {
+    const vol = makeVol([
+      {
+        id: 'c-1',
+        status: 'contract-active',
+        periodLabel: '2026',
+        pauschale: 'ehrenamt',
+      },
+      {
+        id: 'i-1',
+        status: 'timesheet-ready',
+        periodLabel: 'July 2026',
+        pauschale: 'ehrenamt',
+        lastActionDate: new Date('2026-07-15T00:00:00.000Z'),
+      },
+    ]);
+    const annotations = getPickerAnnotations(vol);
+    expect(annotations.contracts).toHaveLength(2);
+    expect(
+      annotations.contracts.find((c) => c.pauschale === 'ehrenamt')?.state,
+    ).toBe('active');
+    expect(
+      annotations.contracts.find((c) => c.pauschale === 'uebungsleiter')?.state,
+    ).toBe('none');
+    expect(annotations.latestTimesheetDate?.getTime()).toBe(
+      new Date('2026-07-15T00:00:00.000Z').getTime(),
+    );
+  });
+
+  it('leaves latestTimesheetDate undefined when there is no timesheet', () => {
+    expect(
+      getPickerAnnotations(makeVol([])).latestTimesheetDate,
+    ).toBeUndefined();
   });
 });
