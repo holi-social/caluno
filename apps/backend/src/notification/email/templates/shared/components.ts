@@ -1,4 +1,5 @@
 import { emailTheme } from './theme';
+import { escapeHtml } from './utils';
 
 const { colors } = emailTheme;
 
@@ -183,6 +184,51 @@ export function orderedListItem(
   const padding = options.last ? '0' : '0 0 12px';
   const marker = `<span style="color:${colors.primary};font-weight:700">${index}.</span>`;
   return text(`${marker}&nbsp;&nbsp;${content}`, { padding });
+}
+
+export interface ShiftCardOptions {
+  href: string;
+  /** The shift's cover image — falls back to a flat tinted block when null, matching the frontend card's no-image state. */
+  imageUrl: string | null;
+  title: string;
+  subtitle: string;
+  /** Extra line for row-specific context, rendered as a pill badge — e.g. why a shift needs volunteers. */
+  meta?: string;
+  /** Omits the bottom margin — pass for the last card in a stack. */
+  last?: boolean;
+}
+
+const SHIFT_CARD_IMAGE_HEIGHT = '120px';
+
+/**
+ * A clickable shift card mirroring the frontend's volunteering-side shift
+ * cards: a cover image banner (or a flat tinted fallback when the shift has
+ * none) above a title, a subtitle line (org/date), and an optional reason
+ * pill — the whole card is one link.
+ */
+export function shiftCard(options: ShiftCardOptions): string {
+  const { href, imageUrl, title, subtitle, meta, last = false } = options;
+  const marginBottom = last ? '0' : '12px';
+
+  const imageBlock = imageUrl
+    ? `<img src="${escapeHtml(imageUrl)}" width="600" alt="" style="display:block;width:100%;height:${SHIFT_CARD_IMAGE_HEIGHT};object-fit:cover;background-color:${colors.border};" />`
+    : `<div style="width:100%;height:${SHIFT_CARD_IMAGE_HEIGHT};background-color:${colors.bg};"></div>`;
+
+  const metaBadge = meta
+    ? `<span style="display:inline-block;background-color:${colors.primarySoft};color:${colors.primaryText};border-radius:9999px;padding:3px 10px;font-size:12px;font-weight:600;margin-top:8px;">${meta}</span>`
+    : '';
+
+  return text(
+    `<a href="${href}" style="text-decoration:none;display:block;border:1px solid ${colors.border};border-radius:12px;overflow:hidden;margin:0 0 ${marginBottom};">
+      ${imageBlock}
+      <div style="padding:12px 14px 14px;">
+        <div style="font-weight:600;color:${colors.ink};font-size:15px;line-height:1.4;">${title}</div>
+        <div style="color:${colors.muted};font-size:13px;line-height:1.4;margin-top:2px;">${subtitle}</div>
+        ${metaBadge}
+      </div>
+    </a>`,
+    { padding: '0' },
+  );
 }
 
 /**
