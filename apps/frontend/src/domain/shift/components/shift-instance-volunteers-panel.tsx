@@ -2,6 +2,7 @@
 
 import { MembershipRequestStatus, type ShiftInviteStatus } from '@repo/data';
 import {
+  Badge,
   Button,
   type VolunteeringActionLabel,
   VolunteeringVolunteerList,
@@ -43,6 +44,10 @@ type ShiftInstanceVolunteersPanelProps = {
   instanceId: string;
   invites: InstanceInvite[];
   spotsLeft: number | null | undefined;
+  /** Joined invites only — waitlisted and pending are excluded. */
+  filledCount: number;
+  /** Effective capacity: instance override ?? shift max. */
+  maxVolunteers: number | null | undefined;
   canManage: boolean;
   isInstanceInThePast: boolean;
 };
@@ -63,6 +68,8 @@ export function ShiftInstanceVolunteersPanel({
   instanceId,
   invites,
   spotsLeft,
+  filledCount,
+  maxVolunteers,
   canManage,
   isInstanceInThePast,
 }: ShiftInstanceVolunteersPanelProps) {
@@ -186,28 +193,40 @@ export function ShiftInstanceVolunteersPanel({
       title={t('inviteStatus.volunteersTitle')}
       summary={summary}
       headerAction={
-        canManage ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {!isInstanceInThePast ? (
-              <SendCallOutDialog
-                orgUId={orgUId}
-                instanceId={instanceId}
-                trigger={
-                  <Button variant="outline" size="sm">
-                    <Megaphone />
-                    {t('instanceDetail.callOutCta')}
-                  </Button>
-                }
-              />
-            ) : null}
-            <Button asChild size="sm">
-              <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
-                <UserPlus />
-                {t('instanceDetail.inviteCta')}
-              </Link>
-            </Button>
-          </div>
-        ) : undefined
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary">
+            {maxVolunteers != null
+              ? t('inviteStatus.capacityBadge', {
+                  filled: filledCount,
+                  max: maxVolunteers,
+                })
+              : t('inviteStatus.capacityBadgeNoMax', {
+                  filled: filledCount,
+                })}
+          </Badge>
+          {canManage ? (
+            <>
+              {!isInstanceInThePast ? (
+                <SendCallOutDialog
+                  orgUId={orgUId}
+                  instanceId={instanceId}
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      <Megaphone />
+                      {t('instanceDetail.callOutCta')}
+                    </Button>
+                  }
+                />
+              ) : null}
+              <Button asChild size="sm">
+                <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
+                  <UserPlus />
+                  {t('instanceDetail.inviteCta')}
+                </Link>
+              </Button>
+            </>
+          ) : null}
+        </div>
       }
       actionLabels={{
         View: tVolunteer('viewProfileAria'),
