@@ -6,9 +6,9 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query';
+import type { UpdateOrganizationUnitInput } from '../../generated/graphql';
 import { OrganizationRepository } from '../../repositories/organization/organization.repository';
 import { OrganizationUnitRepository } from '../../repositories/organization/organization-unit.repository';
-import type { UpdateOrganizationUnitInput } from '../../generated/graphql';
 import { useSdk } from './use-graphql-client';
 
 export function useOrganizationUnitWithSuspense(id: string) {

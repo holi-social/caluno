@@ -122,7 +122,10 @@ mutation SetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
   }
 }
 
-mutation CheckInSetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
+mutation CheckInSetMembershipIdVerified(
+  $membershipId: ID!
+  $verified: Boolean!
+) {
   checkInSetMembershipIdVerified(
     membershipId: $membershipId
     verified: $verified
