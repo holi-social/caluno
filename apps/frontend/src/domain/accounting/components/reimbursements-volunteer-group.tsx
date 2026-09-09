@@ -276,7 +276,6 @@ interface VolunteerTableGroupProps {
   orgUId: string;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestCreate: (pair: DocVolPair) => void;
-  onRequestSign: (pair: DocVolPair) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -287,7 +286,6 @@ function VolunteerTableGroup({
   orgUId,
   onDocumentClick,
   onRequestCreate,
-  onRequestSign,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -565,7 +563,7 @@ function VolunteerTableGroup({
                         if (actionKey === 'create') {
                           onRequestCreate({ doc, vol });
                         } else {
-                          onRequestSign({ doc, vol });
+                          onDocumentClick(doc, vol);
                         }
                       }}
                     >
@@ -590,7 +588,6 @@ interface ReimbursementsTableProps {
   orgUId: string;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestCreate: (pair: DocVolPair) => void;
-  onRequestSign: (pair: DocVolPair) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -601,7 +598,6 @@ export function ReimbursementsTable({
   orgUId,
   onDocumentClick,
   onRequestCreate,
-  onRequestSign,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -634,7 +630,6 @@ export function ReimbursementsTable({
               orgUId={orgUId}
               onDocumentClick={onDocumentClick}
               onRequestCreate={onRequestCreate}
-              onRequestSign={onRequestSign}
               docTypeFilter={docTypeFilter}
               dateRange={dateRange}
               activeTile={activeTile}
