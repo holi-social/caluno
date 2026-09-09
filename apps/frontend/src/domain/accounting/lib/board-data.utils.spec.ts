@@ -573,6 +573,102 @@ describe('buildBoardVolunteers', () => {
   // VOLI-1283: the documents-creation flow ("Not created yet") keys a
   // document line off the volunteer's documents — an awaiting-countersignature
   // invoice must count as already created, not as a fresh create prompt.
+  it('flags a timesheet as over-cap regardless of its status', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 90_000,
+              limitCents: 100_000,
+              remainingCents: 10_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [],
+      invoices: [
+        makeInvoice({
+          id: 'i-over',
+          totalAmountCents: 20_000,
+          invoiceStatus: InvoiceStatus.AwaitingVolunteerSignature,
+        }),
+      ],
+      year: 2026,
+      locale: 'de',
+    });
+    const doc = volunteers[0]?.documents.find(
+      (d) => d.status === 'timesheet-signing-vol',
+    );
+    expect(doc?.isOverCap).toBe(true);
+  });
+
+  it('does not flag a timesheet when used plus amount stays within the cap', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 90_000,
+              limitCents: 100_000,
+              remainingCents: 10_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [],
+      invoices: [
+        makeInvoice({
+          id: 'i-under',
+          totalAmountCents: 5_000,
+          invoiceStatus: InvoiceStatus.Ready,
+        }),
+      ],
+      year: 2026,
+      locale: 'de',
+    });
+    const doc = volunteers[0]?.documents.find(
+      (d) => d.status === 'timesheet-ready',
+    );
+    expect(doc?.isOverCap).toBe(false);
+  });
+
+  it('ignores declined invoices for the cap check', () => {
+    const volunteers = buildBoardVolunteers({
+      rosterUsage: [
+        {
+          volunteer: { id: 'v-1', name: 'Anna Müller', image: null },
+          usageByType: [
+            {
+              usedCents: 90_000,
+              limitCents: 100_000,
+              remainingCents: 10_000,
+              reimbursementType: ehrenamtType,
+            },
+          ],
+        },
+      ],
+      contracts: [],
+      invoices: [
+        makeInvoice({
+          id: 'i-declined',
+          totalAmountCents: 20_000,
+          invoiceStatus: InvoiceStatus.Declined,
+        }),
+      ],
+      year: 2026,
+      locale: 'de',
+    });
+    const doc = volunteers[0]?.documents.find(
+      (d) => d.status === 'timesheet-declined',
+    );
+    expect(doc?.isOverCap).toBeUndefined();
+  });
+
   it('counts an awaiting-countersignature invoice as created in the documents-creation summary', () => {
     const year = new Date().getFullYear();
     const volunteers = buildBoardVolunteers({

@@ -291,7 +291,14 @@ export function buildBoardVolunteers({
             invoiceInMonth(i, y, month),
         );
         for (const invoice of invoicesForMonth) {
-          documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
+          const doc = mapInvoiceToBoardDoc(invoice, type, locale);
+          if (invoice.invoiceStatus !== InvoiceStatus.Declined) {
+            const limit = limits[type];
+            doc.isOverCap =
+              limit !== undefined &&
+              limit.used + centsToEuros(invoice.totalAmountCents) > limit.total;
+          }
+          documents.push(doc);
         }
       }
 
