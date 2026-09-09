@@ -613,11 +613,14 @@ export type JoinShiftInstanceResult = {
 };
 
 export enum JoinStatus {
+  Invited = 'INVITED',
   Joined = 'JOINED',
   None = 'NONE',
   Pending = 'PENDING',
   Rejected = 'REJECTED',
-  RequirementsNeeded = 'REQUIREMENTS_NEEDED'
+  RequirementsNeeded = 'REQUIREMENTS_NEEDED',
+  VolunteerRejected = 'VOLUNTEER_REJECTED',
+  WaitlistJoined = 'WAITLIST_JOINED'
 }
 
 export type ManualBaseline = {
@@ -1543,7 +1546,7 @@ export type QueryCheckInContextArgs = {
 
 
 export type QueryCheckInReadinessArgs = {
-  shiftInstanceId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
   volunteerId: Scalars['ID']['input'];
 };
 
@@ -2303,6 +2306,11 @@ export type Shift = {
   visibility: ShiftVisibility;
 };
 
+export enum ShiftCallOutSource {
+  Automatic = 'AUTOMATIC',
+  Manual = 'MANUAL'
+}
+
 export type ShiftInstance = {
   __typename?: 'ShiftInstance';
   actualEndsAt: Scalars['DateTime']['output'];
@@ -2354,6 +2362,7 @@ export type ShiftInstanceCallOutSummary = {
   recipientCount: Scalars['Int']['output'];
   sentAt: Scalars['DateTime']['output'];
   sentBy: User;
+  source: ShiftCallOutSource;
 };
 
 export type ShiftInstanceInvite = {
@@ -3717,14 +3726,14 @@ export type GetShiftInstanceCallOutSummaryQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
+export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, source: ShiftCallOutSource, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
 
 export type JoinShiftInstanceMutationVariables = Exact<{
   instanceId: Scalars['String']['input'];
 }>;
 
 
-export type JoinShiftInstanceMutation = { __typename?: 'Mutation', joinShiftInstance: { __typename?: 'JoinShiftInstanceResult', status: JoinStatus, membershipRequestId?: string | null, shiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideInstructions?: string | null, overrideLocation?: string | null, overrideMaxVolunteers?: number | null, isException: boolean, isCancelled: boolean, occurrenceIndex: number, master: { __typename?: 'Shift', id: string, title: string } }, requirementProfile?: { __typename?: 'RequirementProfile', id: string, name: string, description?: string | null, requirements?: Array<{ __typename?: 'Requirement', id: string, name: string, description?: string | null, type: RequirementType, mandatory: boolean }> | null } | null, requirementStatuses?: Array<{ __typename?: 'UserRequirementStatus', requirementId: string, name: string, status: RequirementFulfillmentStatus }> | null, requiredForms?: Array<{ __typename?: 'RequiredFormWithStatus', order: number, submitted: boolean, submissionId?: string | null, targetType: RequiredFormTargetType, targetId: string, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> | null } };
+export type JoinShiftInstanceMutation = { __typename?: 'Mutation', joinShiftInstance: { __typename?: 'JoinShiftInstanceResult', status: JoinStatus, membershipRequestId?: string | null, shiftInstance: { __typename?: 'ShiftInstance', id: string, myInviteStatus?: ShiftInviteStatus | null, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideInstructions?: string | null, overrideLocation?: string | null, overrideMaxVolunteers?: number | null, isException: boolean, isCancelled: boolean, occurrenceIndex: number, master: { __typename?: 'Shift', id: string, title: string } }, requirementProfile?: { __typename?: 'RequirementProfile', id: string, name: string, description?: string | null, requirements?: Array<{ __typename?: 'Requirement', id: string, name: string, description?: string | null, type: RequirementType, mandatory: boolean }> | null } | null, requirementStatuses?: Array<{ __typename?: 'UserRequirementStatus', requirementId: string, name: string, status: RequirementFulfillmentStatus }> | null, requiredForms?: Array<{ __typename?: 'RequiredFormWithStatus', order: number, submitted: boolean, submissionId?: string | null, targetType: RequiredFormTargetType, targetId: string, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> | null } };
 
 export type GetShiftVolunteersQueryVariables = Exact<{
   instanceId: Scalars['ID']['input'];
@@ -3915,7 +3924,7 @@ export type GetCheckInContextQuery = { __typename?: 'Query', checkInContext?: { 
 
 export type GetCheckInReadinessQueryVariables = Exact<{
   volunteerId: Scalars['ID']['input'];
-  shiftInstanceId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -6720,6 +6729,7 @@ export const GetShiftInstanceCallOutSummaryDocument = gql`
     lastCallOut {
       sentAt
       recipientCount
+      source
       sentBy {
         id
         name
@@ -6735,6 +6745,7 @@ export const JoinShiftInstanceDocument = gql`
     status
     shiftInstance {
       id
+      myInviteStatus
       actualStartsAt
       actualEndsAt
       overrideTitle
@@ -7236,7 +7247,7 @@ export const GetCheckInContextDocument = gql`
 }
     `;
 export const GetCheckInReadinessDocument = gql`
-    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID) {
   checkInReadiness(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
     isMember
     openMembershipRequestId

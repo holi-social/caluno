@@ -384,6 +384,36 @@
     "subject": "Niemand mehr zu fragen für {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceCallOutSummary": {
+    "heading": "Einsatz ist unterbesetzt",
+    "greeting": "Hallo {firstName}, {shiftTitle} bei {organizationName} liegt unter der Mindestanzahl an Freiwilligen.",
+    "detailShift": "Einsatz",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "whenRange": "{date} · {timeRange}",
+    "detailStaffing": "Besetzung",
+    "staffingValue": "{filledCount} von {minVolunteers} bestätigt",
+    "noticeNotified": "Wir haben bereits {count} Freiwillige um Hilfe gebeten — hier ist erstmal nichts weiter zu tun.",
+    "noticeNoneAvailable": "Es standen niemand mehr zur automatischen Benachrichtigung zur Verfügung — vielleicht möchtest du direkt nachfragen.",
+    "buttonLabel": "Einsatz ansehen",
+    "subject": "{shiftTitle} braucht noch Freiwillige",
+    "previewText": "{shiftTitle} liegt unter der Mindestanzahl an Freiwilligen.",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwaltest."
+  },
+  "shiftInstanceUnderstaffedReminder": {
+    "heading": "Immer noch unterbesetzt",
+    "greeting": "Hallo {firstName}, {shiftTitle} bei {organizationName} liegt weiterhin unter der Mindestanzahl an Freiwilligen.",
+    "detailShift": "Einsatz",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "whenRange": "{date} · {timeRange}",
+    "detailStaffing": "Besetzung",
+    "staffingValue": "{filledCount} von {minVolunteers} bestätigt",
+    "buttonLabel": "Einsatz ansehen",
+    "subject": "Erinnerung: {shiftTitle} ist noch unterbesetzt",
+    "previewText": "{shiftTitle} liegt weiterhin unter der Mindestanzahl an Freiwilligen.",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwaltest."
+  },
   "documentAwaitingSignature": {
     "heading": "Ein Dokument wartet auf deine Unterschrift",
     "greeting": "Hallo {firstName},",
@@ -420,5 +450,22 @@
   "documentNames": {
     "agreement": "Zusatzvereinbarung",
     "timesheet": "Stundennachweis"
+  },
+  "volunteerDigest": {
+    "heading": "Deine Woche im Überblick",
+    "greeting": "Hallo {firstName}, das steht diese Woche für dich an.",
+    "myShiftsHeading": "Deine Einsätze",
+    "myShiftsSeeAll": "Alle deine Einsätze ansehen",
+    "pendingInvitesHeading": "Wartet auf deine Antwort",
+    "pendingInvitesSeeAll": "Alle Einladungen ansehen",
+    "needsVolunteersHeading": "Einsätze, die noch Freiwillige brauchen",
+    "needsVolunteersSeeAll": "Alle offenen Einsätze ansehen",
+    "rowWhen": "{date} · {timeRange}",
+    "reasonNeedsMore": "Braucht noch {count} weitere Freiwillige",
+    "reasonNoVolunteersYet": "Noch keine Freiwilligen",
+    "reasonHasRoom": "Hat noch Platz für weitere Freiwillige",
+    "subject": "Deine Woche im Überblick auf {brandName}",
+    "previewText": "Deine Einsätze, Einladungen und offene Einsätze für die kommende Woche.",
+    "footerNote": "Du erhältst diese wöchentliche Übersicht, weil du Mitglied einer Organisation auf {brandName} bist."
   }
 }

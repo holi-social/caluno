@@ -46,6 +46,14 @@ export function shiftsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts`;
 }
 
+export function shiftInstanceAdminUrl(
+  organizationUnitId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts/${encodeURIComponent(shiftId)}/instances/${encodeURIComponent(instanceId)}`;
+}
+
 /** Public deep link to a shift, optionally scoped to a specific instance. */
 export function shiftPublicUrl(shiftId: string, instanceId?: string): string {
   const path = `/shifts/${encodeURIComponent(shiftId)}`;
@@ -79,4 +87,19 @@ export function publicOrganizationUnitUrl(organizationUnitId: string): string {
  */
 export function volunteerProfileUrl(): string {
   return `${resolveAppUrl()}/profile`;
+}
+
+/** The volunteering side's home page — not org-scoped, spans all of a volunteer's organizations. */
+export function volunteeringHomeUrl(): string {
+  return resolveAppUrl();
+}
+
+/** Deep link to the volunteer's pending shift/event invitations. */
+export function myInvitationsUrl(): string {
+  return `${resolveAppUrl()}/invitations`;
+}
+
+/** Deep link to the volunteering side's open-shift discovery page. */
+export function discoverShiftsUrl(): string {
+  return `${resolveAppUrl()}/discover`;
 }

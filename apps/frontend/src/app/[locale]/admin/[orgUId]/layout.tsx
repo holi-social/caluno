@@ -8,6 +8,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, Suspense } from 'react';
 import { LocaleCookieSeeder } from '@/components/locale-cookie-seeder';
+import { AdminHeaderOrgIdentity } from '@/components/navigation/admin-header-org-identity';
 import { DashboardSidebar } from '@/components/navigation/dashboard-sidebar';
 import {
   PageHeaderProvider,
@@ -66,8 +67,13 @@ export default async function OrgLayout({
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                   <div className="flex justify-between gap-2 flex-1">
-                    <PageHeaderSlot />
-                    <div className="flex gap-2 items-center ml-auto sm:ml-0">
+                    <PageHeaderSlot>
+                      <AdminHeaderOrgIdentity
+                        name={org.name}
+                        logoUrl={org.logoUrl}
+                      />
+                    </PageHeaderSlot>
+                    <div className="flex gap-2 items-center ml-auto">
                       <Suspense
                         fallback={<Loader2 className="animate-spin size-4" />}
                       >

@@ -17,17 +17,20 @@ import type { OrganizationUnitInvitedPayload } from './payloads/organization-uni
 import type { ShiftDetailsChangedPayload } from './payloads/shift-details-changed.payload';
 import type { ShiftInstanceCallOutPayload } from './payloads/shift-instance-call-out.payload';
 import type { ShiftInstanceCallOutNoRecipientsPayload } from './payloads/shift-instance-call-out-no-recipients.payload';
+import type { ShiftInstanceCallOutSummaryPayload } from './payloads/shift-instance-call-out-summary.payload';
 import type { ShiftInstanceCancelledPayload } from './payloads/shift-instance-cancelled.payload';
 import type { ShiftInstanceInvitedPayload } from './payloads/shift-instance-invited.payload';
 import type { ShiftInstanceJoinedPayload } from './payloads/shift-instance-joined.payload';
 import type { ShiftInstanceLeftPayload } from './payloads/shift-instance-left.payload';
 import type { ShiftInstanceRemovedPayload } from './payloads/shift-instance-removed.payload';
 import type { ShiftInstanceSeriesCancelledPayload } from './payloads/shift-instance-series-cancelled.payload';
+import type { ShiftInstanceUnderstaffedReminderPayload } from './payloads/shift-instance-understaffed-reminder.payload';
 import type { ShiftInstanceVolunteerLeftPayload } from './payloads/shift-instance-volunteer-left.payload';
 import type { ShiftInvitedPayload } from './payloads/shift-invited.payload';
 import type { ShiftSeriesLeftPayload } from './payloads/shift-series-left.payload';
 import type { ShiftSeriesRemovedPayload } from './payloads/shift-series-removed.payload';
 import type { ShiftSeriesVolunteerLeftPayload } from './payloads/shift-series-volunteer-left.payload';
+import type { VolunteerDigestSentPayload } from './payloads/volunteer-digest-sent.payload';
 
 export interface NotificationEventPayloadMap {
   [NotificationEvent.ORGANIZATION_CREATED]: OrganizationCreatedPayload;
@@ -51,6 +54,8 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.ORGANIZATION_UNIT_INVITED]: OrganizationUnitInvitedPayload;
   [NotificationEvent.SHIFT_INSTANCE_CALL_OUT]: ShiftInstanceCallOutPayload;
   [NotificationEvent.SHIFT_INSTANCE_CALL_OUT_NO_RECIPIENTS]: ShiftInstanceCallOutNoRecipientsPayload;
+  [NotificationEvent.SHIFT_INSTANCE_CALL_OUT_SUMMARY]: ShiftInstanceCallOutSummaryPayload;
+  [NotificationEvent.SHIFT_INSTANCE_UNDERSTAFFED_REMINDER]: ShiftInstanceUnderstaffedReminderPayload;
   [NotificationEvent.EVENT_INVITED]: EventInvitedPayload;
   [NotificationEvent.EVENT_JOINED]: EventJoinedPayload;
   [NotificationEvent.EVENT_CANCELLED]: EventCancelledPayload;
@@ -59,4 +64,5 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.DOCUMENT_AWAITING_SIGNATURE]: DocumentAwaitingSignaturePayload;
   [NotificationEvent.DOCUMENT_DECLINED_BY_ORG]: DocumentDeclinedByOrgPayload;
   [NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER]: DocumentDeclinedByVolunteerPayload;
+  [NotificationEvent.VOLUNTEER_DIGEST_SENT]: VolunteerDigestSentPayload;
 }

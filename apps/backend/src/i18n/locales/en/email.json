@@ -384,6 +384,36 @@
     "subject": "Nobody left to ask for {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceCallOutSummary": {
+    "heading": "Shift is short",
+    "greeting": "Hi {firstName}, {shiftTitle} at {organizationName} is below the minimum number of volunteers.",
+    "detailShift": "Shift",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "whenRange": "{date} · {timeRange}",
+    "detailStaffing": "Staffing",
+    "staffingValue": "{filledCount} of {minVolunteers} confirmed",
+    "noticeNotified": "We've already emailed {count} volunteers asking for help — no action needed on that front yet.",
+    "noticeNoneAvailable": "Nobody was available to automatically notify — you may want to reach out directly.",
+    "buttonLabel": "View shift",
+    "subject": "{shiftTitle} is short on volunteers",
+    "previewText": "{shiftTitle} is below the minimum number of volunteers.",
+    "footerNote": "You're receiving this because you manage shifts on {brandName}."
+  },
+  "shiftInstanceUnderstaffedReminder": {
+    "heading": "Still short on volunteers",
+    "greeting": "Hi {firstName}, {shiftTitle} at {organizationName} is still below the minimum number of volunteers.",
+    "detailShift": "Shift",
+    "detailOrganization": "Organization",
+    "detailWhen": "When",
+    "whenRange": "{date} · {timeRange}",
+    "detailStaffing": "Staffing",
+    "staffingValue": "{filledCount} of {minVolunteers} confirmed",
+    "buttonLabel": "View shift",
+    "subject": "Reminder: {shiftTitle} is still short",
+    "previewText": "{shiftTitle} is still below the minimum number of volunteers.",
+    "footerNote": "You're receiving this because you manage shifts on {brandName}."
+  },
   "documentAwaitingSignature": {
     "heading": "Your document is waiting for your signature",
     "greeting": "Hi {firstName},",
@@ -420,5 +450,22 @@
   "documentNames": {
     "agreement": "Supplementary agreement",
     "timesheet": "Timesheet"
+  },
+  "volunteerDigest": {
+    "heading": "Your week ahead",
+    "greeting": "Hi {firstName}, here's what's on for the week ahead.",
+    "myShiftsHeading": "Your shifts",
+    "myShiftsSeeAll": "See all your shifts",
+    "pendingInvitesHeading": "Awaiting your answer",
+    "pendingInvitesSeeAll": "See all invitations",
+    "needsVolunteersHeading": "Shifts that need people",
+    "needsVolunteersSeeAll": "See all open shifts",
+    "rowWhen": "{date} · {timeRange}",
+    "reasonNeedsMore": "Needs {count} more volunteers",
+    "reasonNoVolunteersYet": "No volunteers yet",
+    "reasonHasRoom": "Has room for more volunteers",
+    "subject": "Your week ahead on {brandName}",
+    "previewText": "Your shifts, invitations, and open shifts for the week ahead.",
+    "footerNote": "You're receiving this weekly digest as a member of an organization on {brandName}."
   }
 }

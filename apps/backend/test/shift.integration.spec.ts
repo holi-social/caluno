@@ -257,6 +257,43 @@ describe('ShiftService.findInstancesForOrgUnitInRange', () => {
     expect(ids).not.toContain(otherInstance.id);
   });
 
+  it('includes a Sunday-night shift that ends after the week boundary', async () => {
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt: new Date('2026-09-13T20:00:00.000Z'),
+      endsAt: new Date('2026-09-14T01:00:00.000Z'),
+    });
+    const [instance] = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    expect(instance).toBeDefined();
+
+    const weekData = await graphqlRequestRequiringData<{
+      weeklyShifts: Array<{ id: string }>;
+    }>(
+      app,
+      {
+        query: `
+          query WeeklyShifts($startsAfter: DateTime!, $endsBefore: DateTime!) {
+            weeklyShifts(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+              id
+            }
+          }
+        `,
+        variables: {
+          startsAfter: '2026-09-07T00:00:00.000Z',
+          endsBefore: '2026-09-14T00:00:00.000Z',
+        },
+        headers: {
+          'x-organization-unit-id': organizationUnitId,
+        },
+      },
+      'weeklyShifts',
+    );
+
+    expect(weekData.weeklyShifts.map((row) => row.id)).toContain(instance?.id);
+  });
+
   it('invites members to all non-cancelled instances of a shift', async () => {
     const user = await createUser(db);
     const { id: shiftId } = await createShift(db, {
@@ -882,6 +919,188 @@ describe('ShiftService.findInstancesForOrgUnitInRange', () => {
     expect(response.errors?.[0]?.message).toMatch(
       /Shift instance with ID .* not found/,
     );
+  });
+});
+
+describe('overnight shifts (GraphQL)', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  const CREATE_SHIFT = `
+    mutation CreateShift($input: CreateShiftInput!) {
+      createShift(input: $input) {
+        id
+        durationMinutes
+      }
+    }
+  `;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('creates an overnight shift with a 5-hour duration', async () => {
+    const startsAt = futureWeekday(new Date(), 3, 5, 20);
+    const endsAt = new Date(startsAt.getTime() + 5 * 60 * 60 * 1000);
+
+    const data = await graphqlRequestRequiringData<{
+      createShift: { id: string; durationMinutes: number };
+    }>(
+      app,
+      {
+        query: CREATE_SHIFT,
+        variables: {
+          input: {
+            title: `Overnight ${crypto.randomUUID()}`,
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+            visibility: 'INVITED_MEMBERS',
+            invitedMemberIds: [],
+          },
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'createShift',
+    );
+
+    expect(data.createShift.durationMinutes).toBe(300);
+    const [instance] = await db.query.shiftInstances.findMany({
+      where: { masterId: data.createShift.id },
+    });
+    expect(instance?.actualEndsAt.getTime()).toBe(endsAt.getTime());
+  });
+
+  it('rejects a zero-length shift', async () => {
+    const startsAt = futureWeekday(new Date(), 3, 1, 10);
+    const response = await graphqlRequest(app, {
+      query: CREATE_SHIFT,
+      variables: {
+        input: {
+          title: `Zero ${crypto.randomUUID()}`,
+          startsAt: startsAt.toISOString(),
+          endsAt: startsAt.toISOString(),
+          visibility: 'ALL_MEMBERS',
+          invitedMemberIds: [],
+        },
+      },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe('shift_duration_out_of_range');
+  });
+
+  it('rejects a 24-hour shift', async () => {
+    const startsAt = futureWeekday(new Date(), 3, 2, 10);
+    const endsAt = new Date(startsAt.getTime() + 24 * 60 * 60 * 1000);
+    const response = await graphqlRequest(app, {
+      query: CREATE_SHIFT,
+      variables: {
+        input: {
+          title: `Too long ${crypto.randomUUID()}`,
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
+          visibility: 'ALL_MEMBERS',
+          invitedMemberIds: [],
+        },
+      },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+
+    expect(response.errors?.[0]?.message).toBe('shift_duration_out_of_range');
+  });
+
+  it('keeps overnight ends when applying a time edit to all future instances', async () => {
+    const startsAt = futureWeekday(new Date(), 3, 3, 20);
+    const sameDayEnd = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000);
+    const until = new Date(startsAt.getTime() + 5 * 24 * 60 * 60 * 1000);
+
+    const created = await graphqlRequestRequiringData<{
+      createShift: { id: string };
+    }>(
+      app,
+      {
+        query: CREATE_SHIFT,
+        variables: {
+          input: {
+            title: `Series overnight ${crypto.randomUUID()}`,
+            startsAt: startsAt.toISOString(),
+            endsAt: sameDayEnd.toISOString(),
+            visibility: 'INVITED_MEMBERS',
+            invitedMemberIds: [],
+            rrule: `FREQ=DAILY;INTERVAL=1;UNTIL=${rruleUntil(until)}`,
+          },
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'createShift',
+    );
+
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: created.createShift.id },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const [anchor] = instances;
+    if (!anchor) {
+      throw new Error('Expected createShift to expand an instance');
+    }
+
+    const overnightEnd = new Date(
+      anchor.actualStartsAt.getTime() + 5 * 3600_000,
+    );
+
+    await graphqlRequestRequiringData<{
+      updateShiftInstance: { id: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation UpdateShiftInstance(
+            $instanceId: String!
+            $input: UpdateShiftInstanceInput!
+            $applyToAllFuture: Boolean
+          ) {
+            updateShiftInstance(
+              instanceId: $instanceId
+              input: $input
+              applyToAllFuture: $applyToAllFuture
+            ) {
+              id
+            }
+          }
+        `,
+        variables: {
+          instanceId: anchor.id,
+          applyToAllFuture: true,
+          input: {
+            title: `Series overnight ${crypto.randomUUID()}`,
+            startsAt: anchor.actualStartsAt.toISOString(),
+            endsAt: overnightEnd.toISOString(),
+            visibility: 'INVITED_MEMBERS',
+          },
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstance',
+    );
+
+    const refreshed = await db.query.shiftInstances.findMany({
+      where: { masterId: created.createShift.id },
+    });
+    const future = refreshed.filter(
+      (instance) =>
+        !instance.isCancelled &&
+        instance.actualStartsAt.getTime() >= anchor.actualStartsAt.getTime(),
+    );
+    expect(future.length).toBeGreaterThan(1);
+    for (const instance of future) {
+      expect(
+        instance.actualEndsAt.getTime() - instance.actualStartsAt.getTime(),
+      ).toBe(5 * 60 * 60 * 1000);
+    }
   });
 });
 
@@ -4091,6 +4310,138 @@ describe('ShiftService.requestJoinShiftInstance — shift-instance required form
           item.targetType === RequiredFormTargetType.SHIFT_INSTANCE,
       ),
     ).toBe(true);
+  });
+});
+
+describe('ShiftService.requestJoinShiftInstance — JoinStatus resolution', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  const setupJoinableInstance = async (options?: {
+    maxVolunteers?: number;
+    joinRequiresApproval?: boolean;
+  }) => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: options?.maxVolunteers ?? 5,
+    });
+
+    if (options?.joinRequiresApproval) {
+      await db
+        .update(schema.shifts)
+        .set({ joinRequiresApproval: true })
+        .where(eq(schema.shifts.id, shiftId));
+    }
+
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    return { user, shiftId, instance };
+  };
+
+  it('returns PENDING when joinRequiresApproval is enabled', async () => {
+    const { user, instance } = await setupJoinableInstance({
+      joinRequiresApproval: true,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.PENDING);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.AWAITING_ADMIN_APPROVAL);
+  });
+
+  it('returns WAITLIST_JOINED when the shift is full', async () => {
+    const { user, instance } = await setupJoinableInstance({
+      maxVolunteers: 1,
+    });
+
+    const other = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: other.id,
+      status: ShiftInviteStatus.JOINED,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.WAITLIST_JOINED);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.WAITLIST_JOINED);
+  });
+
+  it('returns PENDING for ADMIN_INVITED when joinRequiresApproval is enabled', async () => {
+    const { user, instance } = await setupJoinableInstance({
+      joinRequiresApproval: true,
+    });
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: user.id,
+      status: ShiftInviteStatus.ADMIN_INVITED,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.PENDING);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.AWAITING_ADMIN_APPROVAL);
+  });
+
+  it('returns current JoinStatus without mutating a non-resolve invite', async () => {
+    const { user, instance } = await setupJoinableInstance();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: user.id,
+      status: ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.PENDING);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.AWAITING_ADMIN_APPROVAL);
   });
 });
 

@@ -3,7 +3,6 @@ import {
   type GetWeeklyShiftsQuery,
   PermissionKey,
 } from '@repo/data';
-import { addDays, startOfWeek } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { Pagination } from '@/components/pagination';
 import { CreateShiftButton } from '@/domain/shift/components/create-shift-button';
@@ -13,6 +12,7 @@ import { ShiftTabSwitcher } from '@/domain/shift/components/shift-tab-switcher';
 import { ShiftsTable } from '@/domain/shift/components/shifts-table';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
+import { getWeekRange } from '@/domain/shift/lib/shift-instances';
 import { orgHasShifts } from '@/domain/shift/weekplan';
 import { getDataClient } from '@/lib/data-client';
 import { requireOrgAccess } from '@/lib/org-context-server';
@@ -32,7 +32,7 @@ interface ShiftsPageProps {
 function parseWeekStart(param: string | null | undefined): Date {
   const base = param ? new Date(param) : new Date();
   const d = Number.isNaN(base.getTime()) ? new Date() : base;
-  return startOfWeek(d, { weekStartsOn: 1 });
+  return getWeekRange(d).weekStart;
 }
 
 export default async function ShiftsPage({
@@ -60,7 +60,7 @@ export default async function ShiftsPage({
   let orgShiftTotal = 0;
 
   if (isWeekplan) {
-    const weekEnd = addDays(weekStart, 7);
+    const { weekEnd } = getWeekRange(weekStart);
     instances = await data.shift.findForWeek(weekStart, weekEnd);
     if (instances.length > 0) {
       orgShiftTotal = instances.length;

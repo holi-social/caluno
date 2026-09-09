@@ -98,6 +98,66 @@ describe('resolveCheckInReadiness', () => {
   });
 });
 
+describe('resolveCheckInReadiness without a shift', () => {
+  const noShift = { requiresShift: false };
+
+  it('returns ready for a member, ignoring participation', () => {
+    expect(
+      resolveCheckInReadiness(
+        {
+          hasOpenTimeEntry: false,
+          isMember: true,
+          openMembershipRequestId: null,
+          isParticipating: false,
+        },
+        noShift,
+      ),
+    ).toBe('ready');
+  });
+
+  it('ignores an open time entry: there is no instance to be checked into', () => {
+    expect(
+      resolveCheckInReadiness(
+        {
+          hasOpenTimeEntry: true,
+          isMember: true,
+          openMembershipRequestId: null,
+          isParticipating: false,
+        },
+        noShift,
+      ),
+    ).toBe('ready');
+  });
+
+  it('still blocks a non-member', () => {
+    expect(
+      resolveCheckInReadiness(
+        {
+          hasOpenTimeEntry: false,
+          isMember: false,
+          openMembershipRequestId: null,
+          isParticipating: false,
+        },
+        noShift,
+      ),
+    ).toBe('notMember');
+  });
+
+  it('still blocks on a pending membership request', () => {
+    expect(
+      resolveCheckInReadiness(
+        {
+          hasOpenTimeEntry: false,
+          isMember: false,
+          openMembershipRequestId: 'req-1',
+          isParticipating: false,
+        },
+        noShift,
+      ),
+    ).toBe('pendingMembership');
+  });
+});
+
 describe('alreadyCheckedInDecideHref', () => {
   it('points at the decide page, which lists open entries with check-out links', () => {
     expect(alreadyCheckedInDecideHref('abc-123')).toBe(

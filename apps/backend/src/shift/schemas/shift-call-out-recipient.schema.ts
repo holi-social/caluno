@@ -9,12 +9,17 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
-import { ShiftCallOutDeliveryStatus } from '../enums';
+import { ShiftCallOutDeliveryStatus, ShiftCallOutSource } from '../enums';
 import { shiftInstances } from './shift-instance.schema';
 
 export const shiftCallOutDeliveryStatusEnum = pgEnum(
   'shift_call_out_delivery_status',
   enumValues(ShiftCallOutDeliveryStatus),
+);
+
+export const shiftCallOutSourceEnum = pgEnum(
+  'shift_call_out_source',
+  enumValues(ShiftCallOutSource),
 );
 
 /** One row per recipient per call-out send — the audit trail for who was asked to help, when, and by whom. */
@@ -34,6 +39,10 @@ export const shiftCallOutRecipients = snakeCase.table(
     status: shiftCallOutDeliveryStatusEnum('status')
       .$type<ShiftCallOutDeliveryStatus>()
       .notNull(),
+    source: shiftCallOutSourceEnum('source')
+      .$type<ShiftCallOutSource>()
+      .notNull()
+      .default(ShiftCallOutSource.MANUAL),
     sentAt: timestamp('sent_at').notNull(),
     ...timestampColumns,
   },
