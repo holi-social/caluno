@@ -1,4 +1,4 @@
-import type { ClientOptions, ErrorEvent, TransactionEvent } from '@sentry/core';
+import type { ClientOptions } from '@sentry/core';
 import { resolveSentryEnvironment } from './environments';
 import { IGNORE_ERRORS } from './ignore-errors';
 import { createTracesSampler } from './sampling';
@@ -39,7 +39,7 @@ export function buildBaseOptions(input: BaseOptionsInput): SharedSentryOptions {
       environment,
       override: input.tracesSampleRateOverride,
     }),
-    beforeSend: (event: ErrorEvent) => scrubEvent(event),
-    beforeSendTransaction: (event: TransactionEvent) => scrubEvent(event),
+    beforeSend: (event, _hint) => scrubEvent(event),
+    beforeSendTransaction: (event, _hint) => scrubEvent(event),
   };
 }

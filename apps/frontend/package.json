@@ -16,7 +16,7 @@
     "@repo/data": "*",
     "@repo/observability": "*",
     "@repo/ui": "*",
-    "@sentry/nextjs": "^10.70.0",
+    "@sentry/nextjs": "^10.74.0",
     "@yudiel/react-qr-scanner": "^2.5.1",
     "better-auth": "1.7.3",
     "date-fns": "^4.1.0",
