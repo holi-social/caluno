@@ -156,13 +156,15 @@ export function ContractCreationModal({
   // leave them alone — further re-renders (e.g. rate data arriving late)
   // shouldn't clobber anything the coordinator already edited.
   useEffect(() => {
-    if (!dataReady || !templateDoc || derivedFields) return;
+    if (!dataReady || !templateDoc || derivedFields || !volunteerName) return;
     const profileData = (profileQuery.data?.data ?? {}) as Record<
       string,
       unknown
     >;
-    setDerivedFields(deriveEditableFields(templateDoc, profileData));
-  }, [dataReady, templateDoc, derivedFields, profileQuery.data]);
+    setDerivedFields(
+      deriveEditableFields(templateDoc, profileData, volunteerName),
+    );
+  }, [dataReady, templateDoc, derivedFields, profileQuery.data, volunteerName]);
 
   // Rendered unconditionally (per the DocumentSheet precedent) so the Dialog
   // can drive its own open/close animation; nothing below needs the nullable
@@ -197,8 +199,13 @@ export function ContractCreationModal({
         volunteerId,
         periodStart,
         periodEnd,
-        fieldOverrides: Object.entries(editedValues).map(
-          ([fieldId, value]) => ({ fieldId, value }),
+        fieldOverrides: (derivedFields ?? []).flatMap((field) =>
+          isEdited(field.fieldId)
+            ? field.fieldIds.map((id) => ({
+                fieldId: id,
+                value: editedValues[field.fieldId] ?? '',
+              }))
+            : [],
         ),
       });
       onOpenChange(false);

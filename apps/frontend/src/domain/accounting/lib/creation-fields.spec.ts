@@ -52,16 +52,44 @@ describe('deriveEditableFields', () => {
     expect(bic?.value).toBeNull();
   });
 
-  it('dedupes by source and by manual field id (first occurrence wins)', () => {
+  it('dedupes manual field ids (first occurrence wins)', () => {
     const fields = deriveEditableFields(getContractDocument('ehrenamt'));
     const ids = fields.map((f) => f.fieldId);
     expect(ids.filter((id) => id === 'contract-lifespan')).toHaveLength(1);
-    expect(
-      fields.filter((f) => f.source === 'volunteer_first_name'),
-    ).toHaveLength(1);
-    expect(
-      fields.filter((f) => f.source === 'volunteer_last_name'),
-    ).toHaveLength(1);
+  });
+
+  it('carries every field id bound to a source, not just the first', () => {
+    const fields = deriveEditableFields(getContractDocument('ehrenamt'));
+    const firstName = fields.find((f) => f.source === 'volunteer_first_name');
+    expect(firstName?.fieldIds).toEqual([
+      'volunteer-name-first',
+      'payout-holder-first',
+    ]);
+    const lastName = fields.find((f) => f.source === 'volunteer_last_name');
+    expect(lastName?.fieldIds).toEqual([
+      'volunteer-name-last',
+      'payout-holder-last',
+    ]);
+    expect(firstName?.fieldId).toBe('volunteer-name-first');
+  });
+
+  it('prefills first/last name from the volunteer name, not the profile', () => {
+    const fields = deriveEditableFields(
+      getContractDocument('ehrenamt'),
+      { name: 'Ignored', lastname: 'Ignored' },
+      'Anna Müller',
+    );
+    const first = fields.find((f) => f.source === 'volunteer_first_name');
+    const last = fields.find((f) => f.source === 'volunteer_last_name');
+    expect(first?.value).toBe('Anna');
+    expect(last?.value).toBe('Müller');
+  });
+
+  it('marks name sources gap when no volunteer name is supplied', () => {
+    const fields = deriveEditableFields(getContractDocument('ehrenamt'), {});
+    const first = fields.find((f) => f.source === 'volunteer_first_name');
+    expect(first?.provenance).toBe('gap');
+    expect(first?.value).toBeNull();
   });
 
   it('excludes org/rate/generation-time sources (not per-document editable)', () => {

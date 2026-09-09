@@ -257,8 +257,10 @@ export function InvoiceCreationModal({
       string,
       unknown
     >;
-    setDerivedFields(deriveEditableFields(template, profileData));
-  }, [dataReady, template, derivedFields, profileQuery.data]);
+    setDerivedFields(
+      deriveEditableFields(template, profileData, volunteerName),
+    );
+  }, [dataReady, template, derivedFields, profileQuery.data, volunteerName]);
 
   // Rendered unconditionally (per the ContractCreationModal precedent) so the
   // Dialog can drive its own open/close animation; nothing below needs the
@@ -314,8 +316,13 @@ export function InvoiceCreationModal({
         periodStart: (period.from ?? new Date()).toISOString(),
         periodEnd: (period.to ?? period.from ?? new Date()).toISOString(),
         timeEntryIds: selectedLines.map((line) => line.id),
-        fieldOverrides: Object.entries(editedValues).map(
-          ([fieldId, value]) => ({ fieldId, value }),
+        fieldOverrides: (derivedFields ?? []).flatMap((field) =>
+          isEdited(field.fieldId)
+            ? field.fieldIds.map((id) => ({
+                fieldId: id,
+                value: editedValues[field.fieldId] ?? '',
+              }))
+            : [],
         ),
       });
       onOpenChange(false);
