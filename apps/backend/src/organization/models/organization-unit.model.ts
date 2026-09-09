@@ -48,6 +48,9 @@ export class OrganizationUnit {
   @Field(() => String, { nullable: true })
   legalRep?: string | null;
 
+  @Field(() => Boolean)
+  idVerificationEnabled!: boolean;
+
   @Field(() => String, { nullable: true })
   description?: string | null;
 
