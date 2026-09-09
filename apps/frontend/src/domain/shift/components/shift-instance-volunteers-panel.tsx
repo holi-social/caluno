@@ -44,6 +44,7 @@ type ShiftInstanceVolunteersPanelProps = {
   invites: InstanceInvite[];
   spotsLeft: number | null | undefined;
   canManage: boolean;
+  isInstanceInThePast: boolean;
 };
 
 function manageActions(
@@ -63,6 +64,7 @@ export function ShiftInstanceVolunteersPanel({
   invites,
   spotsLeft,
   canManage,
+  isInstanceInThePast,
 }: ShiftInstanceVolunteersPanelProps) {
   const t = useTranslations('Shift');
   const tVolunteer = useTranslations('Volunteer.action');
@@ -186,16 +188,18 @@ export function ShiftInstanceVolunteersPanel({
       headerAction={
         canManage ? (
           <div className="flex flex-wrap items-center gap-2">
-            <SendCallOutDialog
-              orgUId={orgUId}
-              instanceId={instanceId}
-              trigger={
-                <Button variant="outline" size="sm">
-                  <Megaphone />
-                  {t('instanceDetail.callOutCta')}
-                </Button>
-              }
-            />
+            {!isInstanceInThePast ? (
+              <SendCallOutDialog
+                orgUId={orgUId}
+                instanceId={instanceId}
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Megaphone />
+                    {t('instanceDetail.callOutCta')}
+                  </Button>
+                }
+              />
+            ) : null}
             <Button asChild size="sm">
               <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
                 <UserPlus />
