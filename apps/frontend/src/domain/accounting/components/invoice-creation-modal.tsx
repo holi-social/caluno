@@ -19,7 +19,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
 import { useRouter } from '@/i18n/navigation';
-import { formatEuro } from '@/lib/formatting/formats';
 import {
   type DerivedField,
   deriveEditableFields,
@@ -461,7 +460,7 @@ export function InvoiceCreationModal({
     'Summe',
     `${selectedHours}h`,
     '',
-    formatEuro(selectedAmount),
+    formatHourlyRate(selectedAmount),
   ];
   // The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
   // stated on every invoice regardless, never computed from the total.
