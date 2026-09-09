@@ -20,6 +20,12 @@ export class Membership {
 
   @Field(() => Date)
   createdAt!: Date;
+
+  @Field(() => Date, { nullable: true })
+  idVerifiedAt?: Date | null;
+
+  @Field(() => User, { nullable: true })
+  idVerifiedBy?: User | null;
 }
 
 export const MembershipPaginatedResponse =

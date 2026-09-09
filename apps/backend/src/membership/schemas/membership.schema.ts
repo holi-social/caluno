@@ -1,10 +1,4 @@
-import {
-  index,
-  snakeCase,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, snakeCase, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
