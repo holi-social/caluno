@@ -143,8 +143,6 @@ export function ShiftInstanceVolunteersPanel({
   };
 
   const applyStatus = (invite: InstanceInvite, target: ShiftInviteStatus) => {
-    console.log('TO STATE:', invite, target, canManage);
-
     if (!canManage || pending) {
       return;
     }
@@ -204,7 +202,6 @@ export function ShiftInstanceVolunteersPanel({
   };
 
   const onStatusChange = (volunteerId: string, value: string) => {
-    console.log('WAT');
     const invite = invites.find((item) => item.user.id === volunteerId);
     if (!invite) {
       return;
