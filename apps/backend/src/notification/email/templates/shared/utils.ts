@@ -88,3 +88,18 @@ export function publicOrganizationUnitUrl(organizationUnitId: string): string {
 export function volunteerProfileUrl(): string {
   return `${resolveAppUrl()}/profile`;
 }
+
+/** The volunteering side's home page — not org-scoped, spans all of a volunteer's organizations. */
+export function volunteeringHomeUrl(): string {
+  return resolveAppUrl();
+}
+
+/** Deep link to the volunteer's pending shift/event invitations. */
+export function myInvitationsUrl(): string {
+  return `${resolveAppUrl()}/invitations`;
+}
+
+/** Deep link to the volunteering side's open-shift discovery page. */
+export function discoverShiftsUrl(): string {
+  return `${resolveAppUrl()}/discover`;
+}

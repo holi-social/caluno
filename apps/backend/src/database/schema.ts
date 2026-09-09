@@ -50,5 +50,6 @@ export * from '../shift/schemas/shift-instance-understaffed-state.schema';
 export * from '../shift/schemas/shift-invite.schema';
 export * from '../shift/schemas/shift-manager-notification.schema';
 export * from '../shift/schemas/shift-required-form.schema';
+export * from '../shift/schemas/volunteer-digest-shift-log.schema';
 export * from '../storage/schemas/file.schema';
 export * from '../time-tracking/schemas/time-entry.schema';
