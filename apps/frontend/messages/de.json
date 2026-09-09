@@ -1711,6 +1711,14 @@
       "birthdayLabel": "Geburtstag",
       "emailLabel": "E-Mail",
       "formFallback": "Formular",
+      "idVerification": {
+        "label": "Ausweis geprüft",
+        "unverifyTitle": "Ausweisprüfung entfernen?",
+        "unverifyDescription": "Der Freiwillige wird beim nächsten Check-in wieder als ungeprüft markiert.",
+        "unverifyCancel": "Abbrechen",
+        "unverifyConfirm": "Prüfung entfernen",
+        "updateError": "Der Ausweisstatus konnte nicht aktualisiert werden."
+      },
       "noSubmissions": "Noch keine eingereichten Formulare.",
       "qrIdLabel": "QR-ID",
       "submittedForms": "Eingereichte Formulare",
