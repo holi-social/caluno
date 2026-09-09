@@ -138,10 +138,9 @@ export class ShiftCallOutService {
     };
   }
 
-  /** Latest call-out send per instance (recipient count + when), for many instances in one query (DataLoader batch). */
-  async getLastCallOutSummaries(
+  async getCallOutHistory(
     instanceIds: string[],
-  ): Promise<Map<string, ShiftCallOutSummary>> {
+  ): Promise<Map<string, ShiftCallOutSummary[]>> {
     if (instanceIds.length === 0) return new Map();
 
     const rows = await this.db
@@ -154,36 +153,43 @@ export class ShiftCallOutService {
       .from(schema.shiftCallOutRecipients)
       .where(inArray(schema.shiftCallOutRecipients.instanceId, instanceIds));
 
-    const byInstance = new Map<
-      string,
-      {
-        sentAt: Date;
-        count: number;
-        sentById: string;
-        source: ShiftCallOutSource;
-      }
-    >();
+    const byInstance = new Map<string, ShiftCallOutSummary[]>(
+      instanceIds.map((id) => [id, []]),
+    );
     for (const row of rows) {
-      const existing = byInstance.get(row.instanceId);
-      if (!existing || row.sentAt > existing.sentAt) {
-        byInstance.set(row.instanceId, {
-          sentAt: row.sentAt,
-          count: 1,
-          sentById: row.sentById,
-          source: row.source,
-        });
-      } else if (row.sentAt.getTime() === existing.sentAt.getTime()) {
-        existing.count += 1;
+      const batches = byInstance.get(row.instanceId);
+      if (!batches) continue;
+      const existing = batches.find(
+        (batch) => batch.sentAt.getTime() === row.sentAt.getTime(),
+      );
+      if (existing) {
+        existing.recipientCount += 1;
+        continue;
       }
+      batches.push({
+        sentAt: row.sentAt,
+        recipientCount: 1,
+        source: row.source,
+        sentById: row.sentById,
+      });
     }
 
+    for (const batches of byInstance.values()) {
+      batches.sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
+    }
+
+    return byInstance;
+  }
+
+  async getLastCallOutSummaries(
+    instanceIds: string[],
+  ): Promise<Map<string, ShiftCallOutSummary>> {
+    const history = await this.getCallOutHistory(instanceIds);
     return new Map(
-      [...byInstance.entries()].map(
-        ([instanceId, { sentAt, count, sentById, source }]) => [
-          instanceId,
-          { sentAt, recipientCount: count, sentById, source },
-        ],
-      ),
+      [...history.entries()].map(([instanceId, batches]) => [
+        instanceId,
+        batches[0],
+      ]),
     );
   }
 
