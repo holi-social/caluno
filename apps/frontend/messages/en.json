@@ -1475,6 +1475,9 @@
     },
     "validation": {
       "endTimeRequired": "End time is required",
+      "endMustBeLaterThanStart": "End time must be later than start time",
+      "continuesIntoNextDay": "This shift continues into the next day.",
+      "shorterThan24Hours": "Shift must be shorter than 24 hours.",
       "instanceClearRecurrenceUnsupported": "You can't remove the recurrence here. Edit it on the Edit shift page instead.",
       "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
       "instanceRecurrenceConflict": "The new recurrence doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence.",
