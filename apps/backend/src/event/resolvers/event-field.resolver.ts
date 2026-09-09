@@ -5,14 +5,13 @@ import {
   type UserSession,
 } from '@thallesp/nestjs-better-auth';
 import { Loader } from '../../graphql/decorators/loader.decorator';
-import { MembershipService } from '../../membership/membership.service';
 import { RequiredFormRef } from '../../organization/models/organization-unit-required-form.model';
 import { RequiredFormRefMapper } from '../../requirement-profile/mappers/required-form-ref.mapper';
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
-import { EventInviteStatus } from '../enums';
+import { EventService } from '../event.service';
 import { Event } from '../models/event.model';
 import { EventOrganizationUnit } from '../models/event-organization-unit.model';
 import type { EventEntity } from '../schemas/event.schema';
@@ -27,7 +26,7 @@ import { EventShiftsLoader } from './loader';
 export class EventFieldResolver {
   constructor(
     private readonly userMapper: UserMapper,
-    private readonly membershipService: MembershipService,
+    private readonly eventService: EventService,
     private readonly requiredFormRefMapper: RequiredFormRefMapper,
   ) {}
 
@@ -95,42 +94,12 @@ export class EventFieldResolver {
     const invite = await loader.inviteByEventIdAndUserId.load(
       `${event.id}:${session.user.id}`,
     );
-    if (invite?.status === EventInviteStatus.JOINED) {
-      return JoinStatus.JOINED;
-    }
-    if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
-      return JoinStatus.REJECTED;
-    }
 
-    const membershipState = await this.membershipService.getMembershipState(
+    return this.eventService.resolveEventJoinStatus(
       session.user.id,
       event.organizationUnitId,
+      invite,
     );
-
-    if (membershipState === JoinStatus.REJECTED) {
-      return JoinStatus.REJECTED;
-    }
-
-    if (membershipState === JoinStatus.PENDING) {
-      const requests = await this.membershipService.getMyMembershipRequests(
-        session.user.id,
-      );
-      const request = requests.find(
-        (r) => r.organizationUnitId === event.organizationUnitId,
-      );
-      const intendedEventIds =
-        request?.metadata &&
-        typeof request.metadata === 'object' &&
-        'intendedEventIds' in request.metadata &&
-        Array.isArray(request.metadata.intendedEventIds)
-          ? request.metadata.intendedEventIds
-          : [];
-      if (intendedEventIds.includes(event.id)) {
-        return JoinStatus.PENDING;
-      }
-    }
-
-    return JoinStatus.NONE;
   }
 
   @AllowAnonymous()

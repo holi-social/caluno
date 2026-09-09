@@ -15,6 +15,11 @@ import { shiftInstanceCallOutNoRecipientsTemplate } from '../../notification/ema
 import { NotificationService } from '../../notification/notification.service';
 import { NotificationEvent } from '../../notification/notification-events';
 import {
+  POSTHOG_EVENT,
+  POSTHOG_SURFACE,
+} from '../../shared/observability/posthog.events';
+import { PostHogService } from '../../shared/observability/posthog.service';
+import {
   ShiftCallOutDeliveryStatus,
   ShiftCallOutSource,
   ShiftInviteStatus,
@@ -58,6 +63,7 @@ export class ShiftCallOutService {
     private readonly notificationService: NotificationService,
     private readonly emailService: EmailService,
     private readonly appI18n: AppI18nService,
+    private readonly postHogService: PostHogService,
   ) {}
 
   async sendCallOut(
@@ -93,11 +99,20 @@ export class ShiftCallOutService {
     }
 
     if (recipientUserIds.length === 0) {
-      await this.sendNoRecipientsFallback(
+      const sentFallback = await this.sendNoRecipientsFallback(
         instance,
         organizationUnit,
         actorUserId,
       );
+      if (sentFallback) {
+        this.captureCallOutSend({
+          actorUserId,
+          organizationUnit,
+          instance,
+          recipientCount: 0,
+          sentToManagerFallback: true,
+        });
+      }
       return { recipientCount: 0, sentToManagerFallback: true };
     }
 
@@ -109,16 +124,23 @@ export class ShiftCallOutService {
       source,
     );
 
+    this.captureCallOutSend({
+      actorUserId,
+      organizationUnit,
+      instance,
+      recipientCount: recipientUserIds.length,
+      sentToManagerFallback: false,
+    });
+
     return {
       recipientCount: recipientUserIds.length,
       sentToManagerFallback: false,
     };
   }
 
-  /** Latest call-out send per instance (recipient count + when), for many instances in one query (DataLoader batch). */
-  async getLastCallOutSummaries(
+  async getCallOutHistory(
     instanceIds: string[],
-  ): Promise<Map<string, ShiftCallOutSummary>> {
+  ): Promise<Map<string, ShiftCallOutSummary[]>> {
     if (instanceIds.length === 0) return new Map();
 
     const rows = await this.db
@@ -131,36 +153,43 @@ export class ShiftCallOutService {
       .from(schema.shiftCallOutRecipients)
       .where(inArray(schema.shiftCallOutRecipients.instanceId, instanceIds));
 
-    const byInstance = new Map<
-      string,
-      {
-        sentAt: Date;
-        count: number;
-        sentById: string;
-        source: ShiftCallOutSource;
-      }
-    >();
+    const byInstance = new Map<string, ShiftCallOutSummary[]>(
+      instanceIds.map((id) => [id, []]),
+    );
     for (const row of rows) {
-      const existing = byInstance.get(row.instanceId);
-      if (!existing || row.sentAt > existing.sentAt) {
-        byInstance.set(row.instanceId, {
-          sentAt: row.sentAt,
-          count: 1,
-          sentById: row.sentById,
-          source: row.source,
-        });
-      } else if (row.sentAt.getTime() === existing.sentAt.getTime()) {
-        existing.count += 1;
+      const batches = byInstance.get(row.instanceId);
+      if (!batches) continue;
+      const existing = batches.find(
+        (batch) => batch.sentAt.getTime() === row.sentAt.getTime(),
+      );
+      if (existing) {
+        existing.recipientCount += 1;
+        continue;
       }
+      batches.push({
+        sentAt: row.sentAt,
+        recipientCount: 1,
+        source: row.source,
+        sentById: row.sentById,
+      });
     }
 
+    for (const batches of byInstance.values()) {
+      batches.sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
+    }
+
+    return byInstance;
+  }
+
+  async getLastCallOutSummaries(
+    instanceIds: string[],
+  ): Promise<Map<string, ShiftCallOutSummary>> {
+    const history = await this.getCallOutHistory(instanceIds);
     return new Map(
-      [...byInstance.entries()].map(
-        ([instanceId, { sentAt, count, sentById, source }]) => [
-          instanceId,
-          { sentAt, recipientCount: count, sentById, source },
-        ],
-      ),
+      [...history.entries()].map(([instanceId, batches]) => [
+        instanceId,
+        batches[0],
+      ]),
     );
   }
 
@@ -247,12 +276,14 @@ export class ShiftCallOutService {
       });
   }
 
-  private async findOrganizationUnit(
-    organizationUnitId: string,
-  ): Promise<{ id: string; name: string } | null> {
+  private async findOrganizationUnit(organizationUnitId: string): Promise<{
+    id: string;
+    name: string;
+    organizationId: string | null;
+  } | null> {
     const organizationUnit = await this.db.query.organizationUnits.findFirst({
       where: { id: organizationUnitId },
-      columns: { id: true, name: true },
+      columns: { id: true, name: true, organizationId: true },
     });
 
     return organizationUnit ?? null;
@@ -260,7 +291,11 @@ export class ShiftCallOutService {
 
   private async sendCallOutEmails(
     instance: ShiftInstanceWithMaster,
-    organizationUnit: { id: string; name: string },
+    organizationUnit: {
+      id: string;
+      name: string;
+      organizationId?: string | null;
+    },
     recipientUserIds: string[],
     actorUserId: string,
     source: ShiftCallOutSource,
@@ -330,17 +365,43 @@ export class ShiftCallOutService {
     );
   }
 
+  private captureCallOutSend(input: {
+    actorUserId: string;
+    organizationUnit: { id: string; organizationId?: string | null };
+    instance: ShiftInstanceWithMaster;
+    recipientCount: number;
+    sentToManagerFallback: boolean;
+  }): void {
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.SHIFT_CALL_OUT_SEND,
+      userId: input.actorUserId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: input.organizationUnit.organizationId ?? undefined,
+        organization_unit_id: input.organizationUnit.id,
+        shift_id: input.instance.masterId,
+        shift_instance_id: input.instance.id,
+        recipient_count: input.recipientCount,
+        sent_to_manager_fallback: input.sentToManagerFallback,
+      },
+    });
+  }
+
   private async sendNoRecipientsFallback(
     instance: ShiftInstanceWithMaster,
-    organizationUnit: { id: string; name: string },
+    organizationUnit: {
+      id: string;
+      name: string;
+      organizationId?: string | null;
+    },
     actorUserId: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const manager = await this.notificationService.resolveUserNotificationData(
       actorUserId,
       { event: NotificationEvent.SHIFT_INSTANCE_CALL_OUT_NO_RECIPIENTS },
     );
     if (!manager) {
-      return;
+      return false;
     }
 
     const shiftTitle = instance.overrideTitle ?? instance.master.title;
@@ -362,12 +423,14 @@ export class ShiftCallOutService {
         templateContext,
       );
       await this.emailService.send({ to: manager.email, subject, html });
+      return true;
     } catch (error) {
       this.logger.error(
         `Failed to send "nobody left to ask" email to user ${actorUserId}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
+      return false;
     }
   }
 }

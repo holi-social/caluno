@@ -1192,9 +1192,13 @@
     },
     "card": {
       "inviteAria": "Invite",
+      "inviteToShift": "Invite to the shift",
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "openInstanceAria": "Open"
+      "openInstanceAria": "Open",
+      "waitlist": "Waitlist",
+      "waitlistInviteError": "Could not invite volunteer",
+      "waitlistInviteSuccess": "Volunteer invited to the shift"
     },
     "checkIn": {
       "checkOut": "Check-out",
@@ -1240,6 +1244,7 @@
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
       "urgentCallAutomaticBadge": "Automatic",
+      "urgentCallHistoryCount": "{count, plural, one {# call} other {# calls}}",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1283,7 +1288,6 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
-      "callOutAria": "Urgent Call",
       "callOutCta": "Urgent Call",
       "callOutDialog": {
         "confirm": "Urgent Call",
@@ -1324,6 +1328,8 @@
       "actionInvite": "Invite",
       "actionUninvite": "Uninvite",
       "cancelled": "Canceled",
+      "capacityBadge": "{filled} / {max} spots filled",
+      "capacityBadgeNoMax": "{filled} volunteers",
       "declined": "Declined",
       "inviteError": "Could not invite volunteer",
       "inviteSuccess": "Volunteer invited again",
@@ -1357,7 +1363,10 @@
       "joinShift": "Join shift",
       "joined": "You have joined the shift",
       "joining": "Joining...",
+      "joinWaitlist": "Join the waitlist",
       "keepShift": "Keep shift",
+      "leaveWaitlist": "Leave the waitlist",
+      "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingApproval": "Waiting for approval",
       "pendingCta": "Request pending",
@@ -1369,7 +1378,7 @@
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
       "unexpected": "Unexpected response from server",
-      "waitlisted": "On waitlist"
+      "waitlistJoined": "You're on the waitlist. We'll email you if a spot opens up."
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
@@ -1544,6 +1553,8 @@
     "spotsFull": "· full",
     "spotsTaken": "{filled} of {max} spots taken",
     "timeLabel": "Time",
+    "waitlistBadge": "You're on the waitlist",
+    "waitlistNote": "If a spot opens up, we'll email you so you can claim it.",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & where"
   },
@@ -1863,14 +1874,24 @@
         "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
         "viewVolunteer": "View volunteer",
         "createButton": "Create {kind}",
-        "createButtonEmpty": "Create new document"
+        "createButtonEmpty": "Create new document",
+        "contractState": {
+          "none": "No contract yet",
+          "awaiting-signature": "Awaiting signature",
+          "awaiting-countersignature": "Awaiting countersignature",
+          "active": "Active",
+          "declined": "Declined"
+        },
+        "latestTimesheet": "Latest timesheet · {date}",
+        "noTimesheetYet": "No timesheet yet"
       },
       "bundle": {
         "actionLabel": "Download bundle",
         "readyCount": "{count} ready",
         "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
         "neverDownloaded": "not downloaded yet",
-        "unknownUser": "unknown"
+        "unknownUser": "unknown",
+        "downloadError": "The bundle could not be downloaded. Please try again."
       },
       "batchBar": {
         "selected": "{count} selected",
@@ -1879,7 +1900,8 @@
         "bundleAll": "Download all bundles",
         "mixed": "Mixed selection",
         "clearSelection": "Clear",
-        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}",
+        "bundleDownloadErrorToast": "Bundle download failed. Please try again."
       },
       "actionToasts": {
         "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
@@ -1934,10 +1956,12 @@
         },
         "statusLabel": {
           "contractGenerate": "Create contract",
+          "contractDraft": "Draft",
           "contractSigningVol": "Waiting for signature",
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
           "timesheetGenerate": "Create timesheet",
+          "timesheetDraft": "Draft",
           "timesheetSigningVol": "Waiting for signature",
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",
@@ -2042,6 +2066,16 @@
           "title": "Yearly cap",
           "value": "{before} → {after}",
           "subline": "of {total} yearly cap"
+        },
+        "manualCap": {
+          "title": "Initial amount",
+          "editButtonLabel": "Edit initial amount",
+          "saveButtonLabel": "Save initial amount",
+          "cancelButtonLabel": "Cancel",
+          "inputLabel": "Initial amount in euros",
+          "projectedAfter": "Projected after this invoice: {after}",
+          "successToast": "Initial amount saved.",
+          "errorToast": "The initial amount couldn't be saved. Please try again."
         },
         "hoursCard": {
           "title": "Eligible hours",
@@ -2157,6 +2191,7 @@
           "contract-lifespan": "Contract period",
           "tasks": "Task description",
           "hours-amount": "Hours",
+          "hours-unit": "Hours unit",
           "freeform-text": "Freeform text",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger",

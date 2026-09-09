@@ -70,6 +70,9 @@ export class ShiftInstance {
 
   @Field(() => ShiftInstanceCallOutSummary, { nullable: true })
   lastCallOut?: ShiftInstanceCallOutSummary | null;
+
+  @Field(() => [ShiftInstanceCallOutSummary], { nullable: true })
+  callOuts?: ShiftInstanceCallOutSummary[] | null;
 }
 
 export const ShiftInstancePaginatedResponse =

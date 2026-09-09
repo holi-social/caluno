@@ -227,11 +227,28 @@ query GetShiftInstanceCallOutSummary($id: ID!) {
   }
 }
 
+query GetShiftInstanceCallOutHistory($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    callOuts {
+      sentAt
+      recipientCount
+      source
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+
 mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
     status
     shiftInstance {
       id
+      myInviteStatus
       actualStartsAt
       actualEndsAt
       overrideTitle
