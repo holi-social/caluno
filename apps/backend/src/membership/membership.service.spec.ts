@@ -142,6 +142,7 @@ describe('MembershipService.removeMembership PostHog', () => {
       {} as never,
       {} as never,
       { capture } as unknown as PostHogService,
+      {} as never,
     );
 
     await service.removeMembership('mem-1', 'ou-1');
