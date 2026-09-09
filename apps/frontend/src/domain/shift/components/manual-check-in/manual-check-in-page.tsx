@@ -17,7 +17,10 @@ import { UserCard } from '@/components/user-card';
 import { checkInVolunteer } from '@/domain/time-entry/actions';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { resolveCheckInReadiness } from '../../check-in-readiness';
+import {
+  resolveCheckInReadiness,
+  shouldShowIdVerification,
+} from '../../check-in-readiness';
 import {
   applyDate,
   applyOrgUnit,
@@ -32,6 +35,7 @@ import { AcceptMembershipSheet } from './accept-membership-sheet';
 import { CheckInReadinessCard } from './check-in-readiness-card';
 import { CheckInWithoutShiftWarningCard } from './check-in-without-shift-warning-card';
 import { DateSheet } from './date-sheet';
+import { IdVerificationCard } from './id-verification-card';
 import { OrgUnitSheet } from './org-unit-sheet';
 import { ShiftInstanceStepper } from './shift-instance-stepper';
 import { ShiftSheet } from './shift-sheet';
@@ -140,6 +144,18 @@ export function ManualCheckInPage({
   // Informational only: never gates the check-in button, unlike the
   // readiness card, which only earns its place while it blocks.
   const showShiftlessWarning = shouldShowShiftlessCheckInWarning(withoutShift);
+
+  // The ID verification card is a read-only side output of the readiness
+  // facts: it never blocks check-in, and disappears for good once verified.
+  const showIdVerification =
+    readinessState && readiness
+      ? shouldShowIdVerification({
+          state: readinessState,
+          idVerificationEnabled: readiness.idVerificationEnabled,
+          idVerified: readiness.idVerified,
+          membershipId: readiness.membershipId ?? null,
+        })
+      : false;
 
   // "Sent" is per (org unit) / (shift instance) — tracked as the id it was
   // sent for, so switching to a different unit or instance re-arms the
@@ -270,6 +286,10 @@ export function ManualCheckInPage({
               shiftInviteSentFor === selection.shiftInstanceId
             }
           />
+        )}
+
+        {showIdVerification && readiness?.membershipId && (
+          <IdVerificationCard membershipId={readiness.membershipId} />
         )}
 
         {readinessState === 'ready' && (

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   alreadyCheckedInDecideHref,
   resolveCheckInReadiness,
+  shouldShowIdVerification,
 } from '../check-in-readiness';
 
 describe('resolveCheckInReadiness', () => {
@@ -162,6 +163,46 @@ describe('alreadyCheckedInDecideHref', () => {
   it('points at the decide page, which lists open entries with check-out links', () => {
     expect(alreadyCheckedInDecideHref('abc-123')).toBe(
       '/check-in/abc-123/decide',
+    );
+  });
+});
+
+describe('shouldShowIdVerification', () => {
+  const base = {
+    state: 'ready' as const,
+    idVerificationEnabled: true,
+    idVerified: false,
+    membershipId: 'm-1',
+  };
+
+  it('shows for an unverified member when the feature is enabled and readiness is ready', () => {
+    expect(shouldShowIdVerification(base)).toBe(true);
+  });
+
+  it('stays hidden once the membership is verified (no re-trigger on later check-ins)', () => {
+    expect(shouldShowIdVerification({ ...base, idVerified: true })).toBe(false);
+  });
+
+  it('stays hidden when the feature is disabled for the org unit', () => {
+    expect(
+      shouldShowIdVerification({ ...base, idVerificationEnabled: false }),
+    ).toBe(false);
+  });
+
+  it('stays hidden while any readiness blocker is active', () => {
+    for (const state of [
+      'alreadyCheckedIn',
+      'notMember',
+      'pendingMembership',
+      'notInShift',
+    ] as const) {
+      expect(shouldShowIdVerification({ ...base, state })).toBe(false);
+    }
+  });
+
+  it('stays hidden without a membership id (nothing to verify)', () => {
+    expect(shouldShowIdVerification({ ...base, membershipId: null })).toBe(
+      false,
     );
   });
 });
