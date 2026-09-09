@@ -101,7 +101,11 @@ export class DocumentRenderingService {
     }
     const resolved = await this.resolveValues(document);
     const body = (template.body ?? {}) as TemplateBodyShape;
-    const fieldValues = this.buildFieldValueMap(body, resolved);
+    const fieldValues = this.buildFieldValueMap(
+      body,
+      resolved,
+      document.fieldOverrides ?? {},
+    );
     const tableRows =
       'invoiceTimeEntries' in document
         ? await this.resolveInvoiceTableRows(document)
@@ -319,6 +323,7 @@ export class DocumentRenderingService {
   private buildFieldValueMap(
     body: TemplateBodyShape,
     resolved: Record<string, string>,
+    overrides: Record<string, string>,
   ): Record<string, string> {
     const values: Record<string, string> = {};
     const collect = (fields?: TemplateFieldShape[]) => {
@@ -342,6 +347,11 @@ export class DocumentRenderingService {
       for (const line of block.lines ?? []) collect(line.fields);
     }
     if (body.footer?.closingLine) collect(body.footer.closingLine.fields);
+    for (const [fieldId, value] of Object.entries(overrides)) {
+      if (value) {
+        values[fieldId] = value;
+      }
+    }
     return values;
   }
 

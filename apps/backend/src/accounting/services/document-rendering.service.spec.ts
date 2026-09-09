@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { FilePurpose } from '../../storage/enums';
 import type { ContractWithRelations } from '../accounting.types';
 import { DocumentRenderingService } from './document-rendering.service';
+import type { TemplateBodyShape } from './document-template.types';
 
 describe('DocumentRenderingService', () => {
   const createService = (
@@ -157,5 +158,77 @@ describe('DocumentRenderingService', () => {
       'actor-1',
     );
     expect(fileId).toBeNull();
+  });
+
+  describe('buildFieldValueMap', () => {
+    const buildFieldValueMap = (
+      service: DocumentRenderingService,
+      body: TemplateBodyShape,
+      resolved: Record<string, string>,
+      overrides: Record<string, string>,
+    ): Record<string, string> =>
+      (
+        service as unknown as {
+          buildFieldValueMap: (
+            body: TemplateBodyShape,
+            resolved: Record<string, string>,
+            overrides: Record<string, string>,
+          ) => Record<string, string>;
+        }
+      ).buildFieldValueMap(body, resolved, overrides);
+
+    it('prefers an override over the bound-profile value', () => {
+      const service = createService();
+      const body: TemplateBodyShape = {
+        header: {
+          orgIdentityLine: {
+            id: 'org-line',
+            text: '{volunteer_iban}',
+            fields: [
+              {
+                id: 'volunteer_iban',
+                value: { kind: 'bound', source: 'volunteer_iban' },
+              },
+            ],
+          },
+        },
+      };
+
+      const values = buildFieldValueMap(
+        service,
+        body,
+        { volunteer_iban: 'DE00 1111 2222 3333 4444 55' },
+        { volunteer_iban: 'DE00 9999 9999 9999 9999 99' },
+      );
+
+      expect(values.volunteer_iban).toBe('DE00 9999 9999 9999 9999 99');
+    });
+
+    it('prefers an override over a manual-template value', () => {
+      const service = createService();
+      const body: TemplateBodyShape = {
+        header: {
+          orgIdentityLine: {
+            id: 'org-line',
+            text: '{kostenstelle}',
+            fields: [
+              {
+                id: 'kostenstelle',
+                value: { kind: 'manual-template', value: '1000' },
+              },
+            ],
+          },
+        },
+      };
+
+      const values = buildFieldValueMap(
+        service,
+        body,
+        {},
+        { kostenstelle: '2000' },
+      );
+
+      expect(values.kostenstelle).toBe('2000');
+    });
   });
 });

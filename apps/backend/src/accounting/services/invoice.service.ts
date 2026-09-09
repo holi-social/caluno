@@ -29,6 +29,7 @@ import {
   SigneeType,
 } from '../enums';
 import type { CreateInvoiceInput } from '../inputs/create-invoice.input';
+import { toFieldOverridesMap } from '../inputs/document-field-override.input';
 import type { InvoiceEntity } from '../schemas/invoice.schema';
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import { ContractService } from './contract.service';
@@ -430,6 +431,7 @@ export class InvoiceService {
           totalHours,
           isNonCompliant: !activeContract,
           resolvedBody: structuredClone(template.body),
+          fieldOverrides: toFieldOverridesMap(input.fieldOverrides),
         })
         .returning();
 

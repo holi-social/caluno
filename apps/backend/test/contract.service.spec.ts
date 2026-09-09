@@ -204,6 +204,33 @@ describe('ContractService', () => {
         footer: {},
       });
     });
+
+    it('persists per-document field overrides', async () => {
+      const { organization, reimbursementType, volunteer, signer } =
+        await setup();
+
+      const contract = await service.createContract(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-01-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-12-31T00:00:00.000Z'),
+          fieldOverrides: [
+            {
+              fieldId: 'volunteer-iban-field',
+              value: 'DE00 0000 0000 0000 0000 00',
+            },
+          ],
+        },
+        signer.id,
+      );
+
+      expect(contract.fieldOverrides).toEqual({
+        'volunteer-iban-field': 'DE00 0000 0000 0000 0000 00',
+      });
+    });
   });
 
   describe('signContract', () => {

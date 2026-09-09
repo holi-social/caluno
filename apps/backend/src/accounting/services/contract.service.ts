@@ -25,6 +25,7 @@ import {
   SigneeType,
 } from '../enums';
 import type { CreateContractInput } from '../inputs/create-contract.input';
+import { toFieldOverridesMap } from '../inputs/document-field-override.input';
 import type { ContractEntity } from '../schemas/contract.schema';
 import type { ContractStatusChangeEntity } from '../schemas/contract-status-change.schema';
 import { DocumentNotificationService } from './document-notification.service';
@@ -163,6 +164,7 @@ export class ContractService {
           periodStart: input.periodStart,
           periodEnd: input.periodEnd,
           resolvedBody: structuredClone(template.body),
+          fieldOverrides: toFieldOverridesMap(input.fieldOverrides),
         })
         .returning();
 
