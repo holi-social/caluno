@@ -1326,6 +1326,8 @@
       "actionInvite": "Invite",
       "actionUninvite": "Uninvite",
       "cancelled": "Canceled",
+      "capacityBadge": "{filled} / {max} volunteers",
+      "capacityBadgeNoMax": "{filled} volunteers",
       "declined": "Declined",
       "inviteError": "Could not invite volunteer",
       "inviteSuccess": "Volunteer invited again",
