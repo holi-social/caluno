@@ -145,6 +145,8 @@ export function contractStatusToDocStatus(status: ContractStatus): DocStatus {
 
 export function invoiceStatusToDocStatus(status: InvoiceStatus): DocStatus {
   switch (status) {
+    case InvoiceStatus.Draft:
+      return 'timesheet-draft';
     case InvoiceStatus.AwaitingVolunteerSignature:
       return 'timesheet-signing-vol';
     case InvoiceStatus.AwaitingSupervisorSignature:

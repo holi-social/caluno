@@ -62,7 +62,10 @@ export class ContractQueryResolver {
       );
     const contracts = await this.contractService.findContractsForOrganization(
       organizationId,
-      toContractFilter(filter),
+      {
+        ...toContractFilter(filter),
+        organizationUnitId: context.organizationUnitId,
+      },
     );
     return this.contractMapper.toArray(contracts);
   }

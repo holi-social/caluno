@@ -151,7 +151,14 @@ describe('ContractService', () => {
     });
     const volunteer = await createUser(db);
 
-    return { organization, reimbursementType, template, signer, volunteer };
+    return {
+      organization,
+      root,
+      reimbursementType,
+      template,
+      signer,
+      volunteer,
+    };
   };
 
   describe('createContract', () => {
@@ -485,6 +492,48 @@ describe('ContractService', () => {
         first.organization.id,
       );
       expect(results.map((c) => c.id)).toEqual([firstContract.id]);
+    });
+
+    it('scopes contracts to the requested organization unit', async () => {
+      const { organization, root, reimbursementType, volunteer, signer } =
+        await setup();
+      const sibling = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: root.typeId,
+        name: 'sibling',
+        parentId: root.id,
+      });
+
+      const inRoot = await service.createContract(
+        organization.id,
+        {
+          organizationUnitId: root.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-01-01'),
+          periodEnd: new Date('2026-12-31'),
+        },
+        signer.id,
+      );
+      const inSibling = await service.createContract(
+        organization.id,
+        {
+          organizationUnitId: sibling.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: new Date('2026-01-01'),
+          periodEnd: new Date('2026-12-31'),
+        },
+        signer.id,
+      );
+
+      const rootOnly = await service.findContractsForOrganization(
+        organization.id,
+        { organizationUnitId: root.id },
+      );
+      const ids = rootOnly.map((c) => c.id);
+      expect(ids).toContain(inRoot.id);
+      expect(ids).not.toContain(inSibling.id);
     });
 
     it('excludes contracts whose period does not overlap the requested range', async () => {

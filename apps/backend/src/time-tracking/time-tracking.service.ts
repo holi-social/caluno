@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { and, count, eq, isNull } from 'drizzle-orm';
 import { PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -15,6 +16,7 @@ import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
 import { OrganizationService } from '../organization/organization.service';
+import { AccountingEvent } from '../shared/accounting-events';
 import { isParticipatingShiftInviteStatus } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
@@ -43,6 +45,7 @@ export class TimeTrackingService {
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
@@ -102,6 +105,7 @@ export class TimeTrackingService {
           },
         });
       }
+      this.emitTimeEntryClosed(timeEntry);
       return timeEntry;
     } catch (error) {
       if (
@@ -151,6 +155,13 @@ export class TimeTrackingService {
     };
   }
 
+  private emitTimeEntryClosed(entry: TimeEntryEntity): void {
+    if (!entry.endedAt || !entry.reimbursementTypeId) return;
+    this.eventEmitter.emit(AccountingEvent.TIME_ENTRY_CLOSED, {
+      timeEntryId: entry.id,
+    });
+  }
+
   async closeTimeEntry(
     id: string,
     organizationUnitId: string,
@@ -188,6 +199,8 @@ export class TimeTrackingService {
         },
       });
     }
+
+    this.emitTimeEntryClosed(timeEntry);
 
     return timeEntry;
   }
@@ -743,6 +756,8 @@ export class TimeTrackingService {
         shift_instance_id: closed.shiftInstanceId ?? undefined,
       },
     });
+
+    this.emitTimeEntryClosed(closed);
 
     return closed;
   }
