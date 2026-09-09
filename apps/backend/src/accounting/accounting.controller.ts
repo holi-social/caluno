@@ -29,13 +29,16 @@ export class AccountingController {
   async downloadBundle(
     @Session() session: UserSession,
     @Headers('x-organization-unit-id') organizationUnitId: string | undefined,
-    @Query('volunteerId') volunteerId: string,
-    @Query('reimbursementTypeId') reimbursementTypeId: string,
+    @Query('volunteerId') volunteerId: unknown,
+    @Query('reimbursementTypeId') reimbursementTypeId: unknown,
   ): Promise<StreamableFile> {
     if (!organizationUnitId) {
       throw new BadRequestGraphQLError('Missing organization unit context.');
     }
-    if (!volunteerId || !reimbursementTypeId) {
+    if (
+      typeof volunteerId !== 'string' ||
+      typeof reimbursementTypeId !== 'string'
+    ) {
       throw new BadRequestGraphQLError(
         'Missing volunteer or reimbursement type.',
       );
