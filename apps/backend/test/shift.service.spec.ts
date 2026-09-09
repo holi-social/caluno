@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { beforeAll, describe, expect, it, mock } from 'bun:test';
+import { beforeAll, describe, expect, it, mock, setSystemTime } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asc, eq, inArray } from 'drizzle-orm';
@@ -557,77 +557,76 @@ describe('ShiftService', () => {
       const newType = await createReimbursementType(db, {
         key: ReimbursementTypeKey.UEBUNGSLEITER,
       });
-      const startsAt = new Date(Date.now() + 100000);
-      const endsAt = new Date(Date.now() + 200000);
-      const shift = await createShift(db, {
-        organizationUnitId,
-        createdById: userId,
-        startsAt,
-        endsAt,
-        rrule: DAILY_RRULE,
-        reimbursementTypeId: oldType.id,
-      });
 
-      const [editedInstance] = await getInstances(shift.id);
-      if (!editedInstance) {
-        throw new Error('Expected createShift to expand an instance');
+      // Freeze "now" so every timestamp can be a plain literal on one day.
+      // The edited occurrence must still be in progress when the update runs,
+      // while the post-edit slot must already be over (for the snapshot).
+      setSystemTime(new Date('2026-07-15T15:30:00.000Z'));
+      try {
+        const startsAt = new Date('2026-07-15T14:00:00.000Z');
+        const endsAt = new Date('2026-07-15T16:00:00.000Z');
+        const editedStartsAt = new Date('2026-07-15T10:00:00.000Z');
+        const editedEndsAt = new Date('2026-07-15T11:00:00.000Z');
+
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: DAILY_RRULE,
+          reimbursementTypeId: oldType.id,
+        });
+
+        const [editedInstance] = await getInstances(shift.id);
+        if (!editedInstance) {
+          throw new Error('Expected createShift to expand an instance');
+        }
+
+        // A second, already-ended occurrence on the SAME calendar day as
+        // `editedInstance` — not something `expandShift` would organically
+        // produce for a plain daily rrule, but a stand-in for any already-
+        // occurred same-day row (e.g. a manually added exception) that the
+        // bulk edit below sweeps over.
+        const earlierToday = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date('2026-07-15T08:00:00.000Z'),
+          actualEndsAt: new Date('2026-07-15T09:00:00.000Z'),
+          occurrenceIndex: 2,
+        });
+
+        await shiftService.updateShiftInstance(
+          editedInstance.id,
+          {
+            title: shift.title,
+            startsAt: editedStartsAt,
+            endsAt: editedEndsAt,
+            visibility: shift.visibility,
+            reimbursementTypeId: newType.id,
+          } as never,
+          organizationUnitId,
+          { applyToAllFuture: true },
+        );
+
+        const [refreshedShift] = await db
+          .select()
+          .from(schema.shifts)
+          .where(eq(schema.shifts.id, shift.id));
+        const [refreshedEarlierToday] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, earlierToday.id));
+        const [refreshedEdited] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, editedInstance.id));
+
+        expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+        expect(refreshedEarlierToday?.overrideReimbursementTypeId).toBe(
+          oldType.id,
+        );
+        expect(refreshedEdited?.overrideReimbursementTypeId).toBe(oldType.id);
+      } finally {
+        setSystemTime();
       }
-
-      // A second, already-ended occurrence on the SAME calendar day as
-      // `editedInstance` — not something `expandShift` would organically
-      // produce for a plain daily rrule, but a stand-in for any already-
-      // occurred same-day row (e.g. a manually added exception) that the
-      // bulk edit below sweeps over.
-      const earlierToday = await createShiftInstance(db, shift.id, {
-        actualStartsAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-        actualEndsAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        occurrenceIndex: 2,
-      });
-
-      // Edit to a time-of-day that's already passed today (a few minutes
-      // ago), same calendar day as `editedInstance`. Both rows land on
-      // `date_trunc('day', <their own date>) + this time-of-day` once the
-      // reset runs — deliberately close to "now" rather than near midnight,
-      // so the rewrite can't drift onto a different calendar day than
-      // intended by any local/UTC day-boundary mismatch. An already-passed
-      // time-of-day keeps that shared final instant in the past for both,
-      // so both are legitimately "already ended" once the edit lands and
-      // must both come out frozen onto the OLD type rather than silently
-      // falling back to the new one.
-      const editedStartsAt = new Date(Date.now() - 5 * 60 * 1000);
-      const editedEndsAt = new Date(Date.now() - 4 * 60 * 1000);
-
-      await shiftService.updateShiftInstance(
-        editedInstance.id,
-        {
-          title: shift.title,
-          startsAt: editedStartsAt,
-          endsAt: editedEndsAt,
-          visibility: shift.visibility,
-          reimbursementTypeId: newType.id,
-        } as never,
-        organizationUnitId,
-        { applyToAllFuture: true },
-      );
-
-      const [refreshedShift] = await db
-        .select()
-        .from(schema.shifts)
-        .where(eq(schema.shifts.id, shift.id));
-      const [refreshedEarlierToday] = await db
-        .select()
-        .from(schema.shiftInstances)
-        .where(eq(schema.shiftInstances.id, earlierToday.id));
-      const [refreshedEdited] = await db
-        .select()
-        .from(schema.shiftInstances)
-        .where(eq(schema.shiftInstances.id, editedInstance.id));
-
-      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
-      expect(refreshedEarlierToday?.overrideReimbursementTypeId).toBe(
-        oldType.id,
-      );
-      expect(refreshedEdited?.overrideReimbursementTypeId).toBe(oldType.id);
     });
   });
 
