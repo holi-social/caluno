@@ -28,11 +28,10 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Renders the current page's breadcrumb in the fixed header, falling back to the default "Clippy" title when no page has claimed the slot. */
-export function PageHeaderSlot() {
+/** Renders the current page's breadcrumb in the fixed header, or `children` when no page has claimed the slot. */
+export function PageHeaderSlot({ children }: { children?: ReactNode }) {
   const ctx = useContext(PageHeaderContext);
-  if (ctx?.breadcrumb) return ctx.breadcrumb;
-  return <h1 className="text-lg font-semibold hidden sm:block">Clippy</h1>;
+  return ctx?.breadcrumb ?? children ?? null;
 }
 
 /**
