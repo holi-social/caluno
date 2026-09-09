@@ -64,11 +64,11 @@ const ALL_DATA_SOURCES: DataSourceKey[] = [
   ...PROFILE_REQUIRED_SOURCES,
 ];
 
-const PLACEHOLDER_TABLE_TOTAL_ROW = ['', '', 'Summe', '—', '—'];
+const PLACEHOLDER_TABLE_TOTAL_ROW = ['', '', 'Summe', '—', '', '—'];
 
 // The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
 // stated on every invoice regardless, never computed from the total.
-const TABLE_VAT_ROW = ['', '', 'zzgl. 0 % USt.', '', '0,00 €'];
+const TABLE_VAT_ROW = ['', '', 'zzgl. 0 % USt.', '', '', '0,00 €'];
 
 // Placeholder rows for the invoice's Stundennachweis table — no real timesheets exist at
 // template-configuration time, only the column shape and the chosen first-column source (see
@@ -85,9 +85,9 @@ function getPlaceholderTableRows(
         t('blockEditor.firstColumnPlaceholders.custom')
       : t('blockEditor.firstColumnPlaceholders.agreementTaskDescription');
   return [
-    [firstColumnPlaceholder, '', '', '', ''],
-    [firstColumnPlaceholder, '', '', '', ''],
-    [firstColumnPlaceholder, '', '', '', ''],
+    [firstColumnPlaceholder, '', '', '', '', ''],
+    [firstColumnPlaceholder, '', '', '', '', ''],
+    [firstColumnPlaceholder, '', '', '', '', ''],
   ];
 }
 

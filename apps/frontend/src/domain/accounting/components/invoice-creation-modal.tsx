@@ -25,7 +25,7 @@ import {
   deriveEditableFields,
 } from '../lib/creation-fields';
 import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
-import { centsToEuros } from '../lib/money';
+import { centsToEuros, formatHourlyRate } from '../lib/money';
 import {
   apiDocumentKindFor,
   reimbursementTypeKeyFor,
@@ -452,6 +452,7 @@ export function InvoiceCreationModal({
       end,
       `${line.hours}h`,
       `${ratePerHour.toFixed(2)} €`,
+      formatHourlyRate(line.hours * ratePerHour),
     ];
   });
   const tableTotalRow = [
@@ -459,11 +460,12 @@ export function InvoiceCreationModal({
     '',
     'Summe',
     `${selectedHours}h`,
+    '',
     formatEuro(selectedAmount),
   ];
   // The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
   // stated on every invoice regardless, never computed from the total.
-  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '0,00 €'];
+  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '', '0,00 €'];
 
   return (
     <DocumentCreationDialog
