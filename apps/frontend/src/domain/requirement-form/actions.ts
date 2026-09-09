@@ -5,6 +5,10 @@ import { revalidatePath } from 'next/cache';
 import z from 'zod';
 import { getDataClient } from '@/lib/data-client';
 import { actionClient } from '@/lib/safe-action';
+import {
+  optionalNullableTrimmedText,
+  zOptionalNullableTrimmedString,
+} from './lib/nullable-trimmed-text';
 import { choiceOptionSchema } from './option-values';
 import { serverCreateBlockSchema, serverCreateFormSchema } from './schemas';
 
@@ -17,7 +21,7 @@ export const createForm = actionClient
     const form = await data.requirementForm.createForm({
       organizationId: parsedInput.organizationId,
       name: parsedInput.name,
-      description: parsedInput.description,
+      description: optionalNullableTrimmedText(parsedInput.description),
     });
     revalidatePath(
       `/admin/${parsedInput.organizationUnitId}/requirement-forms`,
@@ -29,7 +33,7 @@ const updateFormSchema = z.object({
   organizationUnitId: z.string().min(1),
   formId: z.string().min(1),
   name: z.string().optional(),
-  description: z.string().optional(),
+  description: zOptionalNullableTrimmedString,
   blockRefs: z
     .array(
       z.object({
@@ -67,8 +71,8 @@ export const createBlock = actionClient
     const block = await data.requirementForm.createBlock({
       organizationId: parsedInput.organizationId,
       title: parsedInput.title,
-      description: parsedInput.description,
-      icon: parsedInput.icon,
+      description: optionalNullableTrimmedText(parsedInput.description),
+      icon: optionalNullableTrimmedText(parsedInput.icon),
       required: parsedInput.required,
     });
     revalidatePath(
@@ -169,8 +173,8 @@ const updateBlockSchema = z.object({
   organizationUnitId: z.string().min(1),
   blockId: z.string().min(1),
   title: z.string().optional(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
+  description: zOptionalNullableTrimmedString,
+  icon: zOptionalNullableTrimmedString,
   required: z.boolean().optional(),
 });
 
@@ -197,8 +201,8 @@ const createBlockFieldSchema = z.object({
   blockId: z.string().min(1),
   type: z.nativeEnum(FieldType),
   label: z.string().min(1),
-  description: z.string().optional(),
-  placeholder: z.string().optional(),
+  description: zOptionalNullableTrimmedString,
+  placeholder: zOptionalNullableTrimmedString,
   required: z.boolean().optional(),
   options: z
     .array(
@@ -209,7 +213,7 @@ const createBlockFieldSchema = z.object({
     )
     .optional(),
   documentFileId: z.string().nullish(),
-  documentLabel: z.string().optional(),
+  documentLabel: zOptionalNullableTrimmedString,
   systemKey: z.string().optional(),
   lockType: z.boolean().optional(),
 });
@@ -245,8 +249,8 @@ const updateBlockFieldSchema = z.object({
   organizationUnitId: z.string().min(1),
   fieldId: z.string().min(1),
   label: z.string().optional(),
-  description: z.string().optional(),
-  placeholder: z.string().optional(),
+  description: zOptionalNullableTrimmedString,
+  placeholder: zOptionalNullableTrimmedString,
   required: z.boolean().optional(),
   options: z
     .array(
@@ -257,7 +261,7 @@ const updateBlockFieldSchema = z.object({
     )
     .optional(),
   documentFileId: z.string().nullish(),
-  documentLabel: z.string().optional(),
+  documentLabel: zOptionalNullableTrimmedString,
   fieldOrder: z.number().optional(),
   systemKey: z.string().nullable().optional(),
   lockType: z.boolean().optional(),
@@ -327,21 +331,21 @@ const saveBlockSchema = z.object({
   organizationId: z.string().min(1),
   blockId: z.string().optional(),
   title: z.string().trim().min(1, 'Title is required'),
-  description: z.string().trim().optional(),
-  icon: z.string().trim().optional(),
+  description: zOptionalNullableTrimmedString,
+  icon: zOptionalNullableTrimmedString,
   fields: z.array(
     z.object({
       id: z.string().optional(),
       type: z.nativeEnum(FieldType),
       label: z.string().trim().min(1, 'Field label is required'),
-      description: z.string().trim().optional(),
-      placeholder: z.string().trim().optional(),
+      description: zOptionalNullableTrimmedString,
+      placeholder: zOptionalNullableTrimmedString,
       required: z.boolean().optional(),
       systemKey: z.string().optional(),
       lockType: z.boolean().optional(),
       options: z.array(choiceOptionSchema).optional(),
       documentFileId: z.string().nullish(),
-      documentLabel: z.string().optional(),
+      documentLabel: zOptionalNullableTrimmedString,
     }),
   ),
 });

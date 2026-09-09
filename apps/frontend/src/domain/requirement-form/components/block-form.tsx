@@ -1,7 +1,7 @@
 'use client';
 
 import { FieldType } from '@repo/data';
-import { useBlock } from '@repo/data/react';
+import { useBlock, useRefreshBlock } from '@repo/data/react';
 import {
   Badge,
   Button,
@@ -88,6 +88,7 @@ export function BlockForm({
   const tField = useTranslations('RequirementForm.fieldForm');
   const tActions = useTranslations('RequirementForm.actions');
   const tValidation = useTranslations('RequirementForm.validation');
+  const refreshBlock = useRefreshBlock();
   const isEdit = !!blockId;
   const blockQuery = useBlock(blockId ?? '');
 
@@ -197,20 +198,20 @@ export function BlockForm({
       organizationId,
       blockId,
       title: data.title,
-      description: data.description || undefined,
-      icon: data.icon || undefined,
+      description: data.description,
+      icon: data.icon,
       fields: data.fields.map((f) => ({
         id: f.id,
         type: f.type,
         label: f.label,
-        description: f.description || undefined,
-        placeholder: f.placeholder || undefined,
+        description: f.description,
+        placeholder: f.placeholder,
         required: f.required,
         systemKey: f.systemKey || undefined,
         lockType: f.lockType ?? false,
         options: f.options,
         documentFileId: f.documentFileId,
-        documentLabel: f.documentLabel || undefined,
+        documentLabel: f.documentLabel,
       })),
     });
 
@@ -218,7 +219,13 @@ export function BlockForm({
       toast.error(result.serverError);
     } else if (result?.data) {
       toast.success(isEdit ? tActions('blockSaved') : tActions('blockCreated'));
-      reset(data);
+
+      if (isEdit && blockId) {
+        await refreshBlock(blockId);
+      } else {
+        reset(data);
+      }
+
       onSuccess(result.data.blockId);
     } else {
       toast.error(tActions('failedToSaveBlock'));
