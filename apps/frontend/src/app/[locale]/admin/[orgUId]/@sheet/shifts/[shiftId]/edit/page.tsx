@@ -36,6 +36,7 @@ export default async function UpdateShiftPage({
         startsAt: shift.startDate,
         endsAt: shift.endDate,
         openShift: shift.visibility === ShiftVisibility.AllMembers,
+        joinRequiresApproval: shift.joinRequiresApproval,
         recurrenceDays: shift.recurrenceDays,
         recurrenceEndsAt: shift.recurrenceEndsAt,
         minVolunteers: shift.minVolunteers ?? undefined,
