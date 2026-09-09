@@ -1790,6 +1790,7 @@
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
       "periodLabel": "Period",
+      "yearLabel": "Year",
       "periodPicker": {
         "allTime": "All time",
         "thisMonth": "This month",
@@ -1819,7 +1820,6 @@
         "contractSigning": "Sign contracts",
         "timesheetGenerate": "Create timesheets",
         "timesheetSigning": "Sign timesheets",
-        "needsTimesheet": "Timesheet needed",
         "readyToGo": "Ready to go"
       },
       "toolbar": {
@@ -1835,6 +1835,8 @@
         "allDoneHint": "No open documents in this period.",
         "filtered": "No entries in this category."
       },
+      "loadError": "Reimbursements could not be loaded.",
+      "loadErrorHint": "Something went wrong. Please try again.",
       "resetPrototype": "Reset prototype",
       "resetPrototypeToast": "Prototype data reset.",
       "createDocumentModal": {
@@ -1986,7 +1988,9 @@
         "sendErrorTitle": "Couldn't send the contract",
         "sendError": "The contract couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create a contract template",
-        "completeOrgProfileCta": "Complete your organization profile",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -2010,7 +2014,9 @@
         "sendErrorTitle": "Couldn't send the invoice",
         "sendError": "The invoice couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create an invoice template",
-        "completeOrgProfileCta": "Complete your organization profile",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
