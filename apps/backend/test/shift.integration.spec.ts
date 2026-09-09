@@ -4094,6 +4094,138 @@ describe('ShiftService.requestJoinShiftInstance — shift-instance required form
   });
 });
 
+describe('ShiftService.requestJoinShiftInstance — JoinStatus resolution', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+  let shiftService: ShiftService;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+    shiftService = app.get(ShiftService);
+  });
+
+  const setupJoinableInstance = async (options?: {
+    maxVolunteers?: number;
+    joinRequiresApproval?: boolean;
+  }) => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      maxVolunteers: options?.maxVolunteers ?? 5,
+    });
+
+    if (options?.joinRequiresApproval) {
+      await db
+        .update(schema.shifts)
+        .set({ joinRequiresApproval: true })
+        .where(eq(schema.shifts.id, shiftId));
+    }
+
+    const instance = await db.query.shiftInstances.findFirst({
+      where: { masterId: shiftId },
+    });
+    if (!instance) throw new Error('Failed to create test shift instance');
+
+    return { user, shiftId, instance };
+  };
+
+  it('returns PENDING when joinRequiresApproval is enabled', async () => {
+    const { user, instance } = await setupJoinableInstance({
+      joinRequiresApproval: true,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.PENDING);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.AWAITING_ADMIN_APPROVAL);
+  });
+
+  it('returns WAITLIST_JOINED when the shift is full', async () => {
+    const { user, instance } = await setupJoinableInstance({
+      maxVolunteers: 1,
+    });
+
+    const other = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: other.id,
+      status: ShiftInviteStatus.JOINED,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.WAITLIST_JOINED);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.WAITLIST_JOINED);
+  });
+
+  it('returns PENDING for ADMIN_INVITED when joinRequiresApproval is enabled', async () => {
+    const { user, instance } = await setupJoinableInstance({
+      joinRequiresApproval: true,
+    });
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: user.id,
+      status: ShiftInviteStatus.ADMIN_INVITED,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.PENDING);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.AWAITING_ADMIN_APPROVAL);
+  });
+
+  it('returns current JoinStatus without mutating a non-resolve invite', async () => {
+    const { user, instance } = await setupJoinableInstance();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: user.id,
+      status: ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
+    });
+
+    const result = await shiftService.requestJoinShiftInstance(
+      user.id,
+      instance.id,
+    );
+
+    expect(result.status).toBe(JoinStatus.PENDING);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: user.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.AWAITING_ADMIN_APPROVAL);
+  });
+});
+
 describe('ShiftService.updateShiftInstance — single instance required forms', () => {
   let app: INestApplication;
   let db: Database;
