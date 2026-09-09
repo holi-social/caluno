@@ -1870,7 +1870,16 @@
         "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
         "viewVolunteer": "View volunteer",
         "createButton": "Create {kind}",
-        "createButtonEmpty": "Create new document"
+        "createButtonEmpty": "Create new document",
+        "contractState": {
+          "none": "No contract yet",
+          "awaiting-signature": "Awaiting signature",
+          "awaiting-countersignature": "Awaiting countersignature",
+          "active": "Active",
+          "declined": "Declined"
+        },
+        "latestTimesheet": "Latest timesheet · {date}",
+        "noTimesheetYet": "No timesheet yet"
       },
       "bundle": {
         "actionLabel": "Download bundle",
@@ -1886,7 +1895,8 @@
         "bundleAll": "Download all bundles",
         "mixed": "Mixed selection",
         "clearSelection": "Clear",
-        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}",
+        "bundleDownloadErrorToast": "Bundle download failed. Please try again."
       },
       "actionToasts": {
         "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
@@ -1941,6 +1951,7 @@
         },
         "statusLabel": {
           "contractGenerate": "Create contract",
+          "contractDraft": "Draft",
           "contractSigningVol": "Waiting for signature",
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
@@ -2049,6 +2060,16 @@
           "title": "Yearly cap",
           "value": "{before} → {after}",
           "subline": "of {total} yearly cap"
+        },
+        "manualCap": {
+          "title": "Initial amount",
+          "editButtonLabel": "Edit initial amount",
+          "saveButtonLabel": "Save initial amount",
+          "cancelButtonLabel": "Cancel",
+          "inputLabel": "Initial amount in euros",
+          "projectedAfter": "Projected after this invoice: {after}",
+          "successToast": "Initial amount saved.",
+          "errorToast": "The initial amount couldn't be saved. Please try again."
         },
         "hoursCard": {
           "title": "Eligible hours",
@@ -2164,6 +2185,7 @@
           "contract-lifespan": "Contract period",
           "tasks": "Task description",
           "hours-amount": "Hours",
+          "hours-unit": "Hours unit",
           "freeform-text": "Freeform text",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger",

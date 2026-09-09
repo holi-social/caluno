@@ -85,6 +85,7 @@ enum ContractStatus {
   AWAITING_NGO_SIGNATURE
   AWAITING_VOLUNTEER_SIGNATURE
   DECLINED
+  DRAFT
   EXPIRED
 }
 
@@ -96,6 +97,7 @@ type ContractStatusChange {
 }
 
 input CreateContractInput {
+  fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -151,6 +153,7 @@ input CreateFormBlockInput {
 }
 
 input CreateInvoiceInput {
+  fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -261,6 +264,11 @@ input CreateTemplateSigneeInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input DocumentFieldOverrideInput {
+  fieldId: String!
+  value: String!
+}
 
 enum DocumentKind {
   CONTRACT
@@ -821,6 +829,11 @@ type PaginationInfo {
   total: Int!
 }
 
+type PaidShiftSignupVolunteer {
+  reimbursementType: ReimbursementType!
+  volunteer: User!
+}
+
 type PendingSignee {
   eligibleUserIds: [String!]
   permissionKey: String
@@ -925,6 +938,7 @@ type Query {
   organizationUnitTypes: [OrganizationUnitType!]!
   organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  paidShiftSignupVolunteers(year: Int!): [PaidShiftSignupVolunteer!]!
   pendingContractSignee(contractId: ID!): PendingSignee
   pendingInvoiceSignee(invoiceId: ID!): PendingSignee
   permissionGroups: [PermissionGroup!]!
