@@ -48,7 +48,7 @@ import { ShiftService } from '../shift/shift.service';
 import { FilePurpose } from '../storage/enums';
 import { FileService } from '../storage/services/file.service';
 import { slugify } from '../utils/slug.util';
-import { EventInviteStatus } from './enums';
+import { EventInviteStatus, INVITE_STATUS_TO_JOIN_EVENT_STATUS } from './enums';
 import { CreateEventInput } from './inputs/create-event.input';
 import { UpdateEventInput } from './inputs/update-event.input';
 import type { EventEntity } from './schemas/event.schema';
@@ -795,11 +795,11 @@ export class EventService {
     }
 
     const existingInvite = await this.findInvite(eventId, userId);
-    if (existingInvite?.status === EventInviteStatus.ADMIN_REJECTED) {
-      return {
-        status: JoinStatus.REJECTED,
-        event,
-      };
+    if (
+      existingInvite &&
+      !isVolunteerJoinResolveSource(existingInvite.status)
+    ) {
+      return this.buildRequestJoinEventResult(userId, event, existingInvite);
     }
 
     const orgUnit = await this.db.query.organizationUnits.findFirst({
@@ -814,6 +814,14 @@ export class EventService {
       userId,
       orgUnit.id,
     );
+
+    if (
+      existingInvite &&
+      isVolunteerJoinResolveSource(existingInvite.status) &&
+      !isAllowed
+    ) {
+      return this.buildRequestJoinEventResult(userId, event, existingInvite);
+    }
 
     if (!isAllowed) {
       const result = await this.membershipService.requestOrgJoin(
@@ -859,10 +867,7 @@ export class EventService {
 
       if (result.status === 'JOINED') {
         await this.joinEvent(userId, eventId, { formsAlreadySatisfied: true });
-        return {
-          status: JoinStatus.JOINED,
-          event,
-        };
+        return this.buildRequestJoinEventResult(userId, event);
       }
 
       return {
@@ -886,9 +891,46 @@ export class EventService {
     }
 
     await this.joinEvent(userId, eventId, { formsAlreadySatisfied: true });
+    return this.buildRequestJoinEventResult(userId, event);
+  }
+
+  private async buildRequestJoinEventResult(
+    userId: string,
+    event: EventEntity,
+    invite?: EventInviteEntity | null,
+    extra?: {
+      membershipRequest?: MembershipRequestEntity;
+      requirementProfile?: RequirementProfileEntity;
+      requirementStatuses?: Array<{
+        requirementId: string;
+        name: string;
+        status: string;
+      }>;
+      requiredForms?: RequiredFormStatus[];
+    },
+  ): Promise<{
+    status: JoinStatus;
+    event: EventEntity;
+    membershipRequest?: MembershipRequestEntity;
+    requirementProfile?: RequirementProfileEntity;
+    requirementStatuses?: Array<{
+      requirementId: string;
+      name: string;
+      status: string;
+    }>;
+    requiredForms?: RequiredFormStatus[];
+  }> {
+    const resolvedInvite =
+      invite === undefined ? await this.findInvite(event.id, userId) : invite;
+
     return {
-      status: JoinStatus.JOINED,
+      status: await this.resolveEventJoinStatus(
+        userId,
+        event.organizationUnitId,
+        resolvedInvite,
+      ),
       event,
+      ...extra,
     };
   }
 
@@ -1029,6 +1071,44 @@ export class EventService {
     }
 
     return updated;
+  }
+
+  /**
+   * Volunteer JoinStatus for an event (GLOSSARY § Join Status).
+   * Org membership wins for non-members; once the user is a member, the
+   * event invite status drives INVITED / PENDING / JOINED / etc.
+   */
+  async resolveEventJoinStatus(
+    userId: string,
+    organizationUnitId: string,
+    invite?: EventInviteEntity | null,
+  ): Promise<JoinStatus> {
+    if (invite?.status === EventInviteStatus.ADMIN_REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    const membershipState = await this.membershipService.getMembershipState(
+      userId,
+      organizationUnitId,
+    );
+
+    if (membershipState === JoinStatus.REJECTED) {
+      return JoinStatus.REJECTED;
+    }
+
+    if (membershipState === JoinStatus.PENDING) {
+      return JoinStatus.PENDING;
+    }
+
+    if (membershipState === JoinStatus.NONE) {
+      return JoinStatus.NONE;
+    }
+
+    if (invite) {
+      return INVITE_STATUS_TO_JOIN_EVENT_STATUS[invite.status];
+    }
+
+    return JoinStatus.NONE;
   }
 
   async findInvite(
