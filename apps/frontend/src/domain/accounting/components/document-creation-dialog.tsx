@@ -48,6 +48,8 @@ interface DocumentCreationDialogProps {
    */
   errorCtaLabel?: string;
   errorCtaAction?: () => void;
+  /** Render the error as a centered message + primary CTA instead of the destructive alert. */
+  errorCtaCentered?: boolean;
   /** Skip the outer Dialog/header — for a caller that owns its own shell. */
   embedded?: boolean;
 }
@@ -78,32 +80,47 @@ export function DocumentCreationDialog({
   errorMessage,
   errorCtaLabel,
   errorCtaAction,
+  errorCtaCentered = false,
   embedded = false,
 }: DocumentCreationDialogProps) {
   const body = (
     <>
       <div className="flex-1 overflow-y-auto p-6">
         {status === 'error' ? (
-          <Alert variant="destructive">
-            <AlertTitle>{errorTitle}</AlertTitle>
-            <AlertDescription>
-              {errorDescription}
-              {errorMessage && (
-                <p className="mt-2 font-mono text-xs break-words opacity-90">
-                  {errorMessage}
+          errorCtaCentered ? (
+            <div className="flex flex-col items-center gap-4 py-10 text-center">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">{errorTitle}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {errorDescription}
                 </p>
-              )}
+              </div>
               {errorCtaLabel && errorCtaAction && (
-                <Button
-                  variant="outline"
-                  className="mt-3"
-                  onClick={errorCtaAction}
-                >
-                  {errorCtaLabel}
-                </Button>
+                <Button onClick={errorCtaAction}>{errorCtaLabel}</Button>
               )}
-            </AlertDescription>
-          </Alert>
+            </div>
+          ) : (
+            <Alert variant="destructive">
+              <AlertTitle>{errorTitle}</AlertTitle>
+              <AlertDescription>
+                {errorDescription}
+                {errorMessage && (
+                  <p className="mt-2 font-mono text-xs break-words opacity-90">
+                    {errorMessage}
+                  </p>
+                )}
+                {errorCtaLabel && errorCtaAction && (
+                  <Button
+                    variant="outline"
+                    className="mt-3"
+                    onClick={errorCtaAction}
+                  >
+                    {errorCtaLabel}
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          )
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-[3fr_2fr]">
             <div>

@@ -320,7 +320,7 @@ describe('publicEvent', () => {
     expect(data.updateEvent.title).toBe('Updated Event Title');
   });
 
-  it('returns myJoinStatus NONE for a pending membership that has not started joining this event', async () => {
+  it('returns myJoinStatus PENDING for a pending membership', async () => {
     const originalUserId = getAuthMockUserId();
     const user = await createUser(db);
     setAuthMockUserId(user.id);
@@ -347,7 +347,7 @@ describe('publicEvent', () => {
       'publicEvent',
     );
 
-    expect(data.publicEvent.myJoinStatus).toBe(JoinStatus.NONE);
+    expect(data.publicEvent.myJoinStatus).toBe(JoinStatus.PENDING);
 
     setAuthMockUserId(originalUserId);
   });
@@ -585,6 +585,380 @@ describe('publicEvent', () => {
     expect(data.joinEvent.status).toBe(JoinStatus.REJECTED);
 
     setAuthMockUserId(originalUserId);
+  });
+});
+
+const MEMBERSHIP_SCENARIOS = [
+  'none',
+  'member',
+  'pending',
+  'pending-intended',
+  'rejected',
+  'cancelled',
+] as const;
+
+type MembershipScenario = (typeof MEMBERSHIP_SCENARIOS)[number];
+
+function expectedMyJoinStatus(
+  membership: MembershipScenario,
+  inviteStatus: EventInviteStatus | null,
+): JoinStatus {
+  if (inviteStatus === EventInviteStatus.ADMIN_REJECTED) {
+    return JoinStatus.REJECTED;
+  }
+
+  switch (membership) {
+    case 'none':
+      return JoinStatus.NONE;
+    case 'pending':
+    case 'pending-intended':
+      return JoinStatus.PENDING;
+    case 'rejected':
+    case 'cancelled':
+      return JoinStatus.REJECTED;
+    case 'member':
+      switch (inviteStatus) {
+        case null:
+          return JoinStatus.NONE;
+        case EventInviteStatus.ADMIN_INVITED:
+          return JoinStatus.INVITED;
+        case EventInviteStatus.AWAITING_ADMIN_APPROVAL:
+          return JoinStatus.PENDING;
+        case EventInviteStatus.WAITLIST_JOINED:
+          return JoinStatus.WAITLIST_JOINED;
+        case EventInviteStatus.JOINED:
+          return JoinStatus.JOINED;
+        case EventInviteStatus.VOLUNTEER_REJECTED:
+        case EventInviteStatus.VOLUNTEER_CANCELLED:
+          return JoinStatus.VOLUNTEER_REJECTED;
+      }
+  }
+}
+
+function expectedJoinEventStatusWithoutInvite(
+  membership: MembershipScenario,
+  joinRequiresApproval = false,
+): JoinStatus {
+  switch (membership) {
+    case 'none':
+      return JoinStatus.PENDING;
+    case 'member':
+      return joinRequiresApproval ? JoinStatus.PENDING : JoinStatus.JOINED;
+    case 'pending':
+    case 'pending-intended':
+      return JoinStatus.PENDING;
+    case 'rejected':
+    case 'cancelled':
+      return JoinStatus.REJECTED;
+  }
+}
+
+function expectedJoinEventStatusWithInvite(
+  membership: MembershipScenario,
+  inviteStatus: EventInviteStatus,
+  joinRequiresApproval = false,
+): JoinStatus {
+  if (inviteStatus === EventInviteStatus.ADMIN_REJECTED) {
+    return JoinStatus.REJECTED;
+  }
+
+  if (
+    inviteStatus === EventInviteStatus.JOINED ||
+    inviteStatus === EventInviteStatus.AWAITING_ADMIN_APPROVAL ||
+    inviteStatus === EventInviteStatus.WAITLIST_JOINED
+  ) {
+    return expectedMyJoinStatus(membership, inviteStatus);
+  }
+
+  if (membership === 'member') {
+    if (joinRequiresApproval) {
+      if (inviteStatus === EventInviteStatus.VOLUNTEER_CANCELLED) {
+        return JoinStatus.JOINED;
+      }
+      return JoinStatus.PENDING;
+    }
+    return JoinStatus.JOINED;
+  }
+
+  return expectedMyJoinStatus(membership, inviteStatus);
+}
+
+async function setupMembershipScenario(
+  db: Database,
+  userId: string,
+  organizationUnitId: string,
+  scenario: MembershipScenario,
+  eventId: string,
+): Promise<void> {
+  switch (scenario) {
+    case 'member':
+      await addMembership(db, userId, organizationUnitId);
+      break;
+    case 'pending':
+      await createMembershipRequest(db, {
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.PENDING,
+      });
+      break;
+    case 'pending-intended':
+      await createMembershipRequest(db, {
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.PENDING,
+        metadata: { intendedEventIds: [eventId] },
+      });
+      break;
+    case 'rejected':
+      await createMembershipRequest(db, {
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.REJECTED,
+      });
+      break;
+    case 'cancelled':
+      await createMembershipRequest(db, {
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.CANCELLED,
+      });
+      break;
+    case 'none':
+      break;
+  }
+}
+
+describe('publicEvent.myJoinStatus — membership × invite combinations', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  const publicEventJoinStatusQuery = `
+    query PublicEvent($id: ID!) {
+      publicEvent(id: $id) { myJoinStatus }
+    }
+  `;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  async function queryMyJoinStatus(
+    eventId: string,
+    userId: string,
+  ): Promise<JoinStatus> {
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(userId);
+    try {
+      const data = await graphqlRequestRequiringData<{
+        publicEvent: { myJoinStatus: JoinStatus };
+      }>(
+        app,
+        {
+          query: publicEventJoinStatusQuery,
+          variables: { id: eventId },
+        },
+        'publicEvent',
+      );
+      return data.publicEvent.myJoinStatus;
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  }
+
+  for (const membership of MEMBERSHIP_SCENARIOS) {
+    for (const inviteStatus of [
+      null,
+      ...Object.values(EventInviteStatus),
+    ] as const) {
+      const inviteLabel = inviteStatus ?? 'none';
+      it(`membership=${membership}, invite=${inviteLabel} → ${expectedMyJoinStatus(membership, inviteStatus)}`, async () => {
+        const user = await createUser(db);
+        const event = await createEvent(db, { organizationUnitId });
+        await setupMembershipScenario(
+          db,
+          user.id,
+          organizationUnitId,
+          membership,
+          event.id,
+        );
+        if (inviteStatus) {
+          await db.insert(schema.eventInvites).values({
+            eventId: event.id,
+            userId: user.id,
+            status: inviteStatus,
+          });
+        }
+
+        const status = await queryMyJoinStatus(event.id, user.id);
+        expect(status).toBe(expectedMyJoinStatus(membership, inviteStatus));
+      });
+    }
+  }
+});
+
+describe('joinEvent — membership × invite combinations', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationId: string;
+  let organizationUnitId: string;
+
+  const joinEventStatusMutation = `
+    mutation JoinEvent($eventId: ID!) {
+      joinEvent(eventId: $eventId) { status }
+    }
+  `;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationId = context.organizationId;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  async function joinEvent(
+    eventId: string,
+    userId: string,
+  ): Promise<JoinStatus> {
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(userId);
+    try {
+      const data = await graphqlRequestRequiringData<{
+        joinEvent: { status: JoinStatus };
+      }>(
+        app,
+        {
+          query: joinEventStatusMutation,
+          variables: { eventId },
+        },
+        'joinEvent',
+      );
+      return data.joinEvent.status;
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  }
+
+  describe('without an existing invite', () => {
+    for (const membership of MEMBERSHIP_SCENARIOS) {
+      it(`membership=${membership} → ${expectedJoinEventStatusWithoutInvite(membership)}`, async () => {
+        const user = await createUser(db);
+        const event = await createEvent(db, { organizationUnitId });
+        await setupMembershipScenario(
+          db,
+          user.id,
+          organizationUnitId,
+          membership,
+          event.id,
+        );
+
+        const status = await joinEvent(event.id, user.id);
+        expect(status).toBe(expectedJoinEventStatusWithoutInvite(membership));
+      });
+    }
+
+    it('membership=member with unsatisfied event forms → REQUIREMENTS_NEEDED', async () => {
+      const user = await createUser(db);
+      await addMembership(db, user.id, organizationUnitId);
+      const event = await createEvent(db, { organizationUnitId });
+      const { form } = await createRequirementForm(db, {
+        organizationId,
+        organizationUnitId,
+        createdById: user.id,
+      });
+      await setEventRequiredForms(db, {
+        eventId: event.id,
+        formIds: [form.id],
+      });
+
+      const status = await joinEvent(event.id, user.id);
+      expect(status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    });
+
+    it('membership=pending with unsatisfied event forms → REQUIREMENTS_NEEDED', async () => {
+      const user = await createUser(db);
+      const event = await createEvent(db, { organizationUnitId });
+      await createMembershipRequest(db, {
+        userId: user.id,
+        organizationUnitId,
+        status: MembershipRequestStatus.PENDING,
+      });
+      const { form } = await createRequirementForm(db, {
+        organizationId,
+        organizationUnitId,
+        createdById: user.id,
+      });
+      await setEventRequiredForms(db, {
+        eventId: event.id,
+        formIds: [form.id],
+      });
+
+      const status = await joinEvent(event.id, user.id);
+      expect(status).toBe(JoinStatus.REQUIREMENTS_NEEDED);
+    });
+  });
+
+  describe('with an existing invite', () => {
+    for (const membership of MEMBERSHIP_SCENARIOS) {
+      for (const inviteStatus of Object.values(EventInviteStatus)) {
+        it(`membership=${membership}, invite=${inviteStatus} → ${expectedJoinEventStatusWithInvite(membership, inviteStatus)}`, async () => {
+          const user = await createUser(db);
+          const event = await createEvent(db, { organizationUnitId });
+          await setupMembershipScenario(
+            db,
+            user.id,
+            organizationUnitId,
+            membership,
+            event.id,
+          );
+          await db.insert(schema.eventInvites).values({
+            eventId: event.id,
+            userId: user.id,
+            status: inviteStatus,
+          });
+
+          const status = await joinEvent(event.id, user.id);
+          expect(status).toBe(
+            expectedJoinEventStatusWithInvite(membership, inviteStatus),
+          );
+        });
+      }
+    }
+  });
+
+  it('membership=member with joinRequiresApproval → PENDING', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const event = await createEvent(db, { organizationUnitId });
+    await db
+      .update(schema.events)
+      .set({ joinRequiresApproval: true })
+      .where(eq(schema.events.id, event.id));
+
+    const status = await joinEvent(event.id, user.id);
+    expect(status).toBe(JoinStatus.PENDING);
+  });
+
+  it('membership=member with ADMIN_INVITED and joinRequiresApproval → PENDING', async () => {
+    const user = await createUser(db);
+    await addMembership(db, user.id, organizationUnitId);
+    const event = await createEvent(db, { organizationUnitId });
+    await db
+      .update(schema.events)
+      .set({ joinRequiresApproval: true })
+      .where(eq(schema.events.id, event.id));
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: user.id,
+      status: EventInviteStatus.ADMIN_INVITED,
+    });
+
+    const status = await joinEvent(event.id, user.id);
+    expect(status).toBe(JoinStatus.PENDING);
   });
 });
 

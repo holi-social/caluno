@@ -226,16 +226,11 @@ export interface BuildBoardVolunteersInput {
   dateRange?: { from?: Date; to?: Date };
   /**
    * Volunteer id -> the reimbursement type ids they still have eligible
-   * (unclaimed, completed, in-period) time entries for. A volunteer only
-   * counts as `needsTimesheet` for a type once that type also has an active
-   * (countersigned) contract in place — the Vereinbarung is a precondition
-   * for the Stundennachweis step, not a parallel concern. Without an active
-   * contract, the eligible hours instead surface as a `contract-generate`
-   * row so the volunteer is queued under "Vereinbarungen erstellen" (or, if
-   * a contract already exists but isn't countersigned yet, the real contract
-   * document already queues them under "Vereinbarungen gegenzeichnen").
+   * (unclaimed, completed, in-period) time entries for. Used to synthesize a
+   * `contract-generate` row when a volunteer has eligible hours but no
+   * contract at all for that type yet.
    */
-  needsTimesheetVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
+  eligibleHoursVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function buildBoardVolunteers({
@@ -245,7 +240,7 @@ export function buildBoardVolunteers({
   year,
   locale,
   dateRange,
-  needsTimesheetVolunteers,
+  eligibleHoursVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -253,8 +248,7 @@ export function buildBoardVolunteers({
       Record<PauschalenType, { used: number; total: number }>
     > = {};
     const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
-    const eligibleTypeIds = needsTimesheetVolunteers?.get(entry.volunteer.id);
-    let hasActiveContractNeedingTimesheet = false;
+    const eligibleTypeIds = eligibleHoursVolunteers?.get(entry.volunteer.id);
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -285,9 +279,7 @@ export function buildBoardVolunteers({
       // tracked no matter what the contract currently is — it can be non-
       // compliant (no active contract, or the contract changed after the
       // timesheet was created), but it must never be orphaned out of every
-      // stage. The active-contract gate only controls whether the volunteer is
-      // *prompted* to create a new timesheet (see the needsTimesheet flag
-      // below), never whether an existing one shows up (VOLI-1283).
+      // stage (VOLI-1283).
       const months = monthsInRange(year, dateRange);
       for (const { year: y, month } of months) {
         const invoicesForMonth = invoices.filter(
@@ -301,14 +293,11 @@ export function buildBoardVolunteers({
         }
       }
 
-      // Eligible hours are only a "Stundennachweis fällig" concern once the
-      // Vereinbarung precondition is satisfied. No countersigned contract ->
-      // the real blocker is creating (or countersigning) the agreement, so
-      // queue them there instead of skipping straight to the timesheet step.
+      // Eligible hours with no contract yet mean the real blocker is creating
+      // the Vereinbarung, so queue the volunteer under "Create contracts"
+      // rather than anywhere downstream.
       if (eligibleTypeIds?.has(usage.reimbursementType.id)) {
-        if (activeContract) {
-          hasActiveContractNeedingTimesheet = true;
-        } else if (contractsForType.length === 0) {
+        if (!activeContract && contractsForType.length === 0) {
           // No Vereinbarung exists at all yet — surface a real,
           // actionable "create contract" row (not the muted
           // contract-missing placeholder, which is reserved for
@@ -340,7 +329,6 @@ export function buildBoardVolunteers({
       name: entry.volunteer.name,
       initials: getInitials(entry.volunteer.name),
       pauschale: primaryType,
-      needsTimesheet: hasActiveContractNeedingTimesheet,
       usedAmount: centsToEuros(
         entry.usageByType.reduce((sum, u) => sum + u.usedCents, 0),
       ),

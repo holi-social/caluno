@@ -8,7 +8,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@repo/ui';
-import { addDays, format, startOfWeek } from 'date-fns';
+import { format } from 'date-fns';
 import { CalendarRange, Plus, UserPlus } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -30,6 +30,7 @@ import { CreateShiftButton } from '@/domain/shift/components/create-shift-button
 import { ShiftCreatedDialog } from '@/domain/shift/components/shift-created-dialog';
 import { WeeklyCalendar } from '@/domain/shift/components/weekly-calendar';
 import { WeeklyCalendarNav } from '@/domain/shift/components/weekly-calendar-nav';
+import { getWeekRange } from '@/domain/shift/lib/shift-instances';
 import { Link } from '@/i18n/navigation';
 import { getDataClient } from '@/lib/data-client';
 import { checkPermission } from '@/lib/permissions-server';
@@ -47,7 +48,7 @@ function parseWeekStart(
 ): Date {
   const base = param ? new Date(param) : fallback;
   const d = Number.isNaN(base.getTime()) ? fallback : base;
-  return startOfWeek(d, { weekStartsOn: 1 });
+  return getWeekRange(d).weekStart;
 }
 
 function parseTab(param: string | null | undefined): EventDetailTab {
@@ -84,7 +85,11 @@ export default async function EventDetailPage({
 
   const instances =
     activeTab === 'shifts'
-      ? await data.shift.findForWeek(weekStart, addDays(weekStart, 7), eventId)
+      ? await data.shift.findForWeek(
+          weekStart,
+          getWeekRange(weekStart).weekEnd,
+          eventId,
+        )
       : null;
 
   return (

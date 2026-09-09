@@ -1,6 +1,6 @@
 'use client';
 
-import { Separator } from '@repo/ui';
+import { Checkbox, Separator } from '@repo/ui';
 import { Building2, CalendarDays } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFormatting } from '@/lib/formatting/use-formatting';
@@ -10,6 +10,9 @@ import { StepperRow } from './stepper-row';
 type ShiftInstanceStepperProps = {
   selection: CheckInSelection;
   orgUnits: Array<{ id: string; name: string }>;
+  /** Hides the date and shift rows; the org unit still scopes the entry. */
+  withoutShift: boolean;
+  onWithoutShiftChange: (withoutShift: boolean) => void;
   onOpenOrgUnit: () => void;
   onOpenDate: () => void;
   onOpenShift: () => void;
@@ -18,6 +21,8 @@ type ShiftInstanceStepperProps = {
 export function ShiftInstanceStepper({
   selection,
   orgUnits,
+  withoutShift,
+  onWithoutShiftChange,
   onOpenOrgUnit,
   onOpenDate,
   onOpenShift,
@@ -60,20 +65,37 @@ export function ShiftInstanceStepper({
         </>
       )}
 
-      <StepperRow
-        label={dateLabel}
-        isEmpty={!selection.date}
-        icon={<CalendarDays className="size-4 text-muted-foreground" />}
-        onClick={onOpenDate}
-      />
-      <Separator />
+      {!withoutShift && (
+        <>
+          <StepperRow
+            label={dateLabel}
+            isEmpty={!selection.date}
+            icon={<CalendarDays className="size-4 text-muted-foreground" />}
+            onClick={onOpenDate}
+          />
+          <Separator />
 
-      <StepperRow
-        label={shiftLabel}
-        sublabel={shiftSublabel}
-        isEmpty={!selectedInstance}
-        onClick={onOpenShift}
-      />
+          <StepperRow
+            label={shiftLabel}
+            sublabel={shiftSublabel}
+            isEmpty={!selectedInstance}
+            onClick={onOpenShift}
+          />
+          <Separator />
+        </>
+      )}
+
+      <label
+        className="flex w-full items-center gap-2 py-2 font-semibold"
+        htmlFor="check-in-without-shift"
+      >
+        <Checkbox
+          id="check-in-without-shift"
+          checked={withoutShift}
+          onCheckedChange={(checked) => onWithoutShiftChange(checked === true)}
+        />
+        {t('checkInWithoutShift')}
+      </label>
     </div>
   );
 }
