@@ -1543,7 +1543,7 @@ export type QueryCheckInContextArgs = {
 
 
 export type QueryCheckInReadinessArgs = {
-  shiftInstanceId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
   volunteerId: Scalars['ID']['input'];
 };
 
@@ -2303,6 +2303,11 @@ export type Shift = {
   visibility: ShiftVisibility;
 };
 
+export enum ShiftCallOutSource {
+  Automatic = 'AUTOMATIC',
+  Manual = 'MANUAL'
+}
+
 export type ShiftInstance = {
   __typename?: 'ShiftInstance';
   actualEndsAt: Scalars['DateTime']['output'];
@@ -2354,6 +2359,7 @@ export type ShiftInstanceCallOutSummary = {
   recipientCount: Scalars['Int']['output'];
   sentAt: Scalars['DateTime']['output'];
   sentBy: User;
+  source: ShiftCallOutSource;
 };
 
 export type ShiftInstanceInvite = {
@@ -3717,7 +3723,7 @@ export type GetShiftInstanceCallOutSummaryQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
+export type GetShiftInstanceCallOutSummaryQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, lastCallOut?: { __typename?: 'ShiftInstanceCallOutSummary', sentAt: string, recipientCount: number, source: ShiftCallOutSource, sentBy: { __typename?: 'User', id: string, name: string, image?: string | null } } | null } };
 
 export type JoinShiftInstanceMutationVariables = Exact<{
   instanceId: Scalars['String']['input'];
@@ -3915,7 +3921,7 @@ export type GetCheckInContextQuery = { __typename?: 'Query', checkInContext?: { 
 
 export type GetCheckInReadinessQueryVariables = Exact<{
   volunteerId: Scalars['ID']['input'];
-  shiftInstanceId: Scalars['ID']['input'];
+  shiftInstanceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -6720,6 +6726,7 @@ export const GetShiftInstanceCallOutSummaryDocument = gql`
     lastCallOut {
       sentAt
       recipientCount
+      source
       sentBy {
         id
         name
@@ -7236,7 +7243,7 @@ export const GetCheckInContextDocument = gql`
 }
     `;
 export const GetCheckInReadinessDocument = gql`
-    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+    query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID) {
   checkInReadiness(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
     isMember
     openMembershipRequestId

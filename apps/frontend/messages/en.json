@@ -97,6 +97,7 @@
     "checkInRunningTitle": "Checkin running",
     "checkInSectionDescription": "Check this volunteer in for a new shift without closing the open entries.",
     "checkInSectionTitle": "New check-in",
+    "checkInWithoutShift": "Check in without shift",
     "dateSheetTitle": "Select date",
     "foundOnOtherDays": "Found on other days",
     "inviteSentConfirmation": "Invitation sent",
@@ -130,6 +131,11 @@
     "selectShiftPlaceholder": "Select the shift",
     "shiftSearchPlaceholder": "Shift name",
     "shiftSheetTitle": "Select shift",
+    "shiftlessWarningDuplicateAtSubmit": "If this volunteer already has an open check-in without a shift, the check-in will fail with an error.",
+    "shiftlessWarningEmptyTaskCell": "The Stundennachweis PDF shows an empty task column unless notes are added to the entry.",
+    "shiftlessWarningNoReimbursement": "These hours get no reimbursement type. They won't enter the Stundennachweis or payment pipeline unless you edit the entry later.",
+    "shiftlessWarningNoShiftStats": "The hours count toward general totals only, not toward any shift's capacity or planning.",
+    "shiftlessWarningTitle": "Checking in without a shift",
     "successDialogCloseButton": "Done",
     "successDialogTitle": "Successfully checked in",
     "today": "Today"
@@ -594,6 +600,7 @@
   "Navigation": {
     "admin": "Admin",
     "checkIn": "Check in",
+    "checkVolunteersIn": "Check volunteers in",
     "events": "Events",
     "home": "Home",
     "myTime": "Your records",
@@ -608,8 +615,9 @@
     "roles": "Roles",
     "selectOrganization": "Select organization",
     "shifts": "Shifts",
+    "shortcuts": "Shortcuts",
     "timesheets": "Timesheets",
-    "volunteering": "Volunteering",
+    "volunteeringApp": "Volunteering app",
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
@@ -1231,6 +1239,7 @@
       "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
+      "urgentCallAutomaticBadge": "Automatic",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1474,6 +1483,9 @@
     },
     "validation": {
       "endTimeRequired": "End time is required",
+      "endMustBeLaterThanStart": "End time must be later than start time",
+      "continuesIntoNextDay": "This shift continues into the next day.",
+      "shorterThan24Hours": "Shift must be shorter than 24 hours.",
       "instanceClearRecurrenceUnsupported": "You can't remove the recurrence here. Edit it on the Edit shift page instead.",
       "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
       "instanceRecurrenceConflict": "The new recurrence doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence.",
@@ -1578,11 +1590,14 @@
       "paidTimeLabel": "Paid time",
       "pauschaleTypeLabel": "Pauschale type",
       "pauschaleTypePlaceholder": "Select a Pauschale type",
-      "selectShiftHint": "Select a shift to view available dates",
+      "noShiftsMatching": "No shifts match your search.",
+      "noShiftsOnDay": "No shifts on this day.",
+      "selectedShiftInstanceLabel": "Selected: {title} · {range}",
       "selectShiftLabel": "Select shift",
-      "selectShiftPlaceholder": "Select a shift",
       "selectVolunteerLabel": "Select volunteer",
       "selectVolunteerPlaceholder": "Select a volunteer",
+      "shiftDatePlaceholder": "Pick a date",
+      "shiftSearchPlaceholder": "Search shift",
       "startEndTimeLabel": "Start and end time"
     },
     "format": {
@@ -1595,10 +1610,6 @@
     "pauschaleType": {
       "ehrenamt": "Ehrenamtspauschale",
       "uebungsleiter": "Übungsleiterpauschale"
-    },
-    "picker": {
-      "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
-      "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
     },
     "sheet": {
       "createDescription": "Record a new time entry for a volunteer shift session.",
@@ -1790,6 +1801,7 @@
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
       "periodLabel": "Period",
+      "yearLabel": "Year",
       "periodPicker": {
         "allTime": "All time",
         "thisMonth": "This month",
@@ -1819,7 +1831,6 @@
         "contractSigning": "Sign contracts",
         "timesheetGenerate": "Create timesheets",
         "timesheetSigning": "Sign timesheets",
-        "needsTimesheet": "Timesheet needed",
         "readyToGo": "Ready to go"
       },
       "toolbar": {
@@ -1835,6 +1846,8 @@
         "allDoneHint": "No open documents in this period.",
         "filtered": "No entries in this category."
       },
+      "loadError": "Reimbursements could not be loaded.",
+      "loadErrorHint": "Something went wrong. Please try again.",
       "resetPrototype": "Reset prototype",
       "resetPrototypeToast": "Prototype data reset.",
       "createDocumentModal": {
@@ -1986,7 +1999,9 @@
         "sendErrorTitle": "Couldn't send the contract",
         "sendError": "The contract couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create a contract template",
-        "completeOrgProfileCta": "Complete your organization profile",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -2010,7 +2025,9 @@
         "sendErrorTitle": "Couldn't send the invoice",
         "sendError": "The invoice couldn't be sent to {name}. Please try again.",
         "noTemplateCta": "Create an invoice template",
-        "completeOrgProfileCta": "Complete your organization profile",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {

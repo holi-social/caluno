@@ -1,182 +1,140 @@
-jest.mock('nanoid', () => ({
-  customAlphabet: () => () => 'abcdefghijkl',
-}));
-
-jest.mock('../../notification/email/email-template-context', () => ({
-  createEmailTemplateContext: () => ({}),
-}));
-
-jest.mock(
-  '../../notification/email/templates/shift-instance-call-out.template',
-  () => ({
-    shiftInstanceCallOutTemplate: jest
-      .fn()
-      .mockResolvedValue({ subject: 'Call-out', html: '<p>join</p>' }),
-  }),
-);
-
-jest.mock(
-  '../../notification/email/templates/shift-instance-call-out-no-recipients.template',
-  () => ({
-    shiftInstanceCallOutNoRecipientsTemplate: jest
-      .fn()
-      .mockResolvedValue({ subject: 'Nobody left', html: '<p>none</p>' }),
-  }),
-);
-
-import {
-  POSTHOG_EVENT,
-  POSTHOG_SURFACE,
-} from '../../shared/observability/posthog.events';
-import { PostHogService } from '../../shared/observability/posthog.service';
-import { ShiftInviteStatus, ShiftVisibility } from '../enums';
+import { describe, expect, it } from 'bun:test';
+import { ShiftCallOutSource, ShiftVisibility } from '../enums';
 import { ShiftCallOutService } from './shift-call-out.service';
 
-function futureInstance() {
+const ORG_UNIT_ID = 'org-1';
+const INSTANCE_ID = 'instance-1';
+
+function makeInstance() {
   return {
-    id: 'si-1',
+    id: INSTANCE_ID,
     masterId: 'shift-1',
     isCancelled: false,
-    actualStartsAt: new Date(Date.now() + 3600_000),
-    actualEndsAt: new Date(Date.now() + 7200_000),
+    actualStartsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    actualEndsAt: new Date(
+      Date.now() + 3 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000,
+    ),
     overrideTitle: null,
     overrideLocation: null,
     master: {
-      id: 'shift-1',
-      title: 'Evening shift',
-      location: 'Hall',
-      organizationUnitId: 'ou-1',
-      visibility: ShiftVisibility.INVITED_MEMBERS,
+      organizationUnitId: ORG_UNIT_ID,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+      title: 'Test Shift',
+      location: null,
     },
   };
 }
 
-describe('ShiftCallOutService.sendCallOut PostHog', () => {
-  it('captures shift_call_out_send after emails go out', async () => {
-    const capture = jest.fn();
-    const insert = jest.fn().mockReturnValue({
-      values: jest.fn().mockResolvedValue(undefined),
-    });
-    const db = {
-      query: {
-        organizationUnits: {
-          findFirst: jest.fn().mockResolvedValue({
-            id: 'ou-1',
-            name: 'Unit',
-            organizationId: 'org-1',
-          }),
-        },
+function setup() {
+  const insertedRows: Array<Record<string, unknown>> = [];
+  const sentEmails: Array<{ to: string }> = [];
+
+  const db = {
+    query: {
+      organizationUnits: {
+        findFirst: async () => ({ id: ORG_UNIT_ID, name: 'Org One' }),
       },
-      select: jest
-        .fn()
-        .mockReturnValueOnce({
-          from: jest.fn().mockReturnValue({
-            where: jest.fn().mockResolvedValue([
-              {
-                userId: 'volunteer-1',
-                status: ShiftInviteStatus.ADMIN_INVITED,
-              },
-            ]),
-          }),
-        })
-        .mockReturnValueOnce({
-          from: jest.fn().mockReturnValue({
-            where: jest.fn().mockResolvedValue([]),
-          }),
-        }),
-      insert,
-    };
-    const service = new ShiftCallOutService(
-      db as never,
-      {
-        findInstanceById: jest.fn().mockResolvedValue(futureInstance()),
-      } as never,
-      {} as never,
-      {} as never,
-      {
-        resolveUsersNotificationData: jest.fn().mockResolvedValue([
-          {
-            userId: 'volunteer-1',
-            email: 'volunteer@example.com',
-            firstName: 'Ada',
-            locale: 'en',
-          },
-        ]),
-      } as never,
-      { send: jest.fn().mockResolvedValue(undefined) } as never,
-      { t: jest.fn() } as never,
-      { capture } as unknown as PostHogService,
+    },
+    select: () => ({
+      from: () => ({
+        where: async () => [],
+      }),
+    }),
+    insert: () => ({
+      values: (rows: Array<Record<string, unknown>>) => {
+        insertedRows.push(...rows);
+        return Promise.resolve();
+      },
+    }),
+  };
+
+  const shiftService = {
+    findInstanceById: async () => makeInstance(),
+  };
+
+  const authService = {
+    findUsersWithPermission: async () => [
+      { id: 'manager-1', email: 'manager@example.com', name: 'Manager One' },
+    ],
+  };
+
+  const membershipService = {
+    getMembers: async () => [{ id: 'vol-1' }, { id: 'vol-2' }, { id: 'vol-3' }],
+  };
+
+  const notificationService = {
+    resolveUsersNotificationData: async (userIds: string[]) =>
+      userIds.map((userId) => ({
+        userId,
+        email: `${userId}@example.com`,
+        name: userId,
+        firstName: userId,
+        locale: 'en',
+      })),
+  };
+
+  const emailService = {
+    send: async (options: { to: string }) => {
+      sentEmails.push(options);
+    },
+  };
+
+  const appI18n = {
+    createTranslator: () => ({ t: (key: string) => key }),
+  };
+
+  const service = new ShiftCallOutService(
+    db as never,
+    shiftService as never,
+    authService as never,
+    membershipService as never,
+    notificationService as never,
+    emailService as never,
+    appI18n as never,
+  );
+
+  return { service, insertedRows, sentEmails };
+}
+
+describe('ShiftCallOutService.sendCallOut', () => {
+  it('excludes explicitly given user ids even though they are otherwise eligible', async () => {
+    const { service, insertedRows } = setup();
+
+    const result = await service.sendCallOut(
+      INSTANCE_ID,
+      ORG_UNIT_ID,
+      'actor-1',
+      { excludeUserIds: ['vol-2'] },
     );
 
-    await service.sendCallOut('si-1', 'ou-1', 'admin-1');
-
-    expect(capture).toHaveBeenCalledWith({
-      event: POSTHOG_EVENT.SHIFT_CALL_OUT_SEND,
-      userId: 'admin-1',
-      properties: {
-        surface: POSTHOG_SURFACE.BACKOFFICE,
-        organization_id: 'org-1',
-        organization_unit_id: 'ou-1',
-        shift_id: 'shift-1',
-        shift_instance_id: 'si-1',
-        recipient_count: 1,
-        sent_to_manager_fallback: false,
-      },
-    });
+    expect(result.recipientCount).toBe(2);
+    expect(insertedRows.map((row) => row.recipientId).sort()).toEqual([
+      'vol-1',
+      'vol-3',
+    ]);
   });
 
-  it('captures with manager fallback when nobody is left to ask', async () => {
-    const capture = jest.fn();
-    const db = {
-      query: {
-        organizationUnits: {
-          findFirst: jest.fn().mockResolvedValue({
-            id: 'ou-1',
-            name: 'Unit',
-            organizationId: 'org-1',
-          }),
-        },
-      },
-      select: jest.fn().mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([]),
-        }),
-      }),
-    };
-    const service = new ShiftCallOutService(
-      db as never,
-      {
-        findInstanceById: jest.fn().mockResolvedValue(futureInstance()),
-      } as never,
-      {} as never,
-      {} as never,
-      {
-        resolveUserNotificationData: jest.fn().mockResolvedValue({
-          userId: 'admin-1',
-          email: 'admin@example.com',
-          firstName: 'Ada',
-          locale: 'en',
-        }),
-      } as never,
-      { send: jest.fn().mockResolvedValue(undefined) } as never,
-      { t: jest.fn() } as never,
-      { capture } as unknown as PostHogService,
-    );
+  it('tags manual sends as MANUAL by default', async () => {
+    const { service, insertedRows } = setup();
 
-    await service.sendCallOut('si-1', 'ou-1', 'admin-1');
+    await service.sendCallOut(INSTANCE_ID, ORG_UNIT_ID, 'actor-1');
 
-    expect(capture).toHaveBeenCalledWith({
-      event: POSTHOG_EVENT.SHIFT_CALL_OUT_SEND,
-      userId: 'admin-1',
-      properties: {
-        surface: POSTHOG_SURFACE.BACKOFFICE,
-        organization_id: 'org-1',
-        organization_unit_id: 'ou-1',
-        shift_id: 'shift-1',
-        shift_instance_id: 'si-1',
-        recipient_count: 0,
-        sent_to_manager_fallback: true,
-      },
+    expect(insertedRows.length).toBeGreaterThan(0);
+    for (const row of insertedRows) {
+      expect(row.source).toBe(ShiftCallOutSource.MANUAL);
+    }
+  });
+
+  it('tags automatic sends as AUTOMATIC when requested', async () => {
+    const { service, insertedRows } = setup();
+
+    await service.sendCallOut(INSTANCE_ID, ORG_UNIT_ID, 'system-automated', {
+      source: ShiftCallOutSource.AUTOMATIC,
     });
+
+    expect(insertedRows.length).toBeGreaterThan(0);
+    for (const row of insertedRows) {
+      expect(row.source).toBe(ShiftCallOutSource.AUTOMATIC);
+    }
   });
 });

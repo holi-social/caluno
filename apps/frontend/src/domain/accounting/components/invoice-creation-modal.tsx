@@ -1,6 +1,6 @@
 'use client';
 
-import { DataError, parseTemplateBody } from '@repo/data';
+import { DataError, PermissionKey, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -8,6 +8,7 @@ import {
   useCurrentOrg,
   useEffectiveRates,
   useEligibleTimeEntriesForInvoice,
+  usePermissions,
   useReimbursementTypes,
   useYearlyUsage,
 } from '@repo/data/react';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { formatEuro } from '@/lib/formatting/formats';
 import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
@@ -128,6 +130,7 @@ export function InvoiceCreationModal({
 
   const org = useCurrentOrg();
   const router = useRouter();
+  const permissionsQuery = usePermissions();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -341,8 +344,13 @@ export function InvoiceCreationModal({
   const sendErrorIsOrgProfile = /organization is missing/i.test(
     sendError ?? '',
   );
-  const completeOrgProfileCta = () =>
-    router.push(`/admin/${orgUId}/settings/org-units`);
+  const canEditOrg =
+    permissionsQuery.data?.some((p) => p.key === PermissionKey.OrgEdit) ??
+    false;
+  const editOrgProfileCta = () =>
+    router.push(
+      `/admin/${orgUId}/settings/org-units?sheet=${ORG_UNIT_EDIT_SHEET_ID}&id=${orgUId}`,
+    );
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -454,30 +462,45 @@ export function InvoiceCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={sendError ? t('sendErrorTitle') : t('loadErrorTitle')}
+      errorTitle={
+        sendErrorIsOrgProfile
+          ? t('orgProfileErrorTitle')
+          : sendError
+            ? t('sendErrorTitle')
+            : t('loadErrorTitle')
+      }
       errorDescription={
-        sendError
-          ? t('sendError', { name: volunteerName })
-          : t('loadError', { name: volunteerName })
+        sendErrorIsOrgProfile
+          ? t('orgProfileErrorDescription')
+          : sendError
+            ? t('sendError', { name: volunteerName })
+            : t('loadError', { name: volunteerName })
       }
       errorMessage={
-        sendError ??
-        (loadError instanceof Error ? loadError.message : undefined)
+        sendErrorIsOrgProfile
+          ? undefined
+          : (sendError ??
+            (loadError instanceof Error ? loadError.message : undefined))
       }
       errorCtaLabel={
-        noInvoiceTemplate || sendErrorIsNoTemplate
-          ? t('noTemplateCta')
-          : sendErrorIsOrgProfile
-            ? t('completeOrgProfileCta')
+        sendErrorIsOrgProfile
+          ? canEditOrg
+            ? t('editProfileCta')
+            : undefined
+          : noInvoiceTemplate || sendErrorIsNoTemplate
+            ? t('noTemplateCta')
             : undefined
       }
       errorCtaAction={
-        noInvoiceTemplate || sendErrorIsNoTemplate
-          ? createTemplateCta
-          : sendErrorIsOrgProfile
-            ? completeOrgProfileCta
+        sendErrorIsOrgProfile
+          ? canEditOrg
+            ? editOrgProfileCta
+            : undefined
+          : noInvoiceTemplate || sendErrorIsNoTemplate
+            ? createTemplateCta
             : undefined
       }
+      errorCtaCentered={sendErrorIsOrgProfile}
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}

@@ -68,7 +68,8 @@ export class TimeTrackingQueryResolver {
   @Query(() => CheckInReadiness)
   async checkInReadiness(
     @Args('volunteerId', { type: () => ID }) volunteerId: string,
-    @Args('shiftInstanceId', { type: () => ID }) shiftInstanceId: string,
+    @Args('shiftInstanceId', { type: () => ID, nullable: true })
+    shiftInstanceId: string | null,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<CheckInReadiness> {
     return this.timeTrackingService.getCheckInReadiness(

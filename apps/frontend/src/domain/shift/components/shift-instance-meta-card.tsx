@@ -1,3 +1,4 @@
+import { ShiftCallOutSource } from '@repo/data';
 import { Badge, Card, CardContent } from '@repo/ui';
 import { CalendarFold, Clock, MailCheck, Megaphone, User } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -15,6 +16,7 @@ type ShiftInstanceMetaCardProps = {
   lastCallOut?: {
     sentAt: string;
     recipientCount: number;
+    source: ShiftCallOutSource;
     sentBy: {
       id: string;
       name: string;
@@ -78,8 +80,16 @@ export async function ShiftInstanceMetaCard({
               </dt>
               <dd className="ml-6 space-y-2">
                 <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
-                  <span>{t('detail.urgentCallSentByPrefix')}</span>
-                  <UserCard user={lastCallOut.sentBy} size="sm" hideEmail />
+                  {lastCallOut.source === ShiftCallOutSource.Automatic ? (
+                    <Badge variant="secondary">
+                      {t('detail.urgentCallAutomaticBadge')}
+                    </Badge>
+                  ) : (
+                    <>
+                      <span>{t('detail.urgentCallSentByPrefix')}</span>
+                      <UserCard user={lastCallOut.sentBy} size="sm" hideEmail />
+                    </>
+                  )}
                   <span>
                     {t('detail.urgentCallSentByDate', {
                       date: `${formatDate(new Date(lastCallOut.sentAt), {

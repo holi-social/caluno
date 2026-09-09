@@ -1,168 +1,215 @@
 'use client';
 
+import { useTimeEntryShiftInstances } from '@repo/data/react';
 import {
-  formatRrulePattern,
-  type GetShiftsQuery,
-  type ShiftInstanceItem,
-} from '@repo/data';
-import { useShiftInstances } from '@repo/data/react';
-import {
+  Calendar,
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  cn,
   Field,
   FieldLabel,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from '@repo/ui';
-import { Loader2 } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
-import { useEffect } from 'react';
-import { ShiftInstanceCalendar } from './shift-instance-calendar';
+import { endOfMonth, startOfMonth } from 'date-fns';
+import { CalendarIcon, Check, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState } from 'react';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  filterByTitle,
+  instancesOnDate,
+  sortByStartsAt,
+  type TimeEntryShiftInstance,
+  toTimeEntryShiftInstance,
+} from '../../shift-instance-options';
 
 export type PickerValue = {
   shiftId?: string;
   shiftInstanceId?: string;
 };
 
-type Shift = GetShiftsQuery['shifts']['items'][0];
-
 type ShiftPickerProps = {
-  shifts: Shift[];
   value: PickerValue;
-  onChange: (value: PickerValue, shiftInstance?: ShiftInstanceItem) => void;
+  onChange: (
+    value: PickerValue,
+    shiftInstance?: TimeEntryShiftInstance,
+  ) => void;
   disabled?: boolean;
+  /** Seeds the date filter (an existing entry's date when editing). */
+  defaultDate?: Date | null;
 };
 
 export function ShiftPicker({
-  shifts,
   value,
   onChange,
   disabled,
+  defaultDate,
 }: ShiftPickerProps) {
   const t = useTranslations('TimeEntry');
-  const formatter = useFormatter();
+  const { formatDate, formatRange } = useFormatting();
+
+  // The admin already knows the day they want to record, so the picker is
+  // date-first: choose a day, then the occurrence(s) that run on it.
+  const [date, setDate] = useState(() => defaultDate ?? new Date());
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (defaultDate) setDate(defaultDate);
+  }, [defaultDate]);
+
+  const range = useMemo(
+    () => ({ start: startOfMonth(date), end: endOfMonth(date) }),
+    [date],
+  );
+
   const {
-    data: instances,
+    data: rawInstances,
     isLoading,
     isError,
-  } = useShiftInstances(value.shiftId);
+  } = useTimeEntryShiftInstances(range.start, range.end);
 
-  const selectedShift = shifts.find((i) => i.id === value.shiftId);
-  const selectedInstance = instances?.find(
+  const dayInstances = useMemo(() => {
+    const all = (rawInstances ?? []).map(toTimeEntryShiftInstance);
+    return sortByStartsAt(instancesOnDate(all, date));
+  }, [rawInstances, date]);
+
+  const visibleInstances = useMemo(
+    () => filterByTitle(dayInstances, search),
+    [dayInstances, search],
+  );
+
+  const selectedInstance = dayInstances.find(
     (i) => i.id === value.shiftInstanceId,
   );
 
-  const shiftInstanceLabel = (shift: Shift, instance?: ShiftInstanceItem) => {
-    if (instance) {
-      const start = new Date(instance.actualStartsAt);
-      const end = new Date(instance.actualEndsAt);
-      return t('picker.shiftInstanceLabel', {
-        title: shift.title,
-        date: formatter.dateTime(start, { dateStyle: 'medium' }),
-        startTime: formatter.dateTime(start, { timeStyle: 'short' }),
-        endTime: formatter.dateTime(end, { timeStyle: 'short' }),
-      });
-    }
-    return shiftLabel(shift);
-  };
-
-  const shiftLabel = (shift: Shift) => {
-    const start = new Date(shift.originalStartsAt);
-    const end = new Date(start.getTime() + shift.durationMinutes * 60000);
-    return t('picker.shiftLabel', {
-      title: shift.title,
-      pattern: formatRrulePattern(shift.rrule),
-      startTime: formatter.dateTime(start, { timeStyle: 'short' }),
-      endTime: formatter.dateTime(end, { timeStyle: 'short' }),
-    });
-  };
-
-  // Auto-select non-recurring shifts, as there's only 1 instance and so no choice to be made
-  useEffect(() => {
-    if (
-      !value.shiftInstanceId &&
-      selectedShift &&
-      !selectedShift.rrule &&
-      instances &&
-      instances.length > 0
-    ) {
-      onChange(
-        {
-          shiftId: selectedShift.id,
-          shiftInstanceId: instances[0]?.id,
-        },
-        instances[0],
-      );
-    }
-  }, [selectedShift, instances, onChange, value.shiftInstanceId]);
-
-  const handleShiftSelect = (shiftId: string) => {
-    onChange({ shiftId });
-  };
-
-  const handleInstanceSelect = (shiftInstanceId: string) => {
-    const instance = instances?.find((i) => i.id === shiftInstanceId);
-    onChange({ shiftId: value.shiftId, shiftInstanceId }, instance);
+  const handleInstanceSelect = (instance: TimeEntryShiftInstance) => {
+    onChange(
+      { shiftId: instance.masterId, shiftInstanceId: instance.id },
+      instance,
+    );
   };
 
   return (
     <Field>
-      <FieldLabel>
+      <FieldLabel htmlFor="time-entry-shift-date">
         {t('form.selectShiftLabel')} <span className="text-destructive">*</span>
       </FieldLabel>
 
-      <Select
-        value={value.shiftId}
-        onValueChange={handleShiftSelect}
-        disabled={disabled}
-      >
-        <SelectTrigger>
-          <SelectValue
-            placeholder={
-              selectedShift
-                ? shiftInstanceLabel(selectedShift, selectedInstance)
-                : t('form.selectShiftPlaceholder')
-            }
+      <Popover>
+        <PopoverTrigger asChild>
+          <InputGroup data-disabled={disabled}>
+            <InputGroupInput
+              id="time-entry-shift-date"
+              disabled={disabled}
+              readOnly
+              value={date ? formatDate(date) : t('form.shiftDatePlaceholder')}
+            />
+            <InputGroupAddon align="inline-start">
+              <CalendarIcon />
+            </InputGroupAddon>
+          </InputGroup>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            defaultMonth={date}
+            selected={date}
+            onSelect={(next) => {
+              if (next) setDate(next);
+            }}
+            disabled={disabled}
           />
-        </SelectTrigger>
-        <SelectContent>
-          {shifts.map((shift) => (
-            <SelectItem key={shift.id} value={shift.id}>
-              {shiftLabel(shift)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        </PopoverContent>
+      </Popover>
 
-      {/* Calendar area */}
-      {value.shiftId ? (
-        <div className="mt-2 animate-in slide-in-from-top-2 fade-in duration-200">
-          {isLoading && (
-            <div className="flex items-center justify-center py-8 rounded-md border">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          )}
+      <div className="mt-2 rounded-md border">
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
 
-          {isError && (
-            <p className="text-sm text-destructive mt-1">
-              {t('form.loadInstancesError')}
-            </p>
-          )}
+        {isError && (
+          <p className="px-3 py-2 text-sm text-destructive">
+            {t('form.loadInstancesError')}
+          </p>
+        )}
 
-          {instances && !isLoading && (
-            <ShiftInstanceCalendar
-              instances={instances}
-              selectedInstanceId={value.shiftInstanceId}
-              onSelect={handleInstanceSelect}
+        {!isLoading && !isError && (
+          <Command
+            forceShowInput
+            shouldFilter={false}
+            className="flex min-h-0 flex-col"
+          >
+            <CommandInput
+              value={search}
+              onValueChange={setSearch}
+              placeholder={t('form.shiftSearchPlaceholder')}
               disabled={disabled}
             />
-          )}
-        </div>
-      ) : (
-        <div className="mt-2 rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-          {t('form.selectShiftHint')}
-        </div>
+
+            <CommandList className="max-h-56 overflow-auto">
+              {visibleInstances.length === 0 && (
+                <CommandEmpty>
+                  {search
+                    ? t('form.noShiftsMatching')
+                    : t('form.noShiftsOnDay')}
+                </CommandEmpty>
+              )}
+
+              {visibleInstances.map((instance) => {
+                const isSelected = instance.id === value.shiftInstanceId;
+                return (
+                  <CommandItem
+                    key={instance.id}
+                    value={instance.id}
+                    onSelect={() => {
+                      if (disabled) return;
+                      handleInstanceSelect(instance);
+                    }}
+                    className={cn(
+                      'cursor-pointer justify-between',
+                      isSelected && 'bg-accent text-accent-foreground',
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">
+                        {instance.title}
+                      </span>
+                      <span className="block text-muted-foreground">
+                        {formatRange(
+                          instance.actualStartsAt,
+                          instance.actualEndsAt,
+                        )}
+                      </span>
+                    </span>
+                    {isSelected && <Check className="size-4 shrink-0" />}
+                  </CommandItem>
+                );
+              })}
+            </CommandList>
+          </Command>
+        )}
+      </div>
+
+      {selectedInstance && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t('form.selectedShiftInstanceLabel', {
+            title: selectedInstance.title,
+            range: formatRange(
+              selectedInstance.actualStartsAt,
+              selectedInstance.actualEndsAt,
+            ),
+          })}
+        </p>
       )}
     </Field>
   );

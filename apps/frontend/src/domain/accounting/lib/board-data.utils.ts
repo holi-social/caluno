@@ -21,6 +21,43 @@ export type RawContract = ContractSummary;
 export type RawInvoice = InvoiceSummary;
 export type RawVolunteerUsage = RawVolunteerYearlyUsage;
 
+export interface DocLineSummary {
+  count: number;
+  latest?: BoardDocument;
+}
+
+/**
+ * How many of a volunteer's documents fall under a given "document line" (a
+ * kind × pauschale pair) and which one is the most recently touched. Used by
+ * the documents-creation flow to decide whether a document already exists for
+ * that line or whether it should still prompt a "create" ("Not created yet").
+ * A doc is counted for a line by its status prefix (`contract-*` for an
+ * agreement, `timesheet-*` for a timesheet) matching the line's pauschale — so
+ * a volunteer-signed timesheet awaiting countersignature (`timesheet-signing-super`)
+ * counts as created, never as generate (VOLI-1283).
+ */
+export function getDocLineSummary(
+  vol: BoardVolunteer,
+  kind: 'contract' | 'invoice',
+  pauschale: PauschalenType,
+): DocLineSummary {
+  const prefix = kind === 'contract' ? 'contract' : 'timesheet';
+  const matches = vol.documents.filter(
+    (d) =>
+      (d.pauschale ?? vol.pauschale) === pauschale &&
+      d.status.startsWith(prefix),
+  );
+  const latest = matches.reduce<BoardDocument | undefined>((acc, d) => {
+    if (!acc) return d;
+    const accDate = acc.lastActionDate?.getTime();
+    const dDate = d.lastActionDate?.getTime();
+    if (dDate === undefined) return acc;
+    if (accDate === undefined) return d;
+    return dDate > accDate ? d : acc;
+  }, undefined);
+  return { count: matches.length, latest };
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
@@ -158,12 +195,15 @@ export function formatMonthYear(date: Date, locale: string): string {
 }
 
 export function monthsInRange(
-  _year: number,
+  year: number,
   range?: { from?: Date; to?: Date },
 ): Array<{ year: number; month: number }> {
-  const now = new Date();
   if (!range?.from) {
-    return [{ year: now.getFullYear(), month: now.getMonth() }];
+    // All-time: every month of the selected year (boardYear falls back to the
+    // current year when no range is set). Previously only the current month
+    // was returned, so documents whose period fell in any other month never
+    // surfaced — orphaning them from every stage (VOLI-1283).
+    return Array.from({ length: 12 }, (_, month) => ({ year, month }));
   }
   const result: Array<{ year: number; month: number }> = [];
   const from = range.from;
@@ -186,16 +226,11 @@ export interface BuildBoardVolunteersInput {
   dateRange?: { from?: Date; to?: Date };
   /**
    * Volunteer id -> the reimbursement type ids they still have eligible
-   * (unclaimed, completed, in-period) time entries for. A volunteer only
-   * counts as `needsTimesheet` for a type once that type also has an active
-   * (countersigned) contract in place — the Vereinbarung is a precondition
-   * for the Stundennachweis step, not a parallel concern. Without an active
-   * contract, the eligible hours instead surface as a `contract-generate`
-   * row so the volunteer is queued under "Vereinbarungen erstellen" (or, if
-   * a contract already exists but isn't countersigned yet, the real contract
-   * document already queues them under "Vereinbarungen gegenzeichnen").
+   * (unclaimed, completed, in-period) time entries for. Used to synthesize a
+   * `contract-generate` row when a volunteer has eligible hours but no
+   * contract at all for that type yet.
    */
-  needsTimesheetVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
+  eligibleHoursVolunteers?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function buildBoardVolunteers({
@@ -205,7 +240,7 @@ export function buildBoardVolunteers({
   year,
   locale,
   dateRange,
-  needsTimesheetVolunteers,
+  eligibleHoursVolunteers,
 }: BuildBoardVolunteersInput): BoardVolunteer[] {
   return rosterUsage.map((entry) => {
     const documents: BoardDocument[] = [];
@@ -213,8 +248,7 @@ export function buildBoardVolunteers({
       Record<PauschalenType, { used: number; total: number }>
     > = {};
     const reimbursementTypeIds: Partial<Record<PauschalenType, string>> = {};
-    const eligibleTypeIds = needsTimesheetVolunteers?.get(entry.volunteer.id);
-    let hasActiveContractNeedingTimesheet = false;
+    const eligibleTypeIds = eligibleHoursVolunteers?.get(entry.volunteer.id);
 
     for (const usage of entry.usageByType) {
       const type = pauschaleForReimbursementTypeKey(
@@ -241,29 +275,29 @@ export function buildBoardVolunteers({
         (c) => c.contractStatus === ContractStatus.Active,
       );
 
-      if (activeContract) {
-        const months = monthsInRange(year, dateRange);
-        for (const { year: y, month } of months) {
-          const invoicesForMonth = invoices.filter(
-            (i) =>
-              i.volunteer.id === entry.volunteer.id &&
-              i.reimbursementType.id === usage.reimbursementType.id &&
-              invoiceInMonth(i, y, month),
-          );
-          for (const invoice of invoicesForMonth) {
-            documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
-          }
+      // An existing timesheet is a real document in the workflow and must be
+      // tracked no matter what the contract currently is — it can be non-
+      // compliant (no active contract, or the contract changed after the
+      // timesheet was created), but it must never be orphaned out of every
+      // stage (VOLI-1283).
+      const months = monthsInRange(year, dateRange);
+      for (const { year: y, month } of months) {
+        const invoicesForMonth = invoices.filter(
+          (i) =>
+            i.volunteer.id === entry.volunteer.id &&
+            i.reimbursementType.id === usage.reimbursementType.id &&
+            invoiceInMonth(i, y, month),
+        );
+        for (const invoice of invoicesForMonth) {
+          documents.push(mapInvoiceToBoardDoc(invoice, type, locale));
         }
       }
 
-      // Eligible hours are only a "Stundennachweis fällig" concern once the
-      // Vereinbarung precondition is satisfied. No countersigned contract ->
-      // the real blocker is creating (or countersigning) the agreement, so
-      // queue them there instead of skipping straight to the timesheet step.
+      // Eligible hours with no contract yet mean the real blocker is creating
+      // the Vereinbarung, so queue the volunteer under "Create contracts"
+      // rather than anywhere downstream.
       if (eligibleTypeIds?.has(usage.reimbursementType.id)) {
-        if (activeContract) {
-          hasActiveContractNeedingTimesheet = true;
-        } else if (contractsForType.length === 0) {
+        if (!activeContract && contractsForType.length === 0) {
           // No Vereinbarung exists at all yet — surface a real,
           // actionable "create contract" row (not the muted
           // contract-missing placeholder, which is reserved for
@@ -295,7 +329,6 @@ export function buildBoardVolunteers({
       name: entry.volunteer.name,
       initials: getInitials(entry.volunteer.name),
       pauschale: primaryType,
-      needsTimesheet: hasActiveContractNeedingTimesheet,
       usedAmount: centsToEuros(
         entry.usageByType.reduce((sum, u) => sum + u.usedCents, 0),
       ),
