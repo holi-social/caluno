@@ -9,11 +9,13 @@ import {
   setDefaultTimeout,
 } from 'bun:test';
 import type { INestApplication } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { PERMISSIONS } from '../src/auth/constants';
 import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
+import * as schema from '../src/database/schema';
 import { MembershipMutationResolver } from '../src/membership/resolvers/membership-mutation.resolver';
-import { createUser } from './factories';
+import { createShift, createShiftInstance, createUser } from './factories';
 import {
   addMembership,
   createOrganizationWithType,
@@ -241,5 +243,133 @@ describe('id verification mutations', () => {
     );
 
     expect(data.checkInSetMembershipIdVerified.idVerifiedAt).toBeTruthy();
+  });
+});
+
+const CHECK_IN_READINESS = `
+  query CheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID!) {
+    checkInReadiness(volunteerId: $volunteerId, shiftInstanceId: $shiftInstanceId) {
+      isMember
+      isParticipating
+      idVerificationEnabled
+      idVerified
+      membershipId
+    }
+  }
+`;
+
+describe('checkInReadiness id verification facts', () => {
+  let app: INestApplication;
+  let db: Database;
+  let callerUserId: string;
+  let unitId: string;
+  let instanceId: string;
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    callerUserId = context.testUserId;
+
+    const org = await createOrganizationWithType(
+      db,
+      `ReadinessIdVerification ${crypto.randomUUID()}`,
+    );
+    const unit = await createUnit(db, {
+      organizationId: org.organization.id,
+      typeId: org.type.id,
+      name: 'Readiness ID verification unit',
+    });
+    unitId = unit.id;
+
+    await grantCallerPermission(
+      db,
+      callerUserId,
+      unit.id,
+      org.organization.id,
+      PERMISSIONS.CHECK_IN_MANAGE,
+    );
+
+    const shift = await createShift(db, { organizationUnitId: unit.id });
+    const instance = await createShiftInstance(db, shift.id);
+    instanceId = instance.id;
+  });
+
+  afterEach(() => {
+    setAuthMockUserId(callerUserId);
+  });
+
+  it('reports idVerificationEnabled false and idVerified false by default', async () => {
+    const volunteer = await createUser(db);
+    const membership = await addMembership(db, volunteer.id, unitId);
+
+    const data = await graphqlRequestRequiringData<{
+      checkInReadiness: {
+        idVerificationEnabled: boolean;
+        idVerified: boolean;
+        membershipId: string | null;
+      };
+    }>(
+      app,
+      {
+        query: CHECK_IN_READINESS,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInReadiness',
+    );
+
+    expect(data.checkInReadiness).toMatchObject({
+      idVerificationEnabled: false,
+      idVerified: false,
+      membershipId: membership.id,
+    });
+  });
+
+  it('reflects the org-unit flag and flips idVerified after verification', async () => {
+    await db
+      .update(schema.organizationUnits)
+      .set({ idVerificationEnabled: true })
+      .where(eq(schema.organizationUnits.id, unitId));
+
+    const volunteer = await createUser(db);
+    const membership = await addMembership(db, volunteer.id, unitId);
+
+    const before = await graphqlRequestRequiringData<{
+      checkInReadiness: { idVerificationEnabled: boolean; idVerified: boolean };
+    }>(
+      app,
+      {
+        query: CHECK_IN_READINESS,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInReadiness',
+    );
+    expect(before.checkInReadiness.idVerificationEnabled).toBe(true);
+    expect(before.checkInReadiness.idVerified).toBe(false);
+
+    await graphqlRequestRequiringData(
+      app,
+      {
+        query: CHECK_IN_SET_ID_VERIFIED,
+        variables: { membershipId: membership.id, verified: true },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInSetMembershipIdVerified',
+    );
+
+    const after = await graphqlRequestRequiringData<{
+      checkInReadiness: { idVerified: boolean };
+    }>(
+      app,
+      {
+        query: CHECK_IN_READINESS,
+        variables: { volunteerId: volunteer.id, shiftInstanceId: instanceId },
+        headers: { 'x-organization-unit-id': unitId },
+      },
+      'checkInReadiness',
+    );
+    expect(after.checkInReadiness.idVerified).toBe(true);
   });
 });
