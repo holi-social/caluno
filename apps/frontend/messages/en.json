@@ -1355,7 +1355,10 @@
       "joinShift": "Join shift",
       "joined": "You have joined the shift",
       "joining": "Joining...",
+      "joinWaitlist": "Join the waitlist",
       "keepShift": "Keep shift",
+      "leaveWaitlist": "Leave the waitlist",
+      "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingApproval": "Waiting for approval",
       "pendingCta": "Request pending",
@@ -1367,7 +1370,7 @@
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
       "unexpected": "Unexpected response from server",
-      "waitlisted": "On waitlist"
+      "waitlistJoined": "You're on the waitlist. We'll email you if a spot opens up."
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
@@ -1542,6 +1545,8 @@
     "spotsFull": "· full",
     "spotsTaken": "{filled} of {max} spots taken",
     "timeLabel": "Time",
+    "waitlistBadge": "You're on the waitlist",
+    "waitlistNote": "If a spot opens up, we'll email you so you can claim it.",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & where"
   },
