@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  useBundleDownloadStatus,
-  useRecordBundleDownload,
-} from '@repo/data/react';
+import { useBundleDownloadStatus, useQueryClient } from '@repo/data/react';
 import {
   Button,
   cn,
@@ -19,6 +16,7 @@ import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { API_URL } from '@/lib/constants';
 import { formatEuro } from '@/lib/formatting/formats';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
@@ -163,25 +161,64 @@ interface BundleDownloadButtonProps {
   reimbursementTypeId: string | undefined;
   typeLabel: string;
   readyCount: number;
+  orgUId: string;
 }
 
 /**
  * Own component (not inlined in the readyTypes.map()) because it calls
- * hooks — useBundleDownloadStatus/useRecordBundleDownload can't live
- * inside a .map() callback per rules-of-hooks.
+ * hooks — useBundleDownloadStatus can't live inside a .map() callback
+ * per rules-of-hooks.
  */
 function BundleDownloadButton({
   volunteerId,
   reimbursementTypeId,
   typeLabel,
   readyCount,
+  orgUId,
 }: BundleDownloadButtonProps) {
   const t = useTranslations('Accounting.reimbursements');
+  const queryClient = useQueryClient();
   const { data: status, isLoading } = useBundleDownloadStatus(
     volunteerId,
     reimbursementTypeId,
   );
-  const recordDownload = useRecordBundleDownload();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadBundle = async () => {
+    if (!reimbursementTypeId || isDownloading) return;
+    const url =
+      `${API_URL}/accounting/reimbursement-bundle/download` +
+      `?volunteerId=${encodeURIComponent(volunteerId)}` +
+      `&reimbursementTypeId=${encodeURIComponent(reimbursementTypeId)}`;
+    setIsDownloading(true);
+    try {
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: { 'x-organization-unit-id': orgUId },
+      });
+      if (!response.ok) {
+        toast.error(t('bundle.downloadError'));
+        return;
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = `Abrechnung-${volunteerId.slice(0, 8)}.zip`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+      // The bundle download records the audit row and marks the READY
+      // invoices as paid, so refresh the board + "last downloaded" hint.
+      queryClient.invalidateQueries({ queryKey: ['accounting'] });
+      toast.success(t('batchBar.bundleDownloadToast', { count: readyCount }));
+    } catch {
+      toast.error(t('bundle.downloadError'));
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-end gap-1 max-w-[220px]">
@@ -189,23 +226,10 @@ function BundleDownloadButton({
         size="sm"
         variant="outline"
         className="gap-1.5 shrink-0"
-        disabled={!reimbursementTypeId || recordDownload.isPending}
+        disabled={!reimbursementTypeId || isDownloading}
         onClick={(e) => {
           e.stopPropagation();
-          if (!reimbursementTypeId || recordDownload.isPending) return;
-          recordDownload.mutate(
-            { volunteerId, reimbursementTypeId },
-            {
-              onSuccess: () => {
-                toast.success(
-                  t('batchBar.bundleDownloadToast', { count: readyCount }),
-                );
-              },
-              onError: () => {
-                toast.error(t('batchBar.bundleDownloadErrorToast'));
-              },
-            },
-          );
+          downloadBundle();
         }}
       >
         <FileTextIcon size={13} />
@@ -243,6 +267,7 @@ function BundleDownloadButton({
 
 interface VolunteerTableGroupProps {
   vol: BoardVolunteer;
+  orgUId: string;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestCreate: (pair: DocVolPair) => void;
   onRequestSign: (pair: DocVolPair) => void;
@@ -253,6 +278,7 @@ interface VolunteerTableGroupProps {
 
 function VolunteerTableGroup({
   vol,
+  orgUId,
   onDocumentClick,
   onRequestCreate,
   onRequestSign,
@@ -361,6 +387,7 @@ function VolunteerTableGroup({
                     reimbursementTypeId={vol.reimbursementTypeIds?.[type]}
                     typeLabel={TYPE_LABEL[type]}
                     readyCount={readyByType[type] ?? 0}
+                    orgUId={orgUId}
                   />
                 ))}
               </div>
@@ -554,6 +581,7 @@ function VolunteerTableGroup({
 
 interface ReimbursementsTableProps {
   vols: BoardVolunteer[];
+  orgUId: string;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestCreate: (pair: DocVolPair) => void;
   onRequestSign: (pair: DocVolPair) => void;
@@ -564,6 +592,7 @@ interface ReimbursementsTableProps {
 
 export function ReimbursementsTable({
   vols,
+  orgUId,
   onDocumentClick,
   onRequestCreate,
   onRequestSign,
@@ -596,6 +625,7 @@ export function ReimbursementsTable({
             <VolunteerTableGroup
               key={vol.id}
               vol={vol}
+              orgUId={orgUId}
               onDocumentClick={onDocumentClick}
               onRequestCreate={onRequestCreate}
               onRequestSign={onRequestSign}

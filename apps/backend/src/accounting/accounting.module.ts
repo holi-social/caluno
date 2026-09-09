@@ -9,6 +9,7 @@ import { RequirementProfileModule } from '../requirement-profile/requirement-pro
 import { StorageModule } from '../storage/storage.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
+import { AccountingController } from './accounting.controller';
 import './enums/register-graphql-enums';
 import {
   ContractMapper,
@@ -53,6 +54,7 @@ import {
 } from './resolvers';
 import {
   AccountingOrgAccessService,
+  BundleDownloadService,
   ContractService,
   DocumentNotificationService,
   DocumentProfileRequirementService,
@@ -78,8 +80,10 @@ import {
     NotificationModule,
     RequirementProfileModule,
   ],
+  controllers: [AccountingController],
   providers: [
     AccountingOrgAccessService,
+    BundleDownloadService,
     VolunteerDocumentsService,
     ReimbursementRateService,
     DocumentTemplateService,

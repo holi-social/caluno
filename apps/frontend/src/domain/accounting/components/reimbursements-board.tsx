@@ -829,6 +829,7 @@ export function ReimbursementsBoard({
       ) : (
         <ReimbursementsTable
           vols={sortedFilteredVols}
+          orgUId={orgUId}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestCreate={handleRequestCreate}
           onRequestSign={handleSign}
