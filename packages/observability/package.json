@@ -13,7 +13,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@sentry/core": "^10.70.0",
+    "@sentry/core": "^10.74.0",
     "pino": "^10.0.0"
   },
   "devDependencies": {
