@@ -1,10 +1,10 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "d82e72c5-5e32-48e3-a9b9-ff1283681fc3",
+  "id": "b902b47f-731c-4f04-a29e-e5bb323012b3",
   "prevIds": [
-    "0c5a6d09-a1b2-4b4f-9343-ee45d410bddb",
-    "4b6ce68a-a190-4f46-b6aa-5101b040b4ad"
+    "56476647-0fe3-4dfc-ab6a-7b52167e2431",
+    "9afaa0f6-a021-4019-93cc-d4d2e293cea5"
   ],
   "ddl": [
     {
@@ -509,6 +509,12 @@
     },
     {
       "isRlsEnabled": false,
+      "name": "volunteer_digest_shift_logs",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
       "name": "files",
       "entityType": "tables",
       "schema": "public"
@@ -671,6 +677,19 @@
       "generated": null,
       "identity": null,
       "name": "resolved_body",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "contracts"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "field_overrides",
       "entityType": "columns",
       "schema": "public",
       "table": "contracts"
@@ -1269,6 +1288,19 @@
       "generated": null,
       "identity": null,
       "name": "resolved_body",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "invoices"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "field_overrides",
       "entityType": "columns",
       "schema": "public",
       "table": "invoices"
@@ -3072,7 +3104,7 @@
       "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
-      "default": "'ADMIN_INVITED'",
+      "default": null,
       "generated": null,
       "identity": null,
       "name": "status",
@@ -6322,7 +6354,7 @@
       "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
-      "default": "'ADMIN_INVITED'",
+      "default": null,
       "generated": null,
       "identity": null,
       "name": "status",
@@ -6530,7 +6562,7 @@
       "typeSchema": "public",
       "notNull": true,
       "dimensions": 0,
-      "default": "'ADMIN_INVITED'",
+      "default": null,
       "generated": null,
       "identity": null,
       "name": "status",
@@ -6719,6 +6751,136 @@
       "entityType": "columns",
       "schema": "public",
       "table": "shift_required_forms"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "shift_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "instance_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "organization_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "position",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "send_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "accepted_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "type": "timestamp",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
     },
     {
       "type": "uuid",
@@ -9085,6 +9247,69 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_vdsl_user_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "instance_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_vdsl_instance_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "send_date",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_vdsl_send_date",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "uploaded_by_user_id",
           "isExpression": false,
           "asc": true,
@@ -10803,6 +11028,58 @@
     },
     {
       "nameExplicit": false,
+      "columns": ["user_id"],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "volunteer_digest_shift_logs_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["shift_id"],
+      "schemaTo": "public",
+      "tableTo": "shifts",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "volunteer_digest_shift_logs_shift_id_shifts_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["instance_id"],
+      "schemaTo": "public",
+      "tableTo": "shift_instances",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "volunteer_digest_shift_logs_instance_id_shift_instances_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["organization_id"],
+      "schemaTo": "public",
+      "tableTo": "organizations",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "volunteer_digest_shift_logs_JEmEZNy2ijpb_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs"
+    },
+    {
+      "nameExplicit": false,
       "columns": ["uploaded_by_user_id"],
       "schemaTo": "public",
       "tableTo": "users",
@@ -11317,6 +11594,14 @@
       "name": "shift_manager_notifications_pkey",
       "schema": "public",
       "table": "shift_manager_notifications",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "volunteer_digest_shift_logs_pkey",
+      "schema": "public",
+      "table": "volunteer_digest_shift_logs",
       "entityType": "pks"
     },
     {
