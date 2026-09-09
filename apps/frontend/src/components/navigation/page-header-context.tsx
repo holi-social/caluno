@@ -29,9 +29,9 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
 }
 
 /** Renders the current page's breadcrumb in the fixed header, or `children` when no page has claimed the slot. */
-export function PageHeaderSlot({ children }: { children?: ReactNode }) {
+export function PageHeaderSlot({ children }: { children: ReactNode }) {
   const ctx = useContext(PageHeaderContext);
-  return ctx?.breadcrumb ?? children ?? null;
+  return ctx?.breadcrumb ?? children;
 }
 
 /**
