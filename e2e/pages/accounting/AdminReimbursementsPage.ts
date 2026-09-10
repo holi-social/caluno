@@ -93,9 +93,12 @@ export class AdminReimbursementsPage {
     const volunteerInput = this.page.getByPlaceholder('Search for a volunteer');
     await volunteerInput.click();
     await volunteerInput.fill(volunteerName);
+    // The picker annotates the option with the volunteer's per-Pauschale
+    // document state, so anchor on the name prefix instead of matching exactly.
     const option = this.page.getByRole('option', {
-      name: volunteerName,
-      exact: true,
+      name: new RegExp(
+        `^${volunteerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+      ),
     });
     await option.click();
     // The input must show the volunteer's name, not their id.
@@ -114,9 +117,10 @@ export class AdminReimbursementsPage {
     await expect(send).toBeEnabled();
     await send.click();
 
-    await expect(
-      this.page.getByText(`Contract sent to ${volunteerName} for signing.`),
-    ).toBeVisible();
+    // The creation modal closes only after the contract is sent. Assert that
+    // state rather than the success toast, which a duplicated `sonner`
+    // instance in the local dev bundle swallows (toasts render on staging).
+    await expect(send).toBeHidden({ timeout: 20_000 });
 
     // The board picks it up as a document row (awaiting the volunteer's
     // signature) — reload because the board doesn't reflect a just-created
@@ -133,12 +137,30 @@ export class AdminReimbursementsPage {
   async countersignContract(volunteerName: string) {
     await this.page.reload({ waitUntil: 'load' });
     const rows = this.countersignRow();
+    // The board is a client component; wait for it to render the coord row
+    // before counting (a bare count after reload can read 0 too early).
+    await expect(rows.first()).toBeVisible();
     const before = await rows.count();
-    expect(before).toBeGreaterThan(0);
+
+    // The row action opens the document detail sheet; countersign from there.
     await rows.first().getByRole('button', { name: 'Countersign' }).click();
-    await expect(
-      this.page.getByText(`Contract countersigned for ${volunteerName}.`),
-    ).toBeVisible();
+    const sheet = this.documentSheet();
+    await expect(sheet).toBeVisible();
+    const countersign = sheet.getByRole('button', { name: 'Countersign' });
+    await expect(countersign).toBeEnabled();
+
+    // Wait on the mutation response rather than the success toast, which a
+    // duplicated `sonner` instance in the local dev bundle swallows.
+    const [signResponse] = await Promise.all([
+      this.page.waitForResponse(
+        (response) =>
+          response.url().includes('/graphql') &&
+          (response.request().postData() ?? '').includes('SignContract'),
+        { timeout: 20_000 },
+      ),
+      countersign.click(),
+    ]);
+    expect(signResponse.ok()).toBeTruthy();
     await this.page.reload({ waitUntil: 'load' });
     await expect(this.countersignRow()).toHaveCount(before - 1);
   }
