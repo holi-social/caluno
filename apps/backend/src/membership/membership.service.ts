@@ -154,10 +154,11 @@ export class MembershipService {
   }
 
   /**
-   * First membership whose unit is in the given id list. The list is expected
-   * to be an ancestor chain ordered self-first (see
+   * Membership on the earliest unit in the given id list. The list is
+   * expected to be an ancestor chain ordered self-first (see
    * `OrganizationUnitDataService.listInclusiveAncestorUnitIds`), so an
-   * exact-unit membership wins over an ancestor one.
+   * exact-unit membership wins over any ancestor one, and a nearer ancestor
+   * wins over a farther one.
    */
   async findMembershipInUnits(
     userId: string,
@@ -168,10 +169,11 @@ export class MembershipService {
       where: { userId, organizationUnitId: { in: organizationUnitIds } },
     });
     if (rows.length === 0) return null;
-    return (
-      rows.find((row) => row.organizationUnitId === organizationUnitIds[0]) ??
-      rows[0]
-    );
+    for (const unitId of organizationUnitIds) {
+      const match = rows.find((row) => row.organizationUnitId === unitId);
+      if (match) return match;
+    }
+    return null;
   }
 
   /**
