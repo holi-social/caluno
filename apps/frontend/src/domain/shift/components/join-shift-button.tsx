@@ -86,6 +86,7 @@ export function JoinShiftButton({
   const joinShiftInstance = useJoinShiftInstance();
   const respondToInvite = useUpdateShiftInstanceInviteStatus();
   const t = useTranslations('Shift');
+  const tCommon = useTranslations('Common');
   const { formatDate } = useFormatting();
 
   const [_hasAutoJoined, _setHasAutoJoined] = useState(false);
@@ -98,12 +99,17 @@ export function JoinShiftButton({
         return;
       }
       try {
-        await respondToInvite.mutateAsync({
+        const updated = await respondToInvite.mutateAsync({
           instanceId,
           status: nextInviteStatus,
         });
-        toast.success(successMessage);
-        onInviteStatusChange?.(nextInviteStatus);
+        const resolvedStatus = updated.status;
+        toast.success(
+          resolvedStatus === ShiftInviteStatus.AwaitingAdminApproval
+            ? t('join.requestSent')
+            : successMessage,
+        );
+        onInviteStatusChange?.(resolvedStatus);
         router.refresh();
       } catch (error) {
         toast.error(getErrorMessage(error) ?? t('join.failed'));
@@ -173,17 +179,30 @@ export function JoinShiftButton({
       try {
         const result = await joinShiftInstance.mutateAsync(instanceId);
 
+        const inviteStatusFromResult = result.shiftInstance?.myInviteStatus;
+
         if (result.status === JoinStatus.Joined) {
           toast.success(t('join.joined'));
-          onInviteStatusChange?.(ShiftInviteStatus.Joined);
+          onInviteStatusChange?.(
+            inviteStatusFromResult ?? ShiftInviteStatus.Joined,
+          );
           if (isAuto) router.push('/');
         } else if (result.status === JoinStatus.WaitlistJoined) {
           toast.success(t('join.waitlistJoined'));
-          onInviteStatusChange?.(ShiftInviteStatus.WaitlistJoined);
+          onInviteStatusChange?.(
+            inviteStatusFromResult ?? ShiftInviteStatus.WaitlistJoined,
+          );
           if (isAuto) router.push('/');
         } else if (result.status === JoinStatus.Pending) {
-          toast.success(t('join.pending'));
-          onMembershipStateChange?.(JoinStatus.Pending);
+          if (
+            inviteStatusFromResult === ShiftInviteStatus.AwaitingAdminApproval
+          ) {
+            toast.success(t('join.requestSent'));
+            onInviteStatusChange?.(inviteStatusFromResult);
+          } else {
+            toast.success(t('join.pending'));
+            onMembershipStateChange?.(JoinStatus.Pending);
+          }
           if (isAuto) router.push('/');
         } else if (result.status === JoinStatus.Rejected) {
           toast.error(t('join.rejected'));
@@ -352,9 +371,20 @@ export function JoinShiftButton({
 
   if (inviteStatus === ShiftInviteStatus.AwaitingAdminApproval) {
     return (
-      <Button variant="outline" size="xl" className={className} disabled>
-        <ClockIcon className="size-5" />
-        {t('join.pendingApproval')}
+      <Button
+        onClick={() =>
+          handleRespond(
+            ShiftInviteStatus.VolunteerRejected,
+            t('join.withdrewApproval'),
+          )
+        }
+        disabled={respondToInvite.isPending || !instanceId}
+        variant="outline"
+        size="xl"
+        className={className}
+      >
+        <BanIcon className="size-5" />
+        {tCommon('cancel')}
       </Button>
     );
   }

@@ -1257,6 +1257,8 @@
     },
     "eventBadge": "Event",
     "form": {
+      "approvalRequiredDescription": "Anyone can request. They wait until you approve.",
+      "approvalRequiredLabel": "Approval required",
       "chooseDays": "Choose which days this shift repeats",
       "dateTimeLabel": "Date and time",
       "imageLabel": "Image",
@@ -1367,6 +1369,7 @@
       "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingApproval": "Waiting for approval",
+      "withdrewApproval": "You've withdrawn your request.",
       "pendingCta": "Request pending",
       "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
       "reenter": "Re-enter shift",
@@ -1515,6 +1518,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Accepted",
+    "pendingApprovalBadge": "Waiting for approval",
     "back": "Back",
     "cancelUntilNote": "You can cancel until {date}.",
     "cancelledBadge": "Canceled",
