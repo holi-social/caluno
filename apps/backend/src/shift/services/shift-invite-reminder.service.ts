@@ -67,8 +67,7 @@ export class ShiftInviteReminderService {
     if (!invite) {
       throw new NotFoundGraphQLError('Shift instance invite not found');
     }
-    // Only a still-unanswered invite can be nudged — once the volunteer has
-    // responded (or was uninvited), the reminder question is moot.
+
     if (invite.status !== ShiftInviteStatus.ADMIN_INVITED) {
       throw new ConflictGraphQLError(
         'Can only remind volunteers with an unanswered invite',
