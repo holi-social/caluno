@@ -32,7 +32,6 @@ import { SendCallOutDialog } from './send-call-out-dialog';
 
 type InstanceInvite = {
   status: ShiftInviteStatus;
-  /** One-shot reminder email sent for this unanswered invite (VOLI-1236). */
   remindedAt?: string | null;
   user: {
     id: string;
@@ -102,8 +101,6 @@ export function ShiftInstanceVolunteersPanel({
     }
   };
   const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
-    // VOLI-1236: the reminder only exists on a live instance's unanswered
-    // invites; once sent it stays visible but inert ("Reminded").
     const remindVisible =
       canManage &&
       !isInstanceInThePast &&

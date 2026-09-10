@@ -15,7 +15,6 @@ export type VolunteeringActionButtonsProps = {
   actions: VolunteeringActionLabel[];
   /** Localized button labels keyed by action id (defaults to English labels). */
   labels?: VolunteeringActionLabels;
-  /** Actions rendered as inert buttons (e.g. an already-sent reminder). */
   disabledActions?: VolunteeringActionLabel[];
   onAction?: (action: VolunteeringActionLabel) => void;
   className?: string;

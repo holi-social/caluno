@@ -3,7 +3,16 @@ jest.mock('nanoid', () => ({
 }));
 
 jest.mock('../../notification/email/email-template-context', () => ({
-  createEmailTemplateContext: () => ({}),
+  // Bun's module mocks are process-global and leak into every spec file that
+  // runs after this one. Return a fully functional context so the leak is
+  // inert — an empty object crashed real email templates elsewhere.
+  createEmailTemplateContext: () => ({
+    t: (key: string) => key,
+    formatDate: (date: Date) => date.toISOString().slice(0, 10),
+    formatTime: (date: Date) => date.toISOString().slice(11, 16),
+    formatDateTime: (date: Date) => date.toISOString(),
+    formatList: (items: string[]) => items.join(', '),
+  }),
 }));
 
 jest.mock(
