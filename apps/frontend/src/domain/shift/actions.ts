@@ -219,6 +219,9 @@ export const remindShiftInstanceInvite = actionClient
   .action(
     async ({ parsedInput, bindArgsParsedInputs: [orgUId, instanceId] }) => {
       const data = await getDataClient({ orgUId });
-      return await data.shift.remindInvite(instanceId, parsedInput.userId);
+      return await data.shift.remindVoluntterAboutInvite(
+        instanceId,
+        parsedInput.userId,
+      );
     },
   );

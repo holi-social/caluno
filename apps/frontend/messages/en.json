@@ -1333,6 +1333,7 @@
       "inviteSuccess": "Volunteer invited again",
       "invited": "Invited",
       "rejected": "Rejected",
+      "remindedAtTooltip": "Reminded on {when}",
       "remindError": "Could not send reminder",
       "remindSuccess": "Reminder sent to volunteer",
       "requested": "Requested",

@@ -26,6 +26,8 @@ export type VolunteeringVolunteerListItem = {
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
   disabledActions?: VolunteeringActionLabel[];
+  /** Hover tooltips for row actions; also shown on disabled buttons. */
+  actionTooltips?: VolunteeringActionLabels;
   /** Far-right icon-only actions (e.g. View profile, Check in). */
   iconActions?: VolunteeringActionLabel[];
   actionLabels?: VolunteeringActionLabels;
@@ -85,6 +87,7 @@ export function VolunteeringVolunteerList({
             statusLabel={volunteer.statusLabel}
             actions={volunteer.actions}
             disabledActions={volunteer.disabledActions}
+            actionTooltips={volunteer.actionTooltips}
             iconActions={volunteer.iconActions}
             actionLabels={
               volunteer.actionLabels
