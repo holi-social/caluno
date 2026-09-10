@@ -120,6 +120,7 @@ describe('RequiredFormService', () => {
       requiredFormService,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
+      {} as never,
     );
 
     registerTestResourceCleanup(async () => {

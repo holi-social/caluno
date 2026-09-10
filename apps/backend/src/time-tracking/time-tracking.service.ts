@@ -16,6 +16,7 @@ import { PaginationInput } from '../graphql/pagination.input';
 import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
 import { OrganizationService } from '../organization/organization.service';
+import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
 import { AccountingEvent } from '../shared/accounting-events';
 import { isParticipatingShiftInviteStatus } from '../shared/invite-status';
 import {
@@ -45,6 +46,7 @@ export class TimeTrackingService {
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
+    private readonly organizationUnitDataService: OrganizationUnitDataService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
   async addTimeEntry(
@@ -489,7 +491,9 @@ export class TimeTrackingService {
    * (ancestor-inclusive, matching `getCheckInContext`'s eligibility check),
    * an open membership request against the exact unit, the volunteer's
    * invite status on the specific shift instance, and whether the volunteer
-   * already has an open time entry for that instance.
+   * already has an open time entry for that instance. The ID-verification
+   * facts (unit flag, verified membership) are read-only inputs to the
+   * optional verification card, not readiness blockers.
    *
    * `shiftInstanceId` is null when checking in without a shift: only the two
    * membership facts exist then, and the shift-scoped ones are reported as
@@ -506,6 +510,9 @@ export class TimeTrackingService {
     shiftInviteStatus: ShiftInviteStatus | null;
     isParticipating: boolean;
     hasOpenTimeEntry: boolean;
+    idVerificationEnabled: boolean;
+    idVerified: boolean;
+    membershipId: string | null;
   }> {
     // Scoped lookup throws NotFound for foreign/missing instances.
     // No instance in without-shift mode: there is nothing to scope against.
@@ -516,25 +523,38 @@ export class TimeTrackingService {
       );
     }
 
-    const [isMember, pendingRequest, inviteStatuses, hasOpenTimeEntry] =
-      await Promise.all([
-        this._membershipService.isMemberOfUnitOrAncestor(
-          volunteerId,
-          organizationUnitId,
-        ),
-        this._membershipService.findPendingMembershipRequest(
-          volunteerId,
-          organizationUnitId,
-        ),
-        shiftInstanceId
-          ? this.shiftService.findInviteStatusesForUser(volunteerId, [
-              shiftInstanceId,
-            ])
-          : [],
-        shiftInstanceId
-          ? this.shiftService.hasOpenTimeEntry(shiftInstanceId, volunteerId)
-          : false,
-      ]);
+    const unitIds =
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
+        organizationUnitId,
+      );
+
+    const [
+      isMember,
+      pendingRequest,
+      inviteStatuses,
+      hasOpenTimeEntry,
+      unit,
+      membership,
+    ] = await Promise.all([
+      this._membershipService.isMemberOfUnitOrAncestor(
+        volunteerId,
+        organizationUnitId,
+      ),
+      this._membershipService.findPendingMembershipRequest(
+        volunteerId,
+        organizationUnitId,
+      ),
+      shiftInstanceId
+        ? this.shiftService.findInviteStatusesForUser(volunteerId, [
+            shiftInstanceId,
+          ])
+        : [],
+      shiftInstanceId
+        ? this.shiftService.hasOpenTimeEntry(shiftInstanceId, volunteerId)
+        : false,
+      this.organizationUnitDataService.findById(organizationUnitId),
+      this._membershipService.findMembershipInUnits(volunteerId, unitIds),
+    ]);
 
     const shiftInviteStatus = inviteStatuses[0]?.status ?? null;
 
@@ -546,6 +566,9 @@ export class TimeTrackingService {
         shiftInviteStatus ?? undefined,
       ),
       hasOpenTimeEntry,
+      idVerificationEnabled: unit?.idVerificationEnabled ?? false,
+      idVerified: membership?.idVerifiedAt != null,
+      membershipId: membership?.id ?? null,
     };
   }
 

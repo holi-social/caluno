@@ -42,6 +42,7 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -88,6 +89,7 @@ describe('TimeTrackingService.inviteVolunteerToOrganization PostHog', () => {
       {} as never,
       { findById: jest.fn().mockResolvedValue({ id: 'volunteer-1' }) } as never,
       { notifyOrganizationUnitInvited } as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
 
@@ -142,6 +144,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -192,6 +195,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -237,6 +241,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -274,6 +279,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -297,11 +303,16 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
   const membershipService = () => ({
     isMemberOfUnitOrAncestor: jest.fn().mockResolvedValue(true),
     findPendingMembershipRequest: jest.fn().mockResolvedValue({ id: 'mr-1' }),
+    findMembershipInUnits: jest.fn().mockResolvedValue(null),
   });
   const shiftService = () => ({
     findInstanceById: jest.fn().mockResolvedValue({ id: 'si-1' }),
     findInviteStatusesForUser: jest.fn(),
     hasOpenTimeEntry: jest.fn(),
+  });
+  const organizationUnitDataService = () => ({
+    listInclusiveAncestorUnitIds: jest.fn().mockResolvedValue(['ou-1']),
+    findById: jest.fn().mockResolvedValue({ idVerificationEnabled: false }),
   });
 
   it('reports the membership facts and skips the shift lookups', async () => {
@@ -314,6 +325,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       {} as never,
+      organizationUnitDataService() as never,
       { emit: jest.fn() } as never,
     );
 
@@ -329,6 +341,9 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       shiftInviteStatus: null,
       isParticipating: false,
       hasOpenTimeEntry: false,
+      idVerificationEnabled: false,
+      idVerified: false,
+      membershipId: null,
     });
     expect(shift.findInstanceById).not.toHaveBeenCalled();
     expect(shift.findInviteStatusesForUser).not.toHaveBeenCalled();
@@ -347,6 +362,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       {} as never,
+      organizationUnitDataService() as never,
       { emit: jest.fn() } as never,
     );
 

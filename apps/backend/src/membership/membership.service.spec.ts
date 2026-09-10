@@ -2,6 +2,7 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
+import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
 import {
   POSTHOG_EVENT,
   POSTHOG_SURFACE,
@@ -41,6 +42,7 @@ function createService(options: {
     {} as never,
     { shareSatisfiedRequiredForms: async () => {} } as never,
     options.posthog as PostHogService,
+    {} as never,
   );
 
   return service;
@@ -140,6 +142,7 @@ describe('MembershipService.removeMembership PostHog', () => {
       {} as never,
       {} as never,
       { capture } as unknown as PostHogService,
+      {} as never,
     );
 
     await service.removeMembership('mem-1', 'ou-1');
@@ -186,6 +189,7 @@ function createRequestOrgJoinService(existingStatus: string) {
     { getRequiredFormStatuses: jest.fn().mockResolvedValue([]) } as never,
     { shareSubmissionsWithOrgUnit: async () => {} } as never,
     { capture } as unknown as PostHogService,
+    {} as never,
   );
   return { service, capture };
 }
@@ -216,5 +220,119 @@ describe('MembershipService.requestOrgJoin PostHog', () => {
 
     expect(result.status).toBe('REJECTED');
     expect(capture).not.toHaveBeenCalled();
+  });
+});
+
+function createIdVerificationService(options: {
+  membership: {
+    id: string;
+    userId: string;
+    organizationUnitId: string;
+  } | null;
+  ancestorUnitIds: string[];
+}) {
+  const returning = jest.fn().mockResolvedValue(
+    options.membership
+      ? [
+          {
+            ...options.membership,
+            idVerifiedAt: new Date('2026-09-09T10:00:00Z'),
+            idVerifiedById: 'actor-1',
+          },
+        ]
+      : [],
+  );
+  const where = jest.fn().mockReturnValue({ returning });
+  const set = jest.fn().mockReturnValue({ where });
+  const db = {
+    query: {
+      memberships: {
+        findFirst: jest.fn().mockResolvedValue(options.membership),
+      },
+    },
+    update: jest.fn().mockReturnValue({ set }),
+  };
+  const organizationUnitDataService = {
+    listInclusiveAncestorUnitIds: jest
+      .fn()
+      .mockResolvedValue(options.ancestorUnitIds),
+  };
+  const service = new MembershipService(
+    db as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    organizationUnitDataService as never,
+  );
+  return { service, set };
+}
+
+describe('MembershipService.setMembershipIdVerified', () => {
+  it('sets idVerifiedAt and idVerifiedById when verified is true', async () => {
+    const { service, set } = createIdVerificationService({
+      membership: { id: 'm-1', userId: 'user-1', organizationUnitId: 'ou-1' },
+      ancestorUnitIds: ['ou-1'],
+    });
+
+    await service.setMembershipIdVerified('m-1', 'ou-1', true, 'actor-1');
+
+    expect(set).toHaveBeenCalledWith({
+      idVerifiedAt: expect.any(Date),
+      idVerifiedById: 'actor-1',
+    });
+  });
+
+  it('clears both columns when verified is false', async () => {
+    const { service, set } = createIdVerificationService({
+      membership: { id: 'm-1', userId: 'user-1', organizationUnitId: 'ou-1' },
+      ancestorUnitIds: ['ou-1'],
+    });
+
+    await service.setMembershipIdVerified('m-1', 'ou-1', false, 'actor-1');
+
+    expect(set).toHaveBeenCalledWith({
+      idVerifiedAt: null,
+      idVerifiedById: null,
+    });
+  });
+
+  it('throws NotFoundGraphQLError for an unknown membership', async () => {
+    const { service } = createIdVerificationService({
+      membership: null,
+      ancestorUnitIds: ['ou-1'],
+    });
+
+    await expect(
+      service.setMembershipIdVerified('m-x', 'ou-1', true, 'actor-1'),
+    ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+  });
+
+  it('throws ForbiddenGraphQLError when the membership unit is outside the caller unit ancestor chain', async () => {
+    const { service } = createIdVerificationService({
+      membership: { id: 'm-1', userId: 'user-1', organizationUnitId: 'ou-2' },
+      ancestorUnitIds: ['ou-1'],
+    });
+
+    await expect(
+      service.setMembershipIdVerified('m-1', 'ou-1', true, 'actor-1'),
+    ).rejects.toBeInstanceOf(ForbiddenGraphQLError);
+  });
+
+  it('accepts a membership on an ancestor unit of the caller unit', async () => {
+    const { service, set } = createIdVerificationService({
+      membership: {
+        id: 'm-1',
+        userId: 'user-1',
+        organizationUnitId: 'ou-parent',
+      },
+      ancestorUnitIds: ['ou-child', 'ou-parent'],
+    });
+
+    await service.setMembershipIdVerified('m-1', 'ou-child', true, 'actor-1');
+
+    expect(set).toHaveBeenCalled();
   });
 });

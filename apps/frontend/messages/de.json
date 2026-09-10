@@ -100,6 +100,10 @@
     "checkInWithoutShift": "Check-in ohne Schicht",
     "dateSheetTitle": "Datum wählen",
     "foundOnOtherDays": "An anderen Tagen gefunden",
+    "idVerificationButton": "Ausweis bestätigen",
+    "idVerificationDescription": "Bitte den Ausweis des Freiwilligen prüfen und den Namen abgleichen.",
+    "idVerificationError": "Der Ausweis konnte nicht bestätigt werden.",
+    "idVerificationTitle": "Ausweis nicht geprüft",
     "inviteSentConfirmation": "Einladung gesendet",
     "manualCheckin": "Manuelles Einchecken",
     "myQrCodeTab": "Mein QR-Code",
@@ -462,6 +466,17 @@
       "downloadUnavailableNote": "PDF noch nicht verfügbar."
     }
   },
+  "IdVerification": {
+    "page": {
+      "title": "Ausweisprüfung",
+      "subtitle": "Ausweisprüfung für {orgName} verwalten."
+    },
+    "card": {
+      "label": "Ausweisprüfung aktivieren",
+      "description": "Wenn aktiviert, werden Betreuer beim Check-in aufgefordert, den Ausweis eines Freiwilligen zu prüfen. Die Prüfung ist optional und blockiert den Check-in nicht.",
+      "updateError": "Die Einstellung konnte nicht gespeichert werden."
+    }
+  },
   "MembershipRequest": {
     "actions": {
       "approve": "Genehmigen",
@@ -609,6 +624,7 @@
     "checkVolunteersIn": "Freiwillige einchecken",
     "events": "Veranstaltungen",
     "home": "Startseite",
+    "idVerification": "Ausweisprüfung",
     "myTime": "Deine Nachweise",
     "orgUnits": "Organisationseinheiten",
     "organizationSettings": "Organisationseinstellungen",
@@ -1713,6 +1729,14 @@
       "birthdayLabel": "Geburtstag",
       "emailLabel": "E-Mail",
       "formFallback": "Formular",
+      "idVerification": {
+        "label": "{status, select, verified {Ausweis geprüft} other {Ausweis ungeprüft}}",
+        "unverifyTitle": "Ausweisprüfung entfernen?",
+        "unverifyDescription": "Der Freiwillige wird beim nächsten Check-in wieder als ungeprüft markiert.",
+        "unverifyCancel": "Abbrechen",
+        "unverifyConfirm": "Prüfung entfernen",
+        "updateError": "Der Ausweisstatus konnte nicht aktualisiert werden."
+      },
       "noSubmissions": "Noch keine eingereichten Formulare.",
       "qrIdLabel": "QR-ID",
       "submittedForms": "Eingereichte Formulare",
