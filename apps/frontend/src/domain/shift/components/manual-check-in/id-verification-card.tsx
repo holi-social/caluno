@@ -36,6 +36,7 @@ export function IdVerificationCard({ membershipId }: IdVerificationCardProps) {
       buttonLabel={t('idVerificationButton')}
       onAction={() => void handleConfirm()}
       isActionPending={mutation.isPending}
+      className="border-alert"
     />
   );
 }
