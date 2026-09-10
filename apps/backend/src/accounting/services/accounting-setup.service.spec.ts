@@ -44,7 +44,9 @@ describe('AccountingSetupService.getSetupStatus', () => {
     });
 
     const status = await service.getSetupStatus('org-1', 'unit-1');
-    const ehrenamt = status.slots.find((s) => s.reimbursementTypeId === 'type-ehrenamt');
+    const ehrenamt = status.slots.find(
+      (s) => s.reimbursementTypeId === 'type-ehrenamt',
+    );
 
     expect(ehrenamt?.hasInvoiceTemplate).toBe(true);
     expect(ehrenamt?.hasContractTemplate).toBe(false);
@@ -62,8 +64,14 @@ describe('AccountingSetupService.getSetupStatus', () => {
 
     const status = await service.getSetupStatus('org-1', 'unit-1');
 
-    expect(status.slots.find((s) => s.reimbursementTypeId === 'type-ehrenamt')?.ready).toBe(true);
-    expect(status.slots.find((s) => s.reimbursementTypeId === 'type-uebungsleiter')?.ready).toBe(false);
+    expect(
+      status.slots.find((s) => s.reimbursementTypeId === 'type-ehrenamt')
+        ?.ready,
+    ).toBe(true);
+    expect(
+      status.slots.find((s) => s.reimbursementTypeId === 'type-uebungsleiter')
+        ?.ready,
+    ).toBe(false);
     expect(status.canCreateDocuments).toBe(true);
   });
 

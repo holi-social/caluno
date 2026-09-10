@@ -241,7 +241,10 @@ describe('DocumentProfileRequirementService', () => {
           },
         },
       } as never;
-      return new DocumentProfileRequirementService(dbWithOrg, userProfileService);
+      return new DocumentProfileRequirementService(
+        dbWithOrg,
+        userProfileService,
+      );
     };
 
     it('reports every baseline org field the unit has not filled in', async () => {

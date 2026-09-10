@@ -3,7 +3,10 @@ import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import type { AuthenticatedGraphQLContext } from '../../graphql/graphql.context';
 import { AccountingSetupStatus } from '../models/accounting-setup-status.model';
-import { AccountingOrgAccessService, AccountingSetupService } from '../services';
+import {
+  AccountingOrgAccessService,
+  AccountingSetupService,
+} from '../services';
 
 @Resolver(() => AccountingSetupStatus)
 export class AccountingSetupQueryResolver {
