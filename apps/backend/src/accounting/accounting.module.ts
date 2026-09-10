@@ -55,6 +55,7 @@ import {
 } from './resolvers';
 import {
   AccountingOrgAccessService,
+  AccountingSetupService,
   BundleDownloadService,
   ContractService,
   DocumentNotificationService,
@@ -85,6 +86,7 @@ import {
   providers: [
     TimeEntryClosedListener,
     AccountingOrgAccessService,
+    AccountingSetupService,
     BundleDownloadService,
     VolunteerDocumentsService,
     ReimbursementRateService,
