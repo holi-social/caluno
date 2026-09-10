@@ -21,12 +21,6 @@ import { PostHogService } from '../../shared/observability/posthog.service';
 import { ShiftInviteStatus } from '../enums';
 import { ShiftService } from '../shift.service';
 
-/**
- * One-shot reminder email for a single volunteer with an unanswered
- * (ADMIN_INVITED) shift-instance invite (VOLI-1236). The roster and the
- * invite status are untouched; only `remindedAt` is stamped, which hides
- * the reminder action until the invite is (re-)issued.
- */
 @Injectable()
 export class ShiftInviteReminderService {
   constructor(
@@ -120,8 +114,6 @@ export class ShiftInviteReminderService {
     await this.emailService.send({ to: recipient.email, subject, html });
 
     const remindedAt = new Date();
-    // Conditional update — if a concurrent request stamped it first, keep
-    // that timestamp instead of overwriting.
     const [updated] = await this.db
       .update(schema.shiftInstanceInvites)
       .set({ remindedAt })
@@ -129,7 +121,6 @@ export class ShiftInviteReminderService {
         and(
           eq(schema.shiftInstanceInvites.instanceId, instanceId),
           eq(schema.shiftInstanceInvites.userId, userId),
-          isNull(schema.shiftInstanceInvites.remindedAt),
         ),
       )
       .returning({ remindedAt: schema.shiftInstanceInvites.remindedAt });
