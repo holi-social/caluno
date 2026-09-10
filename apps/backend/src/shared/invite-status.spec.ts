@@ -5,6 +5,7 @@ import {
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   isVolunteerEventParticipationWithdrawal,
+  MY_SHIFT_INVITE_STATUSES,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
@@ -15,6 +16,14 @@ describe('invite-status', () => {
   it('defines participating statuses as JOINED only', () => {
     expect(PARTICIPATING_SHIFT_INVITE_STATUSES).toEqual([
       ShiftInviteStatus.JOINED,
+    ]);
+  });
+
+  it('defines my-shift roster statuses as joined, pending approval, or waitlisted', () => {
+    expect(MY_SHIFT_INVITE_STATUSES).toEqual([
+      ShiftInviteStatus.JOINED,
+      ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
+      ShiftInviteStatus.WAITLIST_JOINED,
     ]);
   });
 

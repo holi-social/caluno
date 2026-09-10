@@ -1,18 +1,20 @@
 'use client';
 
+import type { ShiftInviteStatus } from '@repo/data';
 import { Card, cn } from '@repo/ui';
-import { Clock4Icon, MapPinIcon, RepeatIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { MapPinIcon, RepeatIcon } from 'lucide-react';
 import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
+import { ShiftRosterStatusLine } from './shift-roster-status-line';
 
 export interface ShiftCardMyShiftProps {
   shiftInstance: {
     id: string;
     actualStartsAt: string;
     actualEndsAt: string;
+    myInviteStatus?: ShiftInviteStatus | null;
     master: {
       id: string;
       title: string;
@@ -37,7 +39,6 @@ export function ShiftCardMyShift({
   showTime = true,
   isPending = false,
 }: ShiftCardMyShiftProps) {
-  const t = useTranslations('VolunteerHome');
   const { formatTimeRange, formatDate } = useFormatting();
   const getRecurrenceLabel = useRecurrenceLabel();
   const recurrence = getRecurrenceLabel(shiftInstance.master.rrule);
@@ -72,12 +73,10 @@ export function ShiftCardMyShift({
           {recurrence}
         </span>
       )}
-      {isPending && (
-        <p className="flex items-center gap-1 text-sm text-muted-foreground">
-          <Clock4Icon className="size-3.5 shrink-0" />
-          {t('pendingBadge')}
-        </p>
-      )}
+      <ShiftRosterStatusLine
+        isIntendingToJoin={isPending}
+        myInviteStatus={shiftInstance.myInviteStatus}
+      />
       <h3 className="line-clamp-2 font-semibold text-foreground">
         {shiftInstance.master.title}
       </h3>

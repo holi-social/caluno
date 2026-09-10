@@ -50,6 +50,7 @@ import {
   getEventCardLayout,
   PARTICIPATING_EVENT_STATUSES,
 } from '../lib/my-events';
+import { isJoinedShiftRosterStatus } from '../lib/shift-roster-status';
 import { useDelayedLoading } from '../lib/use-delayed-loading';
 import { DayStrip } from './day-strip';
 import { DayStripSkeleton } from './day-strip-skeleton';
@@ -335,12 +336,18 @@ export function VolunteerHomeContent({
         </Empty>
       ) : (
         <div className="flex flex-col gap-3">
-          {nextShift && (
-            <ShiftCardMy
-              shiftInstance={nextShift}
-              isPending={!nextShift.myInviteStatus}
-            />
-          )}
+          {nextShift &&
+            (isJoinedShiftRosterStatus(nextShift.myInviteStatus) ? (
+              <ShiftCardMy
+                shiftInstance={nextShift}
+                isPending={nextShift.isIntendingToJoin}
+              />
+            ) : (
+              <ShiftCardMyShift
+                shiftInstance={nextShift}
+                isPending={nextShift.isIntendingToJoin}
+              />
+            ))}
           {futureShifts.length > 0 && (
             <div className="flex gap-3 overflow-x-auto pb-2">
               {futureShifts.map((shift) => (
@@ -348,7 +355,7 @@ export function VolunteerHomeContent({
                   <ShiftCardMyShift
                     shiftInstance={shift}
                     showDate
-                    isPending={!shift.myInviteStatus}
+                    isPending={shift.isIntendingToJoin}
                   />
                 </div>
               ))}

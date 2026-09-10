@@ -11,6 +11,7 @@ import {
   DateRangePaginationInput,
   PaginationInput,
 } from '../../graphql/pagination.input';
+import { MY_SHIFT_INVITE_STATUSES } from '../../shared/invite-status';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus, SortOrder } from '../enums';
@@ -225,6 +226,9 @@ export class ShiftQueryResolver {
     includeIntended: boolean | undefined,
     @Session() session: UserSession,
   ): Promise<ShiftInstancePaginatedResponse> {
+    const rosterStatuses =
+      statuses && statuses.length > 0 ? statuses : MY_SHIFT_INVITE_STATUSES;
+
     const { instances, total } = await this.shiftService.findMyShiftInstances(
       session.user.id,
       includePast,
@@ -233,7 +237,7 @@ export class ShiftQueryResolver {
       pagination.limit,
       pagination.offset,
       order,
-      statuses ?? undefined,
+      rosterStatuses,
       includeIntended ?? false,
     );
     return new ShiftInstancePaginatedResponse({
