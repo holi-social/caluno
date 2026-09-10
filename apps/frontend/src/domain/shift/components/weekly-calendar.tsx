@@ -1,5 +1,5 @@
 import type { GetWeeklyShiftsQuery } from '@repo/data';
-import { getFormatter } from 'next-intl/server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
 import { getDayInstances, getDaysForWeek } from '../lib/shift-instances';
 import { ShiftCard } from './shift-card';
 
@@ -55,12 +55,12 @@ export async function WeeklyCalendar({
   weekStart,
   orgUId,
 }: WeeklyCalendarProps) {
-  const formatter = await getFormatter();
+  const { formatDate } = await getFormatting();
 
   const days: CalendarDay[] = getDaysForWeek(weekStart).map((date) => ({
     date,
-    label: formatter.dateTime(date, { weekday: 'short' }),
-    dateLabel: formatter.dateTime(date, { month: 'short', day: 'numeric' }),
+    label: formatDate(date, { weekday: 'short' }),
+    dateLabel: formatDate(date, { month: 'short', day: 'numeric' }),
     instances: getDayInstances(date, instances),
   }));
 

@@ -32,7 +32,7 @@ interface ShiftsPageProps {
 function parseWeekStart(param: string | null | undefined): Date {
   const base = param ? new Date(param) : new Date();
   const d = Number.isNaN(base.getTime()) ? new Date() : base;
-  return getWeekRange(d).weekStart;
+  return new Date(getWeekRange(d).weekStart.getTime());
 }
 
 export default async function ShiftsPage({
