@@ -1,16 +1,22 @@
 'use client';
 
-import { useDocumentTemplates, useEffectiveRates } from '@repo/data/react';
+import {
+  useAccountingSetupStatus,
+  useDocumentTemplates,
+  useEffectiveRates,
+} from '@repo/data/react';
 import { Skeleton } from '@repo/ui';
 import { AlertCircleIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { centsToEuros, formatHourlyRate } from '../../lib/money';
 import { reimbursementTypeKeyFor } from '../../lib/reimbursement-type-mapping';
+import { templateSetupBlocker } from '../../lib/setup-status';
 import {
   asInvoiceNumberFormat,
   findSlotTemplate,
 } from '../../lib/template-slots';
+import { AccountingSetupAlert } from '../accounting-setup-alert';
 import type { PauschalenType } from '../doc-type-header';
 import { TemplateCardEmpty } from './card-empty';
 import { TemplateCardFilled } from './card-filled';
@@ -24,21 +30,29 @@ function TemplateSlotCard({
   slot,
   orgUId,
   builderBasePath,
+  disabled,
 }: {
   slot: TemplateSlot;
   orgUId: string;
   builderBasePath?: string;
+  disabled: boolean;
 }) {
   const builderHref = `${builderBasePath ?? `/admin/${orgUId}/accounting/settings/templates`}/${slot.slug}`;
 
   if (!slot.configured) {
-    return (
+    const card = (
+      <TemplateCardEmpty
+        slug={slot.slug}
+        pauschale={slot.pauschale}
+        kind={slot.kind}
+      />
+    );
+    // Gate A unmet: the builder would reject the save, so don't offer it.
+    return disabled ? (
+      <div className="contents opacity-60">{card}</div>
+    ) : (
       <Link href={builderHref} className="contents">
-        <TemplateCardEmpty
-          slug={slot.slug}
-          pauschale={slot.pauschale}
-          kind={slot.kind}
-        />
+        {card}
       </Link>
     );
   }
@@ -50,7 +64,7 @@ function TemplateSlotCard({
       summary={slot.summary}
       lastEditedAt={slot.lastEditedAt}
       lastEditedBy={slot.lastEditedBy}
-      builderHref={builderHref}
+      builderHref={disabled ? undefined : builderHref}
     />
   );
 }
@@ -66,14 +80,21 @@ export function TemplateListingPage({
 }: TemplateListingPageProps) {
   const templatesQuery = useDocumentTemplates();
   const ratesQuery = useEffectiveRates(orgUId);
+  const setupStatusQuery = useAccountingSetupStatus();
 
-  if (templatesQuery.isLoading || ratesQuery.isLoading) {
+  if (
+    templatesQuery.isLoading ||
+    ratesQuery.isLoading ||
+    setupStatusQuery.isLoading
+  ) {
     return <TemplateListingPageSkeleton />;
   }
 
   if (templatesQuery.isError || ratesQuery.isError) {
     return <TemplateListingPageError />;
   }
+
+  const blocker = templateSetupBlocker(setupStatusQuery.data);
 
   const buildSlot = (
     slug: TemplateSlug,
@@ -139,6 +160,7 @@ export function TemplateListingPage({
 
   return (
     <div className="space-y-8">
+      {blocker && <AccountingSetupAlert blocker={blocker} orgUId={orgUId} />}
       {sections.map((section) => (
         <TemplateListingSection
           key={section.pauschale}
@@ -151,6 +173,7 @@ export function TemplateListingPage({
               slot={slot}
               orgUId={orgUId}
               builderBasePath={builderBasePath}
+              disabled={blocker !== null}
             />
           ))}
         </TemplateListingSection>
