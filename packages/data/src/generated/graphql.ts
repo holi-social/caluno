@@ -2976,7 +2976,7 @@ export type MyDocumentSummaryQuery = { __typename?: 'Query', myDocumentSummary: 
 export type GetAccountingSetupStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAccountingSetupStatusQuery = { __typename?: 'Query', accountingSetupStatus: { __typename?: 'AccountingSetupStatus', orgProfileComplete: boolean, missingOrgProfileFields: Array<string>, canManageTemplates: boolean, canCreateDocuments: boolean, slots: Array<{ __typename?: 'AccountingTemplateSlotStatus', reimbursementTypeId: string, reimbursementTypeKey: ReimbursementTypeKey, hasContractTemplate: boolean, hasInvoiceTemplate: boolean, ready: boolean }> } };
+export type GetAccountingSetupStatusQuery = { __typename?: 'Query', accountingSetupStatus: { __typename?: 'AccountingSetupStatus', orgProfileComplete: boolean, missingOrgProfileFields: Array<string>, canCreateDocuments: boolean, slots: Array<{ __typename?: 'AccountingTemplateSlotStatus', reimbursementTypeId: string, reimbursementTypeKey: ReimbursementTypeKey, hasContractTemplate: boolean, hasInvoiceTemplate: boolean, ready: boolean }> } };
 
 export type EventListFieldsFragment = { __typename?: 'Event', id: string, title: string, slug: string, startsAt: string, endsAt: string, shiftsCount: number, requiredFormsCount: number, coverUrl?: string | null, signedUpCount: number };
 
@@ -4930,7 +4930,6 @@ export const GetAccountingSetupStatusDocument = gql`
   accountingSetupStatus {
     orgProfileComplete
     missingOrgProfileFields
-    canManageTemplates
     canCreateDocuments
     slots {
       reimbursementTypeId
