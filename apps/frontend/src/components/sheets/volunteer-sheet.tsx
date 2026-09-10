@@ -116,14 +116,14 @@ function VolunteerSheetContent({
         <Badge variant={statusVariant(status)}>
           {statusLabel(tStatus, status)}
         </Badge>
-      </div>
 
-      {membership && orgUnit?.idVerificationEnabled && (
-        <IdVerificationToggle
-          membershipId={membership.id}
-          verified={membership.idVerifiedAt != null}
-        />
-      )}
+        {membership && orgUnit?.idVerificationEnabled && (
+          <IdVerificationToggle
+            membershipId={membership.id}
+            verified={membership.idVerifiedAt != null}
+          />
+        )}
+      </div>
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
