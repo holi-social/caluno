@@ -48,6 +48,7 @@ export function CheckInReadinessCard({
         description={t('alreadyCheckedInDescription')}
         buttonLabel={t('alreadyCheckedInButton')}
         onAction={() => router.push(alreadyCheckedInDecideHref(checkInId))}
+        className="border-destructive"
       />
     );
   }
@@ -63,6 +64,7 @@ export function CheckInReadinessCard({
         isActionPending={isInviteToOrgPending}
         isActionDone={isInviteToOrgSent}
         doneLabel={t('inviteSentConfirmation')}
+        className="border-destructive"
       />
     );
   }
@@ -75,6 +77,7 @@ export function CheckInReadinessCard({
         description={t('pendingMembershipDescription')}
         buttonLabel={t('acceptMembershipButton')}
         onAction={onOpenAcceptMembership}
+        className="border-destructive"
       />
     );
   }
@@ -89,6 +92,7 @@ export function CheckInReadinessCard({
       isActionPending={isInviteToShiftPending}
       isActionDone={isInviteToShiftSent}
       doneLabel={t('inviteSentConfirmation')}
+      className="border-destructive"
     />
   );
 }
