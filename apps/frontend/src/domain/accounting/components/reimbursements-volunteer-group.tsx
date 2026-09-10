@@ -279,6 +279,7 @@ interface VolunteerTableGroupProps {
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
+  canCreateDocuments: boolean;
 }
 
 function VolunteerTableGroup({
@@ -289,6 +290,7 @@ function VolunteerTableGroup({
   docTypeFilter,
   dateRange,
   activeTile,
+  canCreateDocuments,
 }: VolunteerTableGroupProps) {
   const t = useTranslations('Accounting.reimbursements');
   const tSections = useTranslations('Accounting.templates.sections');
@@ -558,9 +560,11 @@ function VolunteerTableGroup({
                     <Button
                       size="sm"
                       variant={actionKey === 'create' ? 'default' : 'outline'}
+                      disabled={actionKey === 'create' && !canCreateDocuments}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (actionKey === 'create') {
+                          if (!canCreateDocuments) return;
                           onRequestCreate({ doc, vol });
                         } else {
                           onDocumentClick(doc, vol);
@@ -591,6 +595,7 @@ interface ReimbursementsTableProps {
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
+  canCreateDocuments: boolean;
 }
 
 export function ReimbursementsTable({
@@ -601,6 +606,7 @@ export function ReimbursementsTable({
   docTypeFilter,
   dateRange,
   activeTile,
+  canCreateDocuments,
 }: ReimbursementsTableProps) {
   const t = useTranslations('Accounting.reimbursements');
 
@@ -633,6 +639,7 @@ export function ReimbursementsTable({
               docTypeFilter={docTypeFilter}
               dateRange={dateRange}
               activeTile={activeTile}
+              canCreateDocuments={canCreateDocuments}
             />
           ))}
         </TableBody>

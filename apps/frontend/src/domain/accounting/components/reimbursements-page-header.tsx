@@ -1,9 +1,12 @@
 'use client';
 
+import { useAccountingSetupStatus } from '@repo/data/react';
 import { Button } from '@repo/ui';
 import { PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { documentCreationBlocker } from '../lib/setup-status';
+import { AccountingSetupAlert } from './accounting-setup-alert';
 import type { DateRange } from './period-picker';
 import { thisMonthRange } from './period-picker';
 import { ReimbursementsBoard } from './reimbursements-board';
@@ -26,6 +29,9 @@ export function ReimbursementsPageHeader({
   const [year, setYear] = useState(() => new Date().getFullYear());
   const [createDocOpen, setCreateDocOpen] = useState(false);
 
+  const setupStatusQuery = useAccountingSetupStatus();
+  const blocker = documentCreationBlocker(setupStatusQuery.data);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -36,12 +42,15 @@ export function ReimbursementsPageHeader({
 
         <Button
           className="h-10 shrink-0"
+          disabled={blocker !== null}
           onClick={() => setCreateDocOpen(true)}
         >
           <PlusIcon />
           {t('createDocument')}
         </Button>
       </div>
+
+      {blocker && <AccountingSetupAlert blocker={blocker} orgUId={orgUId} />}
 
       <ReimbursementsBoard
         orgUId={orgUId}
@@ -55,6 +64,7 @@ export function ReimbursementsPageHeader({
         }}
         createDocOpen={createDocOpen}
         onCreateDocOpenChange={setCreateDocOpen}
+        canCreateDocuments={blocker === null}
       />
     </div>
   );

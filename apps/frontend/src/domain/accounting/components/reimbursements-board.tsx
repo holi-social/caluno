@@ -444,6 +444,7 @@ interface ReimbursementsBoardProps {
   onReadyToGoSelected: () => void;
   createDocOpen: boolean;
   onCreateDocOpenChange: (open: boolean) => void;
+  canCreateDocuments: boolean;
 }
 
 export function ReimbursementsBoard({
@@ -455,6 +456,7 @@ export function ReimbursementsBoard({
   onReadyToGoSelected,
   createDocOpen,
   onCreateDocOpenChange,
+  canCreateDocuments,
 }: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
 
@@ -837,6 +839,7 @@ export function ReimbursementsBoard({
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}
+          canCreateDocuments={canCreateDocuments}
         />
       )}
 
