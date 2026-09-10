@@ -55,6 +55,8 @@ export type VolunteeringVolunteerRowProps = {
   statusLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  /** Actions rendered as inert buttons (e.g. an already-sent reminder). */
+  disabledActions?: VolunteeringActionLabel[];
   /** Far-right icon-only actions (e.g. View profile, Check in). */
   iconActions?: VolunteeringActionLabel[];
   /** Localized button labels keyed by action id. */
@@ -72,6 +74,7 @@ export function VolunteeringVolunteerRow({
   completedDuration,
   statusLabel,
   actions: actionsOverride,
+  disabledActions,
   iconActions = [],
   actionLabels,
   onAction,
@@ -125,6 +128,7 @@ export function VolunteeringVolunteerRow({
         <VolunteeringActionButtons
           actions={actions}
           labels={actionLabels}
+          disabledActions={disabledActions}
           onAction={onAction}
         />
       </div>

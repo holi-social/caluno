@@ -27,6 +27,7 @@ import {
   createRequirementForm,
   createShift,
   createShiftInstance,
+  createShiftInstanceInvite,
   createUser,
 } from './factories';
 import {
@@ -4925,5 +4926,223 @@ describe('ShiftService.updateShiftInstance applyToAllFuture — non-UTC host tim
       target.actualStartsAt.getTime(),
     );
     expect(updated.actualEndsAt.getTime()).toBe(target.actualEndsAt.getTime());
+  });
+});
+
+describe('remindShiftInstanceInvite (VOLI-1236)', () => {
+  let app: INestApplication;
+  let db: Database;
+  let organizationUnitId: string;
+
+  const remindInvite = (instanceId: string, userId: string) =>
+    graphqlRequestRequiringData<{ remindShiftInstanceInvite: string }>(
+      app,
+      {
+        query: `
+          mutation Remind($instanceId: String!, $userId: String!) {
+            remindShiftInstanceInvite(
+              instanceId: $instanceId
+              userId: $userId
+            )
+          }
+        `,
+        variables: { instanceId, userId },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'remindShiftInstanceInvite',
+    );
+
+  const setInviteStatus = (
+    instanceId: string,
+    userId: string,
+    status: ShiftInviteStatus,
+  ) =>
+    graphqlRequestRequiringData<{
+      updateShiftInstanceInviteStatus: { status: string };
+    }>(
+      app,
+      {
+        query: `
+          mutation SetStatus(
+            $instanceId: String!
+            $userId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              userId: $userId
+              status: $status
+            ) {
+              status
+            }
+          }
+        `,
+        variables: { instanceId, userId, status },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'updateShiftInstanceInviteStatus',
+    );
+
+  const firstInstanceId = async (shiftId: string): Promise<string> => {
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const instanceId = instances[0]?.id;
+    if (!instanceId) throw new Error('Expected a shift instance');
+    return instanceId;
+  };
+
+  beforeAll(async () => {
+    const context = await getGraphqlTestContext();
+    app = context.app;
+    db = context.db;
+    organizationUnitId = context.organizationUnitId;
+  });
+
+  it('reminds an unanswered invite once, keeping the invite pending, and resets on re-invite', async () => {
+    const volunteer = await createUser(db);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instanceId = await firstInstanceId(shiftId);
+    await createShiftInstanceInvite(db, { instanceId, userId: volunteer.id });
+
+    const { remindShiftInstanceInvite: remindedAt } = await remindInvite(
+      instanceId,
+      volunteer.id,
+    );
+    expect(remindedAt).toBeTruthy();
+
+    const afterRemind = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId: volunteer.id },
+    });
+    // Email-only nudge: the roster and invite status stay untouched.
+    expect(afterRemind?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    expect(afterRemind?.remindedAt).toBeInstanceOf(Date);
+
+    const second = await graphqlRequest<{ remindShiftInstanceInvite: string }>(
+      app,
+      {
+        query: `
+          mutation Remind($instanceId: String!, $userId: String!) {
+            remindShiftInstanceInvite(
+              instanceId: $instanceId
+              userId: $userId
+            )
+          }
+        `,
+        variables: { instanceId, userId: volunteer.id },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+    );
+    expect(second.errors?.[0]?.message).toMatch(/already been reminded/);
+
+    // Uninvite → re-invite starts a fresh invite cycle: reminder available again.
+    await setInviteStatus(
+      instanceId,
+      volunteer.id,
+      ShiftInviteStatus.ADMIN_REJECTED,
+    );
+    await setInviteStatus(
+      instanceId,
+      volunteer.id,
+      ShiftInviteStatus.ADMIN_INVITED,
+    );
+
+    const afterReinvite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId, userId: volunteer.id },
+    });
+    expect(afterReinvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    expect(afterReinvite?.remindedAt).toBeNull();
+
+    const { remindShiftInstanceInvite: remindedAgain } = await remindInvite(
+      instanceId,
+      volunteer.id,
+    );
+    expect(remindedAgain).toBeTruthy();
+  });
+
+  it('rejects reminding a volunteer who already answered', async () => {
+    const volunteer = await createUser(db);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instanceId = await firstInstanceId(shiftId);
+    await createShiftInstanceInvite(db, {
+      instanceId,
+      userId: volunteer.id,
+      status: ShiftInviteStatus.JOINED,
+    });
+
+    const response = await graphqlRequest<{
+      remindShiftInstanceInvite: string;
+    }>(app, {
+      query: `
+        mutation Remind($instanceId: String!, $userId: String!) {
+          remindShiftInstanceInvite(
+            instanceId: $instanceId
+            userId: $userId
+          )
+        }
+      `,
+      variables: { instanceId, userId: volunteer.id },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+    expect(response.errors?.[0]?.message).toMatch(/unanswered/);
+  });
+
+  it('rejects reminding for a past shift instance', async () => {
+    const volunteer = await createUser(db);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instance = await createShiftInstance(db, shiftId, {
+      actualStartsAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
+      actualEndsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    });
+    await createShiftInstanceInvite(db, {
+      instanceId: instance.id,
+      userId: volunteer.id,
+    });
+
+    const response = await graphqlRequest<{
+      remindShiftInstanceInvite: string;
+    }>(app, {
+      query: `
+        mutation Remind($instanceId: String!, $userId: String!) {
+          remindShiftInstanceInvite(
+            instanceId: $instanceId
+            userId: $userId
+          )
+        }
+      `,
+      variables: { instanceId: instance.id, userId: volunteer.id },
+      headers: { 'x-organization-unit-id': organizationUnitId },
+    });
+    expect(response.errors?.[0]?.message).toMatch(/past/);
+  });
+
+  it('forbids callers without SHIFT_EDIT', async () => {
+    const volunteer = await createUser(db);
+    const { id: shiftId } = await createShift(db, { organizationUnitId });
+    const instanceId = await firstInstanceId(shiftId);
+    await createShiftInstanceInvite(db, { instanceId, userId: volunteer.id });
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        remindShiftInstanceInvite: string;
+      }>(app, {
+        query: `
+          mutation Remind($instanceId: String!, $userId: String!) {
+            remindShiftInstanceInvite(
+              instanceId: $instanceId
+              userId: $userId
+            )
+          }
+        `,
+        variables: { instanceId, userId: volunteer.id },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
   });
 });

@@ -210,6 +210,10 @@ mutation SendShiftInstanceCallOut($instanceId: String!) {
   }
 }
 
+mutation RemindShiftInstanceInvite($instanceId: String!, $userId: String!) {
+  remindShiftInstanceInvite(instanceId: $instanceId, userId: $userId)
+}
+
 query GetShiftInstanceCallOutSummary($id: ID!) {
   shiftInstance(id: $id) {
     id
@@ -363,6 +367,7 @@ query GetShiftInstance($id: ID!) {
     }
     invites {
       status
+      remindedAt
       user {
         id
         name

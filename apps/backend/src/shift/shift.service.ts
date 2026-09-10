@@ -1206,7 +1206,10 @@ export class ShiftService {
         // The insert above no-ops on conflict; resurrect the inactive row.
         await tx
           .update(schema.shiftInstanceInvites)
-          .set({ status: ShiftInviteStatus.ADMIN_INVITED })
+          .set({
+            status: ShiftInviteStatus.ADMIN_INVITED,
+            remindedAt: null,
+          })
           .where(
             and(
               eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
@@ -1330,7 +1333,11 @@ export class ShiftService {
           if (otherIdsToAdd.length > 0) {
             await tx
               .update(schema.shiftInstanceInvites)
-              .set({ status: inviteStatus })
+              .set({
+                status: inviteStatus,
+                // A re-invite starts a fresh reminder cycle (VOLI-1236).
+                remindedAt: null,
+              })
               .where(
                 and(
                   eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
@@ -1474,7 +1481,11 @@ export class ShiftService {
         if (userIdsToAdd.length > 0) {
           await tx
             .update(schema.shiftInstanceInvites)
-            .set({ status: inviteStatus })
+            .set({
+              status: inviteStatus,
+              // A re-invite starts a fresh reminder cycle (VOLI-1236).
+              remindedAt: null,
+            })
             .where(
               and(
                 inArray(
@@ -4129,7 +4140,11 @@ export class ShiftService {
     const instanceIds = instances.map((instance) => instance.id);
     await db
       .update(schema.shiftInstanceInvites)
-      .set({ status: ShiftInviteStatus.ADMIN_INVITED })
+      .set({
+        status: ShiftInviteStatus.ADMIN_INVITED,
+        // A re-invite starts a fresh reminder cycle (VOLI-1236).
+        remindedAt: null,
+      })
       .where(
         and(
           eq(schema.shiftInstanceInvites.userId, userId),
@@ -4215,7 +4230,12 @@ export class ShiftService {
 
     const [updated] = await this.db
       .update(schema.shiftInstanceInvites)
-      .set({ status: targetStatus })
+      .set({
+        status: targetStatus,
+        // (Re-)entering ADMIN_INVITED starts a fresh reminder cycle
+        // (VOLI-1236); clearing on every transition is a harmless superset.
+        remindedAt: null,
+      })
       .where(eq(schema.shiftInstanceInvites.id, invite.id))
       .returning();
 

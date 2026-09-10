@@ -1,0 +1,1 @@
+ALTER TABLE "shift_instance_invites" ADD COLUMN "reminded_at" timestamp;

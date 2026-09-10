@@ -1,5 +1,6 @@
 import {
   Ban,
+  BellRing,
   Check,
   CircleCheck,
   CircleDashed,
@@ -264,6 +265,7 @@ export const volunteeringActionIcons: Partial<
   'Check in': ScanQrCode,
   'Check out': LogOut,
   Uninvite: Ban,
+  Remind: BellRing,
 };
 
 /** Meets 44px minimum touch target while keeping sm visual scale. */

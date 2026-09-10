@@ -1324,6 +1324,8 @@
     "inviteStatus": {
       "accepted": "Accepted",
       "actionInvite": "Invite",
+      "actionRemind": "Remind",
+      "actionReminded": "Reminded",
       "actionUninvite": "Uninvite",
       "cancelled": "Canceled",
       "declined": "Declined",
@@ -1331,6 +1333,8 @@
       "inviteSuccess": "Volunteer invited again",
       "invited": "Invited",
       "rejected": "Rejected",
+      "remindError": "Could not send reminder",
+      "remindSuccess": "Reminder sent to volunteer",
       "requested": "Requested",
       "signedUp": "Signed up",
       "summaryAccepted": "accepted",

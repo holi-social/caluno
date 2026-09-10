@@ -25,10 +25,13 @@ export type VolunteeringVolunteerListItem = {
   statusLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  /** Actions rendered as inert buttons (e.g. an already-sent reminder). */
+  disabledActions?: VolunteeringActionLabel[];
   /** Far-right icon-only actions (e.g. View profile, Check in). */
   iconActions?: VolunteeringActionLabel[];
+  /** Per-row label overrides (e.g. "Reminded" vs "Remind"). */
+  actionLabels?: VolunteeringActionLabels;
 };
-
 export type VolunteeringVolunteerListProps = {
   volunteers: VolunteeringVolunteerListItem[];
   phase?: ShiftVolunteeringPhase;
@@ -83,8 +86,13 @@ export function VolunteeringVolunteerList({
             completedDuration={volunteer.completedDuration}
             statusLabel={volunteer.statusLabel}
             actions={volunteer.actions}
+            disabledActions={volunteer.disabledActions}
             iconActions={volunteer.iconActions}
-            actionLabels={actionLabels}
+            actionLabels={
+              volunteer.actionLabels
+                ? { ...actionLabels, ...volunteer.actionLabels }
+                : actionLabels
+            }
             onAction={
               onAction ? (action) => onAction(volunteer.id, action) : undefined
             }

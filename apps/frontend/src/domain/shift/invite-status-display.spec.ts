@@ -5,6 +5,7 @@ import {
   adminUninviteTargetStatus,
   canAdminReinvite,
   canAdminUninvite,
+  canRemindInvitee,
   countInviteDisplayStates,
   formatInviteStatusSummary,
   partitionInvitesByWaitlist,
@@ -116,6 +117,35 @@ describe('adminReinviteTargetStatus', () => {
     expect(adminReinviteTargetStatus(EventInviteStatus.AdminRejected)).toBe(
       EventInviteStatus.AdminInvited,
     );
+  });
+});
+
+describe('canRemindInvitee (VOLI-1236)', () => {
+  it('returns true only for an unanswered invite without a sent reminder', () => {
+    expect(canRemindInvitee(ShiftInviteStatus.AdminInvited, null)).toBe(true);
+    expect(canRemindInvitee(ShiftInviteStatus.AdminInvited, undefined)).toBe(
+      true,
+    );
+  });
+
+  it('returns false once a reminder was sent', () => {
+    expect(
+      canRemindInvitee(
+        ShiftInviteStatus.AdminInvited,
+        new Date('2026-09-01T10:00:00.000Z'),
+      ),
+    ).toBe(false);
+    expect(
+      canRemindInvitee(ShiftInviteStatus.AdminInvited, '2026-09-01T10:00:00Z'),
+    ).toBe(false);
+  });
+
+  it('returns false for statuses other than ADMIN_INVITED', () => {
+    expect(canRemindInvitee(ShiftInviteStatus.Joined, null)).toBe(false);
+    expect(
+      canRemindInvitee(ShiftInviteStatus.AwaitingAdminApproval, null),
+    ).toBe(false);
+    expect(canRemindInvitee(ShiftInviteStatus.AdminRejected, null)).toBe(false);
   });
 });
 

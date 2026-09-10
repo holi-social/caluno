@@ -209,6 +209,21 @@
     "previewText": "{volunteerName} joined {shiftTitle} in {organizationName} on {startsAt}.",
     "subject": "{shiftTitle}: {volunteerName} joined"
   },
+  "shiftInstanceReminded": {
+    "buttonLabel": "View shift",
+    "detailInstructions": "Instructions",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you were invited to a shift on {brandName}.",
+    "greeting": "Hi {firstName}, this is a quick reminder about your shift invite.",
+    "heading": "Reminder: you're invited to a shift",
+    "note": "Open the shift to see the details and accept or decline.",
+    "previewText": "A quick reminder: you're invited to {shiftTitle} at {organizationName}.",
+    "subject": "Reminder: you're invited to {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceSeriesCancelled": {
     "bodyMessage": "All shifts in the '{shiftTitle}' series from {fromDate} onward have been cancelled.",
     "detailFrom": "From",
