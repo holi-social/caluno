@@ -42,6 +42,7 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -88,6 +89,7 @@ describe('TimeTrackingService.inviteVolunteerToOrganization PostHog', () => {
       {} as never,
       { findById: jest.fn().mockResolvedValue({ id: 'volunteer-1' }) } as never,
       { notifyOrganizationUnitInvited } as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
 
@@ -142,6 +144,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -192,6 +195,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -237,6 +241,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       {} as never,
       {} as never,
+      {} as never,
       { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
@@ -271,6 +276,7 @@ describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
       {} as never,
       { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
       { capture: jest.fn() } as unknown as PostHogService,
+      {} as never,
       {} as never,
       {} as never,
       {} as never,
@@ -319,6 +325,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       {} as never,
+      organizationUnitDataService() as never,
       { emit: jest.fn() } as never,
     );
 
@@ -355,6 +362,7 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       {} as never,
+      organizationUnitDataService() as never,
       { emit: jest.fn() } as never,
     );
 
