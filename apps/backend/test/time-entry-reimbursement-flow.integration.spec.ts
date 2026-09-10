@@ -77,6 +77,7 @@ describe('Time entry -> eligible timesheet flow', () => {
       {} as OrganizationService,
       {} as never,
       {} as NotificationService,
+      {} as never,
       { emit: () => {} } as never,
     );
     // InvoiceService is not registered as a provider by DatabaseModule alone

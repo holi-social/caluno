@@ -17,4 +17,13 @@ export class CheckInReadiness {
 
   @Field(() => Boolean)
   hasOpenTimeEntry!: boolean;
+
+  @Field(() => Boolean)
+  idVerificationEnabled!: boolean;
+
+  @Field(() => Boolean)
+  idVerified!: boolean;
+
+  @Field(() => ID, { nullable: true })
+  membershipId?: string | null;
 }

@@ -63,6 +63,7 @@ describe('ReimbursementRateService', () => {
       {} as RequiredFormService,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
+      {} as never,
     );
     service = new ReimbursementRateService(
       db,
