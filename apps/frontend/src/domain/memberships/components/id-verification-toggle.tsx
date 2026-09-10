@@ -10,7 +10,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  Switch,
+  Toggle,
 } from '@repo/ui';
 import { IdCard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -23,7 +23,7 @@ interface IdVerificationToggleProps {
 }
 
 /**
- * Two-way admin toggle for a membership's ID verification. The Switch state
+ * Two-way admin toggle for a membership's ID verification. The Toggle state
  * is derived from the memberships query (invalidated on success) — no
  * optimistic flip, so the UI never claims a verified state the server
  * rejected. Un-verifying goes through a confirmation dialog.
@@ -44,7 +44,7 @@ export function IdVerificationToggle({
     }
   };
 
-  const handleCheckedChange = (next: boolean) => {
+  const handlePressedChange = (next: boolean) => {
     if (next) {
       void setVerified(true);
     } else {
@@ -52,15 +52,20 @@ export function IdVerificationToggle({
     }
   };
 
+  const label = t('label', { status: verified ? 'verified' : 'unverified' });
+
   return (
     <div className="flex items-center gap-2">
-      <IdCard className="h-4 w-4 shrink-0 text-muted-foreground" />
-      <span className="flex-1 text-sm">{t('label')}</span>
-      <Switch
-        checked={verified}
+      <Toggle
+        variant="default"
+        pressed={verified}
         disabled={mutation.isPending}
-        onCheckedChange={handleCheckedChange}
-      />
+        onPressedChange={handlePressedChange}
+        aria-label={label}
+      >
+        <IdCard className="h-4 w-4 shrink-0" />
+        {label}
+      </Toggle>
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -1716,7 +1716,7 @@
       "emailLabel": "Email",
       "formFallback": "Form",
       "idVerification": {
-        "label": "ID verified",
+        "label": "{status, select, verified {ID verified} other {ID unverified}}",
         "unverifyTitle": "Remove ID verification?",
         "unverifyDescription": "The volunteer will be flagged as unverified at their next check-in.",
         "unverifyCancel": "Cancel",

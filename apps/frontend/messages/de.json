@@ -1716,7 +1716,7 @@
       "emailLabel": "E-Mail",
       "formFallback": "Formular",
       "idVerification": {
-        "label": "Ausweis geprüft",
+        "label": "{status, select, verified {Ausweis geprüft} other {Ausweis ungeprüft}}",
         "unverifyTitle": "Ausweisprüfung entfernen?",
         "unverifyDescription": "Der Freiwillige wird beim nächsten Check-in wieder als ungeprüft markiert.",
         "unverifyCancel": "Abbrechen",
