@@ -1,6 +1,6 @@
 'use client';
 
-import { useCheckInSetMembershipIdVerified } from '@repo/data/react';
+import { useSetMembershipIdVerified } from '@repo/data/react';
 import { IdCard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ export function IdVerificationCard({
   membershipId,
 }: IdVerificationCardProps) {
   const t = useTranslations('CheckIn');
-  const mutation = useCheckInSetMembershipIdVerified(organizationUnitId);
+  const mutation = useSetMembershipIdVerified(organizationUnitId);
 
   const handleConfirm = async () => {
     try {

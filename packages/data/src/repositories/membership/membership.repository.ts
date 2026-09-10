@@ -39,26 +39,17 @@ export class MembershipRepository extends BaseRepository {
     return data.removeMembership;
   }
 
-  async setIdVerified(membershipId: string, verified: boolean) {
-    const data = await this.sdk.SetMembershipIdVerified({
-      membershipId,
-      verified,
-    });
-    return data.setMembershipIdVerified;
-  }
-
-  async checkInSetIdVerified(
-    organizationUnitId: string,
+  async setIdVerified(
     membershipId: string,
     verified: boolean,
+    organizationUnitId?: string,
   ) {
-    const data = await this.sdk.CheckInSetMembershipIdVerified(
-      {
-        membershipId,
-        verified,
-      },
-      { 'x-organization-unit-id': organizationUnitId },
+    const data = await this.sdk.SetMembershipIdVerified(
+      { membershipId, verified },
+      organizationUnitId
+        ? { 'x-organization-unit-id': organizationUnitId }
+        : undefined,
     );
-    return data.checkInSetMembershipIdVerified;
+    return data.setMembershipIdVerified;
   }
 }

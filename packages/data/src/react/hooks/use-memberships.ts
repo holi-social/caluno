@@ -69,31 +69,12 @@ export function useRemoveMembership() {
   });
 }
 
-export function useSetMembershipIdVerified() {
-  const sdk = useSdk();
-  const queryClient = useQueryClient();
-  const repository = new MembershipRepository(sdk);
-
-  return useMutation({
-    mutationFn: ({
-      membershipId,
-      verified,
-    }: {
-      membershipId: string;
-      verified: boolean;
-    }) => repository.setIdVerified(membershipId, verified),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memberships'] });
-    },
-  });
-}
-
 /**
- * Check-in variant: the manual check-in page spans org units, so its
- * DataProvider carries no org unit header — the caller's selected unit must
- * be sent per request.
+ * Pass `organizationUnitId` when the surrounding DataProvider carries no org
+ * unit header (e.g. the manual check-in page spans org units) — it is then
+ * sent per request.
  */
-export function useCheckInSetMembershipIdVerified(organizationUnitId: string) {
+export function useSetMembershipIdVerified(organizationUnitId?: string) {
   const sdk = useSdk();
   const queryClient = useQueryClient();
   const repository = new MembershipRepository(sdk);
@@ -105,12 +86,7 @@ export function useCheckInSetMembershipIdVerified(organizationUnitId: string) {
     }: {
       membershipId: string;
       verified: boolean;
-    }) =>
-      repository.checkInSetIdVerified(
-        organizationUnitId,
-        membershipId,
-        verified,
-      ),
+    }) => repository.setIdVerified(membershipId, verified, organizationUnitId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memberships'] });
       queryClient.invalidateQueries({ queryKey: ['check-in-readiness'] });

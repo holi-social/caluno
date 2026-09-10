@@ -50,15 +50,6 @@ const SET_ID_VERIFIED = `
 // for it (relations are only loaded by the `memberships` query). The
 // verifier identity is asserted directly against the database instead.
 
-const CHECK_IN_SET_ID_VERIFIED = `
-  mutation CheckInSetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
-    checkInSetMembershipIdVerified(membershipId: $membershipId, verified: $verified) {
-      id
-      idVerifiedAt
-    }
-  }
-`;
-
 async function grantCallerPermission(
   db: Database,
   callerUserId: string,
@@ -118,22 +109,13 @@ describe('id verification mutations', () => {
     setAuthMockUserId(callerUserId);
   });
 
-  it('gates setMembershipIdVerified on volunteer:edit', () => {
+  it('gates setMembershipIdVerified on volunteer:edit or check-in:manage', () => {
     expect(
       Reflect.getMetadata(
         PERMISSIONS_KEY,
         MembershipMutationResolver.prototype.setMembershipIdVerified,
       ),
-    ).toEqual([PERMISSIONS.VOLUNTEER_EDIT]);
-  });
-
-  it('gates checkInSetMembershipIdVerified on check-in:manage', () => {
-    expect(
-      Reflect.getMetadata(
-        PERMISSIONS_KEY,
-        MembershipMutationResolver.prototype.checkInSetMembershipIdVerified,
-      ),
-    ).toEqual([PERMISSIONS.CHECK_IN_MANAGE]);
+    ).toEqual([PERMISSIONS.VOLUNTEER_EDIT, PERMISSIONS.CHECK_IN_MANAGE]);
   });
 
   it('sets and clears the verified state via setMembershipIdVerified', async () => {
@@ -209,7 +191,7 @@ describe('id verification mutations', () => {
     );
   });
 
-  it('verifies via checkInSetMembershipIdVerified for a caller holding only check-in:manage', async () => {
+  it('verifies via setMembershipIdVerified for a caller holding only check-in:manage', async () => {
     const org = await createOrganizationWithType(
       db,
       `IdVerificationCheckIn ${crypto.randomUUID()}`,
@@ -231,18 +213,18 @@ describe('id verification mutations', () => {
     const membership = await addMembership(db, volunteer.id, unit.id);
 
     const data = await graphqlRequestRequiringData<{
-      checkInSetMembershipIdVerified: { idVerifiedAt: string | null };
+      setMembershipIdVerified: { idVerifiedAt: string | null };
     }>(
       app,
       {
-        query: CHECK_IN_SET_ID_VERIFIED,
+        query: SET_ID_VERIFIED,
         variables: { membershipId: membership.id, verified: true },
         headers: { 'x-organization-unit-id': unit.id },
       },
-      'checkInSetMembershipIdVerified',
+      'setMembershipIdVerified',
     );
 
-    expect(data.checkInSetMembershipIdVerified.idVerifiedAt).toBeTruthy();
+    expect(data.setMembershipIdVerified.idVerifiedAt).toBeTruthy();
   });
 });
 
@@ -352,11 +334,11 @@ describe('checkInReadiness id verification facts', () => {
     await graphqlRequestRequiringData(
       app,
       {
-        query: CHECK_IN_SET_ID_VERIFIED,
+        query: SET_ID_VERIFIED,
         variables: { membershipId: membership.id, verified: true },
         headers: { 'x-organization-unit-id': unitId },
       },
-      'checkInSetMembershipIdVerified',
+      'setMembershipIdVerified',
     );
 
     const after = await graphqlRequestRequiringData<{
