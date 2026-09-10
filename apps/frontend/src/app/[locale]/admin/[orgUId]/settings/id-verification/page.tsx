@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { IdVerificationSettingsCard } from '@/domain/org-unit/components/id-verification-settings-card';
 import { getDataClient } from '@/lib/data-client';
-import { requireOrgAccess } from '@/lib/org-context-server';
 import { checkPermission, requirePermission } from '@/lib/permissions-server';
 
 interface IdVerificationSettingsPageProps {
@@ -14,7 +13,6 @@ export default async function IdVerificationSettingsPage({
   params,
 }: IdVerificationSettingsPageProps) {
   const { orgUId, locale } = await params;
-  const { org } = await requireOrgAccess(orgUId);
   await requirePermission(orgUId, PermissionKey.OrgView);
   const [canEdit = false] = await checkPermission(
     orgUId,
@@ -31,7 +29,7 @@ export default async function IdVerificationSettingsPage({
       <div>
         <h1 className="page-title">{t('page.title')}</h1>
         <p className="text-muted-foreground mt-1">
-          {t('page.subtitle', { orgName: org.name })}
+          {t('page.subtitle', { orgName: orgUnit.name })}
         </p>
       </div>
 
