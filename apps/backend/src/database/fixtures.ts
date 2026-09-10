@@ -215,7 +215,10 @@ const createAuthUser = async (
 
   await db.insert(schema.accounts).values({
     id: crypto.randomUUID(),
-    accountId: input.email,
+    // better-auth resolves a credential account by `accountId === user.id`
+    // (see its sign-in route), so the account id must be the user id — the
+    // email here makes the fixture account unreachable for sign-in.
+    accountId: id,
     providerId: 'credential',
     userId: id,
     password: hashedPassword,
