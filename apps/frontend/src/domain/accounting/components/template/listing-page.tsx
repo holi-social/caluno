@@ -40,19 +40,21 @@ function TemplateSlotCard({
   const builderHref = `${builderBasePath ?? `/admin/${orgUId}/accounting/settings/templates`}/${slot.slug}`;
 
   if (!slot.configured) {
-    const card = (
+    // Gate A unmet: the builder would reject the save, so don't offer it.
+    return disabled ? (
       <TemplateCardEmpty
         slug={slot.slug}
         pauschale={slot.pauschale}
         kind={slot.kind}
+        disabled
       />
-    );
-    // Gate A unmet: the builder would reject the save, so don't offer it.
-    return disabled ? (
-      <div className="contents opacity-60">{card}</div>
     ) : (
       <Link href={builderHref} className="contents">
-        {card}
+        <TemplateCardEmpty
+          slug={slot.slug}
+          pauschale={slot.pauschale}
+          kind={slot.kind}
+        />
       </Link>
     );
   }
