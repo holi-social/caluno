@@ -743,7 +743,7 @@ export class ShiftService {
       NOT: {
         invites: {
           userId,
-          status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
+          status: { in: [...MY_SHIFT_INVITE_STATUSES] },
         },
       },
       OR: visibilityBranches,
