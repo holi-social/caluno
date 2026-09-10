@@ -1843,10 +1843,25 @@
         "sectionSubtitle": "All templates for documents needed to pay out a respective Pauschale."
       }
     },
+    "setupAlert": {
+      "orgProfileTitle": "Complete your organization profile first",
+      "orgProfileBody": "Documents print your organization's details, so these must be filled in before templates can be saved: {fields}.",
+      "orgProfileCta": "Go to organization profile",
+      "templatesTitle": "Set up your document templates first",
+      "templatesBody": "Documents can't be created until both the agreement and the timesheet template exist for a Pauschale type. Still missing: {pauschalen}.",
+      "templatesCta": "Go to templates"
+    },
+    "orgProfileFields": {
+      "org_name": "Name",
+      "org_address": "Address",
+      "org_city": "City",
+      "org_legal_rep": "Legal representative"
+    },
     "reimbursements": {
       "title": "Reimbursements",
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
+      "setupStatusError": "Setup status could not be checked. Please reload the page.",
       "periodLabel": "Period",
       "yearLabel": "Year",
       "periodPicker": {
@@ -2150,6 +2165,7 @@
         "invoice": "Invoice"
       },
       "loadError": "Templates could not be loaded. Please reload the page.",
+      "setupStatusError": "Setup status could not be checked. Please reload the page.",
       "builder": {
         "breadcrumb": {
           "accounting": "Accounting",

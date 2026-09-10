@@ -1843,10 +1843,25 @@
         "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
       }
     },
+    "setupAlert": {
+      "orgProfileTitle": "Vervollständige zuerst dein Organisationsprofil",
+      "orgProfileBody": "Dokumente geben die Daten deiner Organisation wieder. Diese Angaben müssen vorhanden sein, bevor Vorlagen gespeichert werden können: {fields}.",
+      "orgProfileCta": "Zum Organisationsprofil",
+      "templatesTitle": "Richte zuerst deine Dokumentvorlagen ein",
+      "templatesBody": "Dokumente können erst erstellt werden, wenn für einen Pauschalentyp sowohl die Vereinbarung als auch der Stundennachweis als Vorlage vorliegen. Es fehlen noch: {pauschalen}.",
+      "templatesCta": "Zu den Vorlagen"
+    },
+    "orgProfileFields": {
+      "org_name": "Name",
+      "org_address": "Adresse",
+      "org_city": "Stadt",
+      "org_legal_rep": "Gesetzliche Vertretung"
+    },
     "reimbursements": {
       "title": "Abrechnungen",
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "periodLabel": "Zeitraum",
       "yearLabel": "Jahr",
       "periodPicker": {
@@ -2150,6 +2165,7 @@
         "invoice": "Stundennachweis"
       },
       "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "builder": {
         "breadcrumb": {
           "accounting": "Buchhaltung",
