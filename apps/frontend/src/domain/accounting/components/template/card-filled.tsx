@@ -16,7 +16,7 @@ interface TemplateCardFilledProps {
   summary: TemplateCardSummary;
   lastEditedAt: string | null;
   lastEditedBy: string | null;
-  builderHref: string;
+  builderHref?: string;
 }
 
 export function TemplateCardFilled({
@@ -43,9 +43,15 @@ export function TemplateCardFilled({
       name={kindLabel}
       contentClassName="space-y-4"
       footer={
-        <Button asChild type="button" variant="outline" className="w-full">
-          <Link href={builderHref}>{t('card.editButton')}</Link>
-        </Button>
+        builderHref ? (
+          <Button asChild type="button" variant="outline" className="w-full">
+            <Link href={builderHref}>{t('card.editButton')}</Link>
+          </Button>
+        ) : (
+          <Button type="button" variant="outline" disabled className="w-full">
+            {t('card.editButton')}
+          </Button>
+        )
       }
     >
       <TemplateCardBadges summary={summary} />

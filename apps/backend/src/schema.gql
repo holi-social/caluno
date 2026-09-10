@@ -2,6 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccountingSetupStatus {
+  canCreateDocuments: Boolean!
+  canManageTemplates: Boolean!
+  missingOrgProfileFields: [String!]!
+  orgProfileComplete: Boolean!
+  slots: [AccountingTemplateSlotStatus!]!
+}
+
+type AccountingTemplateSlotStatus {
+  hasContractTemplate: Boolean!
+  hasInvoiceTemplate: Boolean!
+  ready: Boolean!
+  reimbursementTypeId: ID!
+  reimbursementTypeKey: ReimbursementTypeKey!
+}
+
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
@@ -881,6 +897,7 @@ enum PermissionKey {
 }
 
 type Query {
+  accountingSetupStatus: AccountingSetupStatus!
   activeDocumentTemplate(kind: DocumentKind!, organizationUnitId: ID, reimbursementTypeId: ID!): DocumentTemplate!
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile

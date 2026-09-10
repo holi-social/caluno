@@ -12,12 +12,14 @@ interface TemplateCardEmptyProps {
   slug: TemplateSlug;
   pauschale: PauschalenType;
   kind: DocumentKind;
+  disabled?: boolean;
 }
 
 export function TemplateCardEmpty({
   slug: _slug,
   pauschale,
   kind,
+  disabled,
 }: TemplateCardEmptyProps) {
   const t = useTranslations('Accounting.templates');
   const tCard = useTranslations('Accounting.templates.card.empty');
@@ -34,7 +36,12 @@ export function TemplateCardEmpty({
       topLine={typeLabel}
       name={kindLabel}
       footer={
-        <Button type="button" variant="outline" className="w-full">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          disabled={disabled}
+        >
           {tCard('createButton')}
         </Button>
       }

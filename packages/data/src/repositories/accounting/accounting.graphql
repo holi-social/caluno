@@ -568,3 +568,18 @@ query MyDocumentSummary {
     pending
   }
 }
+
+query GetAccountingSetupStatus {
+  accountingSetupStatus {
+    orgProfileComplete
+    missingOrgProfileFields
+    canCreateDocuments
+    slots {
+      reimbursementTypeId
+      reimbursementTypeKey
+      hasContractTemplate
+      hasInvoiceTemplate
+      ready
+    }
+  }
+}
