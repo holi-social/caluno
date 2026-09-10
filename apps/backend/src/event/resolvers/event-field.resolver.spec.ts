@@ -73,4 +73,43 @@ describe('EventFieldResolver', () => {
       expect(result).toEqual(createdAt);
     });
   });
+
+  describe('myInviteStatus', () => {
+    it('returns null without loading when there is no session user', async () => {
+      const resolver = newResolver();
+      const load = jest.fn();
+      const loader = {
+        inviteByEventIdAndUserId: { load },
+      } as unknown as EventInviteLoader;
+
+      const result = await resolver.myInviteStatus(
+        event({ id: 'event-1' }),
+        null as unknown as UserSession,
+        loader,
+      );
+
+      expect(result).toBeNull();
+      expect(load).not.toHaveBeenCalled();
+    });
+
+    it('returns the raw invite status for the current user', async () => {
+      const resolver = newResolver();
+      const load = jest
+        .fn()
+        .mockResolvedValue({ status: 'VOLUNTEER_CANCELLED' });
+      const loader = {
+        inviteByEventIdAndUserId: { load },
+      } as unknown as EventInviteLoader;
+      const session = { user: { id: 'user-1' } } as UserSession;
+
+      const result = await resolver.myInviteStatus(
+        event({ id: 'event-1' }),
+        session,
+        loader,
+      );
+
+      expect(result).toBe('VOLUNTEER_CANCELLED');
+      expect(load).toHaveBeenCalledWith('event-1:user-1');
+    });
+  });
 });

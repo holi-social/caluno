@@ -11,6 +11,7 @@ import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
+import { EventInviteStatus } from '../enums';
 import { EventService } from '../event.service';
 import { Event } from '../models/event.model';
 import { EventOrganizationUnit } from '../models/event-organization-unit.model';
@@ -100,6 +101,24 @@ export class EventFieldResolver {
       event.organizationUnitId,
       invite,
     );
+  }
+
+  @AllowAnonymous()
+  @ResolveField(() => EventInviteStatus, { nullable: true })
+  async myInviteStatus(
+    @Parent() event: EventEntity,
+    @Session() session: UserSession,
+    @Loader(EventInviteLoader) loader: EventInviteLoader,
+  ): Promise<EventInviteStatus | null> {
+    if (!session?.user) {
+      return null;
+    }
+
+    const invite = await loader.inviteByEventIdAndUserId.load(
+      `${event.id}:${session.user.id}`,
+    );
+
+    return invite?.status ?? null;
   }
 
   @AllowAnonymous()

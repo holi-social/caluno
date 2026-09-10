@@ -3,6 +3,7 @@ import { createPaginatedResponseType } from '../../graphql/paginated-response.mo
 import { JoinStatus } from '../../shared/enums/join-status.enum';
 import { Shift } from '../../shift/models/shift.model';
 import { User } from '../../user/models/user.model';
+import { EventInviteStatus } from '../enums';
 
 @ObjectType()
 export class Event {
@@ -59,6 +60,9 @@ export class Event {
 
   @Field(() => JoinStatus)
   myJoinStatus!: JoinStatus;
+
+  @Field(() => EventInviteStatus, { nullable: true })
+  myInviteStatus?: EventInviteStatus | null;
 
   @Field(() => [Shift])
   shifts!: Shift[];

@@ -157,6 +157,19 @@ export function isVolunteerJoinResolveSource(
  * JOINED / WAITLIST_JOINED are only from volunteer join-resolve sources
  * (accept / re-join); admin approval and waitlist promotion are admin-only.
  */
+/** Volunteer self-withdraw/cancel on an event (not shift waitlist). */
+export function isVolunteerEventParticipationWithdrawal(
+  from: InviteStatusValue,
+  to: InviteStatusValue,
+): boolean {
+  return (
+    (from === EventInviteStatus.JOINED &&
+      to === EventInviteStatus.VOLUNTEER_CANCELLED) ||
+    (from === EventInviteStatus.AWAITING_ADMIN_APPROVAL &&
+      to === EventInviteStatus.VOLUNTEER_REJECTED)
+  );
+}
+
 export function volunteerMayRequestInviteStatus(
   from: InviteStatusValue,
   to: InviteStatusValue,
