@@ -72,6 +72,9 @@ export const createDocumentTemplate = async (
       reimbursementTypeId: args.reimbursementTypeId,
       kind: args.kind,
       body: args.body ?? EMPTY_BODY,
+      // Mirror createDocumentTemplate: a saved template is stamped, so it is
+      // never mistaken for a seeded stub (lastEditedAt IS NULL).
+      lastEditedAt: new Date(),
     })
     .returning();
   if (!template) {

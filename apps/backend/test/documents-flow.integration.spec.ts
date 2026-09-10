@@ -25,6 +25,7 @@ import type { DocumentAwaitingSignaturePayload } from '../src/notification/paylo
 import type { DocumentDeclinedByOrgPayload } from '../src/notification/payloads/document-declined-by-org.payload';
 import { userProfiles } from '../src/requirement-profile/schemas/user-profile.schema';
 import {
+  createDocumentTemplate,
   createReimbursementType,
   createTwoStepTemplate,
 } from './factories/accounting.factory';
@@ -1951,6 +1952,85 @@ describe('documents flow — admin + volunteer', () => {
       );
       expect(ehrenamt?.ready).toBe(true);
       expect(after.accountingSetupStatus.canCreateDocuments).toBe(true);
+    });
+
+    it('resolves readiness per unit: a unit-scoped template does not make a sibling unit ready', async () => {
+      // One org, two units — but templates are configured for the root unit
+      // only. The sibling unit must not inherit readiness from them.
+      const multiUnitOrg = await setupFlowOrgWithoutTemplates(db);
+      const rootUnitId = multiUnitOrg.organizationUnitId;
+      const typeId =
+        (
+          await db.query.organizationUnitTypes.findFirst({
+            where: { organizationId: multiUnitOrg.organizationId },
+          })
+        )?.id ?? '';
+      const siblingUnit = await createUnit(db, {
+        organizationId: multiUnitOrg.organizationId,
+        typeId,
+        name: 'Sibling Unit',
+        parentId: rootUnitId,
+      });
+
+      // Both slots configured for the root unit only — no org-wide default.
+      for (const kind of [DocumentKind.CONTRACT, DocumentKind.INVOICE]) {
+        await createDocumentTemplate(db, {
+          organizationId: multiUnitOrg.organizationId,
+          organizationUnitId: rootUnitId,
+          reimbursementTypeId: multiUnitOrg.reimbursementTypeId,
+          kind,
+          signees: [
+            { order: 0, signeeType: SigneeType.VOLUNTEER },
+            {
+              order: 1,
+              signeeType: SigneeType.PERMISSION_HOLDER,
+              requiredPermissionId: multiUnitOrg.permissionId,
+            },
+          ],
+        });
+      }
+
+      setAuthMockUserId(multiUnitOrg.adminId);
+
+      // Unit A (the root, where the templates live) is ready.
+      const unitA = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{ reimbursementTypeKey: string; ready: boolean }>;
+        };
+      }>(
+        app,
+        {
+          query: ACCOUNTING_SETUP_STATUS,
+          headers: { 'x-organization-unit-id': rootUnitId },
+        },
+        'accountingSetupStatus',
+      );
+      expect(unitA.accountingSetupStatus.canCreateDocuments).toBe(true);
+      expect(
+        unitA.accountingSetupStatus.slots.find(
+          (slot) => slot.reimbursementTypeKey === 'EHRENAMT',
+        )?.ready,
+      ).toBe(true);
+
+      // Unit B (the sibling, no override and no org-wide default) is not.
+      const unitB = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{ reimbursementTypeKey: string; ready: boolean }>;
+        };
+      }>(
+        app,
+        {
+          query: ACCOUNTING_SETUP_STATUS,
+          headers: { 'x-organization-unit-id': siblingUnit.id },
+        },
+        'accountingSetupStatus',
+      );
+      expect(unitB.accountingSetupStatus.canCreateDocuments).toBe(false);
+      expect(
+        unitB.accountingSetupStatus.slots.every((slot) => !slot.ready),
+      ).toBe(true);
     });
   });
 });

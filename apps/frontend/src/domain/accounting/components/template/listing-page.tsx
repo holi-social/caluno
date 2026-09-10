@@ -175,7 +175,7 @@ export function TemplateListingPage({
               slot={slot}
               orgUId={orgUId}
               builderBasePath={builderBasePath}
-              disabled={blocker !== null}
+              disabled={!setupStatusQuery.isSuccess || blocker !== null}
             />
           ))}
         </TemplateListingSection>

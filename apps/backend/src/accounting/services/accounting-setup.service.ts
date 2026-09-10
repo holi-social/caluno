@@ -53,9 +53,24 @@ export class AccountingSetupService {
     // reimbursementTypes is a global table (exactly EHRENAMT/UEBUNGSLEITER in
     // a migrated database) — no org filter here.
     const types = await this.db.query.reimbursementTypes.findMany();
-    // Soft-deleted rows never count, mirroring findActiveTemplate.
+    // Only the templates this unit actually resolves count: its own override
+    // when present, else the org-wide default — the same precedence
+    // findActiveTemplate enforces at creation. Soft-deleted rows and seeded
+    // stubs (never stamped with lastEditedAt) never count.
     const templates = await this.db.query.documentTemplates.findMany({
-      where: { organizationId, isDeleted: false },
+      where: {
+        organizationId,
+        isDeleted: false,
+        lastEditedAt: { isNotNull: true },
+        ...(organizationUnitId
+          ? {
+              OR: [
+                { organizationUnitId },
+                { organizationUnitId: { isNull: true } },
+              ],
+            }
+          : { organizationUnitId: { isNull: true } }),
+      },
     });
 
     const slots = types.map((type) => {

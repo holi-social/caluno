@@ -31,6 +31,9 @@ export function ReimbursementsPageHeader({
 
   const setupStatusQuery = useAccountingSetupStatus();
   const blocker = documentCreationBlocker(setupStatusQuery.data);
+  // Fail closed: while the status is loading or errored we cannot prove the
+  // gates are met, so the create paths stay disabled.
+  const canCreateDocuments = setupStatusQuery.isSuccess && blocker === null;
 
   return (
     <div className="space-y-6">
@@ -42,7 +45,7 @@ export function ReimbursementsPageHeader({
 
         <Button
           className="h-10 shrink-0"
-          disabled={blocker !== null}
+          disabled={!canCreateDocuments}
           onClick={() => setCreateDocOpen(true)}
         >
           <PlusIcon />
@@ -64,7 +67,7 @@ export function ReimbursementsPageHeader({
         }}
         createDocOpen={createDocOpen}
         onCreateDocOpenChange={setCreateDocOpen}
-        canCreateDocuments={blocker === null}
+        canCreateDocuments={canCreateDocuments}
       />
     </div>
   );
