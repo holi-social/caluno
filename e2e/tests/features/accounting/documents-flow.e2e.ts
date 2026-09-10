@@ -154,6 +154,21 @@ test.describe('accounting documents flow — admin + volunteer', () => {
   test('profile dropdown leads to the cross-org "My documents" page, whose badge matches the cards awaiting the signature', async ({
     browser,
   }) => {
+    // The preceding test resolves every document it creates, so create one
+    // awaiting the volunteer's signature first — otherwise the badge count is
+    // zero and the equality below verifies nothing.
+    const adminContext = await browser.newContext({
+      storageState: adminAuthFile,
+    });
+    const adminPage = await adminContext.newPage();
+    await adminPage.goto(`${BASE_URL}/en/admin`, { waitUntil: 'load' });
+    await adminPage.waitForURL(/\/en\/admin\/[^/]+/, { timeout: 20_000 });
+    const orgUnitId = new URL(adminPage.url()).pathname.split('/')[3];
+    const board = new AdminReimbursementsPage(adminPage);
+    await board.goto(orgUnitId);
+    await board.createContractFor(VOLUNTEER_NAME);
+    await adminContext.close();
+
     const volunteerContext = await browser.newContext({
       storageState: volunteerAuthFile,
     });
@@ -169,17 +184,15 @@ test.describe('accounting documents flow — admin + volunteer', () => {
 
     // The badge (red dot with a number) counts documents needing the
     // volunteer's signature across all orgs. It is the role="img" whose
-    // accessible name carries the count; zero pending renders no badge. Match
-    // on that rather than the first bare-number span, which also catches the
-    // home day-strip day numbers.
+    // accessible name carries the count. Match on that rather than the first
+    // bare-number span, which also catches the home day-strip day numbers.
     const badge = volunteerPage.getByRole('img', {
       name: /documents need your signature/,
     });
-    const badgeLabel =
-      (await badge.count()) > 0
-        ? await badge.getAttribute('aria-label')
-        : null;
+    await expect(badge).toBeVisible();
+    const badgeLabel = await badge.getAttribute('aria-label');
     const badgeCount = Number(badgeLabel?.match(/\d+/)?.[0] ?? 0);
+    expect(badgeCount).toBeGreaterThan(0);
 
     await dropdownDocuments.click();
     await volunteerPage.waitForURL(/\/en\/profile\/documents/, {
@@ -190,18 +203,12 @@ test.describe('accounting documents flow — admin + volunteer', () => {
     ).toBeVisible();
 
     // The org accordions are open by default; count the cards awaiting the
-    // signature across all of them — the badge number must match. The first
-    // test resolves every document it creates, so also assert the badge's
-    // presence tracks the awaiting count (absent at zero, present otherwise)
-    // rather than leaving a bare 0 === 0.
+    // signature across all of them — the badge number must match.
     const awaitingCards = volunteerPage.locator(
       '[data-testid="volunteer-document-card"][data-state="awaiting-signature"]',
     );
-    await expect(
-      volunteerPage.locator('[data-testid="volunteer-document-card"]').first(),
-    ).toBeVisible();
+    await expect(awaitingCards.first()).toBeVisible();
     const awaitingCount = await awaitingCards.count();
-    await expect(badge).toHaveCount(awaitingCount > 0 ? 1 : 0);
     expect(awaitingCount).toBe(badgeCount);
 
     await volunteerContext.close();
