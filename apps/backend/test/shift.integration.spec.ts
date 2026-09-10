@@ -2236,6 +2236,56 @@ describe('Volunteer home fields and check-in', () => {
     );
   });
 
+  it('excludes waitlisted shift instances from availableShiftInstances', async () => {
+    await db.insert(schema.memberships).values({
+      userId: testUserId,
+      organizationUnitId,
+    });
+
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      visibility: ShiftVisibility.ALL_MEMBERS,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instanceId ?? '',
+      userId: testUserId,
+      status: ShiftInviteStatus.WAITLIST_JOINED,
+    });
+
+    const startsAfter = new Date('2026-06-01T00:00:00.000Z').toISOString();
+    const endsBefore = new Date('2026-12-31T23:59:59.000Z').toISOString();
+
+    const data = await graphqlRequestRequiringData<{
+      availableShiftInstances: {
+        items: Array<{ id: string }>;
+      };
+    }>(
+      app,
+      {
+        query: `
+          query AvailableShiftInstances($startsAfter: DateTime, $endsBefore: DateTime) {
+            availableShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+              items { id }
+            }
+          }
+        `,
+        variables: { startsAfter, endsBefore },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'availableShiftInstances',
+    );
+
+    expect(data.availableShiftInstances.items.map((i) => i.id)).not.toContain(
+      instanceId,
+    );
+  });
+
   it('includes open shifts for pending membership requests', async () => {
     const pendingUser = await createUser(db);
     await createMembershipRequest(db, {
