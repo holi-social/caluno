@@ -4,6 +4,7 @@ import { ShiftInviteStatus } from '../shift/enums';
 import {
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
+  isVolunteerEventParticipationWithdrawal,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
@@ -298,6 +299,35 @@ describe('invite-status', () => {
           ShiftInviteStatus.VOLUNTEER_CANCELLED,
         ),
       ).toBe(true);
+    });
+  });
+
+  describe('isVolunteerEventParticipationWithdrawal', () => {
+    it('matches event cancel and pending withdraw only', () => {
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.JOINED,
+          EventInviteStatus.VOLUNTEER_CANCELLED,
+        ),
+      ).toBe(true);
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+          EventInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(true);
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.ADMIN_INVITED,
+          EventInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(false);
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.JOINED,
+          EventInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(false);
     });
   });
 });

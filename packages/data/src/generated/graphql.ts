@@ -48,8 +48,11 @@ export type CheckInContext = {
 export type CheckInReadiness = {
   __typename?: 'CheckInReadiness';
   hasOpenTimeEntry: Scalars['Boolean']['output'];
+  idVerificationEnabled: Scalars['Boolean']['output'];
+  idVerified: Scalars['Boolean']['output'];
   isMember: Scalars['Boolean']['output'];
   isParticipating: Scalars['Boolean']['output'];
+  membershipId?: Maybe<Scalars['ID']['output']>;
   openMembershipRequestId?: Maybe<Scalars['ID']['output']>;
   shiftInviteStatus?: Maybe<ShiftInviteStatus>;
 };
@@ -342,6 +345,7 @@ export type Event = {
   joinRequiresApproval: Scalars['Boolean']['output'];
   location?: Maybe<Scalars['String']['output']>;
   logoUrl?: Maybe<Scalars['String']['output']>;
+  myInviteStatus?: Maybe<EventInviteStatus>;
   myInvitedAt?: Maybe<Scalars['DateTime']['output']>;
   myJoinStatus: JoinStatus;
   organizationUnit?: Maybe<EventOrganizationUnit>;
@@ -572,6 +576,7 @@ export enum InvoiceStatus {
   AwaitingSupervisorSignature = 'AWAITING_SUPERVISOR_SIGNATURE',
   AwaitingVolunteerSignature = 'AWAITING_VOLUNTEER_SIGNATURE',
   Declined = 'DECLINED',
+  Draft = 'DRAFT',
   Ready = 'READY'
 }
 
@@ -645,6 +650,8 @@ export type Membership = {
   __typename?: 'Membership';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
+  idVerifiedAt?: Maybe<Scalars['DateTime']['output']>;
+  idVerifiedBy?: Maybe<User>;
   organizationUnit: OrganizationUnit;
   roles: Array<Role>;
   user: User;
@@ -734,6 +741,7 @@ export type Mutation = {
   sendShiftInstanceCallOut: ShiftInstanceCallOutResult;
   setEventRequiredForms: Array<RequiredFormRef>;
   setManualBaseline: ManualBaseline;
+  setMembershipIdVerified: Membership;
   setReimbursementRate: ReimbursementRate;
   setRequiredForms: Array<RequiredFormRef>;
   setShiftInstanceRequiredForms: Array<RequiredFormRef>;
@@ -1062,6 +1070,12 @@ export type MutationSetManualBaselineArgs = {
 };
 
 
+export type MutationSetMembershipIdVerifiedArgs = {
+  membershipId: Scalars['ID']['input'];
+  verified: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetReimbursementRateArgs = {
   hourlyRateCents: Scalars['Int']['input'];
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
@@ -1308,6 +1322,7 @@ export type OrganizationUnit = {
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  idVerificationEnabled: Scalars['Boolean']['output'];
   legalRep?: Maybe<Scalars['String']['output']>;
   logoUrl?: Maybe<Scalars['String']['output']>;
   memberCount: Scalars['Int']['output'];
@@ -2551,6 +2566,7 @@ export type UpdateOrganizationUnitInput = {
   city?: InputMaybe<Scalars['String']['input']>;
   contactEmail?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  idVerificationEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   legalRep?: InputMaybe<Scalars['String']['input']>;
   logoFileId?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
@@ -3066,14 +3082,14 @@ export type PublicShiftInstanceFieldsFragment = { __typename?: 'ShiftInstance', 
 
 export type PublicShiftFieldsFragment = { __typename?: 'Shift', id: string, title: string, maxVolunteers?: number | null, instances: Array<{ __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null }> };
 
-export type PublicEventFieldsFragment = { __typename?: 'Event', id: string, title: string, slug: string, description?: string | null, location?: string | null, coverImageUrl?: string | null, startsAt: string, endsAt: string, shiftsCount: number, myJoinStatus: JoinStatus, organizationUnit?: { __typename?: 'EventOrganizationUnit', id: string, name: string, slug: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } | null, shifts: Array<{ __typename?: 'Shift', id: string, title: string, maxVolunteers?: number | null, instances: Array<{ __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null }> }>, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> };
+export type PublicEventFieldsFragment = { __typename?: 'Event', id: string, title: string, slug: string, description?: string | null, location?: string | null, coverImageUrl?: string | null, startsAt: string, endsAt: string, shiftsCount: number, myJoinStatus: JoinStatus, myInviteStatus?: EventInviteStatus | null, organizationUnit?: { __typename?: 'EventOrganizationUnit', id: string, name: string, slug: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } | null, shifts: Array<{ __typename?: 'Shift', id: string, title: string, maxVolunteers?: number | null, instances: Array<{ __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null }> }>, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> };
 
 export type GetPublicEventQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetPublicEventQuery = { __typename?: 'Query', publicEvent: { __typename?: 'Event', id: string, title: string, slug: string, description?: string | null, location?: string | null, coverImageUrl?: string | null, startsAt: string, endsAt: string, shiftsCount: number, myJoinStatus: JoinStatus, organizationUnit?: { __typename?: 'EventOrganizationUnit', id: string, name: string, slug: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } | null, shifts: Array<{ __typename?: 'Shift', id: string, title: string, maxVolunteers?: number | null, instances: Array<{ __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null }> }>, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } };
+export type GetPublicEventQuery = { __typename?: 'Query', publicEvent: { __typename?: 'Event', id: string, title: string, slug: string, description?: string | null, location?: string | null, coverImageUrl?: string | null, startsAt: string, endsAt: string, shiftsCount: number, myJoinStatus: JoinStatus, myInviteStatus?: EventInviteStatus | null, organizationUnit?: { __typename?: 'EventOrganizationUnit', id: string, name: string, slug: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } | null, shifts: Array<{ __typename?: 'Shift', id: string, title: string, maxVolunteers?: number | null, instances: Array<{ __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null }> }>, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } };
 
 export type JoinEventMutationVariables = Exact<{
   eventId: Scalars['ID']['input'];
@@ -3093,7 +3109,7 @@ export type SetEventRequiredFormsMutation = { __typename?: 'Mutation', setEventR
 export type GetOrganizationUnitMembershipsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetOrganizationUnitMembershipsQuery = { __typename?: 'Query', memberships: Array<{ __typename?: 'Membership', id: string, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string }, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string }, roles: Array<{ __typename?: 'Role', id: string, name: string, description?: string | null, isInternal: boolean }> }> };
+export type GetOrganizationUnitMembershipsQuery = { __typename?: 'Query', memberships: Array<{ __typename?: 'Membership', id: string, idVerifiedAt?: string | null, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string }, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string }, roles: Array<{ __typename?: 'Role', id: string, name: string, description?: string | null, isInternal: boolean }>, idVerifiedBy?: { __typename?: 'User', id: string, name: string } | null }> };
 
 export type GetMyMembershipStatusQueryVariables = Exact<{
   organizationUnitId: Scalars['ID']['input'];
@@ -3135,6 +3151,14 @@ export type MyMembershipQueryVariables = Exact<{
 
 
 export type MyMembershipQuery = { __typename?: 'Query', myMembership?: { __typename?: 'Membership', id: string, createdAt: string, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, type: { __typename?: 'OrganizationUnitType', icon: string }, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', name: string } }, roles: Array<{ __typename?: 'Role', id: string, name: string }> } | null };
+
+export type SetMembershipIdVerifiedMutationVariables = Exact<{
+  membershipId: Scalars['ID']['input'];
+  verified: Scalars['Boolean']['input'];
+}>;
+
+
+export type SetMembershipIdVerifiedMutation = { __typename?: 'Mutation', setMembershipIdVerified: { __typename?: 'Membership', id: string, idVerifiedAt?: string | null } };
 
 export type JoinOrganizationMutationVariables = Exact<{
   organizationUnitId: Scalars['ID']['input'];
@@ -3232,7 +3256,7 @@ export type GetOrganizationUnitQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationUnitQuery = { __typename?: 'Query', organizationUnit?: { __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, websiteUrl?: string | null, contactEmail?: string | null, phone?: string | null, address?: string | null, city?: string | null, zipCode?: string | null, legalRep?: string | null, organizationId: string, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, parent?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, type: { __typename?: 'OrganizationUnitType', id: string, name: string, icon: string } } | null };
+export type GetOrganizationUnitQuery = { __typename?: 'Query', organizationUnit?: { __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, websiteUrl?: string | null, contactEmail?: string | null, phone?: string | null, address?: string | null, city?: string | null, zipCode?: string | null, legalRep?: string | null, idVerificationEnabled: boolean, organizationId: string, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, parent?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, type: { __typename?: 'OrganizationUnitType', id: string, name: string, icon: string } } | null };
 
 export type GetOrganizationVolunteersByUnitQueryVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -3324,7 +3348,7 @@ export type UpdateOrganizationUnitMutationVariables = Exact<{
 }>;
 
 
-export type UpdateOrganizationUnitMutation = { __typename?: 'Mutation', updateOrganizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, slug: string, deletedAt?: string | null, address?: string | null, city?: string | null, zipCode?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, type: { __typename?: 'OrganizationUnitType', id: string, name: string, icon: string } } };
+export type UpdateOrganizationUnitMutation = { __typename?: 'Mutation', updateOrganizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, slug: string, deletedAt?: string | null, address?: string | null, city?: string | null, zipCode?: string | null, legalRep?: string | null, idVerificationEnabled: boolean, parent?: { __typename?: 'OrganizationUnit', id: string } | null, type: { __typename?: 'OrganizationUnitType', id: string, name: string, icon: string } } };
 
 export type DeleteOrganizationUnitMutationVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3643,7 +3667,7 @@ export type GetShiftQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftQuery = { __typename?: 'Query', shift: { __typename?: 'Shift', id: string, title: string, slug: string, instructions?: string | null, location?: string | null, imageUrl?: string | null, visibility: ShiftVisibility, createdAt: string, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, rrule?: string | null, originalStartsAt: string, durationMinutes: number, organizationUnitId: string, reimbursementTypeKey?: ReimbursementTypeKey | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organization: { __typename?: 'Organization', id: string, name: string } }, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
+export type GetShiftQuery = { __typename?: 'Query', shift: { __typename?: 'Shift', id: string, title: string, slug: string, instructions?: string | null, location?: string | null, imageUrl?: string | null, visibility: ShiftVisibility, joinRequiresApproval: boolean, createdAt: string, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, rrule?: string | null, originalStartsAt: string, durationMinutes: number, organizationUnitId: string, reimbursementTypeKey?: ReimbursementTypeKey | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organization: { __typename?: 'Organization', id: string, name: string } }, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
 
 export type GetShiftsQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -3979,7 +4003,7 @@ export type GetCheckInReadinessQueryVariables = Exact<{
 }>;
 
 
-export type GetCheckInReadinessQuery = { __typename?: 'Query', checkInReadiness: { __typename?: 'CheckInReadiness', isMember: boolean, openMembershipRequestId?: string | null, shiftInviteStatus?: ShiftInviteStatus | null, isParticipating: boolean, hasOpenTimeEntry: boolean } };
+export type GetCheckInReadinessQuery = { __typename?: 'Query', checkInReadiness: { __typename?: 'CheckInReadiness', isMember: boolean, openMembershipRequestId?: string | null, shiftInviteStatus?: ShiftInviteStatus | null, isParticipating: boolean, hasOpenTimeEntry: boolean, idVerificationEnabled: boolean, idVerified: boolean, membershipId?: string | null } };
 
 export type GetCheckInVolunteerRequiredFormsQueryVariables = Exact<{
   volunteerId: Scalars['ID']['input'];
@@ -4383,6 +4407,7 @@ export const PublicEventFieldsFragmentDoc = gql`
   endsAt
   shiftsCount
   myJoinStatus
+  myInviteStatus
   organizationUnit {
     ...PublicEventOrganizationUnitFields
   }
@@ -5098,6 +5123,11 @@ export const GetOrganizationUnitMembershipsDocument = gql`
       description
       isInternal
     }
+    idVerifiedAt
+    idVerifiedBy {
+      id
+      name
+    }
   }
 }
     `;
@@ -5193,6 +5223,14 @@ export const MyMembershipDocument = gql`
       id
       name
     }
+  }
+}
+    `;
+export const SetMembershipIdVerifiedDocument = gql`
+    mutation SetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
+  setMembershipIdVerified(membershipId: $membershipId, verified: $verified) {
+    id
+    idVerifiedAt
   }
 }
     `;
@@ -5401,6 +5439,7 @@ export const GetOrganizationUnitDocument = gql`
     city
     zipCode
     legalRep
+    idVerificationEnabled
     organizationId
     requiredForms {
       form {
@@ -5685,6 +5724,7 @@ export const UpdateOrganizationUnitDocument = gql`
     city
     zipCode
     legalRep
+    idVerificationEnabled
     parent {
       id
     }
@@ -6585,6 +6625,7 @@ export const GetShiftDocument = gql`
     location
     imageUrl
     visibility
+    joinRequiresApproval
     createdAt
     maxVolunteers
     minVolunteers
@@ -7342,6 +7383,9 @@ export const GetCheckInReadinessDocument = gql`
     shiftInviteStatus
     isParticipating
     hasOpenTimeEntry
+    idVerificationEnabled
+    idVerified
+    membershipId
   }
 }
     `;
@@ -7631,6 +7675,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     MyMembership(variables: MyMembershipQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MyMembershipQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<MyMembershipQuery>({ document: MyMembershipDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MyMembership', 'query', variables);
+    },
+    SetMembershipIdVerified(variables: SetMembershipIdVerifiedMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SetMembershipIdVerifiedMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<SetMembershipIdVerifiedMutation>({ document: SetMembershipIdVerifiedDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SetMembershipIdVerified', 'mutation', variables);
     },
     JoinOrganization(variables: JoinOrganizationMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<JoinOrganizationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<JoinOrganizationMutation>({ document: JoinOrganizationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'JoinOrganization', 'mutation', variables);

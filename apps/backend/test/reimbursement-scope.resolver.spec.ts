@@ -89,6 +89,7 @@ describe('reimbursement-rate resolver unit scoping', () => {
       {} as RequiredFormService,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
+      {} as never,
     );
     const reimbursementRateService = new ReimbursementRateService(
       db,

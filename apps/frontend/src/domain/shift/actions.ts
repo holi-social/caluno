@@ -44,6 +44,7 @@ export const createShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
+      joinRequiresApproval: parsedInput.joinRequiresApproval ?? false,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId ?? null,
@@ -83,6 +84,7 @@ export const updateShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
+      joinRequiresApproval: parsedInput.joinRequiresApproval ?? false,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId,

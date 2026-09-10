@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
   type DerivedField,
   deriveEditableFields,
@@ -166,6 +167,8 @@ export function ContractCreationModal({
     );
   }, [dataReady, templateDoc, derivedFields, profileQuery.data, volunteerName]);
 
+  const { formatDate } = useFormatting();
+
   // Rendered unconditionally (per the DocumentSheet precedent) so the Dialog
   // can drive its own open/close animation; nothing below needs the nullable
   // identity props once past this guard.
@@ -260,7 +263,7 @@ export function ContractCreationModal({
         effectiveRate?.reimbursementType.yearlyLimitCents ??
         reimbursementType?.yearlyLimitCents,
     }),
-    generated_date: new Date().toLocaleDateString('de-DE'),
+    generated_date: formatDate(new Date()),
   };
   for (const field of derivedFields ?? []) {
     if (field.kind !== 'bound' || !field.source) continue;

@@ -11,13 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { format } from 'date-fns';
 import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { API_URL } from '@/lib/constants';
 import { formatEuro } from '@/lib/formatting/formats';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
@@ -91,6 +91,11 @@ export const STATUS_META: Record<DocStatus, StatusMeta> = {
     actionKey: 'create',
     isYourAction: true,
   },
+  'timesheet-draft': {
+    labelKey: 'timesheetDraft',
+    actionKey: 'create',
+    isYourAction: true,
+  },
   'timesheet-signing-vol': {
     labelKey: 'timesheetSigningVol',
     actionKey: null,
@@ -142,6 +147,7 @@ const STATUS_SORT_ORDER: DocStatus[] = [
   'contract-generate',
   'contract-draft',
   'timesheet-generate',
+  'timesheet-draft',
   'contract-missing',
   'contract-signing-coord',
   'timesheet-signing-super',
@@ -177,6 +183,7 @@ function BundleDownloadButton({
   orgUId,
 }: BundleDownloadButtonProps) {
   const t = useTranslations('Accounting.reimbursements');
+  const { formatDate } = useFormatting();
   const queryClient = useQueryClient();
   const { data: status, isLoading } = useBundleDownloadStatus(
     volunteerId,
@@ -244,7 +251,7 @@ function BundleDownloadButton({
                 by: status.downloadedByUser?.name
                   ? abbreviateName(status.downloadedByUser.name)
                   : t('bundle.unknownUser'),
-                at: format(new Date(status.downloadedAt), 'dd.MM.yyyy'),
+                at: formatDate(new Date(status.downloadedAt)),
                 // Stubbed: no volunteer-profile route exists yet
                 // in this prototype — becomes a real link there.
                 name: (chunks) => (
@@ -270,7 +277,6 @@ interface VolunteerTableGroupProps {
   orgUId: string;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestCreate: (pair: DocVolPair) => void;
-  onRequestSign: (pair: DocVolPair) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -281,7 +287,6 @@ function VolunteerTableGroup({
   orgUId,
   onDocumentClick,
   onRequestCreate,
-  onRequestSign,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -559,7 +564,7 @@ function VolunteerTableGroup({
                         if (actionKey === 'create') {
                           onRequestCreate({ doc, vol });
                         } else {
-                          onRequestSign({ doc, vol });
+                          onDocumentClick(doc, vol);
                         }
                       }}
                     >
@@ -584,7 +589,6 @@ interface ReimbursementsTableProps {
   orgUId: string;
   onDocumentClick: (doc: BoardDocument, vol: BoardVolunteer) => void;
   onRequestCreate: (pair: DocVolPair) => void;
-  onRequestSign: (pair: DocVolPair) => void;
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
@@ -595,7 +599,6 @@ export function ReimbursementsTable({
   orgUId,
   onDocumentClick,
   onRequestCreate,
-  onRequestSign,
   docTypeFilter,
   dateRange,
   activeTile,
@@ -628,7 +631,6 @@ export function ReimbursementsTable({
               orgUId={orgUId}
               onDocumentClick={onDocumentClick}
               onRequestCreate={onRequestCreate}
-              onRequestSign={onRequestSign}
               docTypeFilter={docTypeFilter}
               dateRange={dateRange}
               activeTile={activeTile}

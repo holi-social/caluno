@@ -100,6 +100,10 @@
     "checkInWithoutShift": "Check in without shift",
     "dateSheetTitle": "Select date",
     "foundOnOtherDays": "Found on other days",
+    "idVerificationButton": "Confirm ID",
+    "idVerificationDescription": "Ask the volunteer for their ID and confirm the name matches.",
+    "idVerificationError": "Could not confirm the ID.",
+    "idVerificationTitle": "ID not verified",
     "inviteSentConfirmation": "Invitation sent",
     "manualCheckin": "Manual checkin",
     "myQrCodeTab": "My QR code",
@@ -331,6 +335,9 @@
     "aboutHeading": "About the event",
     "badge": "Event",
     "coverImageAlt": "Cover image for {title}",
+    "cancelParticipation": "Cancel participation",
+    "canceledNote": "You canceled your participation in this event.",
+    "canceledToast": "Participation canceled.",
     "followCta": "Step up to help",
     "followNote": "Get invited to shifts, or sign up for one yourself.",
     "followingCta": "You're helping",
@@ -364,7 +371,10 @@
     "showAllShifts": "Show all shifts",
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "today": "Today",
-    "unlimitedSpots": "Open"
+    "unlimitedSpots": "Open",
+    "withdrawRequest": "Withdraw request",
+    "withdrawnNote": "You withdrew your request to join this event.",
+    "withdrawnToast": "Request withdrawn."
   },
   "LocaleSwitcher": {
     "label": "Language"
@@ -454,6 +464,17 @@
         "signDisabledHint": "You can only sign or decline once you've viewed the document in the preview."
       },
       "downloadUnavailableNote": "PDF not available yet."
+    }
+  },
+  "IdVerification": {
+    "page": {
+      "title": "ID verification",
+      "subtitle": "Manage ID verification for {orgName}."
+    },
+    "card": {
+      "label": "Enable ID verification",
+      "description": "When enabled, supervisors are prompted to check a volunteer's ID at check-in. Verification is optional and never blocks check-in.",
+      "updateError": "Could not save the ID verification setting."
     }
   },
   "MembershipRequest": {
@@ -603,6 +624,7 @@
     "checkVolunteersIn": "Check volunteers in",
     "events": "Events",
     "home": "Home",
+    "idVerification": "ID verification",
     "myTime": "Your records",
     "orgUnits": "Org units",
     "organizationSettings": "Organization settings",
@@ -1257,6 +1279,8 @@
     },
     "eventBadge": "Event",
     "form": {
+      "approvalRequiredDescription": "Anyone can request. They wait until you approve.",
+      "approvalRequiredLabel": "Approval required",
       "chooseDays": "Choose which days this shift repeats",
       "dateTimeLabel": "Date and time",
       "imageLabel": "Image",
@@ -1323,30 +1347,35 @@
     },
     "inviteStatus": {
       "accepted": "Accepted",
+      "actionApprove": "Approve",
       "actionInvite": "Invite",
       "actionRemind": "Remind",
       "actionReminded": "Reminded",
       "actionUninvite": "Uninvite",
+      "approveSuccess": "Volunteer approved",
+      "approveWaitlistedSuccess": "Shift is full — volunteer added to the waitlist",
       "cancelled": "Canceled",
+      "changeStatusAria": "Change volunteer status",
+      "capacityBadge": "{filled} / {max} spots filled",
+      "capacityBadgeNoMax": "{filled} volunteers",
       "declined": "Declined",
-      "inviteError": "Could not invite volunteer",
-      "inviteSuccess": "Volunteer invited again",
+      "declineSuccess": "Volunteer declined",
       "invited": "Invited",
+      "inviteSuccess": "Volunteer invited again",
+      "pendingApproval": "Pending approval",
       "rejected": "Rejected",
       "remindedAtTooltip": "Reminded on {when}",
       "remindError": "Could not send reminder",
       "remindSuccess": "Reminder sent to volunteer",
-      "requested": "Requested",
       "signedUp": "Signed up",
+      "statusChangeError": "Could not change the volunteer's status",
       "summaryAccepted": "accepted",
       "summaryInvited": "invited",
       "summarySignedUp": "signed up",
       "summarySpots": "spots",
       "summaryWaitlisted": "waitlisted",
-      "uninviteError": "Could not remove volunteer",
-      "uninviteSuccess": "Volunteer removed from shift",
       "volunteersTitle": "Volunteers",
-      "waitlisted": "Waitlisted"
+      "waitlisted": "On waitlist"
     },
     "join": {
       "accept": "Accept",
@@ -1370,6 +1399,7 @@
       "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingApproval": "Waiting for approval",
+      "withdrewApproval": "You've withdrawn your request.",
       "pendingCta": "Request pending",
       "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
       "reenter": "Re-enter shift",
@@ -1518,6 +1548,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Accepted",
+    "pendingApprovalBadge": "Waiting for approval",
     "back": "Back",
     "cancelUntilNote": "You can cancel until {date}.",
     "cancelledBadge": "Canceled",
@@ -1704,6 +1735,14 @@
       "birthdayLabel": "Birthday",
       "emailLabel": "Email",
       "formFallback": "Form",
+      "idVerification": {
+        "label": "{status, select, verified {ID verified} other {ID unverified}}",
+        "unverifyTitle": "Remove ID verification?",
+        "unverifyDescription": "The volunteer will be flagged as unverified at their next check-in.",
+        "unverifyCancel": "Cancel",
+        "unverifyConfirm": "Remove verification",
+        "updateError": "Could not update the ID verification status."
+      },
       "noSubmissions": "No submitted forms yet.",
       "qrIdLabel": "QR ID",
       "submittedForms": "Submitted forms",
@@ -1962,6 +2001,7 @@
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
           "timesheetGenerate": "Create timesheet",
+          "timesheetDraft": "Draft",
           "timesheetSigningVol": "Waiting for signature",
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",

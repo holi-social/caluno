@@ -51,3 +51,23 @@ export function resolveCheckInReadiness(
 export function alreadyCheckedInDecideHref(checkInId: string): string {
   return `/check-in/${checkInId}/decide`;
 }
+
+/**
+ * The ID verification card is a read-only side output of the readiness
+ * facts, not a readiness state: verification is optional and never blocks
+ * check-in. It appears only once every real blocker is cleared (ready),
+ * the org unit enabled the feature, and the membership is not yet verified.
+ */
+export function shouldShowIdVerification(facts: {
+  state: CheckInReadinessState;
+  idVerificationEnabled: boolean;
+  idVerified: boolean;
+  membershipId: string | null;
+}): boolean {
+  return (
+    facts.state === 'ready' &&
+    facts.idVerificationEnabled &&
+    !facts.idVerified &&
+    facts.membershipId !== null
+  );
+}

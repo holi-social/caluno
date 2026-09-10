@@ -1,11 +1,7 @@
 import { cn } from '../../lib/utils';
 import { Button } from '../base/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../tooltip';
-import {
-  getVolunteeringActionButtonStyle,
-  volunteeringActionButtonClass,
-  volunteeringActionIcons,
-} from './config';
+import { volunteeringActionIcons } from './config';
 import type { VolunteeringActionLabel } from './types';
 
 export type VolunteeringActionLabels = Partial<
@@ -33,23 +29,22 @@ export function VolunteeringActionButtons({
   onAction,
   className,
 }: VolunteeringActionButtonsProps) {
+  if (actions.length === 0) return null;
+
   return (
     <div
       className={cn('flex shrink-0 flex-wrap items-center gap-2', className)}
     >
       {actions.map((actionLabel) => {
         const ActionIcon = volunteeringActionIcons[actionLabel];
-        const { variant, className: actionClassName } =
-          getVolunteeringActionButtonStyle(actionLabel);
         const tooltip = actionTooltips?.[actionLabel];
 
         const button = (
           <Button
             key={actionLabel}
             type="button"
-            variant={variant}
-            size="sm"
-            className={cn(volunteeringActionButtonClass, actionClassName)}
+            variant="outline"
+            size="md"
             disabled={disabledActions?.includes(actionLabel)}
             onClick={() => onAction?.(actionLabel)}
           >

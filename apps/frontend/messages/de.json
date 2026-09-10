@@ -100,6 +100,10 @@
     "checkInWithoutShift": "Check-in ohne Schicht",
     "dateSheetTitle": "Datum wählen",
     "foundOnOtherDays": "An anderen Tagen gefunden",
+    "idVerificationButton": "Ausweis bestätigen",
+    "idVerificationDescription": "Bitte den Ausweis des Freiwilligen prüfen und den Namen abgleichen.",
+    "idVerificationError": "Der Ausweis konnte nicht bestätigt werden.",
+    "idVerificationTitle": "Ausweis nicht geprüft",
     "inviteSentConfirmation": "Einladung gesendet",
     "manualCheckin": "Manuelles Einchecken",
     "myQrCodeTab": "Mein QR-Code",
@@ -331,6 +335,9 @@
     "aboutHeading": "Über die Veranstaltung",
     "badge": "Veranstaltung",
     "coverImageAlt": "Titelbild für {title}",
+    "cancelParticipation": "Teilnahme absagen",
+    "canceledNote": "Du hast deine Teilnahme an dieser Veranstaltung abgesagt.",
+    "canceledToast": "Teilnahme abgesagt.",
     "followCta": "Jetzt mitmachen",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für einen an.",
     "followingCta": "Du machst mit",
@@ -364,7 +371,10 @@
     "showAllShifts": "Alle Einsätze anzeigen",
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "today": "Heute",
-    "unlimitedSpots": "Offen"
+    "unlimitedSpots": "Offen",
+    "withdrawRequest": "Anfrage zurückziehen",
+    "withdrawnNote": "Du hast deine Anfrage für diese Veranstaltung zurückgezogen.",
+    "withdrawnToast": "Anfrage zurückgezogen."
   },
   "LocaleSwitcher": {
     "label": "Sprache"
@@ -454,6 +464,17 @@
         "signDisabledHint": "Du kannst erst unterschreiben oder ablehnen, wenn du das Dokument in der Vorschau angesehen hast."
       },
       "downloadUnavailableNote": "PDF noch nicht verfügbar."
+    }
+  },
+  "IdVerification": {
+    "page": {
+      "title": "Ausweisprüfung",
+      "subtitle": "Ausweisprüfung für {orgName} verwalten."
+    },
+    "card": {
+      "label": "Ausweisprüfung aktivieren",
+      "description": "Wenn aktiviert, werden Betreuer beim Check-in aufgefordert, den Ausweis eines Freiwilligen zu prüfen. Die Prüfung ist optional und blockiert den Check-in nicht.",
+      "updateError": "Die Einstellung konnte nicht gespeichert werden."
     }
   },
   "MembershipRequest": {
@@ -603,6 +624,7 @@
     "checkVolunteersIn": "Freiwillige einchecken",
     "events": "Veranstaltungen",
     "home": "Startseite",
+    "idVerification": "Ausweisprüfung",
     "myTime": "Deine Nachweise",
     "orgUnits": "Organisationseinheiten",
     "organizationSettings": "Organisationseinstellungen",
@@ -1257,6 +1279,8 @@
     },
     "eventBadge": "Veranstaltung",
     "form": {
+      "approvalRequiredDescription": "Jeder kann anfragen und wartet auf deine Freigabe.",
+      "approvalRequiredLabel": "Freigabe erforderlich",
       "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
       "dateTimeLabel": "Datum und Uhrzeit",
       "imageLabel": "Bild",
@@ -1323,28 +1347,33 @@
     },
     "inviteStatus": {
       "accepted": "Angenommen",
+      "actionApprove": "Genehmigen",
       "actionInvite": "Einladen",
       "actionRemind": "Erinnern",
       "actionReminded": "Erinnert",
       "actionUninvite": "Zurückweisen",
+      "approveSuccess": "Freiwillige:r genehmigt",
+      "approveWaitlistedSuccess": "Einsatz ist voll — Freiwillige:r wurde auf die Warteliste gesetzt",
       "cancelled": "Zurückgezogen",
+      "changeStatusAria": "Status der/des Freiwilligen ändern",
+      "capacityBadge": "{filled} / {max} Plätze besetzt",
+      "capacityBadgeNoMax": "{filled} Freiwillige",
       "declined": "Abgelehnt",
-      "inviteError": "Einladen fehlgeschlagen",
-      "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "declineSuccess": "Freiwillige:r abgelehnt",
       "invited": "Eingeladen",
+      "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "pendingApproval": "Genehmigung ausstehend",
       "rejected": "Zurückgewiesen",
       "remindedAtTooltip": "Erinnert am {when}",
       "remindError": "Erinnerung konnte nicht gesendet werden",
       "remindSuccess": "Erinnerung an Freiwillige:n gesendet",
-      "requested": "Angefragt",
       "signedUp": "Selbst angemeldet",
+      "statusChangeError": "Status der/des Freiwilligen konnte nicht geändert werden",
       "summaryAccepted": "angenommen",
       "summaryInvited": "eingeladen",
       "summarySignedUp": "selbst angemeldet",
       "summarySpots": "Plätze",
       "summaryWaitlisted": "auf der Warteliste",
-      "uninviteError": "Entfernen fehlgeschlagen",
-      "uninviteSuccess": "Freiwillige:r von dem Einsatz entfernt",
       "volunteersTitle": "Freiwillige",
       "waitlisted": "Auf der Warteliste"
     },
@@ -1370,6 +1399,7 @@
       "leftWaitlist": "Du hast die Warteliste verlassen.",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "pendingApproval": "Warte auf Freigabe",
+      "withdrewApproval": "Du hast deine Anfrage zurückgezogen.",
       "pendingCta": "Anfrage ausstehend",
       "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde.",
       "reenter": "Erneut beitreten",
@@ -1518,6 +1548,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Angenommen",
+    "pendingApprovalBadge": "Warte auf Freigabe",
     "back": "Zurück",
     "cancelUntilNote": "Du kannst bis {date} absagen.",
     "cancelledBadge": "Abgesagt",
@@ -1704,6 +1735,14 @@
       "birthdayLabel": "Geburtstag",
       "emailLabel": "E-Mail",
       "formFallback": "Formular",
+      "idVerification": {
+        "label": "{status, select, verified {Ausweis geprüft} other {Ausweis ungeprüft}}",
+        "unverifyTitle": "Ausweisprüfung entfernen?",
+        "unverifyDescription": "Der Freiwillige wird beim nächsten Check-in wieder als ungeprüft markiert.",
+        "unverifyCancel": "Abbrechen",
+        "unverifyConfirm": "Prüfung entfernen",
+        "updateError": "Der Ausweisstatus konnte nicht aktualisiert werden."
+      },
       "noSubmissions": "Noch keine eingereichten Formulare.",
       "qrIdLabel": "QR-ID",
       "submittedForms": "Eingereichte Formulare",
@@ -1962,6 +2001,7 @@
           "contractSigningCoord": "Gegenzeichnung erforderlich",
           "contractActive": "Aktive Vereinbarung",
           "timesheetGenerate": "Stundennachweis erstellen",
+          "timesheetDraft": "Entwurf",
           "timesheetSigningVol": "Wartet auf Gegenzeichnung",
           "timesheetSigningSuper": "Supervisorunterschrift",
           "timesheetReady": "Bereit zur Abgabe",

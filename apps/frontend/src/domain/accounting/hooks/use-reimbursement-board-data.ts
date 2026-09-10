@@ -94,11 +94,11 @@ export function useReimbursementBoardData({
   return {
     volunteers,
     isLoading:
-      rosterQuery.isLoading ||
-      contractsQuery.isLoading ||
-      invoicesQuery.isLoading ||
-      needsTimesheetQuery.isLoading ||
-      paidShiftQuery.isLoading,
+      rosterQuery.isFetching ||
+      contractsQuery.isFetching ||
+      invoicesQuery.isFetching ||
+      needsTimesheetQuery.isFetching ||
+      paidShiftQuery.isFetching,
     error:
       rosterQuery.error ??
       contractsQuery.error ??

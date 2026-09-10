@@ -26,8 +26,11 @@ type CheckInContext {
 
 type CheckInReadiness {
   hasOpenTimeEntry: Boolean!
+  idVerificationEnabled: Boolean!
+  idVerified: Boolean!
   isMember: Boolean!
   isParticipating: Boolean!
+  membershipId: ID
   openMembershipRequestId: ID
   shiftInviteStatus: ShiftInviteStatus
 }
@@ -319,6 +322,7 @@ type Event {
   joinRequiresApproval: Boolean!
   location: String
   logoUrl: String
+  myInviteStatus: EventInviteStatus
   myInvitedAt: DateTime
   myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
@@ -537,6 +541,7 @@ enum InvoiceStatus {
   AWAITING_SUPERVISOR_SIGNATURE
   AWAITING_VOLUNTEER_SIGNATURE
   DECLINED
+  DRAFT
   READY
 }
 
@@ -608,6 +613,8 @@ type ManualBaseline {
 type Membership {
   createdAt: DateTime!
   id: ID!
+  idVerifiedAt: DateTime
+  idVerifiedBy: User
   organizationUnit: OrganizationUnit!
   roles: [Role!]!
   user: User!
@@ -694,6 +701,7 @@ type Mutation {
   sendShiftInstanceCallOut(instanceId: String!): ShiftInstanceCallOutResult!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setManualBaseline(amountCents: Int!, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline!
+  setMembershipIdVerified(membershipId: ID!, verified: Boolean!): Membership!
   setReimbursementRate(hourlyRateCents: Int!, organizationUnitId: ID, reimbursementTypeId: ID!): ReimbursementRate!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
@@ -779,6 +787,7 @@ type OrganizationUnit {
   deletedAt: DateTime
   description: String
   id: ID!
+  idVerificationEnabled: Boolean!
   legalRep: String
   logoUrl: String
   memberCount: Int!
@@ -1456,6 +1465,7 @@ input UpdateOrganizationUnitInput {
   city: String
   contactEmail: String
   description: String
+  idVerificationEnabled: Boolean
   legalRep: String
   logoFileId: String
   name: String

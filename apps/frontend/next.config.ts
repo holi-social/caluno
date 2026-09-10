@@ -1,4 +1,4 @@
-import { withSentryConfig } from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -65,6 +65,13 @@ const nextConfig: NextConfig = {
     remotePatterns: storageImagePatterns(),
   },
   turbopack: {
+    // Bun's isolated linker installs one sonner copy per workspace
+    // (apps/frontend + packages/ui resolve to different store entries), so
+    // without this alias `toast` calls and the mounted `<Toaster/>` use two
+    // different store instances and toasts never render.
+    resolveAlias: {
+      sonner: './node_modules/sonner',
+    },
     rules: {
       '*.svg': {
         loaders: ['@svgr/webpack'],
@@ -84,10 +91,12 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   sourcemaps: { deleteSourcemapsAfterUpload: true },
   // Bypass ad blockers by tunnelling events through the Next server.
   tunnelRoute: '/sentry-tunnel',
-  reactComponentAnnotation: { enabled: true },
   // Only print upload logs in CI.
   silent: !process.env.CI,
-  disableLogger: true,
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    reactComponentAnnotation: { enabled: true },
+  },
   ...(process.env.SENTRY_RELEASE
     ? { release: { name: process.env.SENTRY_RELEASE } }
     : {}),

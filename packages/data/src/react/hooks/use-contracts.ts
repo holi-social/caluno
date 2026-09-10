@@ -22,6 +22,7 @@ export function useContracts(filter?: ContractFilterInput) {
     queryKey: ['accounting', 'contracts', filter],
     queryFn: () => repository.findContracts(filter),
     staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 }
 

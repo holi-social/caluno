@@ -77,7 +77,10 @@ export class InvoiceQueryResolver {
       );
     const invoices = await this.invoiceService.findInvoicesForOrganization(
       organizationId,
-      toInvoiceFilter(filter),
+      {
+        ...toInvoiceFilter(filter),
+        organizationUnitId: context.organizationUnitId,
+      },
     );
     return this.invoiceMapper.toArray(invoices);
   }
