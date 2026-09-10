@@ -1324,6 +1324,8 @@
     "inviteStatus": {
       "accepted": "Angenommen",
       "actionInvite": "Einladen",
+      "actionRemind": "Erinnern",
+      "actionReminded": "Erinnert",
       "actionUninvite": "Zurückweisen",
       "cancelled": "Zurückgezogen",
       "declined": "Abgelehnt",
@@ -1331,6 +1333,8 @@
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
       "invited": "Eingeladen",
       "rejected": "Zurückgewiesen",
+      "remindError": "Erinnerung konnte nicht gesendet werden",
+      "remindSuccess": "Erinnerung an Freiwillige:n gesendet",
       "requested": "Angefragt",
       "signedUp": "Selbst angemeldet",
       "summaryAccepted": "angenommen",

@@ -212,3 +212,13 @@ export const sendShiftInstanceCallOut = actionClient
     const data = await getDataClient({ orgUId });
     return await data.shift.sendCallOut(instanceId);
   });
+
+export const remindShiftInstanceInvite = actionClient
+  .inputSchema(z.object({ userId: z.string() }))
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(
+    async ({ parsedInput, bindArgsParsedInputs: [orgUId, instanceId] }) => {
+      const data = await getDataClient({ orgUId });
+      return await data.shift.remindInvite(instanceId, parsedInput.userId);
+    },
+  );

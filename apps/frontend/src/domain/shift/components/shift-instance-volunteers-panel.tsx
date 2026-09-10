@@ -1,6 +1,6 @@
 'use client';
 
-import { MembershipRequestStatus, type ShiftInviteStatus } from '@repo/data';
+import { MembershipRequestStatus, ShiftInviteStatus } from '@repo/data';
 import {
   Button,
   type VolunteeringActionLabel,
@@ -13,12 +13,16 @@ import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, useRouter } from '@/i18n/navigation';
-import { updateShiftInstanceInviteStatus } from '../actions';
+import {
+  remindShiftInstanceInvite,
+  updateShiftInstanceInviteStatus,
+} from '../actions';
 import {
   adminReinviteTargetStatus,
   adminUninviteTargetStatus,
   canAdminReinvite,
   canAdminUninvite,
+  canRemindInvitee,
   countInviteDisplayStates,
   formatInviteStatusSummary,
   toInviteDisplayState,
@@ -28,6 +32,8 @@ import { SendCallOutDialog } from './send-call-out-dialog';
 
 type InstanceInvite = {
   status: ShiftInviteStatus;
+  /** One-shot reminder email sent for this unanswered invite (VOLI-1236). */
+  remindedAt?: string | null;
   user: {
     id: string;
     name: string;
@@ -95,16 +101,38 @@ export function ShiftInstanceVolunteersPanel({
         return state;
     }
   };
+  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
+    // VOLI-1236: the reminder only exists on a live instance's unanswered
+    // invites; once sent it stays visible but inert ("Reminded").
+    const remindVisible =
+      canManage &&
+      !isInstanceInThePast &&
+      invite.status === ShiftInviteStatus.AdminInvited;
+    const remindActive = canRemindInvitee(invite.status, invite.remindedAt);
 
-  const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => ({
-    id: invite.user.id,
-    name: invite.user.name,
-    image: invite.user.image,
-    state: toInviteDisplayState(invite.status),
-    statusLabel: statusLabel(invite.status),
-    actions: manageActions(invite.status, canManage),
-    iconActions: ['View', 'Check in'],
-  }));
+    return {
+      id: invite.user.id,
+      name: invite.user.name,
+      image: invite.user.image,
+      state: toInviteDisplayState(invite.status),
+      statusLabel: statusLabel(invite.status),
+      actions: remindVisible
+        ? ([
+            'Remind',
+            ...manageActions(invite.status, canManage),
+          ] as VolunteeringActionLabel[])
+        : manageActions(invite.status, canManage),
+      disabledActions: remindVisible && !remindActive ? ['Remind'] : undefined,
+      actionLabels: remindVisible
+        ? {
+            Remind: remindActive
+              ? t('inviteStatus.actionRemind')
+              : t('inviteStatus.actionReminded'),
+          }
+        : undefined,
+      iconActions: ['View', 'Check in'] as VolunteeringActionLabel[],
+    };
+  });
 
   const counts = countInviteDisplayStates(invites.map((i) => i.status));
   const summary = formatInviteStatusSummary(counts, spotsLeft, {
@@ -144,6 +172,24 @@ export function ShiftInstanceVolunteersPanel({
     }
 
     if (!canManage || pending) {
+      return;
+    }
+
+    if (action === 'Remind') {
+      if (!canRemindInvitee(invite.status, invite.remindedAt)) {
+        return;
+      }
+      startTransition(async () => {
+        const result = await remindShiftInstanceInvite(orgUId, instanceId, {
+          userId: volunteerId,
+        });
+        if (result?.serverError) {
+          toast.error(t('inviteStatus.remindError'));
+          return;
+        }
+        toast.success(t('inviteStatus.remindSuccess'));
+        router.refresh();
+      });
       return;
     }
 
@@ -214,6 +260,7 @@ export function ShiftInstanceVolunteersPanel({
         'Check in': tVolunteer('checkInAria'),
         Invite: t('inviteStatus.actionInvite'),
         Uninvite: t('inviteStatus.actionUninvite'),
+        Remind: t('inviteStatus.actionRemind'),
       }}
       onAction={onAction}
     />

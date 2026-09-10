@@ -45,6 +45,18 @@ export function adminReinviteTargetStatus<S extends InviteStatus>(
 }
 
 /**
+ * Whether a manager can send the one-shot reminder email for this invite
+ * (VOLI-1236): only a still-unanswered invite (ADMIN_INVITED) that has not
+ * been reminded yet. UI callers additionally hide it for past instances.
+ */
+export function canRemindInvitee(
+  status: InviteStatus,
+  remindedAt?: Date | string | null,
+): boolean {
+  return status === ShiftInviteStatus.AdminInvited && remindedAt == null;
+}
+
+/**
  * Invite-sheet defaults: keep ADMIN_REJECTED off the Invited column so saving
  * the sheet (e.g. to add someone else) does not silently re-invite them.
  * Admins re-add them explicitly from Available.
