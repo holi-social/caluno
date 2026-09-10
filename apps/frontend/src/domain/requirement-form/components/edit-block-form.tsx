@@ -87,8 +87,8 @@ export function EditBlockForm({
         organizationUnitId: orgUId,
         blockId: block.id,
         title: values.title,
-        description: values.description || undefined,
-        icon: values.icon || undefined,
+        description: values.description,
+        icon: values.icon,
       });
       if (result?.serverError) {
         toast.error(result.serverError);

@@ -19,6 +19,7 @@ type BirthDateInputProps = {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
   'aria-invalid'?: boolean;
   'aria-labelledby'?: string;
   'aria-describedby'?: string;
@@ -28,6 +29,7 @@ export function BirthDateInput({
   id,
   value,
   onChange,
+  disabled = false,
   'aria-invalid': ariaInvalid,
   'aria-labelledby': ariaLabelledBy,
   'aria-describedby': ariaDescribedBy,
@@ -61,6 +63,7 @@ export function BirthDateInput({
         maxLength={8}
         pattern={REGEXP_ONLY_DIGITS}
         value={digits}
+        disabled={disabled}
         aria-invalid={ariaInvalid}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={describedBy || undefined}
