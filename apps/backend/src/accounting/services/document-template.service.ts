@@ -73,15 +73,16 @@ export class DocumentTemplateService {
       if (!unit) {
         throw new NotFoundGraphQLError('Organization unit not found');
       }
-      // The unit must already carry the org-profile fields the template's
-      // bound org sources render — otherwise the PDF comes out with "—" gaps
-      // the org can't fix inline after the fact.
-      await this.assertOrgProfileComplete(
-        organizationId,
-        input.organizationUnitId,
-        input.body,
-      );
     }
+    // The unit (or org root unit, for an org-wide template) must already
+    // carry the org-profile fields the template's bound org sources render —
+    // otherwise the PDF comes out with "—" gaps the org can't fix inline
+    // after the fact.
+    await this.assertOrgProfileComplete(
+      organizationId,
+      input.organizationUnitId ?? null,
+      input.body,
+    );
 
     const existing = await this.db.query.documentTemplates.findFirst({
       where: {
@@ -156,8 +157,9 @@ export class DocumentTemplateService {
     }
 
     // Org-data can be removed after a template is created, so re-check the
-    // unit the template is scoped to before overwriting its body.
-    if (input.body !== undefined && existingTemplate.organizationUnitId) {
+    // unit (or org root unit, for an org-wide template) the template is
+    // scoped to before overwriting its body.
+    if (input.body !== undefined) {
       await this.assertOrgProfileComplete(
         organizationId,
         existingTemplate.organizationUnitId,
@@ -299,7 +301,9 @@ export class DocumentTemplateService {
     organizationUnitId: string | null,
     body: unknown,
   ): Promise<void> {
-    if (!organizationUnitId) return;
+    // No early return on a null unit: an org-wide template still renders the
+    // org root unit's profile, so it must meet the same bar as a unit-scoped
+    // one. missingOrgProfileSources resolves null to the root unit for us.
     const missing =
       await this.documentProfileRequirementService.missingOrgProfileSources(
         organizationId,

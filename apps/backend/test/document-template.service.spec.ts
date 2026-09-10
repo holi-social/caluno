@@ -283,6 +283,62 @@ describe('DocumentTemplateService', () => {
         ),
       ).rejects.toBeInstanceOf(BadRequestGraphQLError);
     });
+
+    it('blocks saving an org-wide template when the root unit is missing bound org fields', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Org Wide Gate Org ${crypto.randomUUID()}`,
+      );
+      // Root unit has no address; the body binds org_address.
+      await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      const editor = await createUser(db);
+
+      const gatedService = new DocumentTemplateService(
+        db,
+        {
+          capture: () => {},
+        } as unknown as PostHogService,
+        new DocumentProfileRequirementService(db, {} as never),
+      );
+
+      const body = {
+        header: {
+          orgIdentityLine: {
+            id: 'header-org-identity',
+            enabled: true,
+            fields: [
+              {
+                id: 'header-org-address',
+                value: { kind: 'bound', source: 'org_address' },
+              },
+            ],
+          },
+          metaLines: [],
+        },
+        blocks: [],
+        footer: {},
+      };
+
+      await expect(
+        gatedService.createDocumentTemplate(
+          organization.id,
+          {
+            // organizationUnitId omitted on purpose: this is the org-wide
+            // default, the case that previously skipped the check.
+            reimbursementTypeId: reimbursementType.id,
+            kind: DocumentKind.CONTRACT,
+            body,
+            signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+          },
+          editor.id,
+        ),
+      ).rejects.toThrow(/missing details required for this template/);
+    });
   });
 
   describe('updateDocumentTemplate', () => {
