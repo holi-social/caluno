@@ -302,12 +302,12 @@ export class DocumentRenderingService {
       {
         label: 'Unterschrift (Freiwillige:r)',
         name: resolved.volunteer_name || '—',
-        signedAt: this.signatureDateFor(document, 'VOLUNTEER'),
+        signedAt: this.signatureTimestampFor(document, 'VOLUNTEER'),
       },
       {
         label: 'Unterschrift Koordination',
         name: resolved.org_name || '—',
-        signedAt: this.signatureDateFor(document, 'PERMISSION_HOLDER'),
+        signedAt: this.signatureTimestampFor(document, 'PERMISSION_HOLDER'),
       },
     ];
 
@@ -331,8 +331,9 @@ export class DocumentRenderingService {
 
     pdf.lineWidth(1);
     if (seat.signedAt) {
-      // HelloSign-style: the signing date sits in a gap in the top border —
-      // the border stops, shows the short date, then continues.
+      // HelloSign-style: the signing timestamp sits in a gap in the top border —
+      // the border stops, shows the timestamp, then continues. Lift it above
+      // the line so it does not crowd the signature name below.
       pdf.font('Helvetica').fontSize(8);
       const timestamp = seat.signedAt;
       const labelWidth = pdf.widthOfString(timestamp);
@@ -351,7 +352,7 @@ export class DocumentRenderingService {
       pdf
         .font('Helvetica')
         .fontSize(8)
-        .text(timestamp, gapStart + 3, top + 3, { lineBreak: false });
+        .text(timestamp, gapStart + 3, top - 4, { lineBreak: false });
     } else {
       pdf
         .moveTo(left, top)
@@ -377,7 +378,7 @@ export class DocumentRenderingService {
     return ['', '', 'Gesamtbetrag', '', '', this.formatEuro(totalAmountCents)];
   }
 
-  private signatureDateFor(
+  private signatureTimestampFor(
     document: RenderableDocument,
     signeeType: string,
   ): string | undefined {
@@ -385,7 +386,7 @@ export class DocumentRenderingService {
       (s) => s.signeeType === signeeType && s.signedAt,
     );
     return signature?.signedAt
-      ? this.formatDate(new Date(signature.signedAt))
+      ? this.formatSignatureTimestamp(new Date(signature.signedAt))
       : undefined;
   }
 
@@ -769,6 +770,26 @@ export class DocumentRenderingService {
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
+  }
+
+  /**
+   * Compact date + wall-clock time with seconds for a signature seat, e.g.
+   * "10.09.2026 15:04:05". UTC, matching the period/signature date formatting
+   * above so the calendar day never drifts.
+   */
+  private formatSignatureTimestamp(date: Date): string {
+    return new Intl.DateTimeFormat('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'UTC',
+    })
+      .format(date)
+      .replace(',', '');
   }
 
   /** "10,00" without the € sign — the template text carries "€ pro Stunde" around the marker. */
