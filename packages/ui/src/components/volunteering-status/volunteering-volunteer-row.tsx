@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '../base/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../tooltip';
 import {
