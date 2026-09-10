@@ -774,8 +774,9 @@ export class DocumentRenderingService {
 
   /**
    * Compact date + wall-clock time with seconds for a signature seat, e.g.
-   * "10.09.2026 15:04:05". UTC, matching the period/signature date formatting
-   * above so the calendar day never drifts.
+   * "10.09.2026 15:04:05". A signature is a real instant, so it is shown in
+   * Europe/Berlin wall-clock time — unlike `formatDate`, which stays in UTC
+   * so calendar boundaries (period end, Jahresdeckel) never drift.
    */
   private formatSignatureTimestamp(date: Date): string {
     return new Intl.DateTimeFormat('de-DE', {
@@ -786,7 +787,7 @@ export class DocumentRenderingService {
       minute: '2-digit',
       second: '2-digit',
       hour12: false,
-      timeZone: 'UTC',
+      timeZone: 'Europe/Berlin',
     })
       .format(date)
       .replace(',', '');
