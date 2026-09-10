@@ -13,6 +13,7 @@ import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
   remindShiftInstanceInvite,
   updateShiftInstanceInviteStatus,
@@ -71,6 +72,7 @@ export function ShiftInstanceVolunteersPanel({
   canManage,
   isInstanceInThePast,
 }: ShiftInstanceVolunteersPanelProps) {
+  const { formatDate, formatTime } = useFormatting();
   const t = useTranslations('Shift');
   const tVolunteer = useTranslations('Volunteer.action');
   const router = useRouter();
@@ -127,6 +129,17 @@ export function ShiftInstanceVolunteersPanel({
               : t('inviteStatus.actionReminded'),
           }
         : undefined,
+      actionTooltips:
+        remindVisible && invite.remindedAt
+          ? {
+              Remind: t('inviteStatus.remindedAtTooltip', {
+                when: `${formatDate(new Date(invite.remindedAt), {
+                  month: 'short',
+                  day: 'numeric',
+                })}, ${formatTime(new Date(invite.remindedAt))}`,
+              }),
+            }
+          : undefined,
       iconActions: ['View', 'Check in'] as VolunteeringActionLabel[],
     };
   });

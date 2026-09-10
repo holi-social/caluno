@@ -1333,6 +1333,7 @@
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
       "invited": "Eingeladen",
       "rejected": "Zurückgewiesen",
+      "remindedAtTooltip": "Erinnert am {when}",
       "remindError": "Erinnerung konnte nicht gesendet werden",
       "remindSuccess": "Erinnerung an Freiwillige:n gesendet",
       "requested": "Angefragt",
