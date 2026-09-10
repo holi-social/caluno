@@ -88,7 +88,12 @@ export function useSetMembershipIdVerified() {
   });
 }
 
-export function useCheckInSetMembershipIdVerified() {
+/**
+ * Check-in variant: the manual check-in page spans org units, so its
+ * DataProvider carries no org unit header — the caller's selected unit must
+ * be sent per request.
+ */
+export function useCheckInSetMembershipIdVerified(organizationUnitId: string) {
   const sdk = useSdk();
   const queryClient = useQueryClient();
   const repository = new MembershipRepository(sdk);
@@ -100,7 +105,12 @@ export function useCheckInSetMembershipIdVerified() {
     }: {
       membershipId: string;
       verified: boolean;
-    }) => repository.checkInSetIdVerified(membershipId, verified),
+    }) =>
+      repository.checkInSetIdVerified(
+        organizationUnitId,
+        membershipId,
+        verified,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['memberships'] });
       queryClient.invalidateQueries({ queryKey: ['check-in-readiness'] });
