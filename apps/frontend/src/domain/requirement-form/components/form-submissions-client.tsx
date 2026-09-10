@@ -15,9 +15,10 @@ import {
   TableRow,
 } from '@repo/ui';
 import { Search, UserRound } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { groupSubmissionsByVolunteer } from './group-submissions';
 
 type Submission =
@@ -32,7 +33,7 @@ export function FormSubmissionsClient({
 }) {
   const t = useTranslations('RequirementForm.submissions');
   const tCommon = useTranslations('Common');
-  const formatter = useFormatter();
+  const { formatDate } = useFormatting();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
@@ -104,7 +105,7 @@ export function FormSubmissionsClient({
                     <Badge variant="secondary">{entry.count}</Badge>
                   </TableCell>
                   <TableCell>
-                    {formatter.dateTime(new Date(entry.latestSubmittedAt), {
+                    {formatDate(new Date(entry.latestSubmittedAt), {
                       dateStyle: 'medium',
                       timeStyle: 'short',
                     })}

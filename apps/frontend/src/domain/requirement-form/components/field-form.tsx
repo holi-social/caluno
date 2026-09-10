@@ -139,8 +139,12 @@ export function FieldForm({
     onSubmit({
       type: fieldType,
       label: label.trim(),
-      description: description.trim() || undefined,
-      placeholder: placeholder.trim() || undefined,
+      ...(!isDocument && !isStaticText
+        ? {
+            description,
+            placeholder,
+          }
+        : {}),
       required: isStaticText ? false : required,
       systemKey,
       ...(showOptions

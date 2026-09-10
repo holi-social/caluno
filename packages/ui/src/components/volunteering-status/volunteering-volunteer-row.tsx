@@ -2,7 +2,14 @@
 
 import { cn } from '../../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../base/avatar';
+import { Badge } from '../base/badge';
 import { Button } from '../base/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '../base/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../tooltip';
 import {
   getPassiveDuringShiftHint,
@@ -13,12 +20,13 @@ import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
   VolunteeringActionLabel,
+  VolunteeringStatusOption,
 } from './types';
 import {
   VolunteeringActionButtons,
   type VolunteeringActionLabels,
 } from './volunteering-action-buttons';
-import { VolunteeringStatusBadge } from './volunteering-status-badge';
+import { VolunteeringStatusLabel } from './volunteering-status-label';
 
 const PASSIVE_DURING_SHIFT: ShiftVolunteeringDisplayState[] = [
   'invited',
@@ -53,6 +61,10 @@ export type VolunteeringVolunteerRowProps = {
   completedDuration?: string;
   /** Overrides status badge label (e.g. i18n). */
   statusLabel?: string;
+  /** When set, renders the status chip as a dropdown offering these targets. */
+  statusOptions?: VolunteeringStatusOption[];
+  /** Accessible label for the status chip dropdown trigger. */
+  statusMenuAriaLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
   /** Far-right icon-only actions (e.g. View profile, Check in). */
@@ -60,6 +72,7 @@ export type VolunteeringVolunteerRowProps = {
   /** Localized button labels keyed by action id. */
   actionLabels?: VolunteeringActionLabels;
   onAction?: (action: VolunteeringActionLabel) => void;
+  onStatusChange?: (value: string) => void;
   className?: string;
 };
 
@@ -71,10 +84,13 @@ export function VolunteeringVolunteerRow({
   phase,
   completedDuration,
   statusLabel,
+  statusOptions,
+  statusMenuAriaLabel,
   actions: actionsOverride,
   iconActions = [],
   actionLabels,
   onAction,
+  onStatusChange,
   className,
 }: VolunteeringVolunteerRowProps) {
   const presentation = getVolunteeringStatusPresentation(state, {
@@ -85,14 +101,40 @@ export function VolunteeringVolunteerRow({
   const actions = passive ? [] : (actionsOverride ?? presentation.actions);
   const passiveHint = passive ? getPassiveDuringShiftHint(state) : undefined;
 
-  const statusBadge = (
-    <VolunteeringStatusBadge
+  const statusContent = (
+    <VolunteeringStatusLabel
       state={state}
       completedDuration={completedDuration}
       phase={phase}
       label={statusLabel}
     />
   );
+  const statusChip =
+    statusOptions && statusOptions.length > 0 && onStatusChange ? (
+      <Select value={state} onValueChange={onStatusChange}>
+        <SelectTrigger aria-label={statusMenuAriaLabel}>
+          {statusContent}
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map((option) => (
+            <SelectItem value={option.value} key={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ) : passiveHint ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline">{statusContent}</Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          {passiveHint}
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      <Badge variant="outline">{statusContent}</Badge>
+    );
 
   return (
     <div
@@ -108,20 +150,8 @@ export function VolunteeringVolunteerRow({
         </Avatar>
         <p className="truncate text-base font-medium">{name}</p>
       </div>
-
       <div className="flex min-w-0 flex-wrap items-center gap-2 pl-11 sm:shrink-0 sm:gap-3 sm:pl-0">
-        {passiveHint ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex cursor-default">{statusBadge}</span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs">
-              {passiveHint}
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          statusBadge
-        )}
+        {statusChip}
         <VolunteeringActionButtons
           actions={actions}
           labels={actionLabels}

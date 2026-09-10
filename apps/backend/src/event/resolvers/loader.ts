@@ -21,6 +21,7 @@ export class EventShiftsLoader {
     private readonly shiftMapper: ShiftMapper,
     private readonly membershipService: MembershipService,
   ) {}
+  private readonly activeInstanceCounts = new Map<string, number>();
 
   public readonly shiftsByEventId = new DataLoader<
     EventShiftsKey,
@@ -79,8 +80,26 @@ export class EventShiftsLoader {
         visibleShiftsByEventId.set(shift.eventId, existing);
       }
 
+      const visibleShifts = [...visibleShiftsByEventId.values()].flat();
+      const instanceCounts =
+        await this.shiftService.countActiveInstancesByMasterIds(
+          visibleShifts.map((shift) => shift.id),
+        );
+      for (const [shiftId, count] of instanceCounts) {
+        this.activeInstanceCounts.set(shiftId, count);
+      }
+      const liveShiftIds = new Set(
+        visibleShifts
+          .filter((shift) => (instanceCounts.get(shift.id) ?? 0) > 0)
+          .map((shift) => shift.id),
+      );
+
       return eventIds.map((eventId) =>
-        this.shiftMapper.toArray(visibleShiftsByEventId.get(eventId) ?? []),
+        this.shiftMapper.toArray(
+          (visibleShiftsByEventId.get(eventId) ?? []).filter((shift) =>
+            liveShiftIds.has(shift.id),
+          ),
+        ),
       );
     },
     { cacheKeyFn: (key) => `${key.eventId}:${key.userId ?? ''}` },
@@ -92,9 +111,16 @@ export class EventShiftsLoader {
     string
   >(
     async (keys: readonly EventShiftsKey[]) => {
-      const shifts = await this.shiftsByEventId.loadMany(keys);
-      return shifts.map((shiftOrError) =>
-        Array.isArray(shiftOrError) ? shiftOrError.length : 0,
+      const shiftsPerEvent = await this.shiftsByEventId.loadMany(keys);
+
+      return shiftsPerEvent.map((shiftOrError) =>
+        Array.isArray(shiftOrError)
+          ? shiftOrError.reduce(
+              (total, shift) =>
+                total + (this.activeInstanceCounts.get(shift.id) ?? 0),
+              0,
+            )
+          : 0,
       );
     },
     { cacheKeyFn: (key) => `${key.eventId}:${key.userId ?? ''}` },

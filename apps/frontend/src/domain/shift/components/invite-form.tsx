@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import type { RecurrenceDayValue } from '../constants';
 import type { InviteAllowanceState } from '../invite-allowance-display';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
@@ -113,8 +114,7 @@ export function InviteShiftForm({
       }))
     : availableMembers;
   const locale = useLocale();
-  const formatWithOptions = (date: Date, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, options).format(date);
+  const { formatDate } = useFormatting();
 
   const { open, setOpen } = useFormSheet();
 
@@ -154,6 +154,7 @@ export function InviteShiftForm({
 
   const instanceStartDate = new Date(selectedInstance.actualStartsAt);
   const instanceEndDate = new Date(selectedInstance.actualEndsAt);
+  const isInstanceInThePast = instanceEndDate.getTime() < Date.now();
 
   const formattedDays = shift.isRecurring
     ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(
@@ -205,16 +206,18 @@ export function InviteShiftForm({
               <p className="text-sm text-muted-foreground">
                 {t('inviteForm.managingLabel')}
               </p>
-              <SendCallOutDialog
-                orgUId={orgUId}
-                instanceId={instanceId}
-                trigger={
-                  <Button type="button" variant="outline" size="sm">
-                    <Megaphone />
-                    {t('instanceDetail.callOutCta')}
-                  </Button>
-                }
-              />
+              {!isInstanceInThePast ? (
+                <SendCallOutDialog
+                  orgUId={orgUId}
+                  instanceId={instanceId}
+                  trigger={
+                    <Button type="button" variant="outline" size="sm">
+                      <Megaphone />
+                      {t('instanceDetail.callOutCta')}
+                    </Button>
+                  }
+                />
+              ) : null}
             </div>
             <ShiftInstanceSummaryCard
               title={shift.title}
@@ -242,7 +245,7 @@ export function InviteShiftForm({
                     </FieldLabel>
                     <FieldDescription>
                       {t('inviteForm.inviteAllDescription', {
-                        startDate: formatWithOptions(instanceStartDate, {
+                        startDate: formatDate(instanceStartDate, {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',

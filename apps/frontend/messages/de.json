@@ -335,6 +335,9 @@
     "aboutHeading": "Über die Veranstaltung",
     "badge": "Veranstaltung",
     "coverImageAlt": "Titelbild für {title}",
+    "cancelParticipation": "Teilnahme absagen",
+    "canceledNote": "Du hast deine Teilnahme an dieser Veranstaltung abgesagt.",
+    "canceledToast": "Teilnahme abgesagt.",
     "followCta": "Jetzt mitmachen",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für einen an.",
     "followingCta": "Du machst mit",
@@ -368,7 +371,10 @@
     "showAllShifts": "Alle Einsätze anzeigen",
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "today": "Heute",
-    "unlimitedSpots": "Offen"
+    "unlimitedSpots": "Offen",
+    "withdrawRequest": "Anfrage zurückziehen",
+    "withdrawnNote": "Du hast deine Anfrage für diese Veranstaltung zurückgezogen.",
+    "withdrawnToast": "Anfrage zurückgezogen."
   },
   "LocaleSwitcher": {
     "label": "Sprache"
@@ -1260,6 +1266,7 @@
       "urgentCallSentByDate": "am {date}",
       "urgentCallSentByPrefix": "Gesendet von",
       "urgentCallAutomaticBadge": "Automatisch",
+      "urgentCallHistoryCount": "{count, plural, one {# Aufruf} other {# Aufrufe}}",
       "visibilityLabel": "Sichtbarkeit"
     },
     "editInstanceForm": {
@@ -1272,6 +1279,8 @@
     },
     "eventBadge": "Veranstaltung",
     "form": {
+      "approvalRequiredDescription": "Jeder kann anfragen und wartet auf deine Freigabe.",
+      "approvalRequiredLabel": "Freigabe erforderlich",
       "chooseDays": "Wähle die Tage, an denen sich dieser Einsatz wiederholt",
       "dateTimeLabel": "Datum und Uhrzeit",
       "imageLabel": "Bild",
@@ -1301,7 +1310,6 @@
       "timeRangeConstraint": "Einsätze müssen innerhalb von ({window}) beginnen und enden."
     },
     "instanceDetail": {
-      "callOutAria": "Dringender Aufruf",
       "callOutCta": "Dringender Aufruf",
       "callOutDialog": {
         "confirm": "Dringender Aufruf",
@@ -1339,23 +1347,27 @@
     },
     "inviteStatus": {
       "accepted": "Angenommen",
+      "actionApprove": "Genehmigen",
       "actionInvite": "Einladen",
-      "actionUninvite": "Zurückweisen",
+      "approveSuccess": "Freiwillige:r genehmigt",
+      "approveWaitlistedSuccess": "Einsatz ist voll — Freiwillige:r wurde auf die Warteliste gesetzt",
       "cancelled": "Zurückgezogen",
+      "changeStatusAria": "Status der/des Freiwilligen ändern",
+      "capacityBadge": "{filled} / {max} Plätze besetzt",
+      "capacityBadgeNoMax": "{filled} Freiwillige",
       "declined": "Abgelehnt",
-      "inviteError": "Einladen fehlgeschlagen",
-      "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "declineSuccess": "Freiwillige:r abgelehnt",
       "invited": "Eingeladen",
+      "inviteSuccess": "Freiwillige:r erneut eingeladen",
+      "pendingApproval": "Genehmigung ausstehend",
       "rejected": "Zurückgewiesen",
-      "requested": "Angefragt",
       "signedUp": "Selbst angemeldet",
+      "statusChangeError": "Status der/des Freiwilligen konnte nicht geändert werden",
       "summaryAccepted": "angenommen",
       "summaryInvited": "eingeladen",
       "summarySignedUp": "selbst angemeldet",
       "summarySpots": "Plätze",
       "summaryWaitlisted": "auf der Warteliste",
-      "uninviteError": "Entfernen fehlgeschlagen",
-      "uninviteSuccess": "Freiwillige:r von dem Einsatz entfernt",
       "volunteersTitle": "Freiwillige",
       "waitlisted": "Auf der Warteliste"
     },
@@ -1381,6 +1393,7 @@
       "leftWaitlist": "Du hast die Warteliste verlassen.",
       "pending": "Deine Mitgliedschaftsanfrage ist ausstehend. Du wirst dem Einsatz hinzugefügt, sobald er genehmigt wurde.",
       "pendingApproval": "Warte auf Freigabe",
+      "withdrewApproval": "Du hast deine Anfrage zurückgezogen.",
       "pendingCta": "Anfrage ausstehend",
       "pendingMessage": "Deine Mitgliedschaftsanfrage für diese Organisation wird noch geprüft. Du kannst dich für den Einsatz anmelden, sobald sie genehmigt wurde.",
       "reenter": "Erneut beitreten",
@@ -1529,6 +1542,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Angenommen",
+    "pendingApprovalBadge": "Warte auf Freigabe",
     "back": "Zurück",
     "cancelUntilNote": "Du kannst bis {date} absagen.",
     "cancelledBadge": "Abgesagt",
@@ -1981,6 +1995,7 @@
           "contractSigningCoord": "Gegenzeichnung erforderlich",
           "contractActive": "Aktive Vereinbarung",
           "timesheetGenerate": "Stundennachweis erstellen",
+          "timesheetDraft": "Entwurf",
           "timesheetSigningVol": "Wartet auf Gegenzeichnung",
           "timesheetSigningSuper": "Supervisorunterschrift",
           "timesheetReady": "Bereit zur Abgabe",

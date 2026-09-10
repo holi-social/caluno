@@ -49,6 +49,7 @@ function shiftShape(t: ShiftSchemaMessages) {
     location: z.string().trim().optional(),
     instructions: z.string().trim().optional(),
     openShift: z.boolean().optional(),
+    joinRequiresApproval: z.boolean().optional(),
     invitedMemberIds: z.array(z.string()).optional(),
     recurrenceDays: z.array(recurrenceDayEnum).optional(),
     recurrenceEndMode: z.enum(['never', 'on']).optional(),

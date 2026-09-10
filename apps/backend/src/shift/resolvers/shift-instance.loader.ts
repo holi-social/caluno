@@ -34,6 +34,16 @@ export class ShiftInstanceLoader {
     return instanceIds.map((id) => summaries.get(id) ?? null);
   });
 
+  public readonly callOutsByInstanceId = new DataLoader<
+    string,
+    ShiftCallOutSummary[]
+  >(async (instanceIds) => {
+    const history = await this.shiftCallOutService.getCallOutHistory(
+      instanceIds as string[],
+    );
+    return instanceIds.map((id) => history.get(id) ?? []);
+  });
+
   public readonly instancesByShiftId = new DataLoader<
     string,
     ShiftInstanceEntity[]

@@ -188,8 +188,10 @@ export function VolunteerForm({
     <div className="space-y-6">
       <div className="rounded-lg border bg-card p-6">
         <h1 className="text-2xl font-bold">{form.name}</h1>
-        {form.description && (
-          <p className="mt-1 text-muted-foreground">{form.description}</p>
+        {form.description?.trim() && (
+          <p className="mt-1 text-muted-foreground">
+            {form.description.trim()}
+          </p>
         )}
       </div>
 
@@ -200,11 +202,16 @@ export function VolunteerForm({
       )}
 
       <div className="rounded-lg border bg-card p-6">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4">
           <span className="text-sm text-muted-foreground">
             {t('step', { current: step + 1, total: blocks.length })}
           </span>
-          <span className="text-sm font-medium">{currentBlock.title}</span>
+          <h2 className="mt-1 text-lg font-semibold">{currentBlock.title}</h2>
+          {currentBlock.description?.trim() && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {currentBlock.description.trim()}
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">
