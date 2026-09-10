@@ -319,8 +319,8 @@ type Event {
   joinRequiresApproval: Boolean!
   location: String
   logoUrl: String
-  myInvitedAt: DateTime
   myInviteStatus: EventInviteStatus
+  myInvitedAt: DateTime
   myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
   organizationUnitId: ID!
