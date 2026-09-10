@@ -331,6 +331,9 @@
     "aboutHeading": "About the event",
     "badge": "Event",
     "coverImageAlt": "Cover image for {title}",
+    "cancelParticipation": "Cancel participation",
+    "canceledNote": "You canceled your participation in this event.",
+    "canceledToast": "Participation canceled.",
     "followCta": "Step up to help",
     "followNote": "Get invited to shifts, or sign up for one yourself.",
     "followingCta": "You're helping",
@@ -364,7 +367,10 @@
     "showAllShifts": "Show all shifts",
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "today": "Today",
-    "unlimitedSpots": "Open"
+    "unlimitedSpots": "Open",
+    "withdrawRequest": "Withdraw request",
+    "withdrawnNote": "You withdrew your request to join this event.",
+    "withdrawnToast": "Request withdrawn."
   },
   "LocaleSwitcher": {
     "label": "Language"

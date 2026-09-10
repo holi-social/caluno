@@ -331,6 +331,9 @@
     "aboutHeading": "Über die Veranstaltung",
     "badge": "Veranstaltung",
     "coverImageAlt": "Titelbild für {title}",
+    "cancelParticipation": "Teilnahme absagen",
+    "canceledNote": "Du hast deine Teilnahme an dieser Veranstaltung abgesagt.",
+    "canceledToast": "Teilnahme abgesagt.",
     "followCta": "Jetzt mitmachen",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für einen an.",
     "followingCta": "Du machst mit",
@@ -364,7 +367,10 @@
     "showAllShifts": "Alle Einsätze anzeigen",
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "today": "Heute",
-    "unlimitedSpots": "Offen"
+    "unlimitedSpots": "Offen",
+    "withdrawRequest": "Anfrage zurückziehen",
+    "withdrawnNote": "Du hast deine Anfrage für diese Veranstaltung zurückgezogen.",
+    "withdrawnToast": "Anfrage zurückgezogen."
   },
   "LocaleSwitcher": {
     "label": "Sprache"
