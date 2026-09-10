@@ -12,10 +12,7 @@ export type VolunteeringActionButtonsProps = {
   actions: VolunteeringActionLabel[];
   /** Localized button labels keyed by action id (defaults to English labels). */
   labels?: VolunteeringActionLabels;
-  /** Actions rendered as inert buttons (e.g. an already-sent reminder). */
   disabledActions?: VolunteeringActionLabel[];
-  /** Hover tooltips keyed by action id. Unlike Button's own tooltip prop,
-   * these also render on disabled buttons (span-triggered). */
   actionTooltips?: Partial<Record<VolunteeringActionLabel, string>>;
   onAction?: (action: VolunteeringActionLabel) => void;
   className?: string;
@@ -57,9 +54,6 @@ export function VolunteeringActionButtons({
           return button;
         }
 
-        // Button suppresses its own tooltip on disabled buttons (no hover
-        // events), so trigger from a wrapping span — same pattern the
-        // volunteer row uses for passive-during-shift hints.
         return (
           <Tooltip key={actionLabel}>
             <TooltipTrigger asChild>

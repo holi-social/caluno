@@ -79,11 +79,6 @@ export function adminChipTargetStatuses(
   }
 }
 
-/**
- * Whether a manager can send the one-shot reminder email for this invite
- * (VOLI-1236): only a still-unanswered invite (ADMIN_INVITED) that has not
- * been reminded yet. UI callers additionally hide it for past instances.
- */
 export function canRemindInvitee(
   status: InviteStatus,
   remindedAt?: Date | string | null,
