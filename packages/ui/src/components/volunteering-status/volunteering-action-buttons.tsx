@@ -1,10 +1,6 @@
 import { cn } from '../../lib/utils';
 import { Button } from '../base/button';
-import {
-  getVolunteeringActionButtonStyle,
-  volunteeringActionButtonClass,
-  volunteeringActionIcons,
-} from './config';
+import { volunteeringActionIcons } from './config';
 import type { VolunteeringActionLabel } from './types';
 
 export type VolunteeringActionLabels = Partial<
@@ -33,16 +29,13 @@ export function VolunteeringActionButtons({
     >
       {actions.map((actionLabel) => {
         const ActionIcon = volunteeringActionIcons[actionLabel];
-        const { variant, className: actionClassName } =
-          getVolunteeringActionButtonStyle(actionLabel);
 
         return (
           <Button
             key={actionLabel}
             type="button"
-            variant={variant}
-            size="sm"
-            className={cn(volunteeringActionButtonClass, actionClassName)}
+            variant="outline"
+            size="md"
             onClick={() => onAction?.(actionLabel)}
           >
             {ActionIcon ? <ActionIcon aria-hidden /> : null}
