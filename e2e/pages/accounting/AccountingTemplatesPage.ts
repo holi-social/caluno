@@ -188,16 +188,8 @@ export class AccountingTemplatesPage {
       await this.page.getByRole('tab', { name: 'Period' }).click();
 
       const today = new Date();
-      const firstOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        1,
-      );
-      const tenthOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        10,
-      );
+      const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const tenthOfMonth = new Date(today.getFullYear(), today.getMonth(), 10);
       await this.page
         .getByRole('button', { name: dayButtonName(firstOfMonth) })
         .click();
@@ -212,9 +204,8 @@ export class AccountingTemplatesPage {
     await expect(save).toBeEnabled();
     await save.click();
 
-    await this.page.waitForURL(
-      /accounting\/settings\?tab=templates/,
-      { timeout: 20_000 },
-    );
+    await this.page.waitForURL(/accounting\/settings\?tab=templates/, {
+      timeout: 20_000,
+    });
   }
 }
