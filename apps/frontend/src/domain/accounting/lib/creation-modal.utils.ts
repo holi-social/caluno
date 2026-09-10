@@ -1,5 +1,4 @@
 import type { EligibleTimeEntry } from '@repo/data';
-import { format } from 'date-fns';
 import type { EligibleHourLine } from '../components/eligible-hours-card';
 
 /**
@@ -37,10 +36,15 @@ export function hoursBetween(startedAt: string, endedAt: string): number {
  */
 export function mapEligibleTimeEntry(
   entry: EligibleTimeEntry,
+  formatting: {
+    formatDate: (date: Date, options?: Intl.DateTimeFormatOptions) => string;
+    formatTime: (date: Date) => string;
+  },
 ): EligibleHourLine {
+  const { formatDate, formatTime } = formatting;
   const start = new Date(entry.startedAt);
-  const datePart = format(start, 'dd.MM.yyyy');
-  const startTime = format(start, 'HH:mm');
+  const datePart = formatDate(start);
+  const startTime = formatTime(start);
 
   if (!entry.endedAt) {
     return {
@@ -55,7 +59,7 @@ export function mapEligibleTimeEntry(
   return {
     id: entry.id,
     shiftName: entry.shiftInstance?.master.title ?? entry.notes ?? '',
-    dateTime: `${datePart}, ${startTime}–${format(end, 'HH:mm')}`,
+    dateTime: `${datePart}, ${startTime}–${formatTime(end)}`,
     hours: hoursBetween(entry.startedAt, entry.endedAt),
   };
 }

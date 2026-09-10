@@ -204,6 +204,16 @@ export class ShiftInstanceFieldResolver {
     ) as Promise<ShiftInstanceCallOutSummary | null>;
   }
 
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @ResolveField(() => [ShiftInstanceCallOutSummary], { nullable: true })
+  async callOuts(
+    @Parent() instance: ShiftInstanceEntity,
+    @Loader(ShiftInstanceLoader) loader: ShiftInstanceLoader,
+  ): Promise<ShiftInstanceCallOutSummary[]> {
+    const history = await loader.callOutsByInstanceId.load(instance.id);
+    return history as unknown as ShiftInstanceCallOutSummary[];
+  }
+
   @AllowAnonymous()
   @ResolveField(() => Int)
   async requiredFormsCount(

@@ -335,6 +335,9 @@
     "aboutHeading": "About the event",
     "badge": "Event",
     "coverImageAlt": "Cover image for {title}",
+    "cancelParticipation": "Cancel participation",
+    "canceledNote": "You canceled your participation in this event.",
+    "canceledToast": "Participation canceled.",
     "followCta": "Step up to help",
     "followNote": "Get invited to shifts, or sign up for one yourself.",
     "followingCta": "You're helping",
@@ -368,7 +371,10 @@
     "showAllShifts": "Show all shifts",
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "today": "Today",
-    "unlimitedSpots": "Open"
+    "unlimitedSpots": "Open",
+    "withdrawRequest": "Withdraw request",
+    "withdrawnNote": "You withdrew your request to join this event.",
+    "withdrawnToast": "Request withdrawn."
   },
   "LocaleSwitcher": {
     "label": "Language"
@@ -1260,6 +1266,7 @@
       "urgentCallSentByDate": "on {date}",
       "urgentCallSentByPrefix": "Sent by",
       "urgentCallAutomaticBadge": "Automatic",
+      "urgentCallHistoryCount": "{count, plural, one {# call} other {# calls}}",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1272,6 +1279,8 @@
     },
     "eventBadge": "Event",
     "form": {
+      "approvalRequiredDescription": "Anyone can request. They wait until you approve.",
+      "approvalRequiredLabel": "Approval required",
       "chooseDays": "Choose which days this shift repeats",
       "dateTimeLabel": "Date and time",
       "imageLabel": "Image",
@@ -1301,7 +1310,6 @@
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
-      "callOutAria": "Urgent Call",
       "callOutCta": "Urgent Call",
       "callOutDialog": {
         "confirm": "Urgent Call",
@@ -1339,25 +1347,29 @@
     },
     "inviteStatus": {
       "accepted": "Accepted",
+      "actionApprove": "Approve",
       "actionInvite": "Invite",
-      "actionUninvite": "Uninvite",
+      "approveSuccess": "Volunteer approved",
+      "approveWaitlistedSuccess": "Shift is full — volunteer added to the waitlist",
       "cancelled": "Canceled",
+      "changeStatusAria": "Change volunteer status",
+      "capacityBadge": "{filled} / {max} spots filled",
+      "capacityBadgeNoMax": "{filled} volunteers",
       "declined": "Declined",
-      "inviteError": "Could not invite volunteer",
-      "inviteSuccess": "Volunteer invited again",
+      "declineSuccess": "Volunteer declined",
       "invited": "Invited",
+      "inviteSuccess": "Volunteer invited again",
+      "pendingApproval": "Pending approval",
       "rejected": "Rejected",
-      "requested": "Requested",
       "signedUp": "Signed up",
+      "statusChangeError": "Could not change the volunteer's status",
       "summaryAccepted": "accepted",
       "summaryInvited": "invited",
       "summarySignedUp": "signed up",
       "summarySpots": "spots",
       "summaryWaitlisted": "waitlisted",
-      "uninviteError": "Could not remove volunteer",
-      "uninviteSuccess": "Volunteer removed from shift",
       "volunteersTitle": "Volunteers",
-      "waitlisted": "Waitlisted"
+      "waitlisted": "On waitlist"
     },
     "join": {
       "accept": "Accept",
@@ -1381,6 +1393,7 @@
       "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
       "pendingApproval": "Waiting for approval",
+      "withdrewApproval": "You've withdrawn your request.",
       "pendingCta": "Request pending",
       "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
       "reenter": "Re-enter shift",
@@ -1529,6 +1542,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Accepted",
+    "pendingApprovalBadge": "Waiting for approval",
     "back": "Back",
     "cancelUntilNote": "You can cancel until {date}.",
     "cancelledBadge": "Canceled",
@@ -1981,6 +1995,7 @@
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
           "timesheetGenerate": "Create timesheet",
+          "timesheetDraft": "Draft",
           "timesheetSigningVol": "Waiting for signature",
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",

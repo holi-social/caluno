@@ -48,7 +48,7 @@ function parseWeekStart(
 ): Date {
   const base = param ? new Date(param) : fallback;
   const d = Number.isNaN(base.getTime()) ? fallback : base;
-  return getWeekRange(d).weekStart;
+  return new Date(getWeekRange(d).weekStart.getTime());
 }
 
 function parseTab(param: string | null | undefined): EventDetailTab {

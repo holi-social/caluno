@@ -322,6 +322,7 @@ type Event {
   joinRequiresApproval: Boolean!
   location: String
   logoUrl: String
+  myInviteStatus: EventInviteStatus
   myInvitedAt: DateTime
   myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
@@ -540,6 +541,7 @@ enum InvoiceStatus {
   AWAITING_SUPERVISOR_SIGNATURE
   AWAITING_VOLUNTEER_SIGNATURE
   DECLINED
+  DRAFT
   READY
 }
 
@@ -1273,6 +1275,7 @@ enum ShiftCallOutSource {
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
+  callOuts: [ShiftInstanceCallOutSummary!]
   filledCount: Int!
   id: ID!
   invite(userId: String!): ShiftInstanceInvite

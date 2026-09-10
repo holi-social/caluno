@@ -34,6 +34,7 @@ export function useRosterYearlyUsage(
       repository.findRosterYearlyUsage(organizationUnitId ?? '', year ?? 0),
     staleTime: 30 * 1000,
     enabled: !!organizationUnitId && !!year,
+    refetchOnMount: 'always',
   });
 }
 

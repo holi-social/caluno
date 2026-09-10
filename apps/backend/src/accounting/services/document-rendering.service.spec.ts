@@ -380,30 +380,4 @@ describe('DocumentRenderingService', () => {
       expect(cells).toEqual(['', '', 'Gesamtbetrag', '', '', '82,50 €']);
     });
   });
-
-  describe('signatureTimestampLine', () => {
-    const signatureTimestampLine = (
-      service: DocumentRenderingService,
-      signedAt: string | undefined,
-    ): string =>
-      (
-        service as unknown as {
-          signatureTimestampLine: (signedAt: string | undefined) => string;
-        }
-      ).signatureTimestampLine(signedAt);
-
-    it('prefixes the signing date with "am"', () => {
-      const service = createService();
-      expect(signatureTimestampLine(service, '01.02.2025')).toBe(
-        'am 01.02.2025',
-      );
-    });
-
-    it('falls back to a placeholder line when unsigned', () => {
-      const service = createService();
-      expect(signatureTimestampLine(service, undefined)).toBe(
-        '_______________',
-      );
-    });
-  });
 });

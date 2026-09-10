@@ -7,6 +7,7 @@ import {
   type RawVolunteerYearlyUsage,
   SigneeType,
 } from '@repo/data';
+import { formats } from '@/lib/formatting/formats';
 import type { PauschalenType } from '../components/doc-type-header';
 import type {
   BoardDocument,
@@ -145,6 +146,8 @@ export function contractStatusToDocStatus(status: ContractStatus): DocStatus {
 
 export function invoiceStatusToDocStatus(status: InvoiceStatus): DocStatus {
   switch (status) {
+    case InvoiceStatus.Draft:
+      return 'timesheet-draft';
     case InvoiceStatus.AwaitingVolunteerSignature:
       return 'timesheet-signing-vol';
     case InvoiceStatus.AwaitingSupervisorSignature:
@@ -250,10 +253,7 @@ export function invoiceInMonth(
 }
 
 export function formatMonthYear(date: Date, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
+  return formats(locale).formatDate(date, { month: 'long', year: 'numeric' });
 }
 
 export function monthsInRange(

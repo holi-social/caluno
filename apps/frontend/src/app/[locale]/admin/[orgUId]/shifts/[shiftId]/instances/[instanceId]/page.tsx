@@ -1,6 +1,6 @@
 import { PermissionKey, ShiftVisibility } from '@repo/data';
 import { Button } from '@repo/ui';
-import { Megaphone, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import {
@@ -8,7 +8,6 @@ import {
   DetailCoverImagePlaceholder,
 } from '@/components/detail-entity-image';
 import { DeleteShiftInstanceDialog } from '@/domain/shift/components/delete-shift-instance-dialog';
-import { SendCallOutDialog } from '@/domain/shift/components/send-call-out-dialog';
 import ShareLinkButton from '@/domain/shift/components/share-link-button';
 import { ShiftInstanceInformationCard } from '@/domain/shift/components/shift-instance-information-card';
 import { ShiftInstanceMetaCard } from '@/domain/shift/components/shift-instance-meta-card';
@@ -50,8 +49,8 @@ export default async function ShiftInstanceDetailPage({
   const title = instance.overrideTitle ?? instance.master.title;
   const imageUrl = instance.master.imageUrl;
   const canAddImage = canManage && !isInstanceInThePast;
-  const lastCallOut = canManage
-    ? await data.shift.findLastCallOutSummary(instanceId)
+  const callOuts = canManage
+    ? await data.shift.findCallOutHistory(instanceId)
     : null;
 
   return (
@@ -72,28 +71,12 @@ export default async function ShiftInstanceDetailPage({
           )}
 
           {canManage ? (
-            <SendCallOutDialog
-              orgUId={orgUId}
-              instanceId={instanceId}
-              trigger={
-                <Button
-                  variant="outline"
-                  size="icon-sm"
-                  tooltip={t('instanceDetail.callOutAria')}
-                  disabled={isInstanceInThePast}
-                >
-                  <Megaphone />
-                </Button>
-              }
-            />
-          ) : null}
-
-          {canManage ? (
             <DeleteShiftInstanceDialog
               orgUId={orgUId}
               instanceId={instanceId}
               isRecurring={isRecurring}
               instanceDate={new Date(instance.actualStartsAt)}
+              disableDelete={isInstanceInThePast}
               trigger={
                 <Button
                   variant="destructive"
@@ -159,7 +142,7 @@ export default async function ShiftInstanceDetailPage({
             actualEndsAt={instance.actualEndsAt}
             createdAt={instance.master.createdAt}
             createdBy={instance.master.createdBy ?? null}
-            lastCallOut={lastCallOut}
+            callOuts={callOuts}
           />
         </aside>
       </div>
@@ -170,7 +153,12 @@ export default async function ShiftInstanceDetailPage({
         instanceId={instanceId}
         invites={instance.invites ?? []}
         spotsLeft={instance.spotsLeft}
+        filledCount={instance.filledCount}
+        maxVolunteers={
+          instance.overrideMaxVolunteers ?? instance.master.maxVolunteers
+        }
         canManage={canManage}
+        isInstanceInThePast={isInstanceInThePast}
       />
     </div>
   );

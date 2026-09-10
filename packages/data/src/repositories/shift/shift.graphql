@@ -7,6 +7,7 @@ query GetShift($id: String!) {
     location
     imageUrl
     visibility
+    joinRequiresApproval
     createdAt
     maxVolunteers
     minVolunteers
@@ -214,6 +215,22 @@ query GetShiftInstanceCallOutSummary($id: ID!) {
   shiftInstance(id: $id) {
     id
     lastCallOut {
+      sentAt
+      recipientCount
+      source
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+
+query GetShiftInstanceCallOutHistory($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    callOuts {
       sentAt
       recipientCount
       source

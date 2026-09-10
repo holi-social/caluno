@@ -8,6 +8,7 @@ export type ContractFilter = {
   status?: ContractStatus;
   periodStart?: Date;
   periodEnd?: Date;
+  organizationUnitId?: string;
 };
 
 export type InvoiceFilter = {
@@ -16,6 +17,7 @@ export type InvoiceFilter = {
   status?: InvoiceStatus;
   periodStart?: Date;
   periodEnd?: Date;
+  organizationUnitId?: string;
 };
 
 export type EffectiveRate = {
