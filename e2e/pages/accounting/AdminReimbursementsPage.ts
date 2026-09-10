@@ -134,7 +134,7 @@ export class AdminReimbursementsPage {
    * leftover coord docs from earlier runs: asserts the coord row count
    * decreases by exactly one rather than reaching zero.
    */
-  async countersignContract(volunteerName: string) {
+  async countersignContract() {
     await this.page.reload({ waitUntil: 'load' });
     const rows = this.countersignRow();
     // The board is a client component; wait for it to render the coord row
