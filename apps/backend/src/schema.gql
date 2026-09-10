@@ -651,7 +651,6 @@ type Mutation {
   checkInApproveMembershipRequest(requestId: ID!): MembershipRequest!
   checkInInviteToOrganization(volunteerId: ID!): Boolean!
   checkInInviteToShiftInstance(shiftInstanceId: ID!, volunteerId: ID!): ShiftInstance!
-  checkInSetMembershipIdVerified(membershipId: ID!, verified: Boolean!): Membership!
   checkInVolunteer(shiftInstanceId: ID, volunteerId: ID!): TimeEntry!
   checkOut(shiftInstanceId: ID!): TimeEntry!
   checkOutVolunteer(timeEntryId: ID!): TimeEntry!

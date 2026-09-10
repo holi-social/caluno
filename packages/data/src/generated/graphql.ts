@@ -691,7 +691,6 @@ export type Mutation = {
   checkInApproveMembershipRequest: MembershipRequest;
   checkInInviteToOrganization: Scalars['Boolean']['output'];
   checkInInviteToShiftInstance: ShiftInstance;
-  checkInSetMembershipIdVerified: Membership;
   checkInVolunteer: TimeEntry;
   checkOut: TimeEntry;
   checkOutVolunteer: TimeEntry;
@@ -809,12 +808,6 @@ export type MutationCheckInInviteToOrganizationArgs = {
 export type MutationCheckInInviteToShiftInstanceArgs = {
   shiftInstanceId: Scalars['ID']['input'];
   volunteerId: Scalars['ID']['input'];
-};
-
-
-export type MutationCheckInSetMembershipIdVerifiedArgs = {
-  membershipId: Scalars['ID']['input'];
-  verified: Scalars['Boolean']['input'];
 };
 
 
@@ -3156,14 +3149,6 @@ export type SetMembershipIdVerifiedMutationVariables = Exact<{
 
 export type SetMembershipIdVerifiedMutation = { __typename?: 'Mutation', setMembershipIdVerified: { __typename?: 'Membership', id: string, idVerifiedAt?: string | null } };
 
-export type CheckInSetMembershipIdVerifiedMutationVariables = Exact<{
-  membershipId: Scalars['ID']['input'];
-  verified: Scalars['Boolean']['input'];
-}>;
-
-
-export type CheckInSetMembershipIdVerifiedMutation = { __typename?: 'Mutation', checkInSetMembershipIdVerified: { __typename?: 'Membership', id: string, idVerifiedAt?: string | null } };
-
 export type JoinOrganizationMutationVariables = Exact<{
   organizationUnitId: Scalars['ID']['input'];
 }>;
@@ -5217,14 +5202,6 @@ export const MyMembershipDocument = gql`
 export const SetMembershipIdVerifiedDocument = gql`
     mutation SetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
   setMembershipIdVerified(membershipId: $membershipId, verified: $verified) {
-    id
-    idVerifiedAt
-  }
-}
-    `;
-export const CheckInSetMembershipIdVerifiedDocument = gql`
-    mutation CheckInSetMembershipIdVerified($membershipId: ID!, $verified: Boolean!) {
-  checkInSetMembershipIdVerified(membershipId: $membershipId, verified: $verified) {
     id
     idVerifiedAt
   }
@@ -7650,9 +7627,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     SetMembershipIdVerified(variables: SetMembershipIdVerifiedMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SetMembershipIdVerifiedMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SetMembershipIdVerifiedMutation>({ document: SetMembershipIdVerifiedDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SetMembershipIdVerified', 'mutation', variables);
-    },
-    CheckInSetMembershipIdVerified(variables: CheckInSetMembershipIdVerifiedMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CheckInSetMembershipIdVerifiedMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CheckInSetMembershipIdVerifiedMutation>({ document: CheckInSetMembershipIdVerifiedDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CheckInSetMembershipIdVerified', 'mutation', variables);
     },
     JoinOrganization(variables: JoinOrganizationMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<JoinOrganizationMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<JoinOrganizationMutation>({ document: JoinOrganizationDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'JoinOrganization', 'mutation', variables);
