@@ -1922,6 +1922,55 @@ describe('Volunteer home fields and check-in', () => {
     expect(acceptedItem?.myInviteStatus).toBe('JOINED');
   });
 
+  it('includes waitlisted shift instances in myShiftInstances by default', async () => {
+    await db.insert(schema.memberships).values({
+      userId: testUserId,
+      organizationUnitId,
+    });
+
+    const { id: waitlistedShiftId } = await createShift(db, {
+      organizationUnitId,
+    });
+    const waitlistedInstances = await db.query.shiftInstances.findMany({
+      where: { masterId: waitlistedShiftId },
+      orderBy: { actualStartsAt: 'asc' },
+    });
+    const waitlistedInstanceId = waitlistedInstances[0]?.id;
+    expect(waitlistedInstanceId).toBeDefined();
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: waitlistedInstanceId ?? '',
+      userId: testUserId,
+      status: ShiftInviteStatus.WAITLIST_JOINED,
+    });
+
+    const data = await graphqlRequestRequiringData<{
+      myShiftInstances: {
+        items: Array<{ id: string; myInviteStatus: string | null }>;
+      };
+    }>(
+      app,
+      {
+        query: `
+          query MyShiftInstances($includePast: Boolean!) {
+            myShiftInstances(includePast: $includePast) {
+              items { id myInviteStatus }
+            }
+          }
+        `,
+        variables: { includePast: true },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      },
+      'myShiftInstances',
+    );
+
+    const waitlistedItem = data.myShiftInstances.items.find(
+      (item) => item.id === waitlistedInstanceId,
+    );
+    expect(waitlistedItem).toBeDefined();
+    expect(waitlistedItem?.myInviteStatus).toBe('WAITLIST_JOINED');
+  });
+
   it('includes intended shift instances when includeIntended is true', async () => {
     // The user is not a member of the org unit; their signup is captured as a
     // pending membership request with an intended shift instance id.
