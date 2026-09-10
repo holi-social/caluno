@@ -11,6 +11,7 @@ import {
 import type { INestApplication } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { PERMISSIONS } from '../src/auth/constants';
+import { PERMISSIONS_KEY } from '../src/auth/decorators/permissions.decorator';
 import type { Database } from '../src/database/database.module';
 import * as schema from '../src/database/schema';
 import { NotFoundGraphQLError } from '../src/graphql/errors';
@@ -18,6 +19,7 @@ import { RequiredFormTargetType } from '../src/requirement-profile/enums';
 import { RequiredFormService } from '../src/requirement-profile/services/required-form.service';
 import { JoinStatus } from '../src/shared/enums/join-status.enum';
 import { ShiftInviteStatus, ShiftVisibility } from '../src/shift/enums';
+import { ShiftMutationResolver } from '../src/shift/resolvers/shift-mutation.resolver';
 import { ShiftService } from '../src/shift/shift.service';
 import {
   cancelShiftInstance,
@@ -5117,32 +5119,15 @@ describe('remindShiftInstanceInvite (VOLI-1236)', () => {
     expect(response.errors?.[0]?.message).toMatch(/past/);
   });
 
-  it('forbids callers without SHIFT_EDIT', async () => {
-    const volunteer = await createUser(db);
-    const { id: shiftId } = await createShift(db, { organizationUnitId });
-    const instanceId = await firstInstanceId(shiftId);
-    await createShiftInstanceInvite(db, { instanceId, userId: volunteer.id });
-
-    const originalUserId = getAuthMockUserId();
-    setAuthMockUserId(volunteer.id);
-    try {
-      const response = await graphqlRequest<{
-        remindShiftInstanceInvite: string;
-      }>(app, {
-        query: `
-          mutation Remind($instanceId: String!, $userId: String!) {
-            remindShiftInstanceInvite(
-              instanceId: $instanceId
-              userId: $userId
-            )
-          }
-        `,
-        variables: { instanceId, userId: volunteer.id },
-        headers: { 'x-organization-unit-id': organizationUnitId },
-      });
-      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
-    } finally {
-      setAuthMockUserId(originalUserId);
-    }
+  // The integration test app bypasses PermissionGuard by design
+  // (create-graphql-full-app.ts), so guard coverage follows the suite's
+  // metadata convention instead of a live rejection.
+  it('gates remindShiftInstanceInvite on shift:edit', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        ShiftMutationResolver.prototype.remindShiftInstanceInvite,
+      ),
+    ).toEqual([PERMISSIONS.SHIFT_EDIT]);
   });
 });
