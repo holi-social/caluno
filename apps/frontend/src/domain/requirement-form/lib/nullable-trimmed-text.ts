@@ -17,8 +17,6 @@ export function optionalNullableTrimmedText(
 export const zOptionalNullableTrimmedString = z
   .string()
   .optional()
-  .transform((value) =>
-    value === undefined ? undefined : nullableTrimmedText(value),
-  );
+  .transform((value) => optionalNullableTrimmedText(value));
 
 export const zNullableTrimmedString = z.string().transform(nullableTrimmedText);

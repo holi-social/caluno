@@ -291,8 +291,7 @@ export type RenderableField = Pick<
 >;
 
 function fieldDescription(field: RenderableField): string | null {
-  const trimmed = field.description?.trim();
-  return trimmed ? trimmed : null;
+  return field.description?.trim() ?? null;
 }
 
 export function FieldRenderer({
