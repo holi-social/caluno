@@ -2,7 +2,6 @@ import { hashPassword } from 'better-auth/crypto';
 import { eq, inArray } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { DocumentKind, SigneeType } from '../accounting/enums';
 import {
   DEFAULT_MEMBER_ROLE_NAME,
   DEFAULT_OWNER_ROLE_NAME,
