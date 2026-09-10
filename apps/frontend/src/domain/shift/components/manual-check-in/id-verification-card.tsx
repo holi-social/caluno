@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { BlockerCard } from './blocker-card';
 
 interface IdVerificationCardProps {
+  organizationUnitId: string;
   membershipId: string;
 }
 
@@ -16,9 +17,12 @@ interface IdVerificationCardProps {
  * and check-in works whether or not the ID was confirmed. After success the
  * readiness invalidation hides the card for good.
  */
-export function IdVerificationCard({ membershipId }: IdVerificationCardProps) {
+export function IdVerificationCard({
+  organizationUnitId,
+  membershipId,
+}: IdVerificationCardProps) {
   const t = useTranslations('CheckIn');
-  const mutation = useCheckInSetMembershipIdVerified();
+  const mutation = useCheckInSetMembershipIdVerified(organizationUnitId);
 
   const handleConfirm = async () => {
     try {

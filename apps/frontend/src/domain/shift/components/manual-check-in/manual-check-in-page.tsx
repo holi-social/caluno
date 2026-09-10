@@ -289,13 +289,21 @@ export function ManualCheckInPage({
         )}
 
         {showIdVerification && readiness?.membershipId && (
-          <IdVerificationCard membershipId={readiness.membershipId} />
+          <IdVerificationCard
+            organizationUnitId={selection.orgUnitId}
+            membershipId={readiness.membershipId}
+          />
         )}
 
         {readinessState === 'ready' && (
           <Button
             type="button"
             size="lg"
+            variant={
+              showIdVerification && readiness?.membershipId
+                ? 'outline'
+                : 'default'
+            }
             className="w-full"
             disabled={isSubmitPending}
             onClick={handleSubmit}
