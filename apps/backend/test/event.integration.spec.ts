@@ -2379,6 +2379,14 @@ describe('updateEventInviteStatus (volunteer cancel/withdraw)', () => {
     }
   `;
 
+  const joinEventMutation = `
+    mutation JoinEvent($eventId: ID!) {
+      joinEvent(eventId: $eventId) {
+        status
+      }
+    }
+  `;
+
   it('cancelling JOINED frees signedUpCount and exposes VOLUNTEER_CANCELLED', async () => {
     const originalUserId = getAuthMockUserId();
     const event = await createEvent(db, { organizationUnitId });
@@ -2448,6 +2456,83 @@ describe('updateEventInviteStatus (volunteer cancel/withdraw)', () => {
       expect(after.publicEvent.myJoinStatus).toBe(
         JoinStatus.VOLUNTEER_REJECTED,
       );
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('allows another user to join after cancel frees a spot', async () => {
+    const originalUserId = getAuthMockUserId();
+    const event = await createEvent(db, { organizationUnitId });
+    const volunteer = await createUser(db);
+    const joiner = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
+    await addMembership(db, joiner.id, organizationUnitId);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.JOINED,
+    });
+
+    setAuthMockUserId(volunteer.id);
+    try {
+      await graphqlRequestRequiringData(
+        app,
+        {
+          query: updateInviteMutation,
+          variables: {
+            eventId: event.id,
+            status: EventInviteStatus.VOLUNTEER_CANCELLED,
+          },
+        },
+        'updateEventInviteStatus',
+      );
+
+      const afterCancel = await graphqlRequestRequiringData<{
+        publicEvent: { signedUpCount: number };
+      }>(
+        app,
+        {
+          query: signedUpCountQuery,
+          variables: { id: event.id },
+        },
+        'publicEvent',
+      );
+      expect(afterCancel.publicEvent.signedUpCount).toBe(0);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+
+    setAuthMockUserId(joiner.id);
+    try {
+      const joinResult = await graphqlRequestRequiringData<{
+        joinEvent: { status: JoinStatus };
+      }>(
+        app,
+        {
+          query: joinEventMutation,
+          variables: { eventId: event.id },
+        },
+        'joinEvent',
+      );
+      expect(joinResult.joinEvent.status).toBe(JoinStatus.JOINED);
+
+      const afterJoin = await graphqlRequestRequiringData<{
+        publicEvent: { signedUpCount: number };
+      }>(
+        app,
+        {
+          query: signedUpCountQuery,
+          variables: { id: event.id },
+        },
+        'publicEvent',
+      );
+      expect(afterJoin.publicEvent.signedUpCount).toBe(1);
+
+      const invite = await db.query.eventInvites.findFirst({
+        where: { eventId: event.id, userId: joiner.id },
+      });
+      expect(invite?.status).toBe(EventInviteStatus.JOINED);
     } finally {
       setAuthMockUserId(originalUserId);
     }
@@ -2532,6 +2617,48 @@ describe('updateEventInviteStatus (volunteer cancel/withdraw)', () => {
         where: { eventId: event.id, userId: volunteer.id },
       });
       expect(row?.status).toBe(EventInviteStatus.JOINED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('rejects volunteer withdraw after event start', async () => {
+    const originalUserId = getAuthMockUserId();
+    const startsAt = new Date(Date.now() - 60_000);
+    const endsAt = new Date(Date.now() + 3_600_000);
+    const event = await createEvent(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+    });
+    const volunteer = await createUser(db);
+    await addMembership(db, volunteer.id, organizationUnitId);
+    await db.insert(schema.eventInvites).values({
+      eventId: event.id,
+      userId: volunteer.id,
+      status: EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+    });
+
+    setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        updateEventInviteStatus: { status: string };
+      }>(app, {
+        query: updateInviteMutation,
+        variables: {
+          eventId: event.id,
+          status: EventInviteStatus.VOLUNTEER_REJECTED,
+        },
+      });
+
+      expect(response.errors?.[0]?.message).toMatch(
+        /after the event has started/i,
+      );
+
+      const row = await db.query.eventInvites.findFirst({
+        where: { eventId: event.id, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(EventInviteStatus.AWAITING_ADMIN_APPROVAL);
     } finally {
       setAuthMockUserId(originalUserId);
     }
