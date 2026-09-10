@@ -83,6 +83,7 @@ export function TemplateListingPage({
   const templatesQuery = useDocumentTemplates();
   const ratesQuery = useEffectiveRates(orgUId);
   const setupStatusQuery = useAccountingSetupStatus();
+  const t = useTranslations('Accounting.templates');
 
   if (
     templatesQuery.isLoading ||
@@ -162,6 +163,16 @@ export function TemplateListingPage({
 
   return (
     <div className="space-y-8">
+      {setupStatusQuery.isError && (
+        <div className="flex items-start gap-2 rounded-xl border border-border bg-muted p-4 text-sm text-muted-foreground">
+          <AlertCircleIcon
+            size={16}
+            className="mt-0.5 shrink-0"
+            aria-hidden="true"
+          />
+          <p>{t('setupStatusError')}</p>
+        </div>
+      )}
       {blocker && <AccountingSetupAlert blocker={blocker} orgUId={orgUId} />}
       {sections.map((section) => (
         <TemplateListingSection

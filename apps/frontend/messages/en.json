@@ -1831,6 +1831,7 @@
       "title": "Reimbursements",
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
+      "setupStatusError": "Setup status could not be checked. Please reload the page.",
       "periodLabel": "Period",
       "yearLabel": "Year",
       "periodPicker": {
@@ -2134,6 +2135,7 @@
         "invoice": "Invoice"
       },
       "loadError": "Templates could not be loaded. Please reload the page.",
+      "setupStatusError": "Setup status could not be checked. Please reload the page.",
       "builder": {
         "breadcrumb": {
           "accounting": "Accounting",

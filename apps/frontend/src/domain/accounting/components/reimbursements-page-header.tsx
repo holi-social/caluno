@@ -2,7 +2,7 @@
 
 import { useAccountingSetupStatus } from '@repo/data/react';
 import { Button } from '@repo/ui';
-import { PlusIcon } from 'lucide-react';
+import { AlertCircleIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { documentCreationBlocker } from '../lib/setup-status';
@@ -54,6 +54,17 @@ export function ReimbursementsPageHeader({
       </div>
 
       {blocker && <AccountingSetupAlert blocker={blocker} orgUId={orgUId} />}
+
+      {setupStatusQuery.isError && (
+        <div className="flex items-start gap-2 rounded-xl border border-border bg-muted p-4 text-sm text-muted-foreground">
+          <AlertCircleIcon
+            size={16}
+            className="mt-0.5 shrink-0"
+            aria-hidden="true"
+          />
+          <p>{t('setupStatusError')}</p>
+        </div>
+      )}
 
       <ReimbursementsBoard
         orgUId={orgUId}

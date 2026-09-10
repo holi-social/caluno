@@ -1831,6 +1831,7 @@
       "title": "Abrechnungen",
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "periodLabel": "Zeitraum",
       "yearLabel": "Jahr",
       "periodPicker": {
@@ -2134,6 +2135,7 @@
         "invoice": "Stundennachweis"
       },
       "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "builder": {
         "breadcrumb": {
           "accounting": "Buchhaltung",
