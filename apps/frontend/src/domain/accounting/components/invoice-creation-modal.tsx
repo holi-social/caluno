@@ -13,12 +13,12 @@ import {
   useYearlyUsage,
 } from '@repo/data/react';
 import { Input } from '@repo/ui';
-import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
   type DerivedField,
   deriveEditableFields,
@@ -178,9 +178,13 @@ export function InvoiceCreationModal({
     reimbursementType?.id,
     period.from?.getFullYear(),
   );
+  const formatting = useFormatting();
   const lines = useMemo(
-    () => (eligibleQuery.data ?? []).map(mapEligibleTimeEntry),
-    [eligibleQuery.data],
+    () =>
+      (eligibleQuery.data ?? []).map((entry) =>
+        mapEligibleTimeEntry(entry, formatting),
+      ),
+    [eligibleQuery.data, formatting],
   );
 
   const createInvoice = useCreateInvoice();
@@ -392,7 +396,7 @@ export function InvoiceCreationModal({
         effectiveRate?.reimbursementType.yearlyLimitCents ??
         reimbursementType?.yearlyLimitCents,
     }),
-    generated_date: format(new Date(), 'dd.MM.yyyy'),
+    generated_date: formatting.formatDate(new Date()),
     document_number:
       template?.invoiceNumberFormat && template
         ? formatDocumentNumber(
@@ -401,20 +405,18 @@ export function InvoiceCreationModal({
             kostenstelle,
           )
         : undefined,
-    period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
-    period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
-    contract_period: `${format(period.from ?? new Date(), 'dd.MM.yyyy')} – ${format(
+    period_start: formatting.formatDate(period.from ?? new Date()),
+    period_end: formatting.formatDate(period.to ?? new Date()),
+    contract_period: `${formatting.formatDate(period.from ?? new Date())} – ${formatting.formatDate(
       period.to ?? new Date(),
-      'dd.MM.yyyy',
     )}`,
     // The Jahresdeckel sentence's "already received" figure is a running
     // calendar-year-to-date sum, not the invoice's own (monthly) period — so
     // its stated period runs from Jan 1 of that year through this period's
     // end, matching what the backend actually sums at generation time.
-    already_received_period: `${format(
+    already_received_period: `${formatting.formatDate(
       new Date((period.from ?? new Date()).getFullYear(), 0, 1),
-      'dd.MM.yyyy',
-    )} – ${format(period.to ?? new Date(), 'dd.MM.yyyy')}`,
+    )} – ${formatting.formatDate(period.to ?? new Date())}`,
     already_received_amount:
       yearlyUsageQuery.data?.usedCents !== undefined
         ? `${centsToEuros(yearlyUsageQuery.data.usedCents).toLocaleString(

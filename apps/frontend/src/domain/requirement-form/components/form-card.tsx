@@ -3,10 +3,11 @@
 import type { FormBlock, RequirementForm } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import { Eye, Pencil, Share2, Trash2, Users } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { ConfirmDialog } from './confirm-dialog';
 
 export function FormCard({
@@ -25,7 +26,7 @@ export function FormCard({
   const t = useTranslations('RequirementForm.card');
   const tTable = useTranslations('RequirementForm.table');
   const tActions = useTranslations('RequirementForm.actions');
-  const { dateTime } = useFormatter();
+  const { formatDateTime } = useFormatting();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -84,7 +85,7 @@ export function FormCard({
             </div>
           )}
           <p className="text-muted-foreground mt-4 text-xs">
-            {t('updated', { date: dateTime(new Date(form.updatedAt)) })}
+            {t('updated', { date: formatDateTime(new Date(form.updatedAt)) })}
           </p>
         </div>
 

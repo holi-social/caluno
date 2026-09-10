@@ -22,9 +22,10 @@ import {
   Textarea,
 } from '@repo/ui';
 import { CalendarIcon, Link } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { z } from 'zod';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
   parseMultiChoiceValue,
   serializeMultiChoiceValue,
@@ -308,7 +309,7 @@ export function FieldRenderer({
   readOnly?: boolean;
 }) {
   const t = useTranslations('RequirementForm.volunteerForm');
-  const formatter = useFormatter();
+  const { formatDate } = useFormatting();
   const description = fieldDescription(field);
 
   if (field.type === 'STATIC_TEXT') {
@@ -500,7 +501,7 @@ export function FieldRenderer({
               >
                 <CalendarIcon className="mr-2 size-4" />
                 {dateValue
-                  ? formatter.dateTime(dateValue, { dateStyle: 'long' })
+                  ? formatDate(dateValue, { dateStyle: 'long' })
                   : t('pickDate')}
               </Button>
             </PopoverTrigger>
