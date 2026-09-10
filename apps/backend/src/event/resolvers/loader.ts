@@ -92,9 +92,27 @@ export class EventShiftsLoader {
     string
   >(
     async (keys: readonly EventShiftsKey[]) => {
-      const shifts = await this.shiftsByEventId.loadMany(keys);
-      return shifts.map((shiftOrError) =>
-        Array.isArray(shiftOrError) ? shiftOrError.length : 0,
+      const shiftsPerEvent = await this.shiftsByEventId.loadMany(keys);
+
+      const masterIds = [
+        ...new Set(
+          shiftsPerEvent.flatMap((shiftOrError) =>
+            Array.isArray(shiftOrError)
+              ? shiftOrError.map((shift) => shift.id)
+              : [],
+          ),
+        ),
+      ];
+      const instanceCounts =
+        await this.shiftService.countActiveInstancesByMasterIds(masterIds);
+
+      return shiftsPerEvent.map((shiftOrError) =>
+        Array.isArray(shiftOrError)
+          ? shiftOrError.reduce(
+              (total, shift) => total + (instanceCounts.get(shift.id) ?? 0),
+              0,
+            )
+          : 0,
       );
     },
     { cacheKeyFn: (key) => `${key.eventId}:${key.userId ?? ''}` },
