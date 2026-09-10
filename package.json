@@ -23,7 +23,7 @@
     "setup:hooks": "bash .githooks/install-hooks.sh"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.11",
+    "@biomejs/biome": "^2.5.12",
     "@svgr/webpack": "^8.1.0",
     "turbo": "^2.9.9",
     "typescript": "6.0.3",
