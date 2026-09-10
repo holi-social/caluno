@@ -136,11 +136,10 @@ export class VolunteerDigestService {
     // primary callers, which use a separate loader for `master`).
     const myShiftInstances = withMaster(myShiftsPage.instances);
     const pendingInviteInstances = withMaster(pendingInvitesPage.instances);
-    // findAvailableShiftInstances only excludes JOINED invites (it backs the
-    // home page's "discover" tab, where an invite doesn't hide a shift) —
-    // the needs-volunteers section additionally requires excluding any
-    // active invite (pending, waitlisted, or awaiting approval), not just a
-    // confirmed join.
+    // findAvailableShiftInstances excludes MY_SHIFT roster invites (joined,
+    // awaiting approval, waitlisted) but not coordinator ADMIN_INVITED — the
+    // needs-volunteers section additionally filters ACTIVE_SHIFT invites in
+    // memory before ranking candidates.
     const needsVolunteersInstances = await this.excludeActivelyInvitedInstances(
       userId,
       withMaster(needsVolunteersPage.instances),

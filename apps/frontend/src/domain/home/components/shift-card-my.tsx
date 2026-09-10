@@ -1,5 +1,6 @@
 'use client';
 
+import { ShiftInviteStatus } from '@repo/data';
 import { Button, Card } from '@repo/ui';
 import {
   Clock4Icon,
@@ -15,6 +16,7 @@ import { shiftPublicPath } from '@/domain/shift/share';
 import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
+import { ShiftRosterStatusLine } from './shift-roster-status-line';
 
 type TimerKind = 'far' | 'soon' | 'overdue' | 'active';
 
@@ -24,6 +26,7 @@ export interface ShiftCardMyProps {
     actualStartsAt: string;
     actualEndsAt: string;
     isCheckedIn: boolean;
+    myInviteStatus?: ShiftInviteStatus | null;
     master: {
       id: string;
       title: string;
@@ -95,8 +98,10 @@ export function ShiftCardMy({
   );
 
   const TimerIcon = timer.kind === 'active' ? PlayIcon : Clock4Icon;
-  const showCheckIn = timer.kind === 'soon' || timer.kind === 'overdue';
-  const showCheckOut = timer.kind === 'active';
+  const isJoined = shiftInstance.myInviteStatus === ShiftInviteStatus.Joined;
+  const showCheckIn =
+    isJoined && (timer.kind === 'soon' || timer.kind === 'overdue');
+  const showCheckOut = isJoined && timer.kind === 'active';
 
   return (
     <Card className="relative flex flex-col gap-0 overflow-hidden rounded-xl border border-border bg-card p-0">
@@ -129,12 +134,10 @@ export function ShiftCardMy({
               </span>
             )}
           </div>
-          {isPending && (
-            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock4Icon className="size-3.5 shrink-0" />
-              {t('pendingBadge')}
-            </p>
-          )}
+          <ShiftRosterStatusLine
+            isIntendingToJoin={isPending}
+            myInviteStatus={shiftInstance.myInviteStatus}
+          />
           <h3 className="text-lg font-semibold text-foreground">
             {shiftInstance.master.title}
           </h3>

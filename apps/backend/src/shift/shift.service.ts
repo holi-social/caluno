@@ -38,6 +38,7 @@ import {
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   isVolunteerJoinResolveSource,
+  MY_SHIFT_INVITE_STATUSES,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
@@ -421,7 +422,7 @@ export class ShiftService {
     limit: number,
     offset: number,
     order: SortOrder,
-    statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
+    statuses: readonly ShiftInviteStatus[] = MY_SHIFT_INVITE_STATUSES,
     includeIntended = false,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
@@ -742,7 +743,7 @@ export class ShiftService {
       NOT: {
         invites: {
           userId,
-          status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
+          status: { in: [...MY_SHIFT_INVITE_STATUSES] },
         },
       },
       OR: visibilityBranches,
