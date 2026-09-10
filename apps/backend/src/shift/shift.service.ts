@@ -1335,7 +1335,6 @@ export class ShiftService {
               .update(schema.shiftInstanceInvites)
               .set({
                 status: inviteStatus,
-                // A re-invite starts a fresh reminder cycle (VOLI-1236).
                 remindedAt: null,
               })
               .where(
@@ -1483,7 +1482,6 @@ export class ShiftService {
             .update(schema.shiftInstanceInvites)
             .set({
               status: inviteStatus,
-              // A re-invite starts a fresh reminder cycle (VOLI-1236).
               remindedAt: null,
             })
             .where(
@@ -4166,7 +4164,6 @@ export class ShiftService {
       .update(schema.shiftInstanceInvites)
       .set({
         status: ShiftInviteStatus.ADMIN_INVITED,
-        // A re-invite starts a fresh reminder cycle (VOLI-1236).
         remindedAt: null,
       })
       .where(
