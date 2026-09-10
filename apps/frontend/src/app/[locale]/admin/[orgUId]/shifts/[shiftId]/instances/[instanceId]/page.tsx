@@ -76,6 +76,7 @@ export default async function ShiftInstanceDetailPage({
               instanceId={instanceId}
               isRecurring={isRecurring}
               instanceDate={new Date(instance.actualStartsAt)}
+              disableDelete={isInstanceInThePast}
               trigger={
                 <Button
                   variant="destructive"
