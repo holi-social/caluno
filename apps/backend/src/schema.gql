@@ -320,6 +320,7 @@ type Event {
   location: String
   logoUrl: String
   myInvitedAt: DateTime
+  myInviteStatus: EventInviteStatus
   myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
   organizationUnitId: ID!
