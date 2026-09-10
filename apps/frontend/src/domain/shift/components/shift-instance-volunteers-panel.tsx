@@ -2,6 +2,7 @@
 
 import { MembershipRequestStatus, ShiftInviteStatus } from '@repo/data';
 import {
+  Badge,
   Button,
   type VolunteeringActionLabel,
   VolunteeringVolunteerList,
@@ -19,10 +20,8 @@ import {
   updateShiftInstanceInviteStatus,
 } from '../actions';
 import {
-  adminReinviteTargetStatus,
-  adminUninviteTargetStatus,
-  canAdminReinvite,
-  canAdminUninvite,
+  adminChipTargetStatuses,
+  adminRowActions,
   canRemindInvitee,
   countInviteDisplayStates,
   formatInviteStatusSummary,
@@ -49,19 +48,11 @@ type ShiftInstanceVolunteersPanelProps = {
   instanceId: string;
   invites: InstanceInvite[];
   spotsLeft: number | null | undefined;
+  filledCount: number;
+  maxVolunteers: number | null | undefined;
   canManage: boolean;
   isInstanceInThePast: boolean;
 };
-
-function manageActions(
-  status: ShiftInviteStatus,
-  canManage: boolean,
-): VolunteeringActionLabel[] {
-  if (!canManage) return [];
-  if (canAdminUninvite(status)) return ['Uninvite'];
-  if (canAdminReinvite(status)) return ['Invite'];
-  return [];
-}
 
 export function ShiftInstanceVolunteersPanel({
   orgUId,
@@ -69,6 +60,8 @@ export function ShiftInstanceVolunteersPanel({
   instanceId,
   invites,
   spotsLeft,
+  filledCount,
+  maxVolunteers,
   canManage,
   isInstanceInThePast,
 }: ShiftInstanceVolunteersPanelProps) {
@@ -95,13 +88,27 @@ export function ShiftInstanceVolunteersPanel({
       case 'rejected':
         return t('inviteStatus.rejected');
       case 'requested':
-        return t('inviteStatus.requested');
+        return t('inviteStatus.pendingApproval');
       case 'waitlisted':
         return t('inviteStatus.waitlisted');
       default:
         return state;
     }
   };
+
+  const chipOptionLabel = (target: ShiftInviteStatus) => {
+    switch (target) {
+      case ShiftInviteStatus.Joined:
+        return t('inviteStatus.accepted');
+      case ShiftInviteStatus.AdminRejected:
+        return t('inviteStatus.rejected');
+      case ShiftInviteStatus.AdminInvited:
+        return t('inviteStatus.invited');
+      default:
+        return target;
+    }
+  };
+
   const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
     const remindVisible =
       canManage &&
@@ -109,18 +116,24 @@ export function ShiftInstanceVolunteersPanel({
       invite.status === ShiftInviteStatus.AdminInvited;
     const remindActive = canRemindInvitee(invite.status, invite.remindedAt);
 
+    const chipTargets = canManage ? adminChipTargetStatuses(invite.status) : [];
+    const rowActions = canManage ? adminRowActions(invite.status) : [];
+
     return {
       id: invite.user.id,
       name: invite.user.name,
       image: invite.user.image,
       state: toInviteDisplayState(invite.status),
       statusLabel: statusLabel(invite.status),
-      actions: remindVisible
-        ? ([
-            'Remind',
-            ...manageActions(invite.status, canManage),
-          ] as VolunteeringActionLabel[])
-        : manageActions(invite.status, canManage),
+      statusOptions:
+        chipTargets.length > 0
+          ? chipTargets.map((target) => ({
+              value: target,
+              label: chipOptionLabel(target),
+            }))
+          : undefined,
+      statusMenuAriaLabel: t('inviteStatus.changeStatusAria'),
+      actions: remindVisible ? ['Remind', ...rowActions] : rowActions,
       disabledActions: remindVisible && !remindActive ? ['Remind'] : undefined,
       actionLabels: remindVisible
         ? {
@@ -140,7 +153,7 @@ export function ShiftInstanceVolunteersPanel({
               }),
             }
           : undefined,
-      iconActions: ['View', 'Check in'] as VolunteeringActionLabel[],
+      iconActions: ['View', 'Check in'],
     };
   });
 
@@ -163,6 +176,37 @@ export function ShiftInstanceVolunteersPanel({
     });
   };
 
+  const applyStatus = (invite: InstanceInvite, target: ShiftInviteStatus) => {
+    if (!canManage || pending) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await updateShiftInstanceInviteStatus(orgUId, instanceId, {
+        userId: invite.user.id,
+        status: target,
+      });
+      if (result?.serverError) {
+        toast.error(t('inviteStatus.statusChangeError'));
+        return;
+      }
+
+      if (
+        target === ShiftInviteStatus.Joined &&
+        result?.data?.status === ShiftInviteStatus.WaitlistJoined
+      ) {
+        toast.success(t('inviteStatus.approveWaitlistedSuccess'));
+      } else if (target === ShiftInviteStatus.Joined) {
+        toast.success(t('inviteStatus.approveSuccess'));
+      } else if (target === ShiftInviteStatus.AdminInvited) {
+        toast.success(t('inviteStatus.inviteSuccess'));
+      } else if (target === ShiftInviteStatus.AdminRejected) {
+        toast.success(t('inviteStatus.declineSuccess'));
+      }
+      router.refresh();
+    });
+  };
+
   const onAction = (volunteerId: string, action: VolunteeringActionLabel) => {
     const invite = invites.find((item) => item.user.id === volunteerId);
     if (!invite) {
@@ -181,11 +225,15 @@ export function ShiftInstanceVolunteersPanel({
       return;
     }
 
-    if (!canManage || pending) {
+    if (action === 'Approve') {
+      applyStatus(invite, ShiftInviteStatus.Joined);
       return;
     }
 
     if (action === 'Remind') {
+      if (!canManage || pending) {
+        return;
+      }
       if (!canRemindInvitee(invite.status, invite.remindedAt)) {
         return;
       }
@@ -203,36 +251,17 @@ export function ShiftInstanceVolunteersPanel({
       return;
     }
 
-    const targetStatus =
-      action === 'Uninvite'
-        ? adminUninviteTargetStatus(invite.status)
-        : action === 'Invite'
-          ? adminReinviteTargetStatus(invite.status)
-          : null;
-    if (!targetStatus) {
+    if (action === 'Invite') {
+      applyStatus(invite, ShiftInviteStatus.AdminInvited);
+    }
+  };
+
+  const onStatusChange = (volunteerId: string, value: string) => {
+    const invite = invites.find((item) => item.user.id === volunteerId);
+    if (!invite) {
       return;
     }
-
-    startTransition(async () => {
-      const result = await updateShiftInstanceInviteStatus(orgUId, instanceId, {
-        userId: volunteerId,
-        status: targetStatus,
-      });
-      if (result?.serverError) {
-        toast.error(
-          action === 'Invite'
-            ? t('inviteStatus.inviteError')
-            : t('inviteStatus.uninviteError'),
-        );
-        return;
-      }
-      toast.success(
-        action === 'Invite'
-          ? t('inviteStatus.inviteSuccess')
-          : t('inviteStatus.uninviteSuccess'),
-      );
-      router.refresh();
-    });
+    applyStatus(invite, value as ShiftInviteStatus);
   };
 
   return (
@@ -242,37 +271,50 @@ export function ShiftInstanceVolunteersPanel({
       title={t('inviteStatus.volunteersTitle')}
       summary={summary}
       headerAction={
-        canManage ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {!isInstanceInThePast ? (
-              <SendCallOutDialog
-                orgUId={orgUId}
-                instanceId={instanceId}
-                trigger={
-                  <Button variant="outline" size="sm">
-                    <Megaphone />
-                    {t('instanceDetail.callOutCta')}
-                  </Button>
-                }
-              />
-            ) : null}
-            <Button asChild size="sm">
-              <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
-                <UserPlus />
-                {t('instanceDetail.inviteCta')}
-              </Link>
-            </Button>
-          </div>
-        ) : undefined
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">
+            {maxVolunteers != null
+              ? t('inviteStatus.capacityBadge', {
+                  filled: filledCount,
+                  max: maxVolunteers,
+                })
+              : t('inviteStatus.capacityBadgeNoMax', {
+                  filled: filledCount,
+                })}
+          </Badge>
+          {canManage ? (
+            <>
+              {!isInstanceInThePast ? (
+                <SendCallOutDialog
+                  orgUId={orgUId}
+                  instanceId={instanceId}
+                  trigger={
+                    <Button variant="outline" size="md">
+                      <Megaphone />
+                      {t('instanceDetail.callOutCta')}
+                    </Button>
+                  }
+                />
+              ) : null}
+              <Button asChild size="sm">
+                <Link href={shiftInvitePath(orgUId, shiftId, instanceId)}>
+                  <UserPlus />
+                  {t('instanceDetail.inviteCta')}
+                </Link>
+              </Button>
+            </>
+          ) : null}
+        </div>
       }
       actionLabels={{
         View: tVolunteer('viewProfileAria'),
         'Check in': tVolunteer('checkInAria'),
         Invite: t('inviteStatus.actionInvite'),
-        Uninvite: t('inviteStatus.actionUninvite'),
+        Approve: t('inviteStatus.actionApprove'),
         Remind: t('inviteStatus.actionRemind'),
       }}
       onAction={onAction}
+      onStatusChange={canManage ? onStatusChange : undefined}
     />
   );
 }

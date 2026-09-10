@@ -68,3 +68,28 @@ export function useRemoveMembership() {
     },
   });
 }
+
+/**
+ * Pass `organizationUnitId` when the surrounding DataProvider carries no org
+ * unit header (e.g. the manual check-in page spans org units) — it is then
+ * sent per request.
+ */
+export function useSetMembershipIdVerified(organizationUnitId?: string) {
+  const sdk = useSdk();
+  const queryClient = useQueryClient();
+  const repository = new MembershipRepository(sdk);
+
+  return useMutation({
+    mutationFn: ({
+      membershipId,
+      verified,
+    }: {
+      membershipId: string;
+      verified: boolean;
+    }) => repository.setIdVerified(membershipId, verified, organizationUnitId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+      queryClient.invalidateQueries({ queryKey: ['check-in-readiness'] });
+    },
+  });
+}

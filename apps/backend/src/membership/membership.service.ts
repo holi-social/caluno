@@ -7,8 +7,13 @@ import type { RoleEntity } from '../auth/schemas/role.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import {
+  ConflictGraphQLError,
+  ForbiddenGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import { NotificationService } from '../notification';
+import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
@@ -45,6 +50,7 @@ export class MembershipService {
     private readonly requiredFormService: RequiredFormService,
     private readonly formSubmissionService: FormSubmissionService,
     private readonly postHogService: PostHogService,
+    private readonly organizationUnitDataService: OrganizationUnitDataService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -148,6 +154,77 @@ export class MembershipService {
   }
 
   /**
+   * Membership on the earliest unit in the given id list. The list is
+   * expected to be an ancestor chain ordered self-first (see
+   * `OrganizationUnitDataService.listInclusiveAncestorUnitIds`), so an
+   * exact-unit membership wins over any ancestor one, and a nearer ancestor
+   * wins over a farther one.
+   */
+  async findMembershipInUnits(
+    userId: string,
+    organizationUnitIds: string[],
+  ): Promise<MembershipEntity | null> {
+    if (organizationUnitIds.length === 0) return null;
+    const rows = await this.db.query.memberships.findMany({
+      where: { userId, organizationUnitId: { in: organizationUnitIds } },
+    });
+    if (rows.length === 0) return null;
+    for (const unitId of organizationUnitIds) {
+      const match = rows.find((row) => row.organizationUnitId === unitId);
+      if (match) return match;
+    }
+    return null;
+  }
+
+  /**
+   * Marks a membership as ID-verified (or clears it). The membership may sit
+   * on the caller's unit or one of its ancestors — check-in membership is
+   * ancestor-inclusive everywhere else, so verification follows the same
+   * rule. Both columns are always written together: verified ⇔ idVerifiedAt
+   * IS NOT NULL.
+   */
+  async setMembershipIdVerified(
+    membershipId: string,
+    organizationUnitId: string,
+    verified: boolean,
+    actorUserId: string,
+  ): Promise<MembershipEntity> {
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+    });
+
+    if (!membership) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    const allowedUnitIds =
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
+        organizationUnitId,
+      );
+    if (!allowedUnitIds.includes(membership.organizationUnitId ?? '')) {
+      throw new ForbiddenGraphQLError(
+        'Membership does not belong to the current organization unit.',
+      );
+    }
+
+    const [updated] = await this.db
+      .update(schema.memberships)
+      .set(
+        verified
+          ? { idVerifiedAt: new Date(), idVerifiedById: actorUserId }
+          : { idVerifiedAt: null, idVerifiedById: null },
+      )
+      .where(eq(schema.memberships.id, membershipId))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    return updated;
+  }
+
+  /**
    * Read-only membership state for a user against an org unit — the same
    * lookups `requestOrgJoin` does before it would create anything, exposed
    * separately so a page can show the right button state before the user
@@ -222,6 +299,7 @@ export class MembershipService {
       with: {
         user: true,
         organizationUnit: true,
+        idVerifiedBy: true,
         roles: {
           with: {
             role: true,

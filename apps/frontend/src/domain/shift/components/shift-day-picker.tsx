@@ -1,10 +1,9 @@
 'use client';
 
 import { Button, cn } from '@repo/ui';
-import { format, isBefore, type Locale, startOfDay } from 'date-fns';
-import { de, enGB } from 'date-fns/locale';
+import { isBefore, startOfDay } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useMemo, useRef, useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import {
@@ -23,11 +22,6 @@ interface ShiftDayPickerProps {
   onSelect: (id: string) => void;
 }
 
-const localeMap: Record<string, Locale> = {
-  en: enGB,
-  de,
-};
-
 export function ShiftDayPicker({
   instances,
   selectedId,
@@ -35,8 +29,6 @@ export function ShiftDayPicker({
 }: ShiftDayPickerProps) {
   const { formatDate } = useFormatting();
   const t = useTranslations('ShiftDetail');
-  const locale = useLocale();
-  const dateLocale = localeMap[locale] ?? de;
   const [weekStart, setWeekStart] = useState(() => {
     const selectedInstance = instances.find((i) => i.id === selectedId);
     return getCurrentWeekStart(
@@ -116,7 +108,7 @@ export function ShiftDayPicker({
                 )}
               >
                 <span className="text-xs font-medium text-muted-foreground">
-                  {format(date, 'EEEEEE', { locale: dateLocale })}
+                  {formatDate(date, { weekday: 'narrow' })}
                 </span>
                 <span className="text-lg font-bold text-foreground">
                   {formatDate(date, { day: 'numeric' })}

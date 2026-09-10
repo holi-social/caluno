@@ -76,6 +76,7 @@ export default async function ShiftInstanceDetailPage({
               instanceId={instanceId}
               isRecurring={isRecurring}
               instanceDate={new Date(instance.actualStartsAt)}
+              disableDelete={isInstanceInThePast}
               trigger={
                 <Button
                   variant="destructive"
@@ -152,6 +153,10 @@ export default async function ShiftInstanceDetailPage({
         instanceId={instanceId}
         invites={instance.invites ?? []}
         spotsLeft={instance.spotsLeft}
+        filledCount={instance.filledCount}
+        maxVolunteers={
+          instance.overrideMaxVolunteers ?? instance.master.maxVolunteers
+        }
         canManage={canManage}
         isInstanceInThePast={isInstanceInThePast}
       />

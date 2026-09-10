@@ -99,4 +99,21 @@ export class MembershipMutationResolver {
     );
     return this.membershipMapper.toModelOrThrow(entity);
   }
+
+  @Permissions(PERMISSIONS.VOLUNTEER_EDIT, PERMISSIONS.CHECK_IN_MANAGE)
+  @Mutation(() => Membership)
+  async setMembershipIdVerified(
+    @Args('membershipId', { type: () => ID }) membershipId: string,
+    @Args('verified', { type: () => Boolean }) verified: boolean,
+    @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
+  ): Promise<Membership> {
+    const entity = await this.membershipService.setMembershipIdVerified(
+      membershipId,
+      context.organizationUnitId,
+      verified,
+      session.user.id,
+    );
+    return this.membershipMapper.toModelOrThrow(entity);
+  }
 }
