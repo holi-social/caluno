@@ -89,16 +89,23 @@ describe('documentCreationBlocker', () => {
     ).toEqual({ kind: 'templates', pauschalen: ['ehrenamt', 'uebungsleiter'] });
   });
 
-  it('is null once at least one slot is ready', () => {
+  it('names only the not-ready slot when one slot is ready', () => {
     expect(
       documentCreationBlocker(
         status({
+          canCreateDocuments: false,
           slots: [
             slot(ReimbursementTypeKey.Ehrenamt, true),
             slot(ReimbursementTypeKey.Uebungsleiter, false),
           ],
         }),
       ),
+    ).toEqual({ kind: 'templates', pauschalen: ['uebungsleiter'] });
+  });
+
+  it('is null when canCreateDocuments is true', () => {
+    expect(
+      documentCreationBlocker(status({ canCreateDocuments: true })),
     ).toBeNull();
   });
 });
