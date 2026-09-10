@@ -243,7 +243,7 @@ export class ShiftRepository extends BaseRepository {
     return data.sendShiftInstanceCallOut;
   }
 
-  async remindInvite(
+  async remindVoluntterAboutInvite(
     instanceId: string,
     userId: string,
   ): Promise<RemindShiftInstanceInviteMutation['remindShiftInstanceInvite']> {
