@@ -229,4 +229,47 @@ describe('DocumentProfileRequirementService', () => {
       ['volunteer_tax_id'],
     );
   });
+
+  describe('missingBaselineOrgProfileSources', () => {
+    const makeService = (args: {
+      unit: Record<string, unknown> | undefined;
+    }) => {
+      const dbWithOrg = {
+        query: {
+          organizationUnits: {
+            findFirst: () => Promise.resolve(args.unit),
+          },
+        },
+      } as never;
+      return new DocumentProfileRequirementService(dbWithOrg, userProfileService);
+    };
+
+    it('reports every baseline org field the unit has not filled in', async () => {
+      const service = makeService({
+        unit: { name: 'Playground', address: null, city: '  ' },
+      });
+
+      const missing = await service.missingBaselineOrgProfileSources(
+        'org-1',
+        'unit-1',
+      );
+
+      // org_name maps to `name`, which is always present, so it never appears.
+      expect(missing.sort()).toEqual(['org_address', 'org_city']);
+    });
+
+    it('is empty when every baseline field is filled', async () => {
+      const service = makeService({
+        unit: {
+          name: 'Playground',
+          address: 'Hauptstraße 1',
+          city: 'Berlin',
+        },
+      });
+
+      expect(
+        await service.missingBaselineOrgProfileSources('org-1', 'unit-1'),
+      ).toEqual([]);
+    });
+  });
 });

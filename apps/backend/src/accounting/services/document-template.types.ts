@@ -67,3 +67,19 @@ export const ORG_SOURCE_TO_ORG_COLUMN: Record<string, string> = {
   org_city: 'city',
   org_legal_rep: 'legalRep',
 };
+
+/**
+ * The org-profile sources every shipped template preset binds. Gate A checks
+ * these before any template body exists, so it cannot derive the list from a
+ * body the way missingOrgProfileSources does.
+ *
+ * org_legal_rep is deliberately excluded: no shipped preset binds it (see
+ * apps/frontend/.../builder-document-presets.ts), and there is no edit form
+ * for it, so gating setup on it would block orgs on a field their documents
+ * never render.
+ */
+export const REQUIRED_ORG_PROFILE_SOURCES = [
+  'org_name',
+  'org_address',
+  'org_city',
+] as const;

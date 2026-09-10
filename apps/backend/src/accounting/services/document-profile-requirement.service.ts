@@ -7,6 +7,7 @@ import {
   type TemplateLineShape as LineShape,
   ORG_SOURCE_TO_ORG_COLUMN,
   PROFILE_SOURCE_TO_PROFILE_KEY,
+  REQUIRED_ORG_PROFILE_SOURCES,
 } from './document-template.types';
 
 /**
@@ -149,5 +150,31 @@ export class DocumentProfileRequirementService {
       unit as unknown as Record<string, unknown> | undefined,
       templateBody,
     );
+  }
+
+  /**
+   * The baseline org-profile source keys (the ones every shipped preset
+   * binds) that the given unit (or the org's root unit, when none is given)
+   * has not yet supplied. Used by Gate A to answer "is this org ready to
+   * author templates at all?" before any template body exists.
+   */
+  async missingBaselineOrgProfileSources(
+    organizationId: string,
+    organizationUnitId: string | null | undefined,
+  ): Promise<string[]> {
+    const unit = await this.db.query.organizationUnits.findFirst({
+      where: organizationUnitId
+        ? { id: organizationUnitId }
+        : { organizationId, parentId: { isNull: true } },
+    });
+    const record = unit as unknown as Record<string, unknown> | undefined;
+    if (!record) return [...REQUIRED_ORG_PROFILE_SOURCES];
+
+    return REQUIRED_ORG_PROFILE_SOURCES.filter((source) => {
+      const column = ORG_SOURCE_TO_ORG_COLUMN[source];
+      if (column === 'name') return false; // always present
+      const value = record[column];
+      return typeof value !== 'string' || value.trim() === '';
+    });
   }
 }
