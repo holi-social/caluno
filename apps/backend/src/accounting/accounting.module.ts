@@ -28,6 +28,7 @@ import {
 import {
   AccountingOrganizationLoader,
   AccountingReferenceLoader,
+  AccountingSetupQueryResolver,
   AccountingUserLoader,
   ContractFieldResolver,
   ContractLoader,
@@ -135,6 +136,7 @@ import {
     InvoiceLoader,
     MyDocumentsQueryResolver,
     InviteAllowanceQueryResolver,
+    AccountingSetupQueryResolver,
   ],
   exports: [
     ReimbursementRateService,

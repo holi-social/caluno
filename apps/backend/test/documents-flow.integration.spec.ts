@@ -177,6 +177,18 @@ const CONTRACTS = `
   }
 `;
 
+const ACCOUNTING_SETUP_STATUS = `
+  query {
+    accountingSetupStatus {
+      orgProfileComplete
+      missingOrgProfileFields
+      canManageTemplates
+      canCreateDocuments
+      slots { reimbursementTypeKey hasContractTemplate hasInvoiceTemplate ready }
+    }
+  }
+`;
+
 const CONTRACT_DETAIL = `
   query ContractDetail($id: ID!) {
     contract(id: $id) {
@@ -282,6 +294,62 @@ const setupFlowOrg = async (db: Database) => {
     adminId: admin.id,
     volunteerId: volunteer.id,
     reimbursementTypeId: reimbursementType.id,
+  };
+};
+
+/**
+ * Like `setupFlowOrg`, but without the contract/invoice templates — for
+ * proving the setup-status query's "not ready yet" state, which
+ * `setupFlowOrg`'s org can never be in.
+ */
+const setupFlowOrgWithoutTemplates = async (db: Database) => {
+  const reimbursementType = await createReimbursementType(db);
+  const { organization, type } = await createOrganizationWithType(
+    db,
+    `Setup Status Org ${crypto.randomUUID()}`,
+  );
+  const root = await createUnit(db, {
+    organizationId: organization.id,
+    typeId: type.id,
+    name: 'root',
+  });
+  await db
+    .update(schema.organizations)
+    .set({
+      accountingEnabled: true,
+      address: 'Teststraße 1',
+      city: 'Berlin',
+      zipCode: '10115',
+    })
+    .where(eq(schema.organizations.id, organization.id));
+  await db
+    .update(schema.organizationUnits)
+    .set({ address: 'Teststraße 1', city: 'Berlin', zipCode: '10115' })
+    .where(eq(schema.organizationUnits.id, root.id));
+
+  const permission =
+    (await db.query.permissions.findFirst({
+      where: { key: 'accounting:manage' },
+    })) ?? (await createPermission(db, { key: 'accounting:manage' }));
+  const role = await createRole(db, { organizationId: organization.id });
+  await grantPermissionToRole(db, {
+    roleId: role.id,
+    permissionId: permission.id,
+  });
+
+  const admin = await createUser(db);
+  const adminMembership = await addMembership(db, admin.id, root.id);
+  await assignRoleToMembership(db, {
+    membershipId: adminMembership.id,
+    roleId: role.id,
+  });
+
+  return {
+    organizationId: organization.id,
+    organizationUnitId: root.id,
+    adminId: admin.id,
+    reimbursementTypeId: reimbursementType.id,
+    permissionId: permission.id,
   };
 };
 
@@ -1824,6 +1892,65 @@ describe('documents flow — admin + volunteer', () => {
         .where(eq(schema.contracts.id, createContract.id))
         .limit(1);
       expect(contract.organizationUnitId).toBe(siblingUnit.id);
+    });
+  });
+
+  describe('accounting setup status', () => {
+    it('reports the org as not ready when it has no templates, and ready once both exist', async () => {
+      const statusOrg = await setupFlowOrgWithoutTemplates(db);
+      const statusHeader = {
+        'x-organization-unit-id': statusOrg.organizationUnitId,
+      };
+      setAuthMockUserId(statusOrg.adminId);
+
+      const before = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{ reimbursementTypeKey: string; ready: boolean }>;
+        };
+      }>(
+        app,
+        { query: ACCOUNTING_SETUP_STATUS, headers: statusHeader },
+        'accountingSetupStatus',
+      );
+      expect(before.accountingSetupStatus.canCreateDocuments).toBe(false);
+      expect(
+        before.accountingSetupStatus.slots.every((slot) => !slot.ready),
+      ).toBe(true);
+
+      await createTwoStepTemplate(db, {
+        organizationId: statusOrg.organizationId,
+        reimbursementTypeId: statusOrg.reimbursementTypeId,
+        kind: DocumentKind.CONTRACT,
+        requiredPermissionId: statusOrg.permissionId,
+        signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+      });
+      await createTwoStepTemplate(db, {
+        organizationId: statusOrg.organizationId,
+        reimbursementTypeId: statusOrg.reimbursementTypeId,
+        kind: DocumentKind.INVOICE,
+        requiredPermissionId: statusOrg.permissionId,
+        signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+      });
+
+      const after = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{
+            reimbursementTypeKey: string;
+            ready: boolean;
+          }>;
+        };
+      }>(
+        app,
+        { query: ACCOUNTING_SETUP_STATUS, headers: statusHeader },
+        'accountingSetupStatus',
+      );
+      const ehrenamt = after.accountingSetupStatus.slots.find(
+        (slot) => slot.reimbursementTypeKey === 'EHRENAMT',
+      );
+      expect(ehrenamt?.ready).toBe(true);
+      expect(after.accountingSetupStatus.canCreateDocuments).toBe(true);
     });
   });
 });
