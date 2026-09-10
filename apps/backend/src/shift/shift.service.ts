@@ -2344,6 +2344,30 @@ export class ShiftService {
       .groupBy(schema.shifts.eventId);
   }
 
+  async countActiveInstancesByMasterIds(
+    masterIds: string[],
+  ): Promise<Map<string, number>> {
+    if (masterIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.db
+      .select({
+        masterId: schema.shiftInstances.masterId,
+        count: count(),
+      })
+      .from(schema.shiftInstances)
+      .where(
+        and(
+          inArray(schema.shiftInstances.masterId, masterIds),
+          eq(schema.shiftInstances.isCancelled, false),
+        ),
+      )
+      .groupBy(schema.shiftInstances.masterId);
+
+    return new Map(rows.map((row) => [row.masterId, Number(row.count)]));
+  }
+
   async findAllForEvent(
     eventId: string,
     organizationUnitId: string,

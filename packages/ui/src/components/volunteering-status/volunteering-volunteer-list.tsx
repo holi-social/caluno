@@ -12,6 +12,7 @@ import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
   VolunteeringActionLabel,
+  VolunteeringStatusOption,
 } from './types';
 import type { VolunteeringActionLabels } from './volunteering-action-buttons';
 import { VolunteeringVolunteerRow } from './volunteering-volunteer-row';
@@ -23,6 +24,8 @@ export type VolunteeringVolunteerListItem = {
   state: ShiftVolunteeringDisplayState;
   completedDuration?: string;
   statusLabel?: string;
+  statusOptions?: VolunteeringStatusOption[];
+  statusMenuAriaLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
   /** Far-right icon-only actions (e.g. View profile, Check in). */
@@ -40,10 +43,9 @@ export type VolunteeringVolunteerListProps = {
   headerAction?: ReactNode;
   /** Localized button labels keyed by action id. */
   actionLabels?: VolunteeringActionLabels;
-  onAction?: (
-    volunteerId: string,
-    action: import('./types').VolunteeringActionLabel,
-  ) => void;
+  onAction?: (volunteerId: string, action: VolunteeringActionLabel) => void;
+  /** Chip dropdown selection: move volunteer to the chosen status value. */
+  onStatusChange?: (volunteerId: string, value: string) => void;
   className?: string;
 };
 
@@ -55,6 +57,7 @@ export function VolunteeringVolunteerList({
   headerAction,
   actionLabels,
   onAction,
+  onStatusChange,
   className,
 }: VolunteeringVolunteerListProps) {
   return (
@@ -82,11 +85,18 @@ export function VolunteeringVolunteerList({
             phase={phase}
             completedDuration={volunteer.completedDuration}
             statusLabel={volunteer.statusLabel}
+            statusOptions={volunteer.statusOptions}
+            statusMenuAriaLabel={volunteer.statusMenuAriaLabel}
             actions={volunteer.actions}
             iconActions={volunteer.iconActions}
             actionLabels={actionLabels}
             onAction={
               onAction ? (action) => onAction(volunteer.id, action) : undefined
+            }
+            onStatusChange={
+              onStatusChange
+                ? (value) => onStatusChange(volunteer.id, value)
+                : undefined
             }
           />
         ))}
