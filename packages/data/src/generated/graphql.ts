@@ -21,6 +21,24 @@ export type Scalars = {
   JSON: { input: Record<string, unknown>; output: Record<string, unknown>; }
 };
 
+export type AccountingSetupStatus = {
+  __typename?: 'AccountingSetupStatus';
+  canCreateDocuments: Scalars['Boolean']['output'];
+  canManageTemplates: Scalars['Boolean']['output'];
+  missingOrgProfileFields: Array<Scalars['String']['output']>;
+  orgProfileComplete: Scalars['Boolean']['output'];
+  slots: Array<AccountingTemplateSlotStatus>;
+};
+
+export type AccountingTemplateSlotStatus = {
+  __typename?: 'AccountingTemplateSlotStatus';
+  hasContractTemplate: Scalars['Boolean']['output'];
+  hasInvoiceTemplate: Scalars['Boolean']['output'];
+  ready: Scalars['Boolean']['output'];
+  reimbursementTypeId: Scalars['ID']['output'];
+  reimbursementTypeKey: ReimbursementTypeKey;
+};
+
 export type AddTimeEntryInput = {
   endedAt?: InputMaybe<Scalars['DateTime']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -1406,6 +1424,7 @@ export enum PermissionKey {
 
 export type Query = {
   __typename?: 'Query';
+  accountingSetupStatus: AccountingSetupStatus;
   activeDocumentTemplate: DocumentTemplate;
   activeShiftInstances: Array<ShiftInstance>;
   adminUserProfile?: Maybe<UserProfile>;
@@ -2953,6 +2972,11 @@ export type MyDocumentSummaryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type MyDocumentSummaryQuery = { __typename?: 'Query', myDocumentSummary: { __typename?: 'MyDocumentSummary', total: number, pending: number } };
+
+export type GetAccountingSetupStatusQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAccountingSetupStatusQuery = { __typename?: 'Query', accountingSetupStatus: { __typename?: 'AccountingSetupStatus', orgProfileComplete: boolean, missingOrgProfileFields: Array<string>, canManageTemplates: boolean, canCreateDocuments: boolean, slots: Array<{ __typename?: 'AccountingTemplateSlotStatus', reimbursementTypeId: string, reimbursementTypeKey: ReimbursementTypeKey, hasContractTemplate: boolean, hasInvoiceTemplate: boolean, ready: boolean }> } };
 
 export type EventListFieldsFragment = { __typename?: 'Event', id: string, title: string, slug: string, startsAt: string, endsAt: string, shiftsCount: number, requiredFormsCount: number, coverUrl?: string | null, signedUpCount: number };
 
@@ -4898,6 +4922,23 @@ export const MyDocumentSummaryDocument = gql`
   myDocumentSummary {
     total
     pending
+  }
+}
+    `;
+export const GetAccountingSetupStatusDocument = gql`
+    query GetAccountingSetupStatus {
+  accountingSetupStatus {
+    orgProfileComplete
+    missingOrgProfileFields
+    canManageTemplates
+    canCreateDocuments
+    slots {
+      reimbursementTypeId
+      reimbursementTypeKey
+      hasContractTemplate
+      hasInvoiceTemplate
+      ready
+    }
   }
 }
     `;
@@ -7551,6 +7592,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     MyDocumentSummary(variables?: MyDocumentSummaryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MyDocumentSummaryQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<MyDocumentSummaryQuery>({ document: MyDocumentSummaryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MyDocumentSummary', 'query', variables);
+    },
+    GetAccountingSetupStatus(variables?: GetAccountingSetupStatusQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetAccountingSetupStatusQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetAccountingSetupStatusQuery>({ document: GetAccountingSetupStatusDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetAccountingSetupStatus', 'query', variables);
     },
     GetEvents(variables: GetEventsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetEventsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetEventsQuery>({ document: GetEventsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetEvents', 'query', variables);

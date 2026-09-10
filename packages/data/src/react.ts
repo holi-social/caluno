@@ -22,6 +22,7 @@ export * from './generated/graphql';
 // Auth (better-auth client factory and enhanced methods)
 export * from './react/auth/auth-client';
 // Data fetching hooks
+export * from './react/hooks/use-accounting-setup-status';
 export * from './react/hooks/use-admin-user-profile';
 export * from './react/hooks/use-available-events';
 export * from './react/hooks/use-available-events-infinite';
@@ -89,6 +90,7 @@ export type {
   InvoiceSummary,
   MyDocumentSummaryData,
   MyDocumentsGroupData,
+  RawAccountingSetupStatus,
   RawBundleDownloadStatus,
   RawEffectiveRate,
   RawManualBaseline,
