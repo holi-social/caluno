@@ -258,6 +258,7 @@ export const volunteeringActionIcons: Partial<
   Record<VolunteeringActionLabel, VolunteeringStatusLucideIcon>
 > = {
   Accept: Check,
+  Approve: CircleCheck,
   Decline: X,
   Invite: UserPlus,
   View: UserRound,
@@ -266,39 +267,7 @@ export const volunteeringActionIcons: Partial<
   Uninvite: Ban,
 };
 
-/** Meets 44px minimum touch target while keeping sm visual scale. */
-export const volunteeringActionButtonClass = 'min-h-11';
-
 export type VolunteeringActionButtonStyle = {
   variant: 'default' | 'outline';
   className?: string;
 };
-
-/** Check-in/out and Accept use filled buttons; Accept is success green. */
-export function getVolunteeringActionButtonStyle(
-  actionLabel: VolunteeringActionLabel,
-): VolunteeringActionButtonStyle {
-  if (
-    actionLabel === 'Check in' ||
-    actionLabel === 'Check out' ||
-    actionLabel === 'Accept'
-  ) {
-    return {
-      variant: 'default',
-      className:
-        actionLabel === 'Accept'
-          ? 'bg-success text-success-foreground hover:bg-success/90'
-          : undefined,
-    };
-  }
-
-  if (actionLabel === 'Decline') {
-    return {
-      variant: 'outline',
-      className:
-        'border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive',
-    };
-  }
-
-  return { variant: 'outline' };
-}
