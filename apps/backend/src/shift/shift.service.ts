@@ -4253,8 +4253,6 @@ export class ShiftService {
       .update(schema.shiftInstanceInvites)
       .set({
         status: targetStatus,
-        // (Re-)entering ADMIN_INVITED starts a fresh reminder cycle
-        // (VOLI-1236); clearing on every transition is a harmless superset.
         remindedAt: null,
       })
       .where(eq(schema.shiftInstanceInvites.id, invite.id))
