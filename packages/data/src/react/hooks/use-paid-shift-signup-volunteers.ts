@@ -15,5 +15,6 @@ export function usePaidShiftSignupVolunteers(year?: number) {
     queryFn: () => repository.findPaidShiftSignupVolunteers(year ?? 0),
     staleTime: 30 * 1000,
     enabled: !!year,
+    refetchOnMount: 'always',
   });
 }

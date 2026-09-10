@@ -1,9 +1,4 @@
-import { cn } from '../../lib/utils';
-import { Badge } from '../base/badge';
-import {
-  getVolunteeringStatusPresentation,
-  isRequestedVolunteeringState,
-} from './config';
+import { getVolunteeringStatusPresentation } from './config';
 import type {
   ShiftVolunteeringDisplayState,
   ShiftVolunteeringPhase,
@@ -14,40 +9,30 @@ export type VolunteeringStatusBadgeProps = {
   state: ShiftVolunteeringDisplayState;
   completedDuration?: string;
   phase?: ShiftVolunteeringPhase;
-  /** Overrides presentation label (e.g. i18n). */
   label?: string;
   className?: string;
 };
 
-/** Neutral pill with colored icon + label. No trailing explanation text. */
-export function VolunteeringStatusBadge({
+export function VolunteeringStatusLabel({
   state,
   completedDuration,
   phase,
   label: labelOverride,
-  className,
 }: VolunteeringStatusBadgeProps) {
   const { label: defaultLabel } = getVolunteeringStatusPresentation(state, {
     completedDuration,
     phase,
   });
   const label = labelOverride ?? defaultLabel;
-  const emphasizeLabel = isRequestedVolunteeringState(state);
 
   return (
-    <Badge
-      variant="secondary"
-      className={cn(
-        'gap-1.5 rounded-lg px-2.5 py-1 text-sm font-medium',
-        className,
-      )}
-    >
+    <span className="flex items-center gap-2">
       <VolunteeringStatusIcon
         state={state}
         completedDuration={completedDuration}
         phase={phase}
       />
-      <span className={cn(emphasizeLabel && 'font-semibold')}>{label}</span>
-    </Badge>
+      <span>{label}</span>
+    </span>
   );
 }

@@ -9,4 +9,5 @@ declare module 'bun:test' {
   export const mock: any;
   export const setDefaultTimeout: (timeoutMs: number) => void;
   export const spyOn: any;
+  export const setSystemTime: (date?: Date) => void;
 }
