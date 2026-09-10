@@ -55,7 +55,6 @@ export type VolunteeringVolunteerRowProps = {
   statusLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
-  /** Actions rendered as inert buttons (e.g. an already-sent reminder). */
   disabledActions?: VolunteeringActionLabel[];
   /** Far-right icon-only actions (e.g. View profile, Check in). */
   iconActions?: VolunteeringActionLabel[];
