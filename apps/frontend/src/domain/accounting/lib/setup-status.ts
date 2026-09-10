@@ -27,12 +27,11 @@ export function documentCreationBlocker(
   const orgBlocker = templateSetupBlocker(status);
   if (orgBlocker) return orgBlocker;
   if (status.canCreateDocuments) return null;
-  return {
-    kind: 'templates',
-    pauschalen: status.slots
-      .filter((slot) => !slot.ready)
-      .map((slot) =>
-        pauschaleForReimbursementTypeKey(slot.reimbursementTypeKey),
-      ),
-  };
+  const pauschalen = status.slots
+    .filter((slot) => !slot.ready)
+    .map((slot) => pauschaleForReimbursementTypeKey(slot.reimbursementTypeKey));
+  // No unready slot to name (e.g. no reimbursement types at all): nothing to
+  // point the admin at, so report no blocker rather than a dangling "missing:".
+  if (pauschalen.length === 0) return null;
+  return { kind: 'templates', pauschalen };
 }

@@ -16,7 +16,6 @@ const status = (
   ({
     orgProfileComplete: true,
     missingOrgProfileFields: [],
-    canManageTemplates: true,
     canCreateDocuments: true,
     slots: [
       slot(ReimbursementTypeKey.Ehrenamt, true),
@@ -36,7 +35,6 @@ describe('templateSetupBlocker', () => {
       templateSetupBlocker(
         status({
           orgProfileComplete: false,
-          canManageTemplates: false,
           missingOrgProfileFields: ['org_address', 'org_city'],
         }),
       ),
@@ -63,7 +61,6 @@ describe('documentCreationBlocker', () => {
       documentCreationBlocker(
         status({
           orgProfileComplete: false,
-          canManageTemplates: false,
           missingOrgProfileFields: ['org_address'],
           canCreateDocuments: false,
           slots: [
@@ -106,6 +103,12 @@ describe('documentCreationBlocker', () => {
   it('is null when canCreateDocuments is true', () => {
     expect(
       documentCreationBlocker(status({ canCreateDocuments: true })),
+    ).toBeNull();
+  });
+
+  it('is null when there is no unready slot to name', () => {
+    expect(
+      documentCreationBlocker(status({ canCreateDocuments: false, slots: [] })),
     ).toBeNull();
   });
 });

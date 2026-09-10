@@ -573,7 +573,6 @@ query GetAccountingSetupStatus {
   accountingSetupStatus {
     orgProfileComplete
     missingOrgProfileFields
-    canManageTemplates
     canCreateDocuments
     slots {
       reimbursementTypeId
