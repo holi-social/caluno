@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
@@ -72,7 +73,9 @@ export class VolunteerDigestService {
   private async findDigestRecipientIds(): Promise<string[]> {
     const rows = await this.db
       .selectDistinct({ userId: schema.memberships.userId })
-      .from(schema.memberships);
+      .from(schema.memberships)
+      .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
+      .where(eq(schema.users.emailWeeklyUpdateEnabled, true));
 
     return rows
       .map((row) => row.userId)
@@ -136,11 +139,10 @@ export class VolunteerDigestService {
     // primary callers, which use a separate loader for `master`).
     const myShiftInstances = withMaster(myShiftsPage.instances);
     const pendingInviteInstances = withMaster(pendingInvitesPage.instances);
-    // findAvailableShiftInstances only excludes JOINED invites (it backs the
-    // home page's "discover" tab, where an invite doesn't hide a shift) —
-    // the needs-volunteers section additionally requires excluding any
-    // active invite (pending, waitlisted, or awaiting approval), not just a
-    // confirmed join.
+    // findAvailableShiftInstances excludes MY_SHIFT roster invites (joined,
+    // awaiting approval, waitlisted) but not coordinator ADMIN_INVITED — the
+    // needs-volunteers section additionally filters ACTIVE_SHIFT invites in
+    // memory before ranking candidates.
     const needsVolunteersInstances = await this.excludeActivelyInvitedInstances(
       userId,
       withMaster(needsVolunteersPage.instances),

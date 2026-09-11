@@ -8,6 +8,10 @@
     "previewText": "Your {brandName} verification code is {otp}.",
     "subject": "Your {brandName} verification code"
   },
+  "emailUnsubscribe": {
+    "label": "Manage your email preferences",
+    "prompt": "Don't want these emails anymore? {link}."
+  },
   "eventCancelled": {
     "detailEvent": "Event",
     "detailLocation": "Location",

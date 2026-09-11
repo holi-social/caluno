@@ -6,6 +6,9 @@ query GetMe {
     image
     checkInId
     locale
+    emailWeeklyUpdateEnabled
+    emailUrgentCallsEnabled
+    emailPlatformEnabled
   }
 }
 
@@ -70,5 +73,15 @@ mutation UpdateMyImage($input: UpdateMyImageInput!) {
   updateMyImage(input: $input) {
     id
     image
+  }
+}
+
+mutation UpdateMyAccountSettings($input: UpdateMyAccountSettingsInput!) {
+  updateMyAccountSettings(input: $input) {
+    id
+    locale
+    emailWeeklyUpdateEnabled
+    emailUrgentCallsEnabled
+    emailPlatformEnabled
   }
 }

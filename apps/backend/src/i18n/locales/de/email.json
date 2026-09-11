@@ -8,6 +8,10 @@
     "previewText": "Dein {brandName}-Bestätigungscode ist {otp}.",
     "subject": "Dein {brandName}-Bestätigungscode"
   },
+  "emailUnsubscribe": {
+    "label": "E-Mail-Einstellungen verwalten",
+    "prompt": "Du möchtest diese E-Mails nicht mehr erhalten? {link}."
+  },
   "eventCancelled": {
     "detailEvent": "Event",
     "detailLocation": "Ort",

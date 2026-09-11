@@ -2,6 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccountingSetupStatus {
+  canCreateDocuments: Boolean!
+  canManageTemplates: Boolean!
+  missingOrgProfileFields: [String!]!
+  orgProfileComplete: Boolean!
+  slots: [AccountingTemplateSlotStatus!]!
+}
+
+type AccountingTemplateSlotStatus {
+  hasContractTemplate: Boolean!
+  hasInvoiceTemplate: Boolean!
+  ready: Boolean!
+  reimbursementTypeId: ID!
+  reimbursementTypeKey: ReimbursementTypeKey!
+}
+
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
@@ -717,6 +733,7 @@ type Mutation {
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyAccountSettings(input: UpdateMyAccountSettingsInput!): User!
   updateMyImage(input: UpdateMyImageInput!): User!
   updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
@@ -882,6 +899,7 @@ enum PermissionKey {
 }
 
 type Query {
+  accountingSetupStatus: AccountingSetupStatus!
   activeDocumentTemplate(kind: DocumentKind!, organizationUnitId: ID, reimbursementTypeId: ID!): DocumentTemplate!
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
@@ -1444,6 +1462,13 @@ input UpdateFormBlockInput {
   title: String
 }
 
+input UpdateMyAccountSettingsInput {
+  emailPlatformEnabled: Boolean
+  emailUrgentCallsEnabled: Boolean
+  emailWeeklyUpdateEnabled: Boolean
+  locale: String
+}
+
 input UpdateMyImageInput {
   imageFileId: String
 }
@@ -1560,6 +1585,17 @@ input UpdateUserProfileInput {
 type User {
   checkInId: ID!
   email: String!
+
+  """
+  Whether the volunteer receives platform emails (invitations, joining, cancellations, shift changes, membership).
+  """
+  emailPlatformEnabled: Boolean!
+
+  """Whether the volunteer receives urgent call-out emails."""
+  emailUrgentCallsEnabled: Boolean!
+
+  """Whether the volunteer receives the weekly plan email."""
+  emailWeeklyUpdateEnabled: Boolean!
   id: ID!
   image: String
   locale: String

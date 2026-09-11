@@ -1,5 +1,6 @@
 'use client';
 
+import type { AvailableShiftInstance } from '@repo/data';
 import { Badge, Card, cn } from '@repo/ui';
 import {
   CalendarIcon,
@@ -15,24 +16,8 @@ import { Link } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { useRecurrenceLabel } from '../lib/recurrence-label';
 
-export interface DiscoveryShiftInstance {
-  id: string;
-  overrideTitle?: string | null;
-  actualStartsAt: string;
-  actualEndsAt: string;
-  filledCount: number;
-  master: {
-    id: string;
-    title: string;
-    maxVolunteers?: number | null;
-    rrule?: string | null;
-    organizationUnit: { name: string; logoUrl?: string | null };
-    event?: { id: string; title: string; coverImageUrl?: string | null } | null;
-  };
-}
-
 interface ShiftCardDiscoveryProps {
-  shiftInstance: DiscoveryShiftInstance;
+  shiftInstance: AvailableShiftInstance;
   conflictsWithBooked?: boolean;
 }
 
@@ -131,17 +116,13 @@ export function ShiftCardDiscovery({
           </div>
         </Link>
       )}
-      {fullyBooked ? (
-        <div aria-disabled="true">{body}</div>
-      ) : (
-        <Link
-          href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
-          prefetch={false}
-          className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
-        >
-          {body}
-        </Link>
-      )}
+      <Link
+        href={shiftPublicPath(shiftInstance.master.id, shiftInstance.id)}
+        prefetch={false}
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-1"
+      >
+        {body}
+      </Link>
     </Card>
   );
 }

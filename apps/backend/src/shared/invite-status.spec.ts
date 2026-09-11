@@ -5,19 +5,12 @@ import {
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   isVolunteerEventParticipationWithdrawal,
-  PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
   volunteerMayRequestInviteStatus,
 } from './invite-status';
 
 describe('invite-status', () => {
-  it('defines participating statuses as JOINED only', () => {
-    expect(PARTICIPATING_SHIFT_INVITE_STATUSES).toEqual([
-      ShiftInviteStatus.JOINED,
-    ]);
-  });
-
   it('returns true only for JOINED', () => {
     expect(isParticipatingShiftInviteStatus(ShiftInviteStatus.JOINED)).toBe(
       true,
