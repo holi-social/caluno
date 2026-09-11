@@ -1509,13 +1509,16 @@
         "noAgreement": "Vereinbarung nötig",
         "wouldExceed": "Überschreitet Limit!"
       },
+      "available": "Verfügbar",
       "confirmExceedAllowance": {
         "cancel": "Abbrechen",
         "confirm": "Trotzdem einladen",
         "description": "Die Auszahlung an {name} für diesen Einsatz würde den jährlichen Höchstbetrag überschreiten. Du kannst die Person trotzdem einladen, prüfe aber, ob das gewollt ist.",
         "title": "Dies würde das Limit von {name} überschreiten"
       },
-      "removeAria": "Entfernen"
+      "invited": "Eingeladen",
+      "removeAria": "Entfernen",
+      "searchPlaceholder": "Name oder E-Mail"
     },
     "validation": {
       "endTimeRequired": "Endzeit ist erforderlich",
