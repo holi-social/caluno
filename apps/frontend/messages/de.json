@@ -352,7 +352,7 @@
       "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
       "title": "{eventTitle} beitreten"
     },
-    "fullyBooked": "Ausgebucht",
+    "fullyBooked": "Ausgebucht - Warteliste verfügbar",
     "noShifts": "Noch keine Einsätze geplant.",
     "noShiftsOnDay": "Keine Einsätze an diesem Tag.",
     "pendingCta": "Ausstehende Anfrage",
@@ -657,7 +657,7 @@
     "eventMetaUnlimited": "{shifts, plural, one {# Einsatz} other {# Einsätze}} · Offen",
     "eventsCount": "{n, plural, one {# Veranstaltung} other {# Veranstaltungen}}",
     "eventsHeading": "Veranstaltungen",
-    "fullyBooked": "Ausgebucht",
+    "fullyBooked": "Ausgebucht - Warteliste verfügbar",
     "memberCount": "{n, plural, one {# Mitglied} other {# Mitglieder}}",
     "noEvents": "Noch keine Veranstaltungen.",
     "noShifts": "Noch keine einzelnen Einsätze.",
@@ -776,8 +776,20 @@
   },
   "Profile": {
     "accountSettings": "Kontoeinstellungen",
+    "accountSettingsSaved": "Kontoeinstellungen aktualisiert",
+    "accountSettingsSaveFailed": "Kontoeinstellungen konnten nicht aktualisiert werden",
     "edit": "Bearbeiten",
+    "emailAuthNote": "E-Mails zum Zurücksetzen des Passworts und zur Bestätigung kommen immer an.",
     "emailLocked": "Mit deiner Anmeldung verknüpft",
+    "emailOff": "Aus",
+    "emailOn": "Ein",
+    "emailPlatform": "Plattform",
+    "emailPlatformDescription": "Einladungen, Beitritte, Absagen, Schichtänderungen und Mitgliedschaft.",
+    "emailSettings": "E-Mails",
+    "emailUrgentCalls": "Dringende Aufrufe",
+    "emailUrgentCallsDescription": "Dringende Aufrufe für unterbesetzte Schichten.",
+    "emailWeeklyUpdate": "Wöchentliche Übersicht",
+    "emailWeeklyUpdateDescription": "Die wöchentliche Planungs-E-Mail am Sonntag.",
     "identity": {
       "subtitles": {
         "firstName": "Wie auf deinem Ausweis",
@@ -1515,13 +1527,16 @@
         "noAgreement": "Vereinbarung nötig",
         "wouldExceed": "Überschreitet Limit!"
       },
+      "available": "Verfügbar",
       "confirmExceedAllowance": {
         "cancel": "Abbrechen",
         "confirm": "Trotzdem einladen",
         "description": "Die Auszahlung an {name} für diesen Einsatz würde den jährlichen Höchstbetrag überschreiten. Du kannst die Person trotzdem einladen, prüfe aber, ob das gewollt ist.",
         "title": "Dies würde das Limit von {name} überschreiten"
       },
-      "removeAria": "Entfernen"
+      "invited": "Eingeladen",
+      "removeAria": "Entfernen",
+      "searchPlaceholder": "Name oder E-Mail"
     },
     "validation": {
       "endTimeRequired": "Endzeit ist erforderlich",
@@ -1780,7 +1795,7 @@
     "eventCoverImageAlt": "Titelbild für {title}",
     "filterNextWeek": "Nächste Woche",
     "filterThisWeekend": "Dieses Wochenende",
-    "fullyBooked": "Ausgebucht",
+    "fullyBooked": "Ausgebucht - Warteliste verfügbar",
     "goToToday": "Zu heute",
     "goToTop": "Nach oben",
     "greeting": "Hallo, {firstName}!",
@@ -1799,6 +1814,7 @@
     "loadPast": "Vergangene laden",
     "overlapWarning": "Du hast überschneidende Einsätze in deinem Plan",
     "partOfEvent": "Teil von {event}",
+    "pendingApprovalBadge": "Warte auf Freigabe",
     "pendingBadge": "Ausstehend",
     "pendingRequestBody": "Ein Admin schaut sich deine Anfrage an. Meistens dauert das ein paar Tage.",
     "pendingRequestContact": "Fragen? {name} kann helfen.",
@@ -1809,6 +1825,7 @@
     "timerStartsIn": "beginnt in {time}",
     "timerVolunteering": "Du hilfst seit {time}",
     "todayButton": "Heute",
+    "waitlistBadge": "Du bist auf der Warteliste",
     "weekly": "Wöchentlich",
     "yourEventsEmpty": "Du hast keine bevorstehenden Veranstaltungen.",
     "yourEventsHeading": "Deine Veranstaltungen",
@@ -1849,10 +1866,25 @@
         "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
       }
     },
+    "setupAlert": {
+      "orgProfileTitle": "Vervollständige zuerst dein Organisationsprofil",
+      "orgProfileBody": "Dokumente geben die Daten deiner Organisation wieder. Diese Angaben müssen vorhanden sein, bevor Vorlagen gespeichert werden können: {fields}.",
+      "orgProfileCta": "Zum Organisationsprofil",
+      "templatesTitle": "Richte zuerst deine Dokumentvorlagen ein",
+      "templatesBody": "Dokumente können erst erstellt werden, wenn für einen Pauschalentyp sowohl die Vereinbarung als auch der Stundennachweis als Vorlage vorliegen. Es fehlen noch: {pauschalen}.",
+      "templatesCta": "Zu den Vorlagen"
+    },
+    "orgProfileFields": {
+      "org_name": "Name",
+      "org_address": "Adresse",
+      "org_city": "Stadt",
+      "org_legal_rep": "Gesetzliche Vertretung"
+    },
     "reimbursements": {
       "title": "Abrechnungen",
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "periodLabel": "Zeitraum",
       "yearLabel": "Jahr",
       "periodPicker": {
@@ -2156,6 +2188,7 @@
         "invoice": "Stundennachweis"
       },
       "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "builder": {
         "breadcrumb": {
           "accounting": "Buchhaltung",

@@ -18,6 +18,11 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
+import {
+  type GuardedNavigation,
+  stripKnownLocalePrefix,
+  useUnsavedChangesGuard,
+} from '@/hooks/use-unsaved-changes-guard';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { updateForm } from '../actions';
 import { FormBuilderAddBlockDialog } from './form-builder-add-block-dialog';
@@ -77,7 +82,8 @@ export function FormBuilder({
   );
   const [saving, setSaving] = useState(false);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
-  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] =
+    useState<GuardedNavigation | null>(null);
   const { open: openBlockSheet } = useSheetTrigger('block-form');
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -92,18 +98,12 @@ export function FormBuilder({
     [blockRefs, form.blockRefs],
   );
 
-  // Warn when closing the tab or refreshing with unsaved changes.
-  useEffect(() => {
-    if (!isDirty) return;
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
+  // Block tab close, internal link clicks and browser back while dirty;
+  // blocked navigation is confirmed via the leave dialog below.
+  const { release: releaseNavigationGuard } = useUnsavedChangesGuard({
+    enabled: isDirty,
+    onPrompt: setPendingNavigation,
+  });
 
   // A block created via the block sheet (opened with forForm=true) comes
   // back as the addBlock search param — append it to the form.
@@ -124,13 +124,32 @@ export function FormBuilder({
   }
 
   function handleLeave() {
-    setShowLeaveDialog(false);
-    router.push(`/admin/${orgUId}/requirement-forms`);
+    const target = pendingNavigation;
+    setPendingNavigation(null);
+    if (!target) return;
+    // Disarm the guard so the confirmed navigation is not intercepted again.
+    releaseNavigationGuard();
+    if (target.type === 'back') {
+      if (target.delta === null) {
+        // No entry before the builder (direct link / new tab): go to the
+        // forms list explicitly.
+        router.push(`/admin/${orgUId}/requirement-forms`);
+        return;
+      }
+      // The delta skips the guard's re-pushed dummy entry and every
+      // builder-page entry above the page the user came from.
+      window.history.go(target.delta);
+      return;
+    }
+    router.push(stripKnownLocalePrefix(target.href));
   }
 
   function handleCancel() {
     if (isDirty) {
-      setShowLeaveDialog(true);
+      setPendingNavigation({
+        type: 'href',
+        href: `/admin/${orgUId}/requirement-forms`,
+      });
     } else {
       router.push(`/admin/${orgUId}/requirement-forms`);
     }
@@ -238,7 +257,9 @@ export function FormBuilder({
             <Button
               size="lg"
               onClick={handleSave}
-              disabled={saving || !canSave(blockRefs, hasSubmissions)}
+              disabled={
+                !isDirty || saving || !canSave(blockRefs, hasSubmissions)
+              }
             >
               <Save className="mr-2 h-4 w-4" />
               {saving ? t('saving') : t('saveForm')}
@@ -247,7 +268,12 @@ export function FormBuilder({
         </div>
       )}
 
-      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+      <AlertDialog
+        open={pendingNavigation !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingNavigation(null);
+        }}
+      >
         <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('unsavedChangesTitle')}</AlertDialogTitle>

@@ -7,7 +7,12 @@ import {
   type TemplateLineShape as LineShape,
   ORG_SOURCE_TO_ORG_COLUMN,
   PROFILE_SOURCE_TO_PROFILE_KEY,
+  REQUIRED_ORG_PROFILE_SOURCES,
 } from './document-template.types';
+
+/** A value counts as "missing" when it is not a non-blank string. */
+const isMissingString = (value: unknown): boolean =>
+  typeof value !== 'string' || value.trim() === '';
 
 /**
  * Computes which of the profile-required data sources a document's template
@@ -70,8 +75,7 @@ export class DocumentProfileRequirementService {
 
     return required.filter((source) => {
       const key = PROFILE_SOURCE_TO_PROFILE_KEY[source];
-      const value = data[key];
-      return typeof value !== 'string' || value.trim() === '';
+      return isMissingString(data[key]);
     });
   }
 
@@ -122,8 +126,7 @@ export class DocumentProfileRequirementService {
     return required.filter((source) => {
       const column = ORG_SOURCE_TO_ORG_COLUMN[source];
       if (column === 'name') return false; // always present
-      const value = unit[column];
-      return typeof value !== 'string' || value.trim() === '';
+      return isMissingString(unit[column]);
     });
   }
 
@@ -134,20 +137,59 @@ export class DocumentProfileRequirementService {
    * Reads the unit by id — the same entity the overview Edit edits, so what an
    * account manager sees and what the document renders stay in sync.
    */
+  /** The unit whose org profile a document/template renders: the given unit, else the org root. */
+  private async resolveProfileUnit(
+    organizationId: string,
+    organizationUnitId: string | null | undefined,
+  ) {
+    return this.db.query.organizationUnits.findFirst({
+      where: organizationUnitId
+        ? { id: organizationUnitId }
+        : { organizationId, parentId: { isNull: true } },
+    });
+  }
+
   async missingOrgProfileSources(
     organizationId: string,
     organizationUnitId: string | null | undefined,
     templateBody: unknown,
   ): Promise<string[]> {
     if (this.requiredOrgSources(templateBody).length === 0) return [];
-    const unit = await this.db.query.organizationUnits.findFirst({
-      where: organizationUnitId
-        ? { id: organizationUnitId }
-        : { organizationId, parentId: { isNull: true } },
-    });
+    const unit = await this.resolveProfileUnit(
+      organizationId,
+      organizationUnitId,
+    );
     return this.missingOrgProfileSourcesForUnit(
       unit as unknown as Record<string, unknown> | undefined,
       templateBody,
     );
+  }
+
+  /**
+   * The baseline org-profile source keys (the ones every shipped preset
+   * binds) that the given unit (or the org's root unit, when none is given)
+   * has not yet supplied. Used by Gate A to answer "is this org ready to
+   * author templates at all?" before any template body exists.
+   */
+  async missingBaselineOrgProfileSources(
+    organizationId: string,
+    organizationUnitId: string | null | undefined,
+  ): Promise<string[]> {
+    const unit = await this.resolveProfileUnit(
+      organizationId,
+      organizationUnitId,
+    );
+    const record = unit as unknown as Record<string, unknown> | undefined;
+    // `org_name` maps to `name`, which is always present, so it never appears
+    // as missing — keep the no-unit fallback consistent with that.
+    if (!record) {
+      return REQUIRED_ORG_PROFILE_SOURCES.filter((s) => s !== 'org_name');
+    }
+
+    return REQUIRED_ORG_PROFILE_SOURCES.filter((source) => {
+      const column = ORG_SOURCE_TO_ORG_COLUMN[source];
+      if (column === 'name') return false; // always present
+      return isMissingString(record[column]);
+    });
   }
 }

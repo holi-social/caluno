@@ -4,6 +4,7 @@ import { BadRequestGraphQLError } from '../../graphql/errors';
 import { SUPPORTED_LOCALES } from '../../graphql/locale';
 import { FilePurpose } from '../../storage/enums';
 import { FileService } from '../../storage/services/file.service';
+import { UpdateMyAccountSettingsInput } from '../inputs/update-my-account-settings.input';
 import { UpdateMyImageInput } from '../inputs/update-my-image.input';
 import { UserMapper } from '../mappers/user.mapper';
 import { User } from '../models/user.model';
@@ -22,19 +23,29 @@ export class UserMutationResolver {
     @Args('locale') locale: string,
     @Session() session: UserSession,
   ): Promise<User> {
-    const normalized = locale.trim().toLowerCase();
-    if (
-      !SUPPORTED_LOCALES.includes(
-        normalized as (typeof SUPPORTED_LOCALES)[number],
-      )
-    ) {
-      throw new BadRequestGraphQLError(`Unsupported locale: ${normalized}`);
-    }
+    const normalized = this.normalizeLocale(locale);
 
     const user = await this.userService.updateLocale(
       session.user.id,
       normalized,
     );
+    return this.userMapper.toModelOrThrow(user);
+  }
+
+  @Mutation(() => User)
+  async updateMyAccountSettings(
+    @Args('input') input: UpdateMyAccountSettingsInput,
+    @Session() session: UserSession,
+  ): Promise<User> {
+    const user = await this.userService.updateAccountSettings(session.user.id, {
+      locale:
+        input.locale === undefined || input.locale === null
+          ? undefined
+          : this.normalizeLocale(input.locale),
+      emailWeeklyUpdateEnabled: input.emailWeeklyUpdateEnabled ?? undefined,
+      emailUrgentCallsEnabled: input.emailUrgentCallsEnabled ?? undefined,
+      emailPlatformEnabled: input.emailPlatformEnabled ?? undefined,
+    });
     return this.userMapper.toModelOrThrow(user);
   }
 
@@ -59,6 +70,19 @@ export class UserMutationResolver {
 
     const user = await this.userService.updateImage(session.user.id, imageUrl);
     return this.userMapper.toModelOrThrow(user);
+  }
+
+  private normalizeLocale(locale: string): string {
+    const normalized = locale.trim().toLowerCase();
+    if (
+      !SUPPORTED_LOCALES.includes(
+        normalized as (typeof SUPPORTED_LOCALES)[number],
+      )
+    ) {
+      throw new BadRequestGraphQLError(`Unsupported locale: ${normalized}`);
+    }
+
+    return normalized;
   }
 
   private async resolveProfileImageUrl(

@@ -15,6 +15,15 @@ export const users = snakeCase.table('users', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
   locale: text('locale'),
+  emailWeeklyUpdateEnabled: boolean('email_weekly_update_enabled')
+    .default(true)
+    .notNull(),
+  emailUrgentCallsEnabled: boolean('email_urgent_calls_enabled')
+    .default(true)
+    .notNull(),
+  emailPlatformEnabled: boolean('email_platform_enabled')
+    .default(true)
+    .notNull(),
   privacyPolicyVersion: text('privacy_policy_version'),
   privacyPolicyAcceptedAt: timestamp('privacy_policy_accepted_at'),
   checkInId: text('check_in_id')

@@ -25,6 +25,7 @@ import type { DocumentAwaitingSignaturePayload } from '../src/notification/paylo
 import type { DocumentDeclinedByOrgPayload } from '../src/notification/payloads/document-declined-by-org.payload';
 import { userProfiles } from '../src/requirement-profile/schemas/user-profile.schema';
 import {
+  createDocumentTemplate,
   createReimbursementType,
   createTwoStepTemplate,
 } from './factories/accounting.factory';
@@ -177,6 +178,18 @@ const CONTRACTS = `
   }
 `;
 
+const ACCOUNTING_SETUP_STATUS = `
+  query {
+    accountingSetupStatus {
+      orgProfileComplete
+      missingOrgProfileFields
+      canManageTemplates
+      canCreateDocuments
+      slots { reimbursementTypeKey hasContractTemplate hasInvoiceTemplate ready }
+    }
+  }
+`;
+
 const CONTRACT_DETAIL = `
   query ContractDetail($id: ID!) {
     contract(id: $id) {
@@ -282,6 +295,62 @@ const setupFlowOrg = async (db: Database) => {
     adminId: admin.id,
     volunteerId: volunteer.id,
     reimbursementTypeId: reimbursementType.id,
+  };
+};
+
+/**
+ * Like `setupFlowOrg`, but without the contract/invoice templates — for
+ * proving the setup-status query's "not ready yet" state, which
+ * `setupFlowOrg`'s org can never be in.
+ */
+const setupFlowOrgWithoutTemplates = async (db: Database) => {
+  const reimbursementType = await createReimbursementType(db);
+  const { organization, type } = await createOrganizationWithType(
+    db,
+    `Setup Status Org ${crypto.randomUUID()}`,
+  );
+  const root = await createUnit(db, {
+    organizationId: organization.id,
+    typeId: type.id,
+    name: 'root',
+  });
+  await db
+    .update(schema.organizations)
+    .set({
+      accountingEnabled: true,
+      address: 'Teststraße 1',
+      city: 'Berlin',
+      zipCode: '10115',
+    })
+    .where(eq(schema.organizations.id, organization.id));
+  await db
+    .update(schema.organizationUnits)
+    .set({ address: 'Teststraße 1', city: 'Berlin', zipCode: '10115' })
+    .where(eq(schema.organizationUnits.id, root.id));
+
+  const permission =
+    (await db.query.permissions.findFirst({
+      where: { key: 'accounting:manage' },
+    })) ?? (await createPermission(db, { key: 'accounting:manage' }));
+  const role = await createRole(db, { organizationId: organization.id });
+  await grantPermissionToRole(db, {
+    roleId: role.id,
+    permissionId: permission.id,
+  });
+
+  const admin = await createUser(db);
+  const adminMembership = await addMembership(db, admin.id, root.id);
+  await assignRoleToMembership(db, {
+    membershipId: adminMembership.id,
+    roleId: role.id,
+  });
+
+  return {
+    organizationId: organization.id,
+    organizationUnitId: root.id,
+    adminId: admin.id,
+    reimbursementTypeId: reimbursementType.id,
+    permissionId: permission.id,
   };
 };
 
@@ -1824,6 +1893,144 @@ describe('documents flow — admin + volunteer', () => {
         .where(eq(schema.contracts.id, createContract.id))
         .limit(1);
       expect(contract.organizationUnitId).toBe(siblingUnit.id);
+    });
+  });
+
+  describe('accounting setup status', () => {
+    it('reports the org as not ready when it has no templates, and ready once both exist', async () => {
+      const statusOrg = await setupFlowOrgWithoutTemplates(db);
+      const statusHeader = {
+        'x-organization-unit-id': statusOrg.organizationUnitId,
+      };
+      setAuthMockUserId(statusOrg.adminId);
+
+      const before = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{ reimbursementTypeKey: string; ready: boolean }>;
+        };
+      }>(
+        app,
+        { query: ACCOUNTING_SETUP_STATUS, headers: statusHeader },
+        'accountingSetupStatus',
+      );
+      expect(before.accountingSetupStatus.canCreateDocuments).toBe(false);
+      expect(
+        before.accountingSetupStatus.slots.every((slot) => !slot.ready),
+      ).toBe(true);
+
+      await createTwoStepTemplate(db, {
+        organizationId: statusOrg.organizationId,
+        reimbursementTypeId: statusOrg.reimbursementTypeId,
+        kind: DocumentKind.CONTRACT,
+        requiredPermissionId: statusOrg.permissionId,
+        signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+      });
+      await createTwoStepTemplate(db, {
+        organizationId: statusOrg.organizationId,
+        reimbursementTypeId: statusOrg.reimbursementTypeId,
+        kind: DocumentKind.INVOICE,
+        requiredPermissionId: statusOrg.permissionId,
+        signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+      });
+
+      const after = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{
+            reimbursementTypeKey: string;
+            ready: boolean;
+          }>;
+        };
+      }>(
+        app,
+        { query: ACCOUNTING_SETUP_STATUS, headers: statusHeader },
+        'accountingSetupStatus',
+      );
+      const ehrenamt = after.accountingSetupStatus.slots.find(
+        (slot) => slot.reimbursementTypeKey === 'EHRENAMT',
+      );
+      expect(ehrenamt?.ready).toBe(true);
+      expect(after.accountingSetupStatus.canCreateDocuments).toBe(true);
+    });
+
+    it('resolves readiness per unit: a unit-scoped template does not make a sibling unit ready', async () => {
+      // One org, two units — but templates are configured for the root unit
+      // only. The sibling unit must not inherit readiness from them.
+      const multiUnitOrg = await setupFlowOrgWithoutTemplates(db);
+      const rootUnitId = multiUnitOrg.organizationUnitId;
+      const typeId =
+        (
+          await db.query.organizationUnitTypes.findFirst({
+            where: { organizationId: multiUnitOrg.organizationId },
+          })
+        )?.id ?? '';
+      const siblingUnit = await createUnit(db, {
+        organizationId: multiUnitOrg.organizationId,
+        typeId,
+        name: 'Sibling Unit',
+        parentId: rootUnitId,
+      });
+
+      // Both slots configured for the root unit only — no org-wide default.
+      for (const kind of [DocumentKind.CONTRACT, DocumentKind.INVOICE]) {
+        await createDocumentTemplate(db, {
+          organizationId: multiUnitOrg.organizationId,
+          organizationUnitId: rootUnitId,
+          reimbursementTypeId: multiUnitOrg.reimbursementTypeId,
+          kind,
+          signees: [
+            { order: 0, signeeType: SigneeType.VOLUNTEER },
+            {
+              order: 1,
+              signeeType: SigneeType.PERMISSION_HOLDER,
+              requiredPermissionId: multiUnitOrg.permissionId,
+            },
+          ],
+        });
+      }
+
+      setAuthMockUserId(multiUnitOrg.adminId);
+
+      // Unit A (the root, where the templates live) is ready.
+      const unitA = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{ reimbursementTypeKey: string; ready: boolean }>;
+        };
+      }>(
+        app,
+        {
+          query: ACCOUNTING_SETUP_STATUS,
+          headers: { 'x-organization-unit-id': rootUnitId },
+        },
+        'accountingSetupStatus',
+      );
+      expect(unitA.accountingSetupStatus.canCreateDocuments).toBe(true);
+      expect(
+        unitA.accountingSetupStatus.slots.find(
+          (slot) => slot.reimbursementTypeKey === 'EHRENAMT',
+        )?.ready,
+      ).toBe(true);
+
+      // Unit B (the sibling, no override and no org-wide default) is not.
+      const unitB = await graphqlRequestRequiringData<{
+        accountingSetupStatus: {
+          canCreateDocuments: boolean;
+          slots: Array<{ reimbursementTypeKey: string; ready: boolean }>;
+        };
+      }>(
+        app,
+        {
+          query: ACCOUNTING_SETUP_STATUS,
+          headers: { 'x-organization-unit-id': siblingUnit.id },
+        },
+        'accountingSetupStatus',
+      );
+      expect(unitB.accountingSetupStatus.canCreateDocuments).toBe(false);
+      expect(
+        unitB.accountingSetupStatus.slots.every((slot) => !slot.ready),
+      ).toBe(true);
     });
   });
 });

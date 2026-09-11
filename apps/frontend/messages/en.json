@@ -352,7 +352,7 @@
       "requirementsNeededToast": "Please complete all required forms first",
       "title": "Join {eventTitle}"
     },
-    "fullyBooked": "Fully booked",
+    "fullyBooked": "Full - waitlist available",
     "noShifts": "No shifts planned yet.",
     "noShiftsOnDay": "No shifts on this day.",
     "pendingCta": "Pending request",
@@ -657,7 +657,7 @@
     "eventMetaUnlimited": "{shifts, plural, one {# shift} other {# shifts}} · Open",
     "eventsCount": "{n, plural, one {# event} other {# events}}",
     "eventsHeading": "Events",
-    "fullyBooked": "Fully booked",
+    "fullyBooked": "Full - waitlist available",
     "memberCount": "{n, plural, one {# member} other {# members}}",
     "noEvents": "No events yet.",
     "noShifts": "No individual shifts yet.",
@@ -776,8 +776,20 @@
   },
   "Profile": {
     "accountSettings": "Account settings",
+    "accountSettingsSaved": "Account settings updated",
+    "accountSettingsSaveFailed": "Failed to update account settings",
     "edit": "Edit",
+    "emailAuthNote": "Password reset and verification emails always arrive.",
     "emailLocked": "Linked to your login",
+    "emailOff": "Off",
+    "emailOn": "On",
+    "emailPlatform": "Platform",
+    "emailPlatformDescription": "Invitations, joining, cancellations, shift changes and membership.",
+    "emailSettings": "Emails",
+    "emailUrgentCalls": "Urgent calls",
+    "emailUrgentCallsDescription": "Urgent call-outs for short-staffed shifts.",
+    "emailWeeklyUpdate": "Weekly update",
+    "emailWeeklyUpdateDescription": "The Sunday weekly plan email.",
     "identity": {
       "subtitles": {
         "firstName": "As on your ID",
@@ -1515,13 +1527,16 @@
         "noAgreement": "Agreement needed",
         "wouldExceed": "Would exceed allowance!"
       },
+      "available": "Available",
       "confirmExceedAllowance": {
         "cancel": "Cancel",
         "confirm": "Invite anyway",
         "description": "Paying {name} for this shift would take them past their annual allowance ceiling. You can still invite them, but double check this is intended.",
         "title": "This would exceed {name}'s allowance"
       },
-      "removeAria": "Remove"
+      "invited": "Invited",
+      "removeAria": "Remove",
+      "searchPlaceholder": "Name or email"
     },
     "validation": {
       "endTimeRequired": "End time is required",
@@ -1780,7 +1795,7 @@
     "eventCoverImageAlt": "Cover image for {title}",
     "filterNextWeek": "Next week",
     "filterThisWeekend": "This weekend",
-    "fullyBooked": "Fully booked",
+    "fullyBooked": "Full - waitlist available",
     "goToToday": "Go to today",
     "goToTop": "Go to top",
     "greeting": "Hi, {firstName}!",
@@ -1799,6 +1814,7 @@
     "loadPast": "Load past",
     "overlapWarning": "You have overlapping shifts in your schedule",
     "partOfEvent": "Part of {event}",
+    "pendingApprovalBadge": "Waiting for approval",
     "pendingBadge": "Pending",
     "pendingRequestBody": "An admin is reviewing your request. This usually takes a few days.",
     "pendingRequestContact": "Questions? {name} can help.",
@@ -1809,6 +1825,7 @@
     "timerStartsIn": "starts in {time}",
     "timerVolunteering": "You're volunteering for {time}",
     "todayButton": "Today",
+    "waitlistBadge": "You're on the waitlist",
     "weekly": "Weekly",
     "yourEventsEmpty": "You have no upcoming events.",
     "yourEventsHeading": "Your events",
@@ -1849,10 +1866,25 @@
         "sectionSubtitle": "All templates for documents needed to pay out a respective Pauschale."
       }
     },
+    "setupAlert": {
+      "orgProfileTitle": "Complete your organization profile first",
+      "orgProfileBody": "Documents print your organization's details, so these must be filled in before templates can be saved: {fields}.",
+      "orgProfileCta": "Go to organization profile",
+      "templatesTitle": "Set up your document templates first",
+      "templatesBody": "Documents can't be created until both the agreement and the timesheet template exist for a Pauschale type. Still missing: {pauschalen}.",
+      "templatesCta": "Go to templates"
+    },
+    "orgProfileFields": {
+      "org_name": "Name",
+      "org_address": "Address",
+      "org_city": "City",
+      "org_legal_rep": "Legal representative"
+    },
     "reimbursements": {
       "title": "Reimbursements",
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
+      "setupStatusError": "Setup status could not be checked. Please reload the page.",
       "periodLabel": "Period",
       "yearLabel": "Year",
       "periodPicker": {
@@ -2156,6 +2188,7 @@
         "invoice": "Invoice"
       },
       "loadError": "Templates could not be loaded. Please reload the page.",
+      "setupStatusError": "Setup status could not be checked. Please reload the page.",
       "builder": {
         "breadcrumb": {
           "accounting": "Accounting",

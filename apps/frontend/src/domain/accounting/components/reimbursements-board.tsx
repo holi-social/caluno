@@ -444,6 +444,7 @@ interface ReimbursementsBoardProps {
   onReadyToGoSelected: () => void;
   createDocOpen: boolean;
   onCreateDocOpenChange: (open: boolean) => void;
+  canCreateDocuments: boolean;
 }
 
 export function ReimbursementsBoard({
@@ -455,6 +456,7 @@ export function ReimbursementsBoard({
   onReadyToGoSelected,
   createDocOpen,
   onCreateDocOpenChange,
+  canCreateDocuments,
 }: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
 
@@ -488,6 +490,7 @@ export function ReimbursementsBoard({
     useState<DocVolPair | null>(null);
 
   function handleRequestCreate(pair: DocVolPair) {
+    if (!canCreateDocuments) return;
     if (
       pair.doc.status === 'contract-generate' ||
       pair.doc.status === 'contract-declined' ||
@@ -837,6 +840,7 @@ export function ReimbursementsBoard({
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}
+          canCreateDocuments={canCreateDocuments}
         />
       )}
 
@@ -852,6 +856,7 @@ export function ReimbursementsBoard({
         onDecline={handleDecline}
         selectedDate={selectedDate}
         orgUId={orgUId}
+        canCreateDocuments={canCreateDocuments}
       />
 
       <ContractCreationModal

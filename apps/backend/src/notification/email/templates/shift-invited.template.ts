@@ -13,6 +13,7 @@ import {
   paragraph,
   renderEmail,
   shiftPublicUrl,
+  unsubscribeFooterNote,
 } from './shared';
 import { formatMultilineHtml } from './shared/utils';
 
@@ -188,6 +189,11 @@ export async function shiftInvitedTemplate(
     }),
     previewText,
     body,
-    footerNote: t('shiftInvited.footerNote', { brandName }),
+    footerNote: [
+      t('shiftInvited.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

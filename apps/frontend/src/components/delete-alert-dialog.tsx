@@ -36,7 +36,9 @@ export function DeleteAlertDialog({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger disabled={disabled}>{trigger}</AlertDialogTrigger>
+      <AlertDialogTrigger asChild disabled={disabled}>
+        {trigger}
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
