@@ -35,6 +35,7 @@ import { membershipRequestedTemplate } from './email/templates/membership-reques
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { passwordResetTemplate } from './email/templates/password-reset.template';
 import { shiftDetailsChangedTemplate } from './email/templates/shift-details-changed.template';
+import { shiftInstanceCallOutTemplate } from './email/templates/shift-instance-call-out.template';
 import { shiftInstanceCancelledTemplate } from './email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
@@ -46,6 +47,7 @@ import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from './email/templates/shift-series-left.template';
 import { shiftSeriesRemovedTemplate } from './email/templates/shift-series-removed.template';
 import { shiftSeriesVolunteerLeftTemplate } from './email/templates/shift-series-volunteer-left.template';
+import { volunteerDigestTemplate } from './email/templates/volunteer-digest.template';
 import { DocumentListener } from './listeners/document.listener';
 import { EventListener } from './listeners/event.listener';
 import { MembershipListener } from './listeners/membership.listener';
@@ -1500,6 +1502,137 @@ describe('NotificationModule', () => {
     expect(expected.html).toContain('5 of 6');
     expect(expected.html).toContain(
       `/admin/${payload.organizationUnitId}/shifts`,
+    );
+  });
+
+  it('carries the unsubscribe link in the weekly plan email', async () => {
+    const { html } = await volunteerDigestTemplate(
+      {
+        recipientFirstName: 'Sam',
+        myShifts: [],
+        pendingInvites: [],
+        needsVolunteersGroups: [],
+      },
+      createFixtureTranslator('en'),
+    );
+
+    expect(html).toContain('http://localhost:3000/unsubscribe');
+    expect(html).toContain('Manage your email preferences');
+  });
+
+  it('carries the unsubscribe link in the urgent call-out email', async () => {
+    const { html } = await shiftInstanceCallOutTemplate(
+      {
+        organizationUnitName: 'Acme Volunteers',
+        shiftId: 'shift-1',
+        shiftTitle: 'Morning Kitchen',
+        recipientFirstName: 'Sam',
+        startsAt: new Date('2026-07-10T09:00:00.000Z'),
+        endsAt: new Date('2026-07-10T12:00:00.000Z'),
+        instanceId: 'instance-1',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    expect(html).toContain('http://localhost:3000/unsubscribe');
+    expect(html).toContain('Manage your email preferences');
+  });
+
+  it('does not email a volunteer who switched Platform off', async () => {
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+        emailPlatformEnabled: false,
+      }),
+    );
+
+    notificationService.notifyShiftInstanceCancelled({
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      startsAt: new Date('2026-07-10T09:00:00.000Z'),
+      endsAt: new Date('2026-07-10T12:00:00.000Z'),
+      instanceId: 'instance-1',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('does not email a volunteer who switched Platform off about a membership change', async () => {
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+        emailPlatformEnabled: false,
+      }),
+    );
+
+    notificationService.notifyMembershipApproved({
+      userId: 'volunteer-1',
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('keeps emailing a volunteer whose Platform setting is on', async () => {
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+        emailPlatformEnabled: true,
+      }),
+    );
+
+    notificationService.notifyMembershipApproved({
+      userId: 'volunteer-1',
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps emailing a manager about a volunteer who switched Platform off', async () => {
+    // Manager-facing mail is about a volunteer but addressed to a manager, so
+    // the volunteer's own setting must not silence it.
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Alice Manager',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'alice@example.com',
+        emailPlatformEnabled: false,
+      }),
+    );
+
+    notificationService.notifyShiftInstanceJoined({
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftTitle: 'Morning Kitchen',
+      joinedUserId: 'volunteer-1',
+      recipientUserIds: ['manager-1'],
+      startsAt: new Date('2026-07-10T09:00:00.000Z'),
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledTimes(1);
+    expect(emailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'alice@example.com' }),
     );
   });
 });

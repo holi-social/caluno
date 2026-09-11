@@ -12,6 +12,7 @@ import {
   renderEmail,
   shiftPublicUrl,
   text,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface ShiftInstanceCallOutTemplateData {
@@ -95,6 +96,8 @@ export async function shiftInstanceCallOutTemplate(
     ${button({ href: shiftUrl, label: t('shiftInstanceCallOut.buttonLabel') })}
   `);
 
+  const unsubscribeNote = unsubscribeFooterNote(t);
+
   return renderEmail({
     templateName: 'shiftInstanceCallOutTemplate',
     subject: t('shiftInstanceCallOut.subject', { shiftTitle: data.shiftTitle }),
@@ -103,6 +106,11 @@ export async function shiftInstanceCallOutTemplate(
       organizationName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('shiftInstanceCallOut.footerNote', { brandName }),
+    footerNote: [
+      t('shiftInstanceCallOut.footerNote', { brandName }),
+      unsubscribeNote,
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

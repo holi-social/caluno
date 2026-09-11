@@ -776,8 +776,20 @@
   },
   "Profile": {
     "accountSettings": "Account settings",
+    "accountSettingsSaved": "Account settings updated",
+    "accountSettingsSaveFailed": "Failed to update account settings",
     "edit": "Edit",
+    "emailAuthNote": "Password reset and verification emails always arrive.",
     "emailLocked": "Linked to your login",
+    "emailOff": "Off",
+    "emailOn": "On",
+    "emailPlatform": "Platform",
+    "emailPlatformDescription": "Invitations, joining, cancellations, shift changes and membership.",
+    "emailSettings": "Emails",
+    "emailUrgentCalls": "Urgent calls",
+    "emailUrgentCallsDescription": "Urgent call-outs for short-staffed shifts.",
+    "emailWeeklyUpdate": "Weekly update",
+    "emailWeeklyUpdateDescription": "The Sunday weekly plan email.",
     "identity": {
       "subtitles": {
         "firstName": "As on your ID",

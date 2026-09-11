@@ -10,6 +10,7 @@ import {
   note,
   paragraph,
   renderEmail,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface ShiftInstanceCancelledTemplateData {
@@ -95,6 +96,11 @@ export async function shiftInstanceCancelledTemplate(
       organizationName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('shiftInstanceCancelled.footerNote', { brandName }),
+    footerNote: [
+      t('shiftInstanceCancelled.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

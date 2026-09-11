@@ -1,6 +1,10 @@
 import type {
   GetMyOrganizationsQuery,
   GetMyPermissionsQuery,
+  GetUserByCheckInIdQuery,
+  GetUserQuery,
+  UpdateMyAccountSettingsInput,
+  UpdateMyAccountSettingsMutation,
   UpdateMyImageInput,
   UpdateMyLocaleMutation,
   User,
@@ -13,12 +17,14 @@ export class UserRepository extends BaseRepository {
     return data.me;
   }
 
-  async findById(id: string): Promise<User | null> {
+  async findById(id: string): Promise<GetUserQuery['user']> {
     const data = await this.sdk.GetUser({ id });
     return data.user ?? null;
   }
 
-  async findByCheckInId(checkInId: string): Promise<User | null> {
+  async findByCheckInId(
+    checkInId: string,
+  ): Promise<GetUserByCheckInIdQuery['userByCheckInId']> {
     const data = await this.sdk.GetUserByCheckInId({ checkInId });
     return data.userByCheckInId ?? null;
   }
@@ -48,5 +54,12 @@ export class UserRepository extends BaseRepository {
   async updateMyImage(input: UpdateMyImageInput) {
     const data = await this.sdk.UpdateMyImage({ input });
     return data.updateMyImage;
+  }
+
+  async updateMyAccountSettings(
+    input: UpdateMyAccountSettingsInput,
+  ): Promise<UpdateMyAccountSettingsMutation['updateMyAccountSettings']> {
+    const data = await this.sdk.UpdateMyAccountSettings({ input });
+    return data.updateMyAccountSettings;
   }
 }
