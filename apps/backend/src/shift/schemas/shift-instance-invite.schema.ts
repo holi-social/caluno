@@ -3,6 +3,7 @@ import {
   pgEnum,
   snakeCase,
   text,
+  timestamp,
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -30,6 +31,7 @@ export const shiftInstanceInvites = snakeCase.table(
     status: shiftInviteStatusEnum('status')
       .$type<ShiftInviteStatus>()
       .notNull(),
+    remindedAt: timestamp('reminded_at'),
     ...timestampColumns,
   },
   (table) => [

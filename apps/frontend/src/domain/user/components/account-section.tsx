@@ -81,9 +81,6 @@ export const AccountSection = async ({
               </div>
             ))}
           </dl>
-          <p className="pt-1 text-xs text-muted-foreground">
-            {tProfile('emailAuthNote')}
-          </p>
         </div>
       </div>
     </section>

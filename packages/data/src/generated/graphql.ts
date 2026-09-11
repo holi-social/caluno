@@ -753,6 +753,7 @@ export type Mutation = {
   recordBundleDownload: BundleDownloadStatus;
   regenerateFormShareToken: RequirementForm;
   rejectMembershipRequest: MembershipRequest;
+  remindShiftInstanceInvite: Scalars['DateTime']['output'];
   removeMembership: Membership;
   removeMembershipRequest: MembershipRequest;
   sendShiftInstanceCallOut: ShiftInstanceCallOutResult;
@@ -1050,6 +1051,12 @@ export type MutationRejectMembershipRequestArgs = {
   id: Scalars['ID']['input'];
   organizationUnitId: Scalars['ID']['input'];
   rejectionReason: Scalars['String']['input'];
+};
+
+
+export type MutationRemindShiftInstanceInviteArgs = {
+  instanceId: Scalars['String']['input'];
+  userId: Scalars['String']['input'];
 };
 
 
@@ -2430,6 +2437,7 @@ export type ShiftInstanceInvite = {
   __typename?: 'ShiftInstanceInvite';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
+  remindedAt?: Maybe<Scalars['DateTime']['output']>;
   status: ShiftInviteStatus;
   updatedAt: Scalars['DateTime']['output'];
   user: User;
@@ -3816,6 +3824,14 @@ export type SendShiftInstanceCallOutMutationVariables = Exact<{
 
 export type SendShiftInstanceCallOutMutation = { __typename?: 'Mutation', sendShiftInstanceCallOut: { __typename?: 'ShiftInstanceCallOutResult', recipientCount: number, sentToManagerFallback: boolean } };
 
+export type RemindShiftInstanceInviteMutationVariables = Exact<{
+  instanceId: Scalars['String']['input'];
+  userId: Scalars['String']['input'];
+}>;
+
+
+export type RemindShiftInstanceInviteMutation = { __typename?: 'Mutation', remindShiftInstanceInvite: string };
+
 export type GetShiftInstanceCallOutSummaryQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -3864,7 +3880,7 @@ export type GetShiftInstanceQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftInstanceQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideLocation?: string | null, overrideInstructions?: string | null, overrideMaxVolunteers?: number | null, overrideMinVolunteers?: number | null, overrideReimbursementTypeId?: string | null, isCancelled: boolean, filledCount: number, spotsLeft?: number | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, instructions?: string | null, minVolunteers?: number | null, maxVolunteers?: number | null, reimbursementTypeId?: string | null, visibility: ShiftVisibility, rrule?: string | null, createdAt: string, imageUrl?: string | null, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null }, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string } }> | null } };
+export type GetShiftInstanceQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideLocation?: string | null, overrideInstructions?: string | null, overrideMaxVolunteers?: number | null, overrideMinVolunteers?: number | null, overrideReimbursementTypeId?: string | null, isCancelled: boolean, filledCount: number, spotsLeft?: number | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, instructions?: string | null, minVolunteers?: number | null, maxVolunteers?: number | null, reimbursementTypeId?: string | null, visibility: ShiftVisibility, rrule?: string | null, createdAt: string, imageUrl?: string | null, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null }, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, remindedAt?: string | null, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string } }> | null } };
 
 export type GetWeeklyShiftsQueryVariables = Exact<{
   startsAfter: Scalars['DateTime']['input'];
@@ -6878,6 +6894,11 @@ export const SendShiftInstanceCallOutDocument = gql`
   }
 }
     `;
+export const RemindShiftInstanceInviteDocument = gql`
+    mutation RemindShiftInstanceInvite($instanceId: String!, $userId: String!) {
+  remindShiftInstanceInvite(instanceId: $instanceId, userId: $userId)
+}
+    `;
 export const GetShiftInstanceCallOutSummaryDocument = gql`
     query GetShiftInstanceCallOutSummary($id: ID!) {
   shiftInstance(id: $id) {
@@ -7039,6 +7060,7 @@ export const GetShiftInstanceDocument = gql`
     }
     invites {
       status
+      remindedAt
       user {
         id
         name
@@ -7991,6 +8013,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     SendShiftInstanceCallOut(variables: SendShiftInstanceCallOutMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SendShiftInstanceCallOutMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<SendShiftInstanceCallOutMutation>({ document: SendShiftInstanceCallOutDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SendShiftInstanceCallOut', 'mutation', variables);
+    },
+    RemindShiftInstanceInvite(variables: RemindShiftInstanceInviteMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<RemindShiftInstanceInviteMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<RemindShiftInstanceInviteMutation>({ document: RemindShiftInstanceInviteDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'RemindShiftInstanceInvite', 'mutation', variables);
     },
     GetShiftInstanceCallOutSummary(variables: GetShiftInstanceCallOutSummaryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetShiftInstanceCallOutSummaryQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetShiftInstanceCallOutSummaryQuery>({ document: GetShiftInstanceCallOutSummaryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetShiftInstanceCallOutSummary', 'query', variables);

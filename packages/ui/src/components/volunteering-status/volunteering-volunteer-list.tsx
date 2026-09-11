@@ -28,10 +28,12 @@ export type VolunteeringVolunteerListItem = {
   statusMenuAriaLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  disabledActions?: VolunteeringActionLabel[];
+  actionTooltips?: VolunteeringActionLabels;
   /** Far-right icon-only actions (e.g. View profile, Check in). */
   iconActions?: VolunteeringActionLabel[];
+  actionLabels?: VolunteeringActionLabels;
 };
-
 export type VolunteeringVolunteerListProps = {
   volunteers: VolunteeringVolunteerListItem[];
   phase?: ShiftVolunteeringPhase;
@@ -88,8 +90,14 @@ export function VolunteeringVolunteerList({
             statusOptions={volunteer.statusOptions}
             statusMenuAriaLabel={volunteer.statusMenuAriaLabel}
             actions={volunteer.actions}
+            disabledActions={volunteer.disabledActions}
+            actionTooltips={volunteer.actionTooltips}
             iconActions={volunteer.iconActions}
-            actionLabels={actionLabels}
+            actionLabels={
+              volunteer.actionLabels
+                ? { ...actionLabels, ...volunteer.actionLabels }
+                : actionLabels
+            }
             onAction={
               onAction ? (action) => onAction(volunteer.id, action) : undefined
             }

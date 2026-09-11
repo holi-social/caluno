@@ -14,10 +14,15 @@ import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { useSheetTrigger } from '@/hooks/use-sheet';
 import { Link, useRouter } from '@/i18n/navigation';
-import { updateShiftInstanceInviteStatus } from '../actions';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  remindShiftInstanceInvite,
+  updateShiftInstanceInviteStatus,
+} from '../actions';
 import {
   adminChipTargetStatuses,
   adminRowActions,
+  canRemindInvitee,
   countInviteDisplayStates,
   formatInviteStatusSummary,
   toInviteDisplayState,
@@ -27,6 +32,7 @@ import { SendCallOutDialog } from './send-call-out-dialog';
 
 type InstanceInvite = {
   status: ShiftInviteStatus;
+  remindedAt?: string | null;
   user: {
     id: string;
     name: string;
@@ -59,6 +65,7 @@ export function ShiftInstanceVolunteersPanel({
   canManage,
   isInstanceInThePast,
 }: ShiftInstanceVolunteersPanelProps) {
+  const { formatDate, formatTime } = useFormatting();
   const t = useTranslations('Shift');
   const tVolunteer = useTranslations('Volunteer.action');
   const router = useRouter();
@@ -103,7 +110,15 @@ export function ShiftInstanceVolunteersPanel({
   };
 
   const volunteers: VolunteeringVolunteerListItem[] = invites.map((invite) => {
+    const remindVisible =
+      canManage &&
+      !isInstanceInThePast &&
+      invite.status === ShiftInviteStatus.AdminInvited;
+    const remindActive = canRemindInvitee(invite.status, invite.remindedAt);
+
     const chipTargets = canManage ? adminChipTargetStatuses(invite.status) : [];
+    const rowActions = canManage ? adminRowActions(invite.status) : [];
+
     return {
       id: invite.user.id,
       name: invite.user.name,
@@ -118,7 +133,26 @@ export function ShiftInstanceVolunteersPanel({
             }))
           : undefined,
       statusMenuAriaLabel: t('inviteStatus.changeStatusAria'),
-      actions: canManage ? adminRowActions(invite.status) : [],
+      actions: remindVisible ? ['Remind', ...rowActions] : rowActions,
+      disabledActions: remindVisible && !remindActive ? ['Remind'] : undefined,
+      actionLabels: remindVisible
+        ? {
+            Remind: remindActive
+              ? t('inviteStatus.actionRemind')
+              : t('inviteStatus.actionReminded'),
+          }
+        : undefined,
+      actionTooltips:
+        remindVisible && invite.remindedAt
+          ? {
+              Remind: t('inviteStatus.remindedAtTooltip', {
+                when: `${formatDate(new Date(invite.remindedAt), {
+                  month: 'short',
+                  day: 'numeric',
+                })}, ${formatTime(new Date(invite.remindedAt))}`,
+              }),
+            }
+          : undefined,
       iconActions: ['View', 'Check in'],
     };
   });
@@ -196,6 +230,27 @@ export function ShiftInstanceVolunteersPanel({
       return;
     }
 
+    if (action === 'Remind') {
+      if (!canManage || pending) {
+        return;
+      }
+      if (!canRemindInvitee(invite.status, invite.remindedAt)) {
+        return;
+      }
+      startTransition(async () => {
+        const result = await remindShiftInstanceInvite(orgUId, instanceId, {
+          userId: volunteerId,
+        });
+        if (result?.serverError) {
+          toast.error(t('inviteStatus.remindError'));
+          return;
+        }
+        toast.success(t('inviteStatus.remindSuccess'));
+        router.refresh();
+      });
+      return;
+    }
+
     if (action === 'Invite') {
       applyStatus(invite, ShiftInviteStatus.AdminInvited);
     }
@@ -256,6 +311,7 @@ export function ShiftInstanceVolunteersPanel({
         'Check in': tVolunteer('checkInAria'),
         Invite: t('inviteStatus.actionInvite'),
         Approve: t('inviteStatus.actionApprove'),
+        Remind: t('inviteStatus.actionRemind'),
       }}
       onAction={onAction}
       onStatusChange={canManage ? onStatusChange : undefined}

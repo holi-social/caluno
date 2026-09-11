@@ -26,6 +26,7 @@ import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';
 import { ShiftQueryResolver } from './resolvers/shift-query.resolver';
 import { ShiftRequiredFormsLoader } from './resolvers/shift-required-forms.loader';
 import { ShiftCallOutService } from './services/shift-call-out.service';
+import { ShiftInviteReminderService } from './services/shift-invite-reminder.service';
 import { ShiftUnderstaffedNotificationService } from './services/shift-understaffed-notification.service';
 import { ShiftUnderstaffedSchedulerService } from './services/shift-understaffed-scheduler.service';
 import { VolunteerDigestService } from './services/volunteer-digest.service';
@@ -47,6 +48,7 @@ import { ShiftService } from './shift.service';
   providers: [
     ShiftService,
     ShiftCallOutService,
+    ShiftInviteReminderService,
     ShiftUnderstaffedNotificationService,
     ShiftUnderstaffedSchedulerService,
     VolunteerDigestService,

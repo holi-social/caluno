@@ -49,6 +49,7 @@ export const NOTIFICATION_EMAIL_GROUP: Record<
   // Platform — things that happened to the volunteer, addressed to them.
   [NotificationEvent.SHIFT_INVITED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_INVITED]: 'platform',
+  [NotificationEvent.SHIFT_INSTANCE_INVITE_REMINDER]: 'platform',
   [NotificationEvent.EVENT_INVITED]: 'platform',
   [NotificationEvent.ORGANIZATION_UNIT_INVITED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_CANCELLED]: 'platform',
