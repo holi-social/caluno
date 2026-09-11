@@ -779,7 +779,6 @@
     "accountSettingsSaved": "Account settings updated",
     "accountSettingsSaveFailed": "Failed to update account settings",
     "edit": "Edit",
-    "emailAuthNote": "Password reset and verification emails always arrive.",
     "emailLocked": "Linked to your login",
     "emailOff": "Off",
     "emailOn": "On",
