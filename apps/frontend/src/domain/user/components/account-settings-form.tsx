@@ -156,7 +156,6 @@ export function AccountSettingsForm({
               />
             </div>
           ))}
-          <p className="text-xs text-muted-foreground">{t('emailAuthNote')}</p>
         </CardContent>
       </Card>
 

@@ -1,5 +1,6 @@
 import { cn } from '../../lib/utils';
 import { Button } from '../base/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../tooltip';
 import { volunteeringActionIcons } from './config';
 import type { VolunteeringActionLabel } from './types';
 
@@ -11,6 +12,8 @@ export type VolunteeringActionButtonsProps = {
   actions: VolunteeringActionLabel[];
   /** Localized button labels keyed by action id (defaults to English labels). */
   labels?: VolunteeringActionLabels;
+  disabledActions?: VolunteeringActionLabel[];
+  actionTooltips?: Partial<Record<VolunteeringActionLabel, string>>;
   onAction?: (action: VolunteeringActionLabel) => void;
   className?: string;
 };
@@ -18,6 +21,8 @@ export type VolunteeringActionButtonsProps = {
 export function VolunteeringActionButtons({
   actions,
   labels,
+  disabledActions,
+  actionTooltips,
   onAction,
   className,
 }: VolunteeringActionButtonsProps) {
@@ -29,18 +34,35 @@ export function VolunteeringActionButtons({
     >
       {actions.map((actionLabel) => {
         const ActionIcon = volunteeringActionIcons[actionLabel];
+        const tooltip = actionTooltips?.[actionLabel];
 
-        return (
+        const button = (
           <Button
             key={actionLabel}
             type="button"
             variant="outline"
             size="md"
+            disabled={disabledActions?.includes(actionLabel)}
             onClick={() => onAction?.(actionLabel)}
           >
             {ActionIcon ? <ActionIcon aria-hidden /> : null}
             {labels?.[actionLabel] ?? actionLabel}
           </Button>
+        );
+
+        if (!tooltip) {
+          return button;
+        }
+
+        return (
+          <Tooltip key={actionLabel}>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{button}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </div>

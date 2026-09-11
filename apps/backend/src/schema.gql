@@ -711,6 +711,7 @@ type Mutation {
   recordBundleDownload(invoiceIds: [ID!], reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  remindShiftInstanceInvite(instanceId: String!, userId: String!): DateTime!
   removeMembership(id: ID!): Membership!
   removeMembershipRequest(id: ID!): MembershipRequest!
   sendShiftInstanceCallOut(instanceId: String!): ShiftInstanceCallOutResult!
@@ -1335,6 +1336,7 @@ type ShiftInstanceCallOutSummary {
 type ShiftInstanceInvite {
   createdAt: DateTime!
   id: ID!
+  remindedAt: DateTime
   status: ShiftInviteStatus!
   updatedAt: DateTime!
   user: User!
