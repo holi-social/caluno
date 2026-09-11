@@ -182,6 +182,7 @@
   },
   "Error": {
     "digestLabel": "ID: {digest}",
+    "generic": "Etwas ist schiefgelaufen",
     "goHome": "Zur Startseite",
     "orgNotFound": {
       "description": "Die gesuchte Organisation existiert nicht.",
