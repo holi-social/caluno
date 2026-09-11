@@ -116,7 +116,7 @@ export class ShiftCallOutService {
       return { recipientCount: 0, sentToManagerFallback: true };
     }
 
-    await this.sendCallOutEmails(
+    const recipientCount = await this.sendCallOutEmails(
       instance,
       organizationUnit,
       recipientUserIds,
@@ -128,12 +128,12 @@ export class ShiftCallOutService {
       actorUserId,
       organizationUnit,
       instance,
-      recipientCount: recipientUserIds.length,
+      recipientCount,
       sentToManagerFallback: false,
     });
 
     return {
-      recipientCount: recipientUserIds.length,
+      recipientCount,
       sentToManagerFallback: false,
     };
   }
@@ -299,11 +299,14 @@ export class ShiftCallOutService {
     recipientUserIds: string[],
     actorUserId: string,
     source: ShiftCallOutSource,
-  ): Promise<void> {
+  ): Promise<number> {
     const recipients =
-      await this.notificationService.resolveUsersNotificationData(
-        recipientUserIds,
-        { event: NotificationEvent.SHIFT_INSTANCE_CALL_OUT },
+      await this.notificationService.filterRecipientsByEmailPreferences(
+        await this.notificationService.resolveUsersNotificationData(
+          recipientUserIds,
+          { event: NotificationEvent.SHIFT_INSTANCE_CALL_OUT },
+        ),
+        NotificationEvent.SHIFT_INSTANCE_CALL_OUT,
       );
 
     const sentAt = new Date();
@@ -350,7 +353,7 @@ export class ShiftCallOutService {
     );
 
     if (results.length === 0) {
-      return;
+      return 0;
     }
 
     await this.db.insert(schema.shiftCallOutRecipients).values(
@@ -363,6 +366,8 @@ export class ShiftCallOutService {
         sentAt,
       })),
     );
+
+    return recipients.length;
   }
 
   private captureCallOutSend(input: {

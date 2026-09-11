@@ -24,6 +24,7 @@ jest.mock(
   }),
 );
 
+import { filterRecipientsForEvent } from '../../notification/email-preferences';
 import {
   POSTHOG_EVENT,
   POSTHOG_SURFACE,
@@ -102,6 +103,7 @@ describe('ShiftCallOutService.sendCallOut PostHog', () => {
             locale: 'en',
           },
         ]),
+        filterRecipientsByEmailPreferences: filterRecipientsForEvent,
       } as never,
       { send: jest.fn().mockResolvedValue(undefined) } as never,
       { t: jest.fn() } as never,

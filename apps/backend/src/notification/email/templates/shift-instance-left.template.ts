@@ -10,6 +10,7 @@ import {
   note,
   paragraph,
   renderEmail,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface ShiftInstanceLeftTemplateData {
@@ -94,6 +95,11 @@ export async function shiftInstanceLeftTemplate(
       organizationName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('shiftInstanceLeft.footerNote', { brandName }),
+    footerNote: [
+      t('shiftInstanceLeft.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }
