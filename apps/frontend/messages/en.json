@@ -1509,13 +1509,16 @@
         "noAgreement": "Agreement needed",
         "wouldExceed": "Would exceed allowance!"
       },
+      "available": "Available",
       "confirmExceedAllowance": {
         "cancel": "Cancel",
         "confirm": "Invite anyway",
         "description": "Paying {name} for this shift would take them past their annual allowance ceiling. You can still invite them, but double check this is intended.",
         "title": "This would exceed {name}'s allowance"
       },
-      "removeAria": "Remove"
+      "invited": "Invited",
+      "removeAria": "Remove",
+      "searchPlaceholder": "Name or email"
     },
     "validation": {
       "endTimeRequired": "End time is required",
@@ -1793,6 +1796,7 @@
     "loadPast": "Load past",
     "overlapWarning": "You have overlapping shifts in your schedule",
     "partOfEvent": "Part of {event}",
+    "pendingApprovalBadge": "Waiting for approval",
     "pendingBadge": "Pending",
     "pendingRequestBody": "An admin is reviewing your request. This usually takes a few days.",
     "pendingRequestContact": "Questions? {name} can help.",
@@ -1803,6 +1807,7 @@
     "timerStartsIn": "starts in {time}",
     "timerVolunteering": "You're volunteering for {time}",
     "todayButton": "Today",
+    "waitlistBadge": "You're on the waitlist",
     "weekly": "Weekly",
     "yourEventsEmpty": "You have no upcoming events.",
     "yourEventsHeading": "Your events",
