@@ -1509,13 +1509,16 @@
         "noAgreement": "Agreement needed",
         "wouldExceed": "Would exceed allowance!"
       },
+      "available": "Available",
       "confirmExceedAllowance": {
         "cancel": "Cancel",
         "confirm": "Invite anyway",
         "description": "Paying {name} for this shift would take them past their annual allowance ceiling. You can still invite them, but double check this is intended.",
         "title": "This would exceed {name}'s allowance"
       },
-      "removeAria": "Remove"
+      "invited": "Invited",
+      "removeAria": "Remove",
+      "searchPlaceholder": "Name or email"
     },
     "validation": {
       "endTimeRequired": "End time is required",
