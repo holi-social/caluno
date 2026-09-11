@@ -1,4 +1,5 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { ReimbursementTypeKey } from '../../accounting/enums';
 import { Event } from '../../event/models/event.model';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { Organization } from '../../organization/models/organization.model';
@@ -49,8 +50,20 @@ export class Shift {
   @Field(() => Int, { nullable: true })
   minVolunteers?: number | null;
 
+  @Field(() => Boolean)
+  joinRequiresApproval!: boolean;
+
   @Field(() => String, { nullable: true })
   rrule?: string | null;
+
+  @Field(() => ID, { nullable: true })
+  reimbursementTypeId?: string | null;
+
+  // Which Pauschalentyp compensates volunteers for this shift, if any. Null
+  // means the shift is unpaid. Intentionally exposes only the key — never
+  // the rate/limit amounts — to volunteer-facing invite surfaces.
+  @Field(() => ReimbursementTypeKey, { nullable: true })
+  reimbursementTypeKey?: ReimbursementTypeKey | null;
 
   @Field(() => Event, { nullable: true })
   event?: Event | null;

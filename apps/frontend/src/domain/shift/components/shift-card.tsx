@@ -2,7 +2,7 @@
 
 import {
   formatRrulePattern,
-  type ShiftInviteStatus,
+  ShiftInviteStatus,
   ShiftVisibility,
   type WeeklyShiftInstance,
 } from '@repo/data';
@@ -14,7 +14,6 @@ import {
   type VolunteeringShiftCardVolunteer,
   VolunteeringShiftCardVolunteers,
 } from '@repo/ui';
-import { format } from 'date-fns';
 import {
   LockKeyhole,
   RepeatIcon,
@@ -23,29 +22,24 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
-import { toInviteDisplayState } from '../invite-status-display';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
+import { Link, useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import { updateShiftInstanceInviteStatus } from '../actions';
+import {
+  partitionInvitesByWaitlist,
+  toInviteDisplayState,
+} from '../invite-status-display';
 import { shiftInstanceDetailPath, shiftInvitePath } from '../routes';
+import { getStaffingState, staffingBadgeText } from '../staffing';
+import { PauschaleMarker } from './pauschale-marker';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
   canManage?: boolean;
   orgUId: string;
 };
-
-function getStaffingState(
-  count: number,
-  min: number | null | undefined,
-  max: number | null | undefined,
-) {
-  if (max != null && count >= max) {
-    return 'full' as const;
-  }
-  if (count === 0 || (min != null && count < min)) {
-    return 'alert' as const;
-  }
-  return 'neutral' as const;
-}
 
 function StaffingBadge({
   count,
@@ -67,24 +61,13 @@ function StaffingBadge({
     state === 'alert' && min != null && count < min && count > 0;
   const Icon = showTriangle ? TriangleAlert : UsersRound;
 
-  let text: string;
-  if (state === 'full' && max != null) {
-    text = `${max}/${max}`;
-  } else if (state === 'alert' && min != null && count > 0) {
-    text = `${count}/${min}`;
-  } else if (max != null) {
-    text = `${count}/${max}`;
-  } else {
-    text = `${count}`;
-  }
-
   return (
     <Badge
       variant={variant}
       className={`flex-1 justify-center self-stretch gap-1${interactive ? ' cursor-pointer' : ''}`}
     >
       <Icon className="size-3" />
-      {text}
+      {staffingBadgeText(count, min, max, state)}
     </Badge>
   );
 }
@@ -95,9 +78,14 @@ export function ShiftCard({
   orgUId,
 }: ShiftCardProps) {
   const t = useTranslations('Shift');
+  const { formatTime } = useFormatting();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
 
   const participatingCount = instance.volunteers?.length ?? 0;
-  const invites = instance.invites ?? [];
+  const { invites, waitlisted } = partitionInvitesByWaitlist(
+    instance.invites ?? [],
+  );
   const min = instance.overrideMinVolunteers ?? instance.master.minVolunteers;
   const max = instance.overrideMaxVolunteers ?? instance.master.maxVolunteers;
   const state = getStaffingState(participatingCount, min, max);
@@ -106,10 +94,10 @@ export function ShiftCard({
   const showButton = canManage && !isAtCapacity;
   const buttonVariant = state === 'alert' ? 'default' : 'outline';
 
-  const startTime = format(new Date(instance.actualStartsAt), 'HH:mm');
-  const endTime = format(new Date(instance.actualEndsAt), 'HH:mm');
+  const startTime = formatTime(new Date(instance.actualStartsAt));
+  const endTime = formatTime(new Date(instance.actualEndsAt));
 
-  const cardVolunteers: VolunteeringShiftCardVolunteer[] = invites.map(
+  const invitedVolunteers: VolunteeringShiftCardVolunteer[] = invites.map(
     (invite) => ({
       id: invite.user.id,
       name: invite.user.name,
@@ -117,11 +105,52 @@ export function ShiftCard({
     }),
   );
 
+  const waitlistVolunteers: VolunteeringShiftCardVolunteer[] = waitlisted.map(
+    (invite) => ({
+      id: invite.user.id,
+      name: invite.user.name,
+      state: 'waitlisted',
+      action: canManage ? (
+        <Button
+          size="icon-sm"
+          variant="outline"
+          tooltip={t('card.inviteToShift')}
+          disabled={pending}
+          onClick={() => inviteFromWaitlist(invite.user.id)}
+        >
+          <UserPlus className="size-4" />
+        </Button>
+      ) : undefined,
+    }),
+  );
+
+  const inviteFromWaitlist = (userId: string) => {
+    startTransition(async () => {
+      const result = await updateShiftInstanceInviteStatus(
+        orgUId,
+        instance.id,
+        {
+          userId,
+          status: ShiftInviteStatus.Joined,
+        },
+      );
+      if (result?.serverError) {
+        toast.error(t('card.waitlistInviteError'));
+        return;
+      }
+      toast.success(t('card.waitlistInviteSuccess'));
+      router.refresh();
+    });
+  };
+
   const instanceHref = shiftInstanceDetailPath(
     orgUId,
     instance.master.id,
     instance.id,
   );
+
+  const reimbursementTypeId =
+    instance.overrideReimbursementTypeId ?? instance.master.reimbursementTypeId;
 
   return (
     <Card className="min-w-0 rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
@@ -180,6 +209,11 @@ export function ShiftCard({
           )}
         </div>
 
+        <PauschaleMarker
+          reimbursementTypeId={reimbursementTypeId}
+          className="self-start"
+        />
+
         {instance.master.visibility === ShiftVisibility.InvitedMembers && (
           <span className="flex w-full items-center gap-1 text-sm text-muted-foreground">
             <LockKeyhole className="size-3" />
@@ -189,9 +223,14 @@ export function ShiftCard({
       </div>
 
       <VolunteeringShiftCardVolunteers
-        volunteers={cardVolunteers}
+        volunteers={invitedVolunteers}
         phase="before"
         sectionLabel={t('card.invited')}
+      />
+      <VolunteeringShiftCardVolunteers
+        volunteers={waitlistVolunteers}
+        phase="before"
+        sectionLabel={t('card.waitlist')}
       />
     </Card>
   );

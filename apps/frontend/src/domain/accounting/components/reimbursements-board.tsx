@@ -22,6 +22,7 @@ import {
   Skeleton,
 } from '@repo/ui';
 import {
+  AlertCircleIcon,
   ArrowUpDownIcon,
   CheckCircle2Icon,
   ChevronRightIcon,
@@ -50,6 +51,7 @@ import type { SigneeRole } from './template/types';
 
 export type DocStatus =
   | 'contract-generate'
+  | 'contract-draft'
   | 'contract-signing-vol'
   | 'contract-signing-coord'
   | 'contract-active'
@@ -60,6 +62,7 @@ export type DocStatus =
   // manual "Create contract" action.
   | 'contract-missing'
   | 'timesheet-generate'
+  | 'timesheet-draft'
   | 'timesheet-signing-vol'
   | 'timesheet-signing-super'
   | 'timesheet-ready'
@@ -91,6 +94,14 @@ const TILE_IDS: Exclude<TileFilter, null>[] = [
   'timesheet-generate',
   'timesheet-signing',
   'ready-to-go',
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [
+  CURRENT_YEAR - 2,
+  CURRENT_YEAR - 1,
+  CURRENT_YEAR,
+  CURRENT_YEAR + 1,
 ];
 
 export interface BoardDocument {
@@ -278,13 +289,13 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
   if (!tile) return false;
   switch (tile) {
     case 'contract-generate':
-      return status === 'contract-generate';
+      return status === 'contract-generate' || status === 'contract-draft';
     case 'contract-signing':
       return (
         status === 'contract-signing-vol' || status === 'contract-signing-coord'
       );
     case 'timesheet-generate':
-      return status === 'timesheet-generate';
+      return status === 'timesheet-generate' || status === 'timesheet-draft';
     case 'timesheet-signing':
       return (
         status === 'timesheet-signing-vol' ||
@@ -292,6 +303,8 @@ function matchesTile(status: DocStatus, tile: TileFilter): boolean {
       );
     case 'ready-to-go':
       return status === 'timesheet-ready';
+    default:
+      return false;
   }
 }
 
@@ -425,6 +438,8 @@ interface ReimbursementsBoardProps {
   /** Owned by the page header — see reimbursements-page-header.tsx. */
   dateRange: DateRange | undefined;
   onDateRangeChange: (range: DateRange | undefined) => void;
+  year: number;
+  onYearChange: (year: number) => void;
   /** Fired when the "Ready to go" tile is selected — the page header narrows its own range to this month. */
   onReadyToGoSelected: () => void;
   createDocOpen: boolean;
@@ -435,15 +450,18 @@ export function ReimbursementsBoard({
   orgUId,
   dateRange,
   onDateRangeChange,
+  year,
+  onYearChange,
   onReadyToGoSelected,
   createDocOpen,
   onCreateDocOpenChange,
 }: ReimbursementsBoardProps) {
   const t = useTranslations('Accounting.reimbursements');
 
-  const { volunteers, isLoading } = useReimbursementBoardData({
+  const { volunteers, isLoading, error } = useReimbursementBoardData({
     orgUId,
     dateRange,
+    year,
   });
 
   const signContract = useSignContract();
@@ -480,6 +498,7 @@ export function ReimbursementsBoard({
     }
     if (
       pair.doc.status === 'timesheet-generate' ||
+      pair.doc.status === 'timesheet-draft' ||
       pair.doc.status === 'timesheet-declined'
     ) {
       setInvoiceCreationTarget(pair);
@@ -551,12 +570,10 @@ export function ReimbursementsBoard({
   const baseFilteredVols = useMemo(
     () =>
       volunteers.filter((v) => {
-        if (
-          pauschale !== 'all' &&
-          !v.documents.some((d) => (d.pauschale ?? v.pauschale) === pauschale)
-        )
-          return false;
-        return true;
+        if (pauschale === 'all') return true;
+        return v.documents.some(
+          (d) => (d.pauschale ?? v.pauschale) === pauschale,
+        );
       }),
     [volunteers, pauschale],
   );
@@ -628,10 +645,23 @@ export function ReimbursementsBoard({
     return <ReimbursementsBoardSkeleton />;
   }
 
+  if (error) {
+    return (
+      <Empty className="border-border py-16">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <AlertCircleIcon className="size-5 text-destructive" />
+          </EmptyMedia>
+          <EmptyTitle>{t('loadError')}</EmptyTitle>
+          <EmptyDescription>{t('loadErrorHint')}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-24">
-      {/* Calendar only — nothing else belongs in this row */}
-      <div className="flex justify-start">
+      <div className="flex flex-wrap items-center gap-3">
         <PeriodPicker
           value={dateRange}
           onChange={onDateRangeChange}
@@ -660,6 +690,24 @@ export function ReimbursementsBoard({
           align="start"
           className="h-10 gap-2 shrink-0"
         />
+        <Select
+          value={String(year)}
+          onValueChange={(v) => onYearChange(Number(v))}
+        >
+          <SelectTrigger
+            className="h-10 min-w-28 shrink-0"
+            aria-label={t('yearLabel')}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {YEAR_OPTIONS.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Pipeline steps (connected filter tiles) */}
@@ -783,9 +831,9 @@ export function ReimbursementsBoard({
       ) : (
         <ReimbursementsTable
           vols={sortedFilteredVols}
+          orgUId={orgUId}
           onDocumentClick={(doc, vol) => setSelectedDoc({ doc, vol })}
           onRequestCreate={handleRequestCreate}
-          onRequestSign={handleSign}
           docTypeFilter={docTypeFilter}
           dateRange={dateRange}
           activeTile={activeTile}
@@ -870,7 +918,14 @@ export function ReimbursementsBoard({
 
 // ─── Board skeleton ───────────────────────────────────────────────────────────
 
-const TILE_SKELETON_KEYS = ['tile-1', 'tile-2', 'tile-3', 'tile-4', 'tile-5'];
+const TILE_SKELETON_KEYS = [
+  'tile-1',
+  'tile-2',
+  'tile-3',
+  'tile-4',
+  'tile-5',
+  'tile-6',
+];
 const ROW_SKELETON_KEYS = ['row-1', 'row-2', 'row-3'];
 
 export function ReimbursementsBoardSkeleton() {

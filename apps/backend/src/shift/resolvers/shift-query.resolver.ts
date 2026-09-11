@@ -11,6 +11,7 @@ import {
   DateRangePaginationInput,
   PaginationInput,
 } from '../../graphql/pagination.input';
+import { MY_SHIFT_INVITE_STATUSES } from '../../shared/invite-status';
 import { UserMapper } from '../../user/mappers/user.mapper';
 import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus, SortOrder } from '../enums';
@@ -167,13 +168,45 @@ export class ShiftQueryResolver {
     eventId: string | null | undefined,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ShiftInstance[]> {
-    const instances = await this.shiftService.findShiftsForWeek(
+    const instances = await this.shiftService.findInstancesForOrgUnitInRange(
       context.organizationUnitId,
       pagination.startsAfter,
       pagination.endsBefore,
       eventId,
     );
     return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  // Check-in surface: `check-in:manage` is a separate permission from
+  // `shift:view`, and the guard requires every listed permission, so a
+  // front-desk admin cannot use `weeklyShifts`. Scoped by the header unit
+  // like every other query here.
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Query(() => [ShiftInstance])
+  async checkInShiftInstances(
+    @Args() pagination: DateRangePaginationInput,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<ShiftInstance[]> {
+    const instances = await this.shiftService.findInstancesForOrgUnitInRange(
+      context.organizationUnitId,
+      pagination.startsAfter,
+      pagination.endsBefore,
+    );
+    return this.shiftInstanceMapper.toArray(instances);
+  }
+
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Query(() => [Shift])
+  async checkInShifts(
+    @Args('search', { type: () => String, nullable: true })
+    search: string | null | undefined,
+    @Context() context: AuthenticatedGraphQLContext,
+  ): Promise<Shift[]> {
+    const shifts = await this.shiftService.findShiftsByTitle(
+      context.organizationUnitId,
+      search ?? null,
+    );
+    return this.shiftMapper.toArray(shifts);
   }
 
   @Query(() => ShiftInstancePaginatedResponse)
@@ -193,6 +226,9 @@ export class ShiftQueryResolver {
     includeIntended: boolean | undefined,
     @Session() session: UserSession,
   ): Promise<ShiftInstancePaginatedResponse> {
+    const rosterStatuses =
+      statuses && statuses.length > 0 ? statuses : MY_SHIFT_INVITE_STATUSES;
+
     const { instances, total } = await this.shiftService.findMyShiftInstances(
       session.user.id,
       includePast,
@@ -201,7 +237,7 @@ export class ShiftQueryResolver {
       pagination.limit,
       pagination.offset,
       order,
-      statuses ?? undefined,
+      rosterStatuses,
       includeIntended ?? false,
     );
     return new ShiftInstancePaginatedResponse({

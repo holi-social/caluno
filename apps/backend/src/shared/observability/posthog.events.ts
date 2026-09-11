@@ -12,6 +12,8 @@ export const POSTHOG_JOIN_SOURCE = {
   SELF_JOIN: 'self_join',
   MEMBERSHIP_APPROVE: 'membership_approve',
   INVITE_ACCEPT: 'invite_accept',
+  CHECK_IN: 'check_in',
+  WAITLIST_PROMOTE: 'waitlist_promote',
 } as const;
 
 export type PostHogJoinSource =
@@ -29,6 +31,7 @@ export const POSTHOG_OBJECTS = [
   'shift_instance',
   'shift_invite',
   'shift_instance_invite',
+  'shift_call_out',
   'event',
   'event_invite',
   'time_entry',
@@ -81,7 +84,9 @@ export type PostHogAction = (typeof POSTHOG_ACTIONS)[number];
 export type PostHogCaptureProperties = {
   surface: PostHogSurface;
   organization_id?: string;
+  organization_name?: string;
   organization_unit_id?: string;
+  organization_unit_name?: string;
   source?: string;
   [key: string]: string | number | boolean | undefined;
 };
@@ -104,7 +109,7 @@ export const POSTHOG_EVENT_REGISTRY = {
   user_log_out: defineEvent('user_log_out', 'A user session is deleted.'),
   user_update: defineEvent(
     'user_update',
-    'A user account field is updated (locale or image).',
+    'A user account field is updated (locale, image, email verification, or password reset).',
   ),
   user_profile_update: defineEvent(
     'user_profile_update',
@@ -118,6 +123,10 @@ export const POSTHOG_EVENT_REGISTRY = {
   organization_create: defineEvent(
     'organization_create',
     'An organization is created.',
+  ),
+  organization_update: defineEvent(
+    'organization_update',
+    'An organization profile field is updated.',
   ),
   organization_join: defineEvent(
     'organization_join',
@@ -142,6 +151,10 @@ export const POSTHOG_EVENT_REGISTRY = {
   organization_unit_leave: defineEvent(
     'organization_unit_leave',
     'A volunteer leaves an organization unit.',
+  ),
+  organization_unit_invite: defineEvent(
+    'organization_unit_invite',
+    'A volunteer is invited to join an organization unit.',
   ),
   role_create: defineEvent('role_create', 'A role is created.'),
   role_update: defineEvent('role_update', 'A role is updated.'),
@@ -216,6 +229,10 @@ export const POSTHOG_EVENT_REGISTRY = {
   shift_instance_invite_update: defineEvent(
     'shift_instance_invite_update',
     'A shift instance invite status is updated.',
+  ),
+  shift_call_out_send: defineEvent(
+    'shift_call_out_send',
+    'A shift instance call-out email is sent.',
   ),
   event_create: defineEvent(
     'event_create',

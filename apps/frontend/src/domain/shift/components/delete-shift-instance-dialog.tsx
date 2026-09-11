@@ -31,6 +31,8 @@ interface DeleteShiftInstanceDialogProps {
   isRecurring: boolean;
   instanceDate: Date;
   trigger: ReactNode;
+  /** When true the delete triggers are disabled (e.g. the instance has ended). */
+  disableDelete?: boolean;
 }
 
 export function DeleteShiftInstanceDialog({
@@ -39,6 +41,7 @@ export function DeleteShiftInstanceDialog({
   isRecurring,
   instanceDate,
   trigger,
+  disableDelete,
 }: DeleteShiftInstanceDialogProps) {
   const t = useTranslations('Shift');
   const tCommon = useTranslations('Common');
@@ -49,7 +52,6 @@ export function DeleteShiftInstanceDialog({
   const { formatDate } = useFormatting();
 
   const instanceDateFormatted = formatDate(instanceDate);
-  const isInstanceInThePast = (instanceDate ?? 0) < new Date();
 
   const runDelete = (applyToAllFuture: boolean) => {
     startDeleteTransition(async () => {
@@ -81,13 +83,14 @@ export function DeleteShiftInstanceDialog({
         })}
         onDelete={() => runDelete(false)}
         trigger={trigger}
+        disabled={disableDelete}
       />
     );
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger disabled={isInstanceInThePast}>{trigger}</DialogTrigger>
+      <DialogTrigger disabled={disableDelete}>{trigger}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

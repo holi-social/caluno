@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AccountingOrgAccessService } from '../accounting/services/accounting-org-access.service';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
@@ -16,6 +17,7 @@ import { ShiftInstanceInvitesLoader } from './resolvers/loader';
 import { ShiftLoader } from './resolvers/shift.loader';
 import { ShiftFieldResolver } from './resolvers/shift-field.resolver';
 import { ShiftInstanceLoader } from './resolvers/shift-instance.loader';
+import { ShiftInstanceCallOutSummaryFieldResolver } from './resolvers/shift-instance-call-out-summary-field.resolver';
 import { ShiftInstanceFieldResolver } from './resolvers/shift-instance-field.resolver';
 import { ShiftInstanceInviteFieldResolver } from './resolvers/shift-instance-invite-field.resolver';
 import { ShiftInstanceInviteUsersLoader } from './resolvers/shift-instance-invite-users.loader';
@@ -23,6 +25,11 @@ import { ShiftInstanceRequiredFormsLoader } from './resolvers/shift-instance-req
 import { ShiftMutationResolver } from './resolvers/shift-mutation.resolver';
 import { ShiftQueryResolver } from './resolvers/shift-query.resolver';
 import { ShiftRequiredFormsLoader } from './resolvers/shift-required-forms.loader';
+import { ShiftCallOutService } from './services/shift-call-out.service';
+import { ShiftUnderstaffedNotificationService } from './services/shift-understaffed-notification.service';
+import { ShiftUnderstaffedSchedulerService } from './services/shift-understaffed-scheduler.service';
+import { VolunteerDigestService } from './services/volunteer-digest.service';
+import { VolunteerDigestSchedulerService } from './services/volunteer-digest-scheduler.service';
 import { ShiftService } from './shift.service';
 
 @Module({
@@ -39,6 +46,12 @@ import { ShiftService } from './shift.service';
   ],
   providers: [
     ShiftService,
+    ShiftCallOutService,
+    ShiftUnderstaffedNotificationService,
+    ShiftUnderstaffedSchedulerService,
+    VolunteerDigestService,
+    VolunteerDigestSchedulerService,
+    AccountingOrgAccessService,
     ShiftQueryResolver,
     ShiftMapper,
     ShiftInstanceInviteMapper,
@@ -47,6 +60,7 @@ import { ShiftService } from './shift.service';
     ShiftMutationResolver,
     ShiftFieldResolver,
     ShiftInstanceFieldResolver,
+    ShiftInstanceCallOutSummaryFieldResolver,
     ShiftInstanceInviteFieldResolver,
     ShiftInstanceInvitesLoader,
     ShiftInstanceInviteUsersLoader,

@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
+import { DatabaseModule } from '../../database/database.module';
 import { ObservabilityService } from './observability.service';
 import { buildPinoHttpOptions } from './pino-options';
 import {
@@ -8,11 +9,14 @@ import {
   createPostHogRequestInterceptor,
 } from './posthog.client';
 import { POSTHOG_CLIENT, PostHogService } from './posthog.service';
+import { PostHogDistinctSecretService } from './posthog-distinct-secret.service';
+import { PostHogOrgLabelService } from './posthog-org-label.service';
 import { SentryExceptionFilter } from './sentry-exception.filter';
 
 @Global()
 @Module({
   imports: [
+    DatabaseModule,
     LoggerModule.forRootAsync({
       useFactory: () => ({
         pinoHttp: buildPinoHttpOptions({
@@ -28,6 +32,8 @@ import { SentryExceptionFilter } from './sentry-exception.filter';
       provide: POSTHOG_CLIENT,
       useFactory: () => createPostHogClient(),
     },
+    PostHogDistinctSecretService,
+    PostHogOrgLabelService,
     PostHogService,
     {
       provide: APP_INTERCEPTOR,

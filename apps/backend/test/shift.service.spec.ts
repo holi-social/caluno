@@ -1,17 +1,22 @@
 import 'reflect-metadata';
-import { beforeAll, describe, expect, it, mock } from 'bun:test';
+import { beforeAll, describe, expect, it, mock, setSystemTime } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { asc, eq, inArray } from 'drizzle-orm';
+import { ReimbursementTypeKey } from '../src/accounting/enums';
+import { AccountingOrgAccessService } from '../src/accounting/services/accounting-org-access.service';
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
 import * as schema from '../src/database/schema';
+import { BadRequestGraphQLError } from '../src/graphql/errors/bad-request.error';
 import { ConflictGraphQLError } from '../src/graphql/errors/conflict.error';
+import { ForbiddenGraphQLError } from '../src/graphql/errors/forbidden.error';
 import { NotFoundGraphQLError } from '../src/graphql/errors/not-found.error';
 import { MembershipService } from '../src/membership/membership.service';
 import { NotificationService } from '../src/notification/notification.service';
 import { OrganizationService } from '../src/organization/organization.service';
+import { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { ACTIVE_SHIFT_INVITE_STATUSES } from '../src/shared/invite-status';
 import { POSTHOG_EVENT } from '../src/shared/observability/posthog.events';
 import { PostHogService } from '../src/shared/observability/posthog.service';
@@ -25,6 +30,11 @@ import {
   createShiftInstance,
   createUser,
 } from './factories';
+import { createReimbursementType } from './factories/accounting.factory';
+import {
+  createOrganizationWithType,
+  createUnit,
+} from './factories/org.factory';
 import {
   ensureTestDatabase,
   registerTestResourceCleanup,
@@ -52,9 +62,21 @@ describe('ShiftService', () => {
       notifyShiftInvited: mock(() => {}),
       notifyShiftInstanceCancelled: mock(() => {}),
       notifyShiftInstanceSeriesCancelled: mock(() => {}),
+      notifyShiftInstanceJoined: mock(() => {}),
     } as unknown as NotificationService;
 
     capture = mock(() => {});
+
+    const organizationUnitService = new OrganizationUnitService(
+      db,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    const accountingOrgAccessService = new AccountingOrgAccessService(
+      db,
+      organizationUnitService,
+    );
 
     shiftService = new ShiftService(
       db,
@@ -71,6 +93,7 @@ describe('ShiftService', () => {
       {} as never,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture } as unknown as PostHogService,
+      accountingOrgAccessService,
     );
 
     userId = (await createUser(db)).id;
@@ -104,6 +127,11 @@ describe('ShiftService', () => {
       .returning();
 
     organizationUnitId = rootUnit.id;
+
+    await db
+      .update(schema.organizations)
+      .set({ accountingEnabled: true })
+      .where(eq(schema.organizations.id, organization.id));
 
     registerTestResourceCleanup(async () => {
       await moduleRef.close();
@@ -258,6 +286,347 @@ describe('ShiftService', () => {
       });
 
       expect(updated?.slug).toBe(originalSlug);
+    });
+  });
+
+  describe('update — reimbursement type override', () => {
+    it('syncs a new reimbursement type to the master for a non-recurring shift with only one instance', async () => {
+      // A non-recurring shift (rrule: null) always routes through
+      // `updateShiftInstanceSeries` (the instance IS the shift), which syncs
+      // `reimbursementTypeId` to the master row and leaves the instance's
+      // own override cleared, so it keeps falling back to the master.
+      const shiftType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const overrideType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: null,
+        reimbursementTypeId: shiftType.id,
+      });
+      const instance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: startsAt,
+        actualEndsAt: endsAt,
+      });
+
+      const updated = await shiftService.updateShiftInstance(
+        instance.id,
+        {
+          title: 'Coaching (override)',
+          startsAt,
+          endsAt,
+          reimbursementTypeId: overrideType.id,
+        } as never,
+        organizationUnitId,
+      );
+
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+
+      expect(updated.overrideReimbursementTypeId).toBeNull();
+      expect(refreshedShift?.reimbursementTypeId).toBe(overrideType.id);
+    });
+
+    it('rejects a reimbursement type change on a past instance', async () => {
+      const shiftType = await createReimbursementType(db);
+      const startsAt = daysAgo(2, 8);
+      const endsAt = daysAgo(2, 10);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: shiftType.id,
+      });
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: startsAt,
+        actualEndsAt: endsAt,
+      });
+
+      await expect(
+        shiftService.updateShiftInstance(
+          pastInstance.id,
+          {
+            title: 'late edit',
+            startsAt,
+            endsAt,
+            reimbursementTypeId: shiftType.id,
+          } as never,
+          organizationUnitId,
+        ),
+      ).rejects.toThrow(ConflictGraphQLError);
+    });
+  });
+
+  describe('update — reimbursement type change only affects the future', () => {
+    it('freezes already-occurred instances on their old type when the master type changes', async () => {
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: oldType.id,
+      });
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: daysAgo(2, 8),
+        actualEndsAt: daysAgo(2, 10),
+      });
+      const futureInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date(Date.now() + 300000),
+        actualEndsAt: new Date(Date.now() + 400000),
+      });
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: shift.title,
+        startsAt: shift.originalStartsAt,
+        endsAt: new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        ),
+        visibility: shift.visibility,
+        reimbursementTypeId: newType.id,
+      } as never);
+
+      const [refreshedPast] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstance.id));
+      const [refreshedFuture] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, futureInstance.id));
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+
+      expect(refreshedPast?.overrideReimbursementTypeId).toBe(oldType.id);
+      expect(refreshedFuture?.overrideReimbursementTypeId).toBeNull();
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+    });
+
+    it('does not overwrite an instance that already has its own override', async () => {
+      // createReimbursementType upserts on `key`, and there are only two
+      // keys in the enum (EHRENAMT/UEBUNGSLEITER) — so this test can only
+      // ever have two distinct type rows to work with, not three. That's
+      // still enough: pre-set the past instance's override to `oldType`
+      // (distinct from the `newType` the master is about to change to), and
+      // assert it stays `oldType` — if the `isNull(overrideReimbursementTypeId)`
+      // guard were missing and the snapshot ran unconditionally, this
+      // instance's override would get stomped to `newType` instead.
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        rrule: null,
+        reimbursementTypeId: oldType.id,
+      });
+      const pastInstanceWithOwnOverride = await createShiftInstance(
+        db,
+        shift.id,
+        {
+          actualStartsAt: daysAgo(2, 8),
+          actualEndsAt: daysAgo(2, 10),
+          overrideReimbursementTypeId: oldType.id,
+        },
+      );
+
+      await shiftService.update(userId, shift.id, organizationUnitId, {
+        title: shift.title,
+        startsAt: shift.originalStartsAt,
+        endsAt: new Date(
+          shift.originalStartsAt.getTime() + shift.durationMinutes * 60000,
+        ),
+        visibility: shift.visibility,
+        reimbursementTypeId: newType.id,
+      } as never);
+
+      const [refreshed] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstanceWithOwnOverride.id));
+
+      expect(refreshed?.overrideReimbursementTypeId).toBe(oldType.id);
+    });
+  });
+
+  describe('updateShiftInstanceSeries — reimbursement type sync', () => {
+    it('syncs the new type to the master, snapshots past instances, and leaves future instances falling back', async () => {
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt,
+        rrule: DAILY_RRULE,
+        reimbursementTypeId: oldType.id,
+      });
+
+      // createShift only expands instances from `startsAt` onward, so add an
+      // already-occurred instance by hand — this is the one that must get
+      // snapshotted onto the old type before the master row changes.
+      const pastInstance = await createShiftInstance(db, shift.id, {
+        actualStartsAt: daysAgo(2, 8),
+        actualEndsAt: daysAgo(2, 10),
+      });
+
+      const [futureInstance] = await getInstances(shift.id).then((rows) =>
+        rows.filter((r) => r.id !== pastInstance.id),
+      );
+      if (!futureInstance) {
+        throw new Error('Expected createShift to expand a future instance');
+      }
+
+      await shiftService.updateShiftInstance(
+        futureInstance.id,
+        {
+          title: shift.title,
+          startsAt: futureInstance.actualStartsAt,
+          endsAt: futureInstance.actualEndsAt,
+          visibility: shift.visibility,
+          reimbursementTypeId: newType.id,
+        } as never,
+        organizationUnitId,
+        { applyToAllFuture: true },
+      );
+
+      const [refreshedShift] = await db
+        .select()
+        .from(schema.shifts)
+        .where(eq(schema.shifts.id, shift.id));
+      const [refreshedPast] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, pastInstance.id));
+      const [refreshedFuture] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.id, futureInstance.id));
+
+      expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+      expect(refreshedPast?.overrideReimbursementTypeId).toBe(oldType.id);
+      expect(refreshedFuture?.overrideReimbursementTypeId).toBeNull();
+    });
+
+    it('keeps an already-ended, same-day instance frozen on its OLD type even when a bulk time-only edit pushes the whole day past', async () => {
+      // Regression test for a snapshot-then-wipe ordering bug: the override-
+      // reset block below (the time-only path, taken here since neither the
+      // recurrence pattern nor the edited occurrence's date change) matches
+      // every instance with `actualStartsAt >= fromDate` (start of the
+      // edited occurrence's day) and, in this branch, also rewrites every
+      // matched row's actualStartsAt/actualEndsAt to the new time-of-day —
+      // so two same-day rows necessarily converge on the same instant after
+      // the edit. Snapshotting past instances onto the OLD type BEFORE this
+      // reset (the pre-fix order) would have that reset immediately wipe the
+      // freeze right back to null for every row it touches, silently letting
+      // them inherit the NEW master type. Snapshotting AFTER (the fix)
+      // catches them once their post-edit actualEndsAt is settled.
+      const oldType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.EHRENAMT,
+      });
+      const newType = await createReimbursementType(db, {
+        key: ReimbursementTypeKey.UEBUNGSLEITER,
+      });
+
+      // Freeze "now" so every timestamp can be a plain literal on one day.
+      // The edited occurrence must still be in progress when the update runs,
+      // while the post-edit slot must already be over (for the snapshot).
+      setSystemTime(new Date('2026-07-15T15:30:00.000Z'));
+      try {
+        const startsAt = new Date('2026-07-15T14:00:00.000Z');
+        const endsAt = new Date('2026-07-15T16:00:00.000Z');
+        const editedStartsAt = new Date('2026-07-15T10:00:00.000Z');
+        const editedEndsAt = new Date('2026-07-15T11:00:00.000Z');
+
+        const shift = await createShift(db, {
+          organizationUnitId,
+          createdById: userId,
+          startsAt,
+          endsAt,
+          rrule: DAILY_RRULE,
+          reimbursementTypeId: oldType.id,
+        });
+
+        const [editedInstance] = await getInstances(shift.id);
+        if (!editedInstance) {
+          throw new Error('Expected createShift to expand an instance');
+        }
+
+        // A second, already-ended occurrence on the SAME calendar day as
+        // `editedInstance` — not something `expandShift` would organically
+        // produce for a plain daily rrule, but a stand-in for any already-
+        // occurred same-day row (e.g. a manually added exception) that the
+        // bulk edit below sweeps over.
+        const earlierToday = await createShiftInstance(db, shift.id, {
+          actualStartsAt: new Date('2026-07-15T08:00:00.000Z'),
+          actualEndsAt: new Date('2026-07-15T09:00:00.000Z'),
+          occurrenceIndex: 2,
+        });
+
+        await shiftService.updateShiftInstance(
+          editedInstance.id,
+          {
+            title: shift.title,
+            startsAt: editedStartsAt,
+            endsAt: editedEndsAt,
+            visibility: shift.visibility,
+            reimbursementTypeId: newType.id,
+          } as never,
+          organizationUnitId,
+          { applyToAllFuture: true },
+        );
+
+        const [refreshedShift] = await db
+          .select()
+          .from(schema.shifts)
+          .where(eq(schema.shifts.id, shift.id));
+        const [refreshedEarlierToday] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, earlierToday.id));
+        const [refreshedEdited] = await db
+          .select()
+          .from(schema.shiftInstances)
+          .where(eq(schema.shiftInstances.id, editedInstance.id));
+
+        expect(refreshedShift?.reimbursementTypeId).toBe(newType.id);
+        expect(refreshedEarlierToday?.overrideReimbursementTypeId).toBe(
+          oldType.id,
+        );
+        expect(refreshedEdited?.overrideReimbursementTypeId).toBe(oldType.id);
+      } finally {
+        setSystemTime();
+      }
     });
   });
 
@@ -513,7 +882,7 @@ describe('ShiftService', () => {
       const invite = await db.query.shiftInstanceInvites.findFirst({
         where: { instanceId, userId },
       });
-      expect(invite?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(invite?.status).toBe(ShiftInviteStatus.JOINED);
       expect(
         notificationService.notifyShiftInstanceInvited,
       ).not.toHaveBeenCalled();
@@ -551,8 +920,8 @@ describe('ShiftService', () => {
       });
       const selfInvite = invites.find((i) => i.userId === userId);
       const otherInvite = invites.find((i) => i.userId === otherUser.id);
-      expect(selfInvite?.status).toBe(ShiftInviteStatus.ACCEPTED);
-      expect(otherInvite?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(selfInvite?.status).toBe(ShiftInviteStatus.JOINED);
+      expect(otherInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
 
       expect(
         notificationService.notifyShiftInstanceInvited,
@@ -617,7 +986,7 @@ describe('ShiftService', () => {
       }
     });
 
-    it('does not emit invite notifications when the transaction rolls back', async () => {
+    it('allows inviting beyond capacity (accept may waitlist)', async () => {
       const shift = await createShift(db, {
         organizationUnitId,
         createdById: userId,
@@ -635,7 +1004,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instanceId,
         userId: existingUser.id,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.JOINED,
       });
 
       (
@@ -653,12 +1022,60 @@ describe('ShiftService', () => {
           [newUser.id],
           organizationUnitId,
         ),
-      ).rejects.toThrow(ConflictGraphQLError);
+      ).resolves.toBeDefined();
 
-      expect(
-        notificationService.notifyShiftInstanceInvited,
-      ).not.toHaveBeenCalled();
-      expect(notificationService.notifyShiftInvited).not.toHaveBeenCalled();
+      const invite = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId: newUser.id },
+      });
+      expect(invite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    });
+
+    it('does not emit invite notifications when the transaction rolls back', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const newUser = await createUser(db);
+
+      (
+        notificationService.notifyShiftInstanceInvited as ReturnType<
+          typeof mock
+        >
+      ).mockClear();
+      (
+        notificationService.notifyShiftInvited as ReturnType<typeof mock>
+      ).mockClear();
+
+      // biome-ignore lint/complexity/useLiteralKeys: accessing private method for test stubbing
+      const originalCreate = shiftService['createInvitesForInstances'];
+      // biome-ignore lint/complexity/useLiteralKeys: assigning private method for test stubbing
+      shiftService['createInvitesForInstances'] = async () => {
+        throw new ConflictGraphQLError('forced rollback');
+      };
+
+      try {
+        await expect(
+          shiftService.updateMembersForShiftInstance(
+            instanceId,
+            [newUser.id],
+            organizationUnitId,
+          ),
+        ).rejects.toThrow(ConflictGraphQLError);
+
+        expect(
+          notificationService.notifyShiftInstanceInvited,
+        ).not.toHaveBeenCalled();
+        expect(notificationService.notifyShiftInvited).not.toHaveBeenCalled();
+      } finally {
+        // biome-ignore lint/complexity/useLiteralKeys: restoring private method after test stubbing
+        shiftService['createInvitesForInstances'] = originalCreate;
+      }
     });
 
     it('keeps pending invites when re-saving the same member list', async () => {
@@ -690,7 +1107,7 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('resurrects a REJECTED invite when re-inviting the member', async () => {
@@ -721,7 +1138,110 @@ describe('ShiftService', () => {
         where: { instanceId, userId: user.id },
       });
       expect(invites).toHaveLength(1);
-      expect(invites[0]?.status).toBe(ShiftInviteStatus.INVITED);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    });
+
+    it('does not throw a spurious capacity error when re-inviting a declined member at capacity', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        maxVolunteers: 1,
+      });
+      const instances = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      const instanceId = instances[0]?.id;
+      expect(instanceId).toBeDefined();
+
+      const user = await createUser(db);
+      // A stale (non-active) invite must not occupy capacity against a
+      // single-member re-invite when maxVolunteers is 1.
+      await db.insert(schema.shiftInstanceInvites).values({
+        instanceId,
+        userId: user.id,
+        status: ShiftInviteStatus.ADMIN_REJECTED,
+      });
+
+      await shiftService.updateMembersForShiftInstance(
+        instanceId,
+        [user.id],
+        organizationUnitId,
+      );
+
+      const invites = await db.query.shiftInstanceInvites.findMany({
+        where: { instanceId, userId: user.id },
+      });
+      expect(invites).toHaveLength(1);
+      expect(invites[0]?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+    });
+
+    it('does not throw a spurious capacity error when re-inviting to all future instances after a decline', async () => {
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        maxVolunteers: 1,
+        startsAt: new Date('2026-07-01T08:00:00.000Z'),
+        endsAt: new Date('2026-07-01T10:00:00.000Z'),
+        rrule: null,
+      });
+      const [anchorInstance] = await db.query.shiftInstances.findMany({
+        where: { masterId: shift.id },
+      });
+      expect(anchorInstance?.id).toBeDefined();
+
+      // A later instance of the same shift, so the invite-to-all-future path
+      // iterates a real future sibling.
+      const futureSibling = await createShiftInstance(db, shift.id, {
+        actualStartsAt: new Date('2026-07-02T08:00:00.000Z'),
+        actualEndsAt: new Date('2026-07-02T10:00:00.000Z'),
+        occurrenceIndex: 1,
+      });
+
+      const user = await createUser(db);
+
+      const originalNotificationHandler =
+        // biome-ignore lint/complexity/useLiteralKeys: accessing private method for test stubbing
+        shiftService['loadAndEmitShiftInvitedNotification'];
+      // biome-ignore lint/complexity/useLiteralKeys: assigning private method for test stubbing
+      shiftService['loadAndEmitShiftInvitedNotification'] = async () => {};
+
+      try {
+        // A stale (non-active) invite on a future instance must not count
+        // against capacity when the member is re-invited to all future
+        // instances.
+        await db.insert(schema.shiftInstanceInvites).values({
+          instanceId: futureSibling.id,
+          userId: user.id,
+          status: ShiftInviteStatus.VOLUNTEER_REJECTED,
+        });
+
+        await shiftService.updateMembersForShiftInstance(
+          anchorInstance.id,
+          [user.id],
+          organizationUnitId,
+          { inviteToAllInstances: true },
+        );
+      } finally {
+        // biome-ignore lint/complexity/useLiteralKeys: restoring private method after test stubbing
+        shiftService['loadAndEmitShiftInvitedNotification'] =
+          originalNotificationHandler;
+      }
+
+      const anchorInvite = await db.query.shiftInstanceInvites.findFirst({
+        where: {
+          instanceId: anchorInstance.id,
+          userId: user.id,
+        },
+      });
+      expect(anchorInvite?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
+
+      const resurrectedFuture = await db.query.shiftInstanceInvites.findFirst({
+        where: {
+          instanceId: futureSibling.id,
+          userId: user.id,
+        },
+      });
+      expect(resurrectedFuture?.status).toBe(ShiftInviteStatus.ADMIN_INVITED);
     });
 
     it('returns pending invitees via findVolunteers when active statuses are requested', async () => {
@@ -739,7 +1259,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId,
         userId: user.id,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.ADMIN_INVITED,
       });
 
       const withActiveStatuses = await shiftService.findVolunteers(
@@ -832,7 +1352,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: oldest.id,
         userId: volunteer.id,
-        status: ShiftInviteStatus.ACCEPTED,
+        status: ShiftInviteStatus.JOINED,
       });
 
       const newStartsAt = daysAgo(7, 8);
@@ -899,12 +1419,12 @@ describe('ShiftService', () => {
         {
           instanceId: syncTarget.id,
           userId: volunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: manualTarget.id,
           userId: volunteer2.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
       ]);
       await db
@@ -1134,17 +1654,17 @@ describe('ShiftService', () => {
         {
           instanceId: instances[0].id,
           userId: invitedUser.id,
-          status: ShiftInviteStatus.INVITED,
+          status: ShiftInviteStatus.ADMIN_INVITED,
         },
         {
           instanceId: instances[0].id,
           userId: acceptedUser.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: instances[0].id,
           userId: selfJoinedUser.id,
-          status: ShiftInviteStatus.SELF_JOINED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: instances[0].id,
@@ -1166,13 +1686,13 @@ describe('ShiftService', () => {
       );
 
       expect(statusByUserId.get(invitedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_CANCELLED,
       );
       expect(statusByUserId.get(acceptedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_CANCELLED,
       );
       expect(statusByUserId.get(selfJoinedUser.id)).toBe(
-        ShiftInviteStatus.CANCELLED,
+        ShiftInviteStatus.VOLUNTEER_CANCELLED,
       );
       expect(statusByUserId.get(rejectedUser.id)).toBe(
         ShiftInviteStatus.VOLUNTEER_REJECTED,
@@ -1201,12 +1721,12 @@ describe('ShiftService', () => {
         {
           instanceId: targetInstance.id,
           userId: sharedVolunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
         {
           instanceId: siblingInstance.id,
           userId: sharedVolunteer.id,
-          status: ShiftInviteStatus.ACCEPTED,
+          status: ShiftInviteStatus.JOINED,
         },
       ]);
 
@@ -1226,7 +1746,7 @@ describe('ShiftService', () => {
         .from(schema.shiftInstanceInvites)
         .where(eq(schema.shiftInstanceInvites.instanceId, siblingInstance.id));
       expect(siblingInvites).toHaveLength(1);
-      expect(siblingInvites[0]?.status).toBe(ShiftInviteStatus.ACCEPTED);
+      expect(siblingInvites[0]?.status).toBe(ShiftInviteStatus.JOINED);
     });
 
     it('emits a cancellation notification for volunteers with an active invite', async () => {
@@ -1244,7 +1764,7 @@ describe('ShiftService', () => {
       await db.insert(schema.shiftInstanceInvites).values({
         instanceId: instances[0].id,
         userId: invitedUser.id,
-        status: ShiftInviteStatus.INVITED,
+        status: ShiftInviteStatus.ADMIN_INVITED,
       });
 
       (
@@ -1479,17 +1999,17 @@ describe('ShiftService', () => {
           {
             instanceId: anchor.id,
             userId: bothVolunteer.id,
-            status: ShiftInviteStatus.ACCEPTED,
+            status: ShiftInviteStatus.JOINED,
           },
           {
             instanceId: sibling.id,
             userId: bothVolunteer.id,
-            status: ShiftInviteStatus.INVITED,
+            status: ShiftInviteStatus.ADMIN_INVITED,
           },
           {
             instanceId: anchor.id,
             userId: anchorOnlyVolunteer.id,
-            status: ShiftInviteStatus.INVITED,
+            status: ShiftInviteStatus.ADMIN_INVITED,
           },
         ]);
 
@@ -1519,7 +2039,7 @@ describe('ShiftService', () => {
           );
         expect(
           invites.every(
-            (invite) => invite.status === ShiftInviteStatus.CANCELLED,
+            (invite) => invite.status === ShiftInviteStatus.VOLUNTEER_CANCELLED,
           ),
         ).toBe(true);
 
@@ -1568,6 +2088,324 @@ describe('ShiftService', () => {
           notificationService.notifyShiftInstanceSeriesCancelled,
         ).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('create — reimbursement type', () => {
+    it('persists the reimbursement type on the created shift', async () => {
+      const reimbursementType = await createReimbursementType(db);
+
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Coaching session',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        reimbursementTypeId: reimbursementType.id,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBe(reimbursementType.id);
+    });
+
+    it('leaves the shift type-less when not provided', async () => {
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Setup crew',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBeNull();
+    });
+  });
+
+  describe('reimbursement type requires accountingEnabled', () => {
+    it('rejects creating a shift with a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      await expect(
+        shiftService.create(userId, disabledUnit.id, {
+          title: 'Disabled org shift',
+          startsAt: new Date(Date.now() + 100000),
+          endsAt: new Date(Date.now() + 200000),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+          reimbursementTypeId: reimbursementType.id,
+        } as never),
+      ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+
+    it('allows creating a shift with a reimbursement type on the enabled shared test org', async () => {
+      const reimbursementType = await createReimbursementType(db);
+
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Enabled org shift',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        reimbursementTypeId: reimbursementType.id,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBe(reimbursementType.id);
+    });
+
+    it('does not gate a shift creation that never sets a reimbursement type, even on a disabled org', async () => {
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting No-Type Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'No type, disabled org',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.reimbursementTypeId).toBeNull();
+    });
+
+    it('rejects updating a shift to set a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Update Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'Disabled org shift to update',
+        startsAt: new Date(Date.now() + 100000),
+        endsAt: new Date(Date.now() + 200000),
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      await expect(
+        shiftService.update(userId, shift.id, disabledUnit.id, {
+          reimbursementTypeId: reimbursementType.id,
+        } as never),
+      ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+
+    it('rejects updating a shift instance to set a reimbursement type when accounting is disabled', async () => {
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Disabled Accounting Instance Org ${crypto.randomUUID()}`,
+      );
+      const disabledUnit = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'root',
+      });
+      // accountingEnabled defaults to false — deliberately not enabling it here.
+
+      const startsAt = new Date(Date.now() + 100000);
+      const endsAt = new Date(Date.now() + 200000);
+      const shift = await shiftService.create(userId, disabledUnit.id, {
+        title: 'Disabled org shift instance',
+        startsAt,
+        endsAt,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+      const [instance] = await db
+        .select()
+        .from(schema.shiftInstances)
+        .where(eq(schema.shiftInstances.masterId, shift.id));
+      if (!instance) {
+        throw new Error('Expected shift creation to expand an instance');
+      }
+
+      await expect(
+        shiftService.updateShiftInstance(
+          instance.id,
+          {
+            title: shift.title,
+            startsAt,
+            endsAt,
+            reimbursementTypeId: reimbursementType.id,
+          } as never,
+          disabledUnit.id,
+        ),
+      ).rejects.toThrow(ForbiddenGraphQLError);
+    });
+  });
+
+  it('captures shift_instance_join from waitlist promotion when a seat frees', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const shift = await createShift(db, {
+      organizationUnitId,
+      createdById: userId,
+      startsAt,
+      endsAt,
+      rrule: null,
+      maxVolunteers: 1,
+    });
+    const [instance] = await getInstances(shift.id);
+    const joinedUser = await createUser(db);
+    const waitlistedUser = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId: instance.id,
+        userId: joinedUser.id,
+        status: ShiftInviteStatus.JOINED,
+      },
+      {
+        instanceId: instance.id,
+        userId: waitlistedUser.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+    ]);
+
+    capture.mockClear();
+
+    await shiftService.updateShiftInstanceInviteStatus(
+      joinedUser.id,
+      instance.id,
+      ShiftInviteStatus.VOLUNTEER_CANCELLED,
+    );
+
+    const waitlisted = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: waitlistedUser.id },
+    });
+    expect(waitlisted?.status).toBe(ShiftInviteStatus.JOINED);
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+        userId: waitlistedUser.id,
+        properties: expect.objectContaining({
+          source: 'waitlist_promote',
+          shift_instance_id: instance.id,
+        }),
+      }),
+    );
+  });
+
+  describe('overnight shifts', () => {
+    it('stores a 5-hour duration when end is the next morning', async () => {
+      const startsAt = new Date('2026-09-18T20:00:00.000Z');
+      const endsAt = new Date('2026-09-19T01:00:00.000Z');
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Night watch',
+        startsAt,
+        endsAt,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+      } as never);
+
+      expect(shift.durationMinutes).toBe(300);
+      const [instance] = await getInstances(shift.id);
+      expect(instance?.actualEndsAt.getTime()).toBe(endsAt.getTime());
+    });
+
+    it('expands a weekly Friday overnight series onto Saturday mornings', async () => {
+      const startsAt = new Date('2026-09-18T20:00:00.000Z');
+      const endsAt = new Date('2026-09-19T01:00:00.000Z');
+      const shift = await shiftService.create(userId, organizationUnitId, {
+        title: 'Friday night',
+        startsAt,
+        endsAt,
+        visibility: ShiftVisibility.ALL_MEMBERS,
+        rrule: 'FREQ=WEEKLY;BYDAY=FR;COUNT=3',
+      } as never);
+
+      const instances = await getInstances(shift.id);
+      expect(instances.length).toBeGreaterThan(0);
+      for (const instance of instances) {
+        expect(
+          instance.actualEndsAt.getTime() - instance.actualStartsAt.getTime(),
+        ).toBe(5 * 60 * 60 * 1000);
+      }
+    });
+
+    it('rejects a zero-length shift', async () => {
+      const startsAt = new Date(Date.now() + 100000);
+      await expect(
+        shiftService.create(userId, organizationUnitId, {
+          title: 'Zero length',
+          startsAt,
+          endsAt: new Date(startsAt.getTime()),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        } as never),
+      ).rejects.toThrow(BadRequestGraphQLError);
+    });
+
+    it('rejects a 24-hour shift', async () => {
+      const startsAt = new Date(Date.now() + 100000);
+      await expect(
+        shiftService.create(userId, organizationUnitId, {
+          title: 'Too long',
+          startsAt,
+          endsAt: new Date(startsAt.getTime() + 24 * 60 * 60 * 1000),
+          visibility: ShiftVisibility.ALL_MEMBERS,
+        } as never),
+      ).rejects.toThrow(BadRequestGraphQLError);
+    });
+
+    it('keeps overnight ends when applying a time edit to all future instances', async () => {
+      const startsAt = new Date(Date.now() + 3 * 24 * 3600_000);
+      startsAt.setUTCMinutes(0, 0, 0);
+      startsAt.setUTCHours(20);
+      const sameDayEnd = new Date(startsAt.getTime() + 2 * 3600_000);
+      const shift = await createShift(db, {
+        organizationUnitId,
+        createdById: userId,
+        startsAt,
+        endsAt: sameDayEnd,
+        rrule: DAILY_RRULE,
+      });
+      const instances = await getInstances(shift.id);
+      const [anchor] = instances;
+      if (!anchor) {
+        throw new Error('Expected createShift to expand an instance');
+      }
+
+      const overnightEnd = new Date(
+        anchor.actualStartsAt.getTime() + 5 * 3600_000,
+      );
+      await shiftService.updateShiftInstance(
+        anchor.id,
+        {
+          title: shift.title,
+          startsAt: anchor.actualStartsAt,
+          endsAt: overnightEnd,
+          visibility: shift.visibility,
+        } as never,
+        organizationUnitId,
+        { applyToAllFuture: true },
+      );
+
+      const refreshed = await getInstances(shift.id);
+      const future = refreshed.filter(
+        (instance) =>
+          !instance.isCancelled &&
+          instance.actualStartsAt.getTime() >= anchor.actualStartsAt.getTime(),
+      );
+      expect(future.length).toBeGreaterThan(1);
+      for (const instance of future) {
+        expect(
+          instance.actualEndsAt.getTime() - instance.actualStartsAt.getTime(),
+        ).toBe(5 * 60 * 60 * 1000);
+      }
     });
   });
 });

@@ -79,6 +79,10 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
       from: r.contracts.volunteerId,
       to: r.users.id,
     }),
+    organizationUnit: r.one.organizationUnits({
+      from: r.contracts.organizationUnitId,
+      to: r.organizationUnits.id,
+    }),
     reimbursementType: r.one.reimbursementTypes({
       from: r.contracts.reimbursementTypeId,
       to: r.reimbursementTypes.id,
@@ -104,6 +108,10 @@ export const accountingRelations = defineRelationsPart(schema, (r) => ({
     volunteer: r.one.users({
       from: r.invoices.volunteerId,
       to: r.users.id,
+    }),
+    organizationUnit: r.one.organizationUnits({
+      from: r.invoices.organizationUnitId,
+      to: r.organizationUnits.id,
     }),
     reimbursementType: r.one.reimbursementTypes({
       from: r.invoices.reimbursementTypeId,

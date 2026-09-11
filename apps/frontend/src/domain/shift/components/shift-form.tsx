@@ -1,7 +1,12 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useOrganizationUnit, useRequirementForms } from '@repo/data/react';
+import {
+  useCurrentOrg,
+  useOrganizationUnit,
+  useReimbursementTypes,
+  useRequirementForms,
+} from '@repo/data/react';
 import {
   Button,
   Card,
@@ -12,6 +17,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Switch,
   Textarea,
 } from '@repo/ui';
@@ -28,11 +38,18 @@ import {
 import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
+import { pauschaleForReimbursementTypeKey } from '../../accounting/lib/reimbursement-type-mapping';
 import { resolveCreateShiftSuccessNavigation } from '../create-shift-flow';
 import { shiftInvitePath } from '../routes';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
+import {
+  type RecurrenceEndMode,
+  RecurrenceEndSelect,
+} from './recurrence-end-select';
 import { RecurrenceSelect } from './recurrence-select';
+
+const NO_REIMBURSEMENT_TYPE = 'none';
 
 interface ShiftFormProps {
   title: string;
@@ -66,7 +83,10 @@ export const ShiftForm = ({
   const t = useTranslations('Shift');
   const tUpload = useTranslations('Storage.upload');
   const tForms = useTranslations('Shift.detail.requiredForms');
+  const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
   const { formatRange } = useFormatting();
+  const { accountingEnabled } = useCurrentOrg();
+  const { data: reimbursementTypes } = useReimbursementTypes();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const [requiredFormIds, setRequiredFormIds] = useState(
@@ -110,6 +130,10 @@ export const ShiftForm = ({
       endTimeRequired: t('validation.endTimeRequired'),
       windowViolation: t('validation.windowViolation'),
       minMaxVolunteers: t('validation.minMaxVolunteers'),
+      recurrenceEndRequired: t('validation.recurrenceEndRequired'),
+      recurrenceEndBeforeStart: t('validation.recurrenceEndBeforeStart'),
+      endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+      shorterThan24Hours: t('validation.shorterThan24Hours'),
     },
     event,
   );
@@ -128,15 +152,20 @@ export const ShiftForm = ({
       location: defaultLocation ?? '',
       instructions: '',
       openShift: true,
+      joinRequiresApproval: false,
       invitedMemberIds: [],
       recurrenceDays: [],
       imageFileId: undefined,
       ...initialValues,
+      recurrenceEndMode: initialValues?.recurrenceEndsAt ? 'on' : 'never',
     },
   });
 
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
+  const recurrenceDays = watch('recurrenceDays');
+  const recurrenceEndMode = watch('recurrenceEndMode') ?? 'never';
+  const recurrenceEndsAt = watch('recurrenceEndsAt');
 
   const onSubmit = async (formData: ShiftFormValues) => {
     setServerError(undefined);
@@ -146,6 +175,11 @@ export const ShiftForm = ({
 
       if (result.serverError === 'shift_window_violation') {
         setError('endsAt', { message: t('validation.windowViolation') });
+        return;
+      }
+
+      if (result.serverError === 'shift_duration_out_of_range') {
+        setError('endsAt', { message: t('validation.shorterThan24Hours') });
         return;
       }
 
@@ -235,32 +269,68 @@ export const ShiftForm = ({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
-      <Field>
-        <FieldLabel>
-          {t('form.dateTimeLabel')}
-          <span className="text-destructive"> *</span>
-        </FieldLabel>
-        <DatePickerWithTimeRange
-          value={{ start: startsAt ?? null, end: endsAt ?? null }}
-          onChange={(start, end) => {
-            setValue('startsAt', start as Date, { shouldValidate: true });
-            setValue('endsAt', end as Date, { shouldValidate: true });
-          }}
-          errors={[errors.startsAt?.message, errors.endsAt?.message]}
-          disabled={pending}
-          minDate={event?.startsAt}
-          maxDate={event?.endsAt}
-        />
-      </Field>
+      <div className="space-y-3">
+        <Field>
+          <FieldLabel>
+            {t('form.dateTimeLabel')}
+            <span className="text-destructive"> *</span>
+          </FieldLabel>
+          <DatePickerWithTimeRange
+            value={{ start: startsAt ?? null, end: endsAt ?? null }}
+            onChange={(start, end) => {
+              setValue('startsAt', start as Date, { shouldValidate: true });
+              setValue('endsAt', end as Date, { shouldValidate: true });
+            }}
+            errors={[errors.startsAt?.message, errors.endsAt?.message]}
+            disabled={pending}
+            minDate={event?.startsAt}
+            maxDate={event?.endsAt}
+            allowOvernight
+            messages={{
+              endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+              continuesIntoNextDay: t('validation.continuesIntoNextDay'),
+              shorterThan24Hours: t('validation.shorterThan24Hours'),
+            }}
+          />
+        </Field>
 
-      <RecurrenceSelect
-        value={watch('recurrenceDays')}
-        onChange={(days) => {
-          if (event) return;
-          setValue('recurrenceDays', days as ShiftFormValues['recurrenceDays']);
-        }}
-        disabled={!!event || pending}
-      />
+        <RecurrenceSelect
+          value={recurrenceDays}
+          onChange={(days) => {
+            if (event) return;
+            setValue(
+              'recurrenceDays',
+              days as ShiftFormValues['recurrenceDays'],
+            );
+            if (days.length === 0) {
+              setValue('recurrenceEndMode', 'never', { shouldValidate: true });
+              setValue('recurrenceEndsAt', undefined, { shouldValidate: true });
+            }
+          }}
+          disabled={!!event || pending}
+        />
+
+        {(recurrenceDays?.length ?? 0) > 0 && (
+          <RecurrenceEndSelect
+            mode={recurrenceEndMode}
+            date={recurrenceEndsAt}
+            minDate={startsAt}
+            error={errors.recurrenceEndsAt?.message}
+            disabled={!!event || pending}
+            onModeChange={(mode: RecurrenceEndMode) => {
+              setValue('recurrenceEndMode', mode, { shouldValidate: true });
+              if (mode === 'never') {
+                setValue('recurrenceEndsAt', undefined, {
+                  shouldValidate: true,
+                });
+              }
+            }}
+            onDateChange={(date) => {
+              setValue('recurrenceEndsAt', date, { shouldValidate: true });
+            }}
+          />
+        )}
+      </div>
 
       <Field>
         <FieldLabel htmlFor="location">{t('form.locationLabel')}</FieldLabel>
@@ -326,6 +396,27 @@ export const ShiftForm = ({
             disabled={pending}
           />
         </Field>
+
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldLabel htmlFor="joinRequiresApproval">
+              {t('form.approvalRequiredLabel')}
+            </FieldLabel>
+
+            <FieldDescription>
+              {t('form.approvalRequiredDescription')}
+            </FieldDescription>
+          </FieldContent>
+
+          <Switch
+            id="joinRequiresApproval"
+            checked={watch('joinRequiresApproval')}
+            onCheckedChange={(checked) =>
+              setValue('joinRequiresApproval', checked)
+            }
+            disabled={pending}
+          />
+        </Field>
       </Card>
 
       <div className="flex gap-3">
@@ -367,6 +458,45 @@ export const ShiftForm = ({
           <FieldError errors={[errors.maxVolunteers]} />
         </Field>
       </div>
+
+      {accountingEnabled && (
+        <Field>
+          <FieldLabel htmlFor="reimbursementTypeId">
+            {t('form.reimbursementTypeLabel')}
+          </FieldLabel>
+          <Select
+            value={watch('reimbursementTypeId') ?? NO_REIMBURSEMENT_TYPE}
+            onValueChange={(value) =>
+              setValue(
+                'reimbursementTypeId',
+                value === NO_REIMBURSEMENT_TYPE ? null : value,
+              )
+            }
+            disabled={pending}
+          >
+            <SelectTrigger id="reimbursementTypeId" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_REIMBURSEMENT_TYPE}>
+                {t('form.reimbursementTypeNone')}
+              </SelectItem>
+              {(reimbursementTypes ?? []).map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {tPauschale(
+                    pauschaleForReimbursementTypeKey(type.key) === 'ehrenamt'
+                      ? 'typeEP'
+                      : 'typeUL',
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldDescription>
+            {t('form.reimbursementTypeDescription')}
+          </FieldDescription>
+        </Field>
+      )}
 
       <div className="rounded-xl border p-5 space-y-5">
         <div className="space-y-1">

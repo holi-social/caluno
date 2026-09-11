@@ -1,6 +1,6 @@
 import type { GetWeeklyShiftsQuery } from '@repo/data';
-import { addDays, isSameDay } from 'date-fns';
-import { getFormatter } from 'next-intl/server';
+import { getFormatting } from '@/lib/formatting/formatting-server';
+import { getDayInstances, getDaysForWeek } from '../lib/shift-instances';
 import { ShiftCard } from './shift-card';
 
 type WeeklyShiftInstance = GetWeeklyShiftsQuery['weeklyShifts'][number];
@@ -55,19 +55,14 @@ export async function WeeklyCalendar({
   weekStart,
   orgUId,
 }: WeeklyCalendarProps) {
-  const formatter = await getFormatter();
+  const { formatDate } = await getFormatting();
 
-  const days: CalendarDay[] = Array.from({ length: 7 }, (_, i) => {
-    const date = addDays(weekStart, i);
-    return {
-      date,
-      label: formatter.dateTime(date, { weekday: 'short' }),
-      dateLabel: formatter.dateTime(date, { month: 'short', day: 'numeric' }),
-      instances: instances.filter((inst) =>
-        isSameDay(new Date(inst.actualStartsAt), date),
-      ),
-    };
-  });
+  const days: CalendarDay[] = getDaysForWeek(weekStart).map((date) => ({
+    date,
+    label: formatDate(date, { weekday: 'short' }),
+    dateLabel: formatDate(date, { month: 'short', day: 'numeric' }),
+    instances: getDayInstances(date, instances),
+  }));
 
   return (
     <div className="bg-muted border border-border rounded-xl overflow-x-auto flex-1 min-h-80 snap-x snap-mandatory">

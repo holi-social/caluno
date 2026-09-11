@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { GetShiftsQuery, ShiftInstanceItem } from '@repo/data';
+import { ReimbursementTypeKey } from '@repo/data';
+import { useReimbursementTypes } from '@repo/data/react';
 import {
   Checkbox,
   DatePickerWithTimeRange,
@@ -21,17 +22,15 @@ import { useForm } from 'react-hook-form';
 import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { clientTimeEntrySchema, type TimeEntryFormValues } from '../schemas';
+import type { TimeEntryShiftInstance } from '../shift-instance-options';
 
 import {
   type PickerValue,
   ShiftPicker,
 } from './shift-instance-picker/shift-instance-picker';
 
-type Shift = GetShiftsQuery['shifts']['items'][0];
-
 interface TimeEntryFormProps {
   organizationUnitId: string;
-  shifts: Shift[];
   volunteers?: Array<{ id: string; name: string; email: string }>;
   initialValues?: Partial<TimeEntryFormValues>;
   mutate: (formData: TimeEntryFormValues) => Promise<{ serverError?: string }>;
@@ -41,7 +40,6 @@ interface TimeEntryFormProps {
 
 export const TimeEntryForm = ({
   organizationUnitId,
-  shifts,
   volunteers = [],
   mutate,
   initialValues,
@@ -53,9 +51,13 @@ export const TimeEntryForm = ({
   const tValidation = useTranslations('TimeEntry.validation');
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
-  const [selectedInstance, setSelectedInstance] = useState<ShiftInstanceItem>();
+  const [selectedInstance, setSelectedInstance] =
+    useState<TimeEntryShiftInstance>();
 
   const { open, setOpen } = useFormSheet();
+
+  const tPauschale = useTranslations('TimeEntry.pauschaleType');
+  const reimbursementTypesQuery = useReimbursementTypes();
 
   const schema = clientTimeEntrySchema({
     organizationUnitRequired: tValidation('organizationUnitRequired'),
@@ -64,6 +66,7 @@ export const TimeEntryForm = ({
     startedAtRequired: tValidation('startedAtRequired'),
     endedAtRequired: tValidation('endedAtRequired'),
     timeEntryIdRequired: tValidation('timeEntryIdRequired'),
+    reimbursementTypeRequired: tValidation('reimbursementTypeRequired'),
   });
 
   const {
@@ -80,6 +83,7 @@ export const TimeEntryForm = ({
       shiftInstanceId: '',
       volunteerId: '',
       hasShift: initialValues?.hasShift ?? true,
+      isPaidTime: !!initialValues?.reimbursementTypeId,
       ...initialValues,
     },
   });
@@ -88,6 +92,13 @@ export const TimeEntryForm = ({
   const shiftInstanceId = watch('shiftInstanceId');
   const startedAt = watch('startedAt');
   const endedAt = watch('endedAt');
+  const isPaidTime = watch('isPaidTime');
+  const reimbursementTypeId = watch('reimbursementTypeId');
+
+  const pauschaleLabel = (key: string) =>
+    key === ReimbursementTypeKey.Uebungsleiter
+      ? tPauschale('uebungsleiter')
+      : tPauschale('ehrenamt');
 
   //  When an instance is selected, default the time entry to the instances date range
   //  But don't overwrite any initial range that would be set via the Edit form
@@ -108,7 +119,7 @@ export const TimeEntryForm = ({
   ]);
 
   const handleInstanceSelect = useCallback(
-    (value: PickerValue, instance?: ShiftInstanceItem) => {
+    (value: PickerValue, instance?: TimeEntryShiftInstance) => {
       setValue('shiftId', value.shiftId);
       setValue('shiftInstanceId', value.shiftInstanceId ?? '');
       setSelectedInstance(instance);
@@ -122,6 +133,9 @@ export const TimeEntryForm = ({
     const payload = formData.hasShift
       ? formData
       : { ...formData, shiftId: undefined, shiftInstanceId: undefined };
+    payload.reimbursementTypeId = formData.isPaidTime
+      ? formData.reimbursementTypeId
+      : undefined;
 
     startTransition(async () => {
       const result = await mutate(payload);
@@ -169,15 +183,67 @@ export const TimeEntryForm = ({
       {watch('hasShift') && (
         <>
           <ShiftPicker
-            shifts={shifts}
             value={{ shiftId, shiftInstanceId }}
             onChange={handleInstanceSelect}
             disabled={pending}
+            defaultDate={initialValues?.startedAt ?? null}
           />
           {errors.shiftInstanceId && (
             <FieldError>{errors.shiftInstanceId.message}</FieldError>
           )}
         </>
+      )}
+
+      <Field>
+        <label
+          className="flex items-center gap-2 text-sm"
+          htmlFor="is-paid-time"
+        >
+          <Checkbox
+            id="is-paid-time"
+            checked={isPaidTime}
+            onCheckedChange={(checked) => {
+              setValue('isPaidTime', !!checked, { shouldValidate: true });
+              if (!checked) {
+                setValue('reimbursementTypeId', undefined, {
+                  shouldValidate: true,
+                });
+              }
+            }}
+            disabled={pending}
+          />
+          {t('paidTimeLabel')}
+        </label>
+      </Field>
+
+      {isPaidTime && (
+        <Field>
+          <FieldLabel htmlFor="reimbursementTypeId">
+            {t('pauschaleTypeLabel')}{' '}
+            <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Select
+            value={reimbursementTypeId}
+            onValueChange={(value) =>
+              setValue('reimbursementTypeId', value, { shouldValidate: true })
+            }
+            disabled={pending || reimbursementTypesQuery.isLoading}
+          >
+            <SelectTrigger id="reimbursementTypeId">
+              <SelectValue placeholder={t('pauschaleTypePlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {(reimbursementTypesQuery.data ?? []).map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {pauschaleLabel(type.key)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.reimbursementTypeId && (
+            <FieldError>{errors.reimbursementTypeId.message}</FieldError>
+          )}
+        </Field>
       )}
 
       <Field>

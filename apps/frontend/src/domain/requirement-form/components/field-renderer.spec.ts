@@ -3,6 +3,7 @@ import { FieldType } from '@repo/data';
 import {
   buildFieldSchema,
   type RenderableField,
+  validateBic,
   validateIban,
 } from './field-renderer';
 
@@ -34,6 +35,7 @@ const msgs = {
   validPostalCode: (l: string) => `${l} zip`,
   minAge: (a: number) => `min ${a}`,
   invalidIban: (l: string) => `${l} iban`,
+  invalidBic: (l: string) => `${l} bic`,
   dateNotFuture: (l: string) => `${l} not future`,
 };
 
@@ -112,6 +114,42 @@ describe('buildFieldSchema IBAN', () => {
       buildFieldSchema(field, true, msgs).safeParse(
         'DE89 3704 0044 0532 0130 00',
       ).success,
+    ).toBe(true);
+  });
+});
+
+describe('validateBic', () => {
+  it('accepts 8- and 11-char SWIFT-BIC values', () => {
+    expect(validateBic('COBADEFFXXX')).toBe(true);
+    expect(validateBic('COBADEFF')).toBe(true);
+  });
+  it('accepts lowercase and whitespace', () => {
+    expect(validateBic('cobadeffxxx')).toBe(true);
+    expect(validateBic('COBA DEFF XXX')).toBe(true);
+  });
+  it('rejects malformed BICs', () => {
+    expect(validateBic('')).toBe(false);
+    expect(validateBic('COB')).toBe(false);
+    expect(validateBic('COBADEFFXXXX')).toBe(false);
+    expect(validateBic('COBA-DEFF')).toBe(false);
+  });
+});
+
+describe('buildFieldSchema BIC', () => {
+  const field = makeField({
+    id: 'bic',
+    type: FieldType.Text,
+    label: 'BIC',
+    systemKey: 'bic',
+  });
+  it('rejects an invalid BIC', () => {
+    expect(
+      buildFieldSchema(field, true, msgs).safeParse('not-a-bic').success,
+    ).toBe(false);
+  });
+  it('accepts a valid BIC', () => {
+    expect(
+      buildFieldSchema(field, true, msgs).safeParse('COBADEFFXXX').success,
     ).toBe(true);
   });
 });

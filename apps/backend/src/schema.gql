@@ -5,6 +5,7 @@
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
+  reimbursementTypeId: String
   shiftInstanceId: String
   startedAt: DateTime!
   volunteerId: String!
@@ -15,6 +16,23 @@ type BundleDownloadStatus {
   downloadedByUser: User
   reimbursementType: ReimbursementType!
   volunteer: User!
+}
+
+type CheckInContext {
+  eligibleOrganizationUnits: [OrganizationUnit!]!
+  openTimeEntries: [TimeEntry!]!
+  volunteer: User!
+}
+
+type CheckInReadiness {
+  hasOpenTimeEntry: Boolean!
+  idVerificationEnabled: Boolean!
+  idVerified: Boolean!
+  isMember: Boolean!
+  isParticipating: Boolean!
+  membershipId: ID
+  openMembershipRequestId: ID
+  shiftInviteStatus: ShiftInviteStatus
 }
 
 input CloseTimeEntryInput {
@@ -33,6 +51,8 @@ type Contract {
   downloadUrl: String
   id: ID!
   isNonCompliant: Boolean!
+  missingOrgProfileFields: [String!]!
+  missingProfileFields: [String!]!
   periodEnd: DateTime!
   periodStart: DateTime!
   reimbursementType: ReimbursementType!
@@ -68,6 +88,7 @@ enum ContractStatus {
   AWAITING_NGO_SIGNATURE
   AWAITING_VOLUNTEER_SIGNATURE
   DECLINED
+  DRAFT
   EXPIRED
 }
 
@@ -79,6 +100,7 @@ type ContractStatusChange {
 }
 
 input CreateContractInput {
+  fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -101,6 +123,7 @@ input CreateEventInput {
   description: String
   endsAt: DateTime!
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   logoFileId: String
   requiredFormIds: [String!]
@@ -133,6 +156,7 @@ input CreateFormBlockInput {
 }
 
 input CreateInvoiceInput {
+  fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
   periodStart: DateTime!
@@ -143,6 +167,7 @@ input CreateInvoiceInput {
 
 input CreateOrganizationInput {
   address: String
+  city: String
   contactEmail: String
   description: String
   logoFileId: String
@@ -151,12 +176,15 @@ input CreateOrganizationInput {
   parentId: String
   phone: String
   websiteUrl: String
+  zipCode: String
 }
 
 input CreateOrganizationUnitInput {
   address: String
+  city: String
   contactEmail: String
   description: String
+  legalRep: String
   logoFileId: String
   name: String!
   organizationId: String!
@@ -164,6 +192,7 @@ input CreateOrganizationUnitInput {
   phone: String
   typeId: String!
   websiteUrl: String
+  zipCode: String
 }
 
 input CreateRequirementFormInput {
@@ -216,9 +245,11 @@ input CreateShiftInput {
   imageFileId: String
   instructions: String
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!
@@ -236,6 +267,11 @@ input CreateTemplateSigneeInput {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input DocumentFieldOverrideInput {
+  fieldId: String!
+  value: String!
+}
 
 enum DocumentKind {
   CONTRACT
@@ -283,8 +319,10 @@ type Event {
   endsAt: DateTime!
   id: ID!
   isDeleted: Boolean!
+  joinRequiresApproval: Boolean!
   location: String
   logoUrl: String
+  myInviteStatus: EventInviteStatus
   myInvitedAt: DateTime
   myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
@@ -310,12 +348,13 @@ type EventInvite {
 }
 
 enum EventInviteStatus {
-  ACCEPTED
+  ADMIN_INVITED
   ADMIN_REJECTED
-  CANCELLED
-  INVITED
-  SELF_JOINED
+  AWAITING_ADMIN_APPROVAL
+  JOINED
+  VOLUNTEER_CANCELLED
   VOLUNTEER_REJECTED
+  WAITLIST_JOINED
 }
 
 type EventOrganizationUnit {
@@ -444,6 +483,13 @@ type FormSubmissionValue {
   value: String!
 }
 
+enum InviteAllowanceState {
+  ELIGIBLE
+  NEARLY_EXHAUSTED
+  NO_AGREEMENT
+  WOULD_EXCEED
+}
+
 type Invoice {
   createdAt: DateTime!
   declineReason: String
@@ -456,6 +502,8 @@ type Invoice {
   invoiceStatus: InvoiceStatus!
   invoiceTimeEntries: [InvoiceTimeEntry!]!
   isNonCompliant: Boolean!
+  missingOrgProfileFields: [String!]!
+  missingProfileFields: [String!]!
   paidAt: DateTime
   paidByUser: User
   periodEnd: DateTime!
@@ -493,6 +541,7 @@ enum InvoiceStatus {
   AWAITING_SUPERVISOR_SIGNATURE
   AWAITING_VOLUNTEER_SIGNATURE
   DECLINED
+  DRAFT
   READY
 }
 
@@ -542,11 +591,14 @@ type JoinShiftInstanceResult {
 }
 
 enum JoinStatus {
+  INVITED
   JOINED
   NONE
   PENDING
   REJECTED
   REQUIREMENTS_NEEDED
+  VOLUNTEER_REJECTED
+  WAITLIST_JOINED
 }
 
 type ManualBaseline {
@@ -561,6 +613,8 @@ type ManualBaseline {
 type Membership {
   createdAt: DateTime!
   id: ID!
+  idVerifiedAt: DateTime
+  idVerifiedBy: User
   organizationUnit: OrganizationUnit!
   roles: [Role!]!
   user: User!
@@ -596,7 +650,12 @@ type Mutation {
   approveMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   cancelMembershipRequest(id: ID!, organizationUnitId: ID!): MembershipRequest!
   checkIn(shiftInstanceId: ID!): TimeEntry!
+  checkInApproveMembershipRequest(requestId: ID!): MembershipRequest!
+  checkInInviteToOrganization(volunteerId: ID!): Boolean!
+  checkInInviteToShiftInstance(shiftInstanceId: ID!, volunteerId: ID!): ShiftInstance!
+  checkInVolunteer(shiftInstanceId: ID, volunteerId: ID!): TimeEntry!
   checkOut(shiftInstanceId: ID!): TimeEntry!
+  checkOutVolunteer(timeEntryId: ID!): TimeEntry!
   closeTimeEntry(id: ID!, input: CloseTimeEntryInput!): TimeEntry!
   createContract(input: CreateContractInput!): Contract!
   createDocumentTemplate(input: CreateDocumentTemplateInput!): DocumentTemplate!
@@ -638,8 +697,10 @@ type Mutation {
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
   removeMembership(id: ID!): Membership!
   removeMembershipRequest(id: ID!): MembershipRequest!
+  sendShiftInstanceCallOut(instanceId: String!): ShiftInstanceCallOutResult!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setManualBaseline(amountCents: Int!, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline!
+  setMembershipIdVerified(membershipId: ID!, verified: Boolean!): Membership!
   setReimbursementRate(hourlyRateCents: Int!, organizationUnitId: ID, reimbursementTypeId: ID!): ReimbursementRate!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
@@ -658,6 +719,7 @@ type Mutation {
   updateMyImage(input: UpdateMyImageInput!): User!
   updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
   updateOrganizationUnit(id: String!, input: UpdateOrganizationUnitInput!): OrganizationUnit!
   updateRequirement(id: String!, input: UpdateRequirementInput!): Requirement!
   updateRequirementForm(id: String!, input: UpdateRequirementFormInput!): RequirementForm!
@@ -672,9 +734,25 @@ type Mutation {
   updateTimeEntry(id: ID!, input: UpdateTimeEntryInput!): TimeEntry!
 }
 
+type MyDocumentSummary {
+  pending: Int!
+  total: Int!
+}
+
+type MyDocumentsGroup {
+  contracts: [Contract!]!
+  invoices: [Invoice!]!
+  logoUrl: String
+  membershipId: ID!
+  organizationName: String!
+  organizationUnitId: ID!
+  organizationUnitName: String!
+}
+
 type Organization {
   accountingEnabled: Boolean!
   address: String
+  city: String
   contactEmail: String
   createdAt: DateTime!
   description: String
@@ -687,6 +765,7 @@ type Organization {
   units: [OrganizationUnit!]!
   updatedAt: DateTime
   websiteUrl: String
+  zipCode: String
 }
 
 type OrganizationPaginatedResponse {
@@ -701,11 +780,14 @@ type OrganizationTree {
 type OrganizationUnit {
   address: String
   children: [OrganizationUnit!]!
+  city: String
   contactEmail: String
   coverUrl: String
   deletedAt: DateTime
   description: String
   id: ID!
+  idVerificationEnabled: Boolean!
+  legalRep: String
   logoUrl: String
   memberCount: Int!
   myMembershipState: JoinStatus!
@@ -720,6 +802,7 @@ type OrganizationUnit {
   slug: String!
   type: OrganizationUnitType!
   websiteUrl: String
+  zipCode: String
 }
 
 type OrganizationUnitPaginatedResponse {
@@ -753,6 +836,11 @@ type PaginationInfo {
   limit: Int!
   offset: Int!
   total: Int!
+}
+
+type PaidShiftSignupVolunteer {
+  reimbursementType: ReimbursementType!
+  volunteer: User!
 }
 
 type PendingSignee {
@@ -800,6 +888,11 @@ type Query {
   availableEvents(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): EventPaginatedResponse!
   availableShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, organizationUnitIds: [ID!], startsAfter: DateTime = null): ShiftInstancePaginatedResponse!
   bundleDownloadStatus(reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus
+  checkInContext(checkInId: String!): CheckInContext
+  checkInReadiness(shiftInstanceId: ID, volunteerId: ID!): CheckInReadiness!
+  checkInShiftInstances(endsBefore: DateTime = null, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
+  checkInShifts(search: String): [Shift!]!
+  checkInVolunteerRequiredForms(volunteerId: ID!): [RequiredFormWithStatus!]!
   contract(id: ID!): Contract!
   contracts(filter: ContractFilterInput): [Contract!]!
   documentTemplate(id: ID!): DocumentTemplate!
@@ -816,6 +909,7 @@ type Query {
   formSubmissionsByForm(formId: String!, limit: Int! = 10, offset: Int! = 0): FormSubmissionPaginatedResponse!
   formSubmissionsByMembershipRequest(membershipRequestId: String!): [FormSubmission!]!
   formSubmissionsForVolunteer(userId: String!): [FormSubmission!]!
+  inviteAllowanceEligibility(organizationUnitId: ID!, reimbursementTypeId: ID!, shiftDurationMinutes: Int!): [VolunteerInviteAllowance!]!
   invoice(id: ID!): Invoice!
   invoices(filter: InvoiceFilterInput): [Invoice!]!
   isMemberOfUnitOrAncestor(organizationUnitId: ID!, userId: String!): Boolean!
@@ -829,6 +923,8 @@ type Query {
   myAdminstableOrganizationUnits: [OrganizationUnit!]!
   myCheckInAdministrableOrganizationUnits: [OrganizationUnit!]!
   myContracts(filter: ContractFilterInput): [Contract!]!
+  myDocumentSummary: MyDocumentSummary!
+  myDocuments: [MyDocumentsGroup!]!
   myEvents(endsBefore: DateTime = null, includePast: Boolean! = false, limit: Int! = 15, offset: Int! = 0, order: SortOrder! = ASC, startsAfter: DateTime = null, statuses: [EventInviteStatus!]): EventPaginatedResponse!
   myFormSubmission(id: ID!): FormSubmission
   myFormSubmissionByToken(token: String!): FormSubmission
@@ -851,6 +947,7 @@ type Query {
   organizationUnitTypes: [OrganizationUnitType!]!
   organizationUnits(limit: Int! = 10, offset: Int! = 0, organizationId: String!): OrganizationUnitPaginatedResponse!
   organizations(limit: Int! = 10, offset: Int! = 0): OrganizationPaginatedResponse!
+  paidShiftSignupVolunteers(year: Int!): [PaidShiftSignupVolunteer!]!
   pendingContractSignee(contractId: ID!): PendingSignee
   pendingInvoiceSignee(invoiceId: ID!): PendingSignee
   permissionGroups: [PermissionGroup!]!
@@ -887,6 +984,7 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
+  volunteersNeedingTimesheets(periodEnd: DateTime, periodStart: DateTime): [VolunteerNeedsTimesheet!]!
   weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
   yearlyUsage(reimbursementTypeId: ID!, year: Int!): YearlyUsage!
 }
@@ -1151,6 +1249,7 @@ type Shift {
   instances: [ShiftInstance!]!
   instructions: String
   isDeleted: Boolean!
+  joinRequiresApproval: Boolean!
   location: String
   maxVolunteers: Int
   minVolunteers: Int
@@ -1158,6 +1257,8 @@ type Shift {
   organizationUnit: OrganizationUnit!
   organizationUnitId: ID!
   originalStartsAt: DateTime!
+  reimbursementTypeId: ID
+  reimbursementTypeKey: ReimbursementTypeKey
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
   rrule: String
@@ -1166,9 +1267,15 @@ type Shift {
   visibility: ShiftVisibility!
 }
 
+enum ShiftCallOutSource {
+  AUTOMATIC
+  MANUAL
+}
+
 type ShiftInstance {
   actualEndsAt: DateTime!
   actualStartsAt: DateTime!
+  callOuts: [ShiftInstanceCallOutSummary!]
   filledCount: Int!
   id: ID!
   invite(userId: String!): ShiftInstanceInvite
@@ -1177,6 +1284,7 @@ type ShiftInstance {
   isCheckedIn: Boolean!
   isException: Boolean!
   isIntendingToJoin: Boolean!
+  lastCallOut: ShiftInstanceCallOutSummary
   master: Shift!
   masterId: ID!
   myInviteStatus: ShiftInviteStatus
@@ -1186,11 +1294,24 @@ type ShiftInstance {
   overrideLocation: String
   overrideMaxVolunteers: Int
   overrideMinVolunteers: Int
+  overrideReimbursementTypeId: ID
   overrideTitle: String
   requiredForms: [RequiredFormRef!]!
   requiredFormsCount: Int!
   spotsLeft: Int
   volunteers: [User!]
+}
+
+type ShiftInstanceCallOutResult {
+  recipientCount: Int!
+  sentToManagerFallback: Boolean!
+}
+
+type ShiftInstanceCallOutSummary {
+  recipientCount: Int!
+  sentAt: DateTime!
+  sentBy: User!
+  source: ShiftCallOutSource!
 }
 
 type ShiftInstanceInvite {
@@ -1221,12 +1342,13 @@ type ShiftInvite {
 }
 
 enum ShiftInviteStatus {
-  ACCEPTED
+  ADMIN_INVITED
   ADMIN_REJECTED
-  CANCELLED
-  INVITED
-  SELF_JOINED
+  AWAITING_ADMIN_APPROVAL
+  JOINED
+  VOLUNTEER_CANCELLED
   VOLUNTEER_REJECTED
+  WAITLIST_JOINED
 }
 
 type ShiftPaginatedResponse {
@@ -1290,6 +1412,7 @@ input UpdateEventInput {
   description: String
   endsAt: DateTime
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   logoFileId: String
   requiredFormIds: [String!]
@@ -1323,10 +1446,25 @@ input UpdateMyImageInput {
   imageFileId: String
 }
 
-input UpdateOrganizationUnitInput {
+input UpdateOrganizationInput {
   address: String
+  city: String
   contactEmail: String
   description: String
+  logoFileId: String
+  logoUrl: String
+  phone: String
+  websiteUrl: String
+  zipCode: String
+}
+
+input UpdateOrganizationUnitInput {
+  address: String
+  city: String
+  contactEmail: String
+  description: String
+  idVerificationEnabled: Boolean
+  legalRep: String
   logoFileId: String
   name: String
   organizationId: String!
@@ -1335,6 +1473,7 @@ input UpdateOrganizationUnitInput {
   requiredMembershipRequirementProfileId: String
   typeId: String
   websiteUrl: String
+  zipCode: String
 }
 
 input UpdateRequirementFormInput {
@@ -1377,9 +1516,11 @@ input UpdateShiftInput {
   imageFileId: String
   instructions: String
   invitedMemberIds: [String!]
+  joinRequiresApproval: Boolean
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime
@@ -1394,6 +1535,7 @@ input UpdateShiftInstanceInput {
   location: String
   maxVolunteers: Int
   minVolunteers: Int
+  reimbursementTypeId: ID
   requiredFormIds: [String!]
   rrule: String
   startsAt: DateTime!
@@ -1404,6 +1546,7 @@ input UpdateShiftInstanceInput {
 input UpdateTimeEntryInput {
   endedAt: DateTime
   notes: String
+  reimbursementTypeId: String
   shiftInstanceId: String
   startedAt: DateTime!
 }
@@ -1434,6 +1577,17 @@ type UserRequirementStatus {
   name: String!
   requirementId: ID!
   status: RequirementFulfillmentStatus!
+}
+
+type VolunteerInviteAllowance {
+  state: InviteAllowanceState!
+  volunteerId: ID!
+}
+
+type VolunteerNeedsTimesheet {
+  eligibleHours: Float!
+  reimbursementType: ReimbursementType!
+  volunteer: User!
 }
 
 type VolunteerYearlyUsage {

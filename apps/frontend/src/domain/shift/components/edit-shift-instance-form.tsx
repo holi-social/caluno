@@ -2,8 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  useCurrentOrg,
   useOrganizationUnit,
   useQueryClient,
+  useReimbursementTypes,
   useRequirementForms,
 } from '@repo/data/react';
 import {
@@ -17,6 +19,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Switch,
   Textarea,
 } from '@repo/ui';
@@ -32,12 +39,19 @@ import {
 } from '@/components/required-forms-fields';
 import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
+import { pauschaleForReimbursementTypeKey } from '../../accounting/lib/reimbursement-type-mapping';
 import {
   type EditShiftInstanceFormValues,
   editShiftInstanceFormSchema,
 } from '../schemas';
+import {
+  type RecurrenceEndMode,
+  RecurrenceEndSelect,
+} from './recurrence-end-select';
 import { RecurrenceSelect } from './recurrence-select';
 import { ShiftInstanceSummaryCard } from './shift-instance-summary-card';
+
+const NO_REIMBURSEMENT_TYPE = 'none';
 
 interface EditShiftInstanceFormProps {
   orgUId: string;
@@ -62,6 +76,9 @@ export const EditShiftInstanceForm = ({
   const t = useTranslations('Shift');
   const tUpload = useTranslations('Storage.upload');
   const tForms = useTranslations('Shift.detail.requiredForms');
+  const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
+  const { accountingEnabled } = useCurrentOrg();
+  const { data: reimbursementTypes } = useReimbursementTypes();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const [requiredFormIds, setRequiredFormIds] = useState(
@@ -105,6 +122,10 @@ export const EditShiftInstanceForm = ({
     startTimeRequired: t('validation.startTimeRequired'),
     endTimeRequired: t('validation.endTimeRequired'),
     minMaxVolunteers: t('validation.minMaxVolunteers'),
+    recurrenceEndRequired: t('validation.recurrenceEndRequired'),
+    recurrenceEndBeforeStart: t('validation.recurrenceEndBeforeStart'),
+    endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+    shorterThan24Hours: t('validation.shorterThan24Hours'),
   });
 
   const {
@@ -123,6 +144,7 @@ export const EditShiftInstanceForm = ({
       imageFileId: undefined,
       applyToAllFuture: false,
       ...initialValues,
+      recurrenceEndMode: initialValues.recurrenceEndsAt ? 'on' : 'never',
     },
   });
 
@@ -130,6 +152,9 @@ export const EditShiftInstanceForm = ({
   const startsAt = watch('startsAt');
   const endsAt = watch('endsAt');
   const applyToAllFuture = watch('applyToAllFuture');
+  const recurrenceDays = watch('recurrenceDays');
+  const recurrenceEndMode = watch('recurrenceEndMode') ?? 'never';
+  const recurrenceEndsAt = watch('recurrenceEndsAt');
   const instanceDate = initialValues.startsAt;
 
   const onSubmit = async (formData: EditShiftInstanceFormValues) => {
@@ -147,6 +172,7 @@ export const EditShiftInstanceForm = ({
         shift_instance_recurrence_conflict: t(
           'validation.instanceRecurrenceConflict',
         ),
+        shift_duration_out_of_range: t('validation.shorterThan24Hours'),
       };
 
       if (result.serverError) {
@@ -227,36 +253,73 @@ export const EditShiftInstanceForm = ({
         {errors.name && <FieldError>{errors.name.message}</FieldError>}
       </Field>
 
-      <Field>
-        <FieldLabel>
-          {t('form.dateTimeLabel')}
-          <span className="text-destructive"> *</span>
-        </FieldLabel>
-        <DatePickerWithTimeRange
-          value={{ start: startsAt ?? null, end: endsAt ?? null }}
-          onChange={(start, end) => {
-            setValue('startsAt', start as Date, { shouldValidate: true });
-            setValue('endsAt', end as Date, { shouldValidate: true });
-          }}
-          errors={[errors.startsAt?.message, errors.endsAt?.message]}
-          disabled={pending}
-          minDate={applyToAllFuture ? instanceDate : undefined}
-          maxDate={applyToAllFuture ? instanceDate : undefined}
-        />
-      </Field>
+      <div className={applyToAllFuture ? 'space-y-3' : undefined}>
+        <Field>
+          <FieldLabel>
+            {t('form.dateTimeLabel')}
+            <span className="text-destructive"> *</span>
+          </FieldLabel>
+          <DatePickerWithTimeRange
+            value={{ start: startsAt ?? null, end: endsAt ?? null }}
+            onChange={(start, end) => {
+              setValue('startsAt', start as Date, { shouldValidate: true });
+              setValue('endsAt', end as Date, { shouldValidate: true });
+            }}
+            errors={[errors.startsAt?.message, errors.endsAt?.message]}
+            disabled={pending}
+            minDate={applyToAllFuture ? instanceDate : undefined}
+            maxDate={applyToAllFuture ? instanceDate : undefined}
+            allowOvernight
+            messages={{
+              endMustBeLaterThanStart: t('validation.endMustBeLaterThanStart'),
+              continuesIntoNextDay: t('validation.continuesIntoNextDay'),
+              shorterThan24Hours: t('validation.shorterThan24Hours'),
+            }}
+          />
+        </Field>
 
-      {applyToAllFuture && (
-        <RecurrenceSelect
-          value={watch('recurrenceDays')}
-          onChange={(days) =>
-            setValue(
-              'recurrenceDays',
-              days as EditShiftInstanceFormValues['recurrenceDays'],
-            )
-          }
-          disabled={pending}
-        />
-      )}
+        {applyToAllFuture && (
+          <RecurrenceSelect
+            value={recurrenceDays}
+            onChange={(days) => {
+              setValue(
+                'recurrenceDays',
+                days as EditShiftInstanceFormValues['recurrenceDays'],
+              );
+              if (days.length === 0) {
+                setValue('recurrenceEndMode', 'never', {
+                  shouldValidate: true,
+                });
+                setValue('recurrenceEndsAt', undefined, {
+                  shouldValidate: true,
+                });
+              }
+            }}
+            disabled={pending}
+          />
+        )}
+
+        {applyToAllFuture && (recurrenceDays?.length ?? 0) > 0 && (
+          <RecurrenceEndSelect
+            mode={recurrenceEndMode}
+            date={recurrenceEndsAt}
+            minDate={startsAt}
+            error={errors.recurrenceEndsAt?.message}
+            disabled={pending}
+            onModeChange={(mode: RecurrenceEndMode) => {
+              setValue('recurrenceEndMode', mode, { shouldValidate: true });
+              if (mode === 'never') {
+                setValue('recurrenceEndsAt', undefined, {
+                  shouldValidate: true,
+                });
+              }
+            }}
+            onDateChange={(date) => {
+              setValue('recurrenceEndsAt', date, { shouldValidate: true });
+            }}
+          />
+        )}
+      </div>
 
       <Field>
         <FieldLabel htmlFor="location">{t('form.locationLabel')}</FieldLabel>
@@ -365,6 +428,45 @@ export const EditShiftInstanceForm = ({
           <FieldError errors={[errors.maxVolunteers]} />
         </Field>
       </div>
+
+      {accountingEnabled && (
+        <Field>
+          <FieldLabel htmlFor="reimbursementTypeId">
+            {t('form.reimbursementTypeLabel')}
+          </FieldLabel>
+          <Select
+            value={watch('reimbursementTypeId') ?? NO_REIMBURSEMENT_TYPE}
+            onValueChange={(value) =>
+              setValue(
+                'reimbursementTypeId',
+                value === NO_REIMBURSEMENT_TYPE ? null : value,
+              )
+            }
+            disabled={pending}
+          >
+            <SelectTrigger id="reimbursementTypeId" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_REIMBURSEMENT_TYPE}>
+                {t('form.reimbursementTypeNone')}
+              </SelectItem>
+              {(reimbursementTypes ?? []).map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {tPauschale(
+                    pauschaleForReimbursementTypeKey(type.key) === 'ehrenamt'
+                      ? 'typeEP'
+                      : 'typeUL',
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldDescription>
+            {t('form.reimbursementTypeDescription')}
+          </FieldDescription>
+        </Field>
+      )}
 
       {(isOneTimeShift || applyToAllFuture) && (
         <div className="rounded-xl border p-5 space-y-5">

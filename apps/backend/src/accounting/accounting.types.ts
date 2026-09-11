@@ -8,6 +8,7 @@ export type ContractFilter = {
   status?: ContractStatus;
   periodStart?: Date;
   periodEnd?: Date;
+  organizationUnitId?: string;
 };
 
 export type InvoiceFilter = {
@@ -16,12 +17,20 @@ export type InvoiceFilter = {
   status?: InvoiceStatus;
   periodStart?: Date;
   periodEnd?: Date;
+  organizationUnitId?: string;
 };
 
 export type EffectiveRate = {
   reimbursementType: ReimbursementTypeEntity;
   hourlyRateCents: number;
   isOverride: boolean;
+};
+
+/** A volunteer with at least one eligible (unclaimed, completed, in-period) time entry. */
+export type EligibleTimesheetVolunteer = {
+  volunteerId: string;
+  reimbursementTypeId: string;
+  eligibleHours: number;
 };
 
 export type YearlyUsage = {
@@ -45,6 +54,7 @@ export type ContractWithRelations = InferResultType<
     reimbursementType: true;
     signatures: true;
     statusChanges: true;
+    organizationUnit: true;
   }
 >;
 
@@ -56,5 +66,6 @@ export type InvoiceWithRelations = InferResultType<
     signatures: true;
     statusChanges: true;
     invoiceTimeEntries: true;
+    organizationUnit: true;
   }
 >;

@@ -23,6 +23,11 @@ query GetTimeEntry($id: String!) {
     endedAt
     notes
     createdAt
+    isPaid
+    reimbursementType {
+      id
+      key
+    }
     volunteer {
       id
       name
@@ -165,5 +170,87 @@ query GetMyTime($limit: Int!, $offset: Int!) {
       offset
       hasMore
     }
+  }
+}
+
+query GetCheckInContext($checkInId: String!) {
+  checkInContext(checkInId: $checkInId) {
+    volunteer {
+      id
+      name
+      email
+      image
+    }
+    eligibleOrganizationUnits {
+      id
+      name
+    }
+    openTimeEntries {
+      id
+      startedAt
+      shiftInstance {
+        id
+        overrideTitle
+        master {
+          id
+          title
+        }
+      }
+      organizationUnit {
+        id
+        name
+        organization {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+
+query GetCheckInReadiness($volunteerId: ID!, $shiftInstanceId: ID) {
+  checkInReadiness(
+    volunteerId: $volunteerId
+    shiftInstanceId: $shiftInstanceId
+  ) {
+    isMember
+    openMembershipRequestId
+    shiftInviteStatus
+    isParticipating
+    hasOpenTimeEntry
+    idVerificationEnabled
+    idVerified
+    membershipId
+  }
+}
+
+query GetCheckInVolunteerRequiredForms($volunteerId: ID!) {
+  checkInVolunteerRequiredForms(volunteerId: $volunteerId) {
+    form {
+      id
+      name
+    }
+    order
+    submitted
+    submissionId
+  }
+}
+
+mutation CheckInVolunteer($volunteerId: ID!, $shiftInstanceId: ID) {
+  checkInVolunteer(
+    volunteerId: $volunteerId
+    shiftInstanceId: $shiftInstanceId
+  ) {
+    id
+  }
+}
+
+mutation CheckInInviteToOrganization($volunteerId: ID!) {
+  checkInInviteToOrganization(volunteerId: $volunteerId)
+}
+
+mutation CheckOutVolunteer($timeEntryId: ID!) {
+  checkOutVolunteer(timeEntryId: $timeEntryId) {
+    id
   }
 }

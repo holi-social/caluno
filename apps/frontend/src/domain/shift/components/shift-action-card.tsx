@@ -4,7 +4,7 @@ import {
   JoinStatus,
   type PublicShiftInstance,
   ShiftInviteStatus,
-  type ShiftVisibility,
+  ShiftVisibility,
 } from '@repo/data';
 import type { RequiredForm } from '@repo/data/react';
 import { Badge, Card } from '@repo/ui';
@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   CheckIcon,
   ClockIcon,
+  HourglassIcon,
   UsersIcon,
   XIcon,
 } from 'lucide-react';
@@ -41,9 +42,7 @@ interface ShiftActionCardProps {
 
 const isParticipatingInvite = (
   status: ShiftInviteStatus | null | undefined,
-): boolean =>
-  status === ShiftInviteStatus.Accepted ||
-  status === ShiftInviteStatus.SelfJoined;
+): boolean => status === ShiftInviteStatus.Joined;
 
 export function ShiftActionCard({
   shiftId,
@@ -108,6 +107,7 @@ export function ShiftActionCard({
       ? null
       : Math.max(0, selected.spotsLeft - (justJoined ? 1 : 0));
   const full = spotsLeft === 0;
+  const showWaitlistCta = full && visibility === ShiftVisibility.AllMembers;
   const unlimited = spotsLeft == null;
   const resolvedMax = max ?? (spotsLeft != null ? filled + spotsLeft : filled);
 
@@ -119,21 +119,29 @@ export function ShiftActionCard({
 
   const getInviteStatusNote = () => {
     switch (inviteStatus) {
-      case ShiftInviteStatus.Invited:
+      case ShiftInviteStatus.AdminInvited:
         return t('respondBeforeNote', { date: longDate });
-      case ShiftInviteStatus.Accepted:
+      case ShiftInviteStatus.Joined:
         return t('cancelUntilNote', { date: longDate });
-      case ShiftInviteStatus.Cancelled:
-        return t('cancelledNote', { date: longDate });
-      case ShiftInviteStatus.SelfJoined:
-        return t('joinedNote');
+      case ShiftInviteStatus.VolunteerCancelled:
+        return showWaitlistCta
+          ? t('waitlistNote')
+          : t('cancelledNote', { date: longDate });
       case ShiftInviteStatus.VolunteerRejected:
-        return t('declinedNote');
+        return showWaitlistCta ? t('waitlistNote') : t('declinedNote');
+      case ShiftInviteStatus.AwaitingAdminApproval:
+        return t('pendingNote');
+      case ShiftInviteStatus.WaitlistJoined:
+        return t('waitlistNote');
       default:
         if (effectiveMembershipState === JoinStatus.Pending) {
           return t('pendingNote');
         }
-        return full ? t('fullNote') : t('signUpNote');
+        return full
+          ? showWaitlistCta
+            ? t('waitlistNote')
+            : t('fullNote')
+          : t('signUpNote');
     }
   };
 
@@ -169,16 +177,29 @@ export function ShiftActionCard({
         />
       )}
 
-      {inviteStatus === ShiftInviteStatus.Accepted && (
+      {inviteStatus === ShiftInviteStatus.Joined && (
         <Badge variant="secondary" className="gap-1">
           <CheckIcon className="size-3.5" />
           {t('acceptedBadge')}
         </Badge>
       )}
-      {inviteStatus === ShiftInviteStatus.Cancelled && (
+      {inviteStatus === ShiftInviteStatus.AwaitingAdminApproval && (
         <Badge variant="secondary" className="gap-1">
-          <XIcon className="size-3.5" />
-          {t('cancelledBadge')}
+          <ClockIcon className="size-3.5" />
+          {t('pendingApprovalBadge')}
+        </Badge>
+      )}
+      {inviteStatus === ShiftInviteStatus.VolunteerCancelled &&
+        !showWaitlistCta && (
+          <Badge variant="secondary" className="gap-1">
+            <XIcon className="size-3.5" />
+            {t('cancelledBadge')}
+          </Badge>
+        )}
+      {inviteStatus === ShiftInviteStatus.WaitlistJoined && (
+        <Badge variant="outline" className="gap-1 bg-accent">
+          <HourglassIcon className="size-3.5" />
+          {t('waitlistBadge')}
         </Badge>
       )}
 

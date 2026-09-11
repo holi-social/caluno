@@ -35,10 +35,14 @@ const sessionDecorator = createParamDecorator(
 
 class MockBetterAuthModule {
   static forRootAsync() {
+    const mockAuthService = {
+      provide: MockAuthService,
+      useValue: new MockAuthService(),
+    };
     return {
       module: MockBetterAuthModule,
-      providers: [],
-      exports: [],
+      providers: [mockAuthService],
+      exports: [mockAuthService],
     };
   }
 }
@@ -46,13 +50,34 @@ class MockBetterAuthModule {
 class MockAuthGuard {
   canActivate(context: ExecutionContext) {
     if (context.getType() === 'http') {
-      const request = context
-        .switchToHttp()
-        .getRequest<{ user?: { id: string } }>();
+      const request = context.switchToHttp().getRequest<{
+        user?: { id: string };
+        session?: { user: { id: string } };
+      }>();
       request.user = { id: mockedUserId };
+      request.session = { user: request.user };
     }
 
     return true;
+  }
+}
+
+const mockAuthInstance = (options: unknown) => ({
+  options,
+  api: {
+    getSession: async () => ({
+      user: { id: mockedUserId },
+    }),
+  },
+});
+
+class MockAuthService {
+  get api() {
+    return mockAuthInstance({}).api;
+  }
+
+  get instance() {
+    return mockAuthInstance({});
   }
 }
 
@@ -60,19 +85,13 @@ const registerCommonAuthMocks = (registerModuleMock: RegisterModuleMock) => {
   registerModuleMock('@thallesp/nestjs-better-auth', () => ({
     AuthGuard: MockAuthGuard,
     AuthModule: MockBetterAuthModule,
+    AuthService: MockAuthService,
     Session: () => sessionDecorator(),
     AllowAnonymous: createNoopDecorator(),
   }));
 
   registerModuleMock('better-auth', () => ({
-    betterAuth: (options: unknown) => ({
-      options,
-      api: {
-        getSession: async () => ({
-          user: { id: mockedUserId },
-        }),
-      },
-    }),
+    betterAuth: mockAuthInstance,
   }));
 
   registerModuleMock('@better-auth/drizzle-adapter', () => ({

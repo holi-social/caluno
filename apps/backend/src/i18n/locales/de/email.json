@@ -21,6 +21,35 @@
     "subject": "{eventTitle} wurde abgesagt",
     "whenRange": "{date} · {timeRange}"
   },
+  "eventRemoved": {
+    "detailEvent": "Event",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einem Event entfernt hat.",
+    "greeting": "Hallo {firstName}, du wurdest von einem Event entfernt.",
+    "heading": "Du wurdest von einem Event entfernt",
+    "note": "Dieses Event steht nicht mehr in deinem Zeitplan. Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
+    "previewText": "Du wurdest von {eventTitle} bei {organizationName} entfernt.",
+    "subject": "Du wurdest von {eventTitle} entfernt",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "eventDetailsChanged": {
+    "field": {
+      "startsAt": "Beginn",
+      "endsAt": "Ende",
+      "location": "Ort",
+      "description": "Beschreibung",
+      "title": "Titel"
+    },
+    "footerNote": "Du erhältst diese E-Mail, weil sich ein Event, für das du angemeldet bist, auf {brandName} geändert hat.",
+    "greeting": "Hallo {firstName}, das Event '{eventTitle}' bei {organizationName} hat sich geändert.",
+    "heading": "Eventdetails geändert",
+    "note": "Du bist weiterhin für dieses Event angemeldet – du musst nicht erneut zusagen.",
+    "previewText": "Die Details für {eventTitle} bei {organizationName} haben sich geändert.",
+    "subject": "Details geändert für {eventTitle}",
+    "updated": "aktualisiert"
+  },
   "eventInvited": {
     "buttonLabel": "Event ansehen",
     "detailEvent": "Event",
@@ -95,6 +124,16 @@
     "previewText": "{requesterName} möchte {organizationName} beitreten.",
     "subject": "Neue Mitgliedschaftsanfrage für {organizationName}"
   },
+  "membershipRejected": {
+    "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} abgelehnt wurde.",
+    "greetingAfter": "wurde abgelehnt.",
+    "greetingBefore": "Hallo {firstName}, deine Mitgliedschaftsanfrage für",
+    "heading": "Deine Mitgliedschaftsanfrage wurde abgelehnt",
+    "outro": "Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
+    "previewText": "Deine Mitgliedschaftsanfrage für {organizationName} wurde abgelehnt.",
+    "reasonLabel": "Genannter Grund:",
+    "subject": "Deine Mitgliedschaftsanfrage für {organizationName} wurde abgelehnt"
+  },
   "organizationCreated": {
     "buttonLabel": "{organizationName} öffnen",
     "footerNote": "Du erhältst diese E-Mail, weil du eine Organisation auf {brandName} erstellt hast.",
@@ -110,6 +149,14 @@
     "step3Detail": "teile deinen Einladungslink und sieh zu, wie sich der Plan füllt.",
     "step3Title": "Freiwillige gewinnen",
     "subject": "Deine Organisation \"{organizationName}\" ist bereit"
+  },
+  "organizationUnitInvited": {
+    "buttonLabel": "{organizationUnitName} beitreten",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich eingeladen hat, {brandName} beizutreten.",
+    "greeting": "Hallo {firstName}, du wurdest eingeladen, {organizationUnitName} beizutreten.",
+    "heading": "Du bist eingeladen, {organizationUnitName} beizutreten",
+    "previewText": "Du wurdest eingeladen, {organizationUnitName} beizutreten.",
+    "subject": "Du bist eingeladen, {organizationUnitName} beizutreten"
   },
   "passwordReset": {
     "buttonLabel": "Passwort zurücksetzen",
@@ -175,6 +222,110 @@
     "previewText": "{shiftTitle} bei {organizationName} — kommende Einsätze ab {fromDate} abgesagt.",
     "subject": "{shiftTitle}: kommende Einsätze abgesagt"
   },
+  "shiftInstanceRemoved": {
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einem Einsatz entfernt hat.",
+    "greeting": "Hallo {firstName}, du wurdest von einem Einsatz entfernt.",
+    "heading": "Du wurdest von einem Einsatz entfernt",
+    "note": "Dieser Einsatz steht nicht mehr in deinem Zeitplan. Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
+    "previewText": "Du wurdest von {shiftTitle} bei {organizationName} entfernt.",
+    "subject": "Du wurdest von {shiftTitle} entfernt",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesRemoved": {
+    "bodyMessage": "Du wurdest aus der Einsatzserie '{shiftTitle}' ab {fromDate} entfernt.",
+    "detailFrom": "Ab",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Admin dich auf {brandName} von einer Einsatzserie entfernt hat.",
+    "greeting": "Hallo {firstName}, du wurdest von einer Einsatzserie entfernt.",
+    "heading": "Du wurdest von einer Einsatzserie entfernt",
+    "note": "Diese Einsätze stehen nicht mehr in deinem Zeitplan. Kontaktiere die Organisation, wenn du denkst, dass das ein Fehler war.",
+    "previewText": "Du wurdest von {shiftTitle} bei {organizationName} ab {fromDate} entfernt.",
+    "subject": "Du wurdest von {shiftTitle} entfernt"
+  },
+  "shiftInstanceLeft": {
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du deine Anmeldung für einen Einsatz auf {brandName} abgesagt hast.",
+    "greeting": "Hallo {firstName}, du hast deine Anmeldung für einen Einsatz abgesagt.",
+    "heading": "Du hast einen Einsatz verlassen",
+    "note": "Ein:e Koordinator:in wurde informiert, damit die Lücke besetzt werden kann.",
+    "previewText": "Du hast deine Anmeldung für {shiftTitle} bei {organizationName} abgesagt.",
+    "subject": "Du hast {shiftTitle} verlassen",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftInstanceVolunteerLeft": {
+    "buttonLabel": "Einsatzplan ansehen",
+    "coverage": "Jetzt angemeldet: {signedUp} von {minVolunteers}.",
+    "coverageNoMin": "Jetzt angemeldet: {signedUp}.",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailVolunteer": "Freiwillige:r",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, {volunteerName} hat einen Einsatz verlassen, den du verwaltest.",
+    "heading": "Freiwillige:r hat einen Einsatz verlassen",
+    "note": "Möglicherweise musst du Ersatz finden.",
+    "previewText": "{volunteerName} hat {shiftTitle} bei {organizationName} verlassen.",
+    "subject": "{volunteerName} hat {shiftTitle} verlassen",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftSeriesLeft": {
+    "bodyMessage": "Du hast deine Anmeldungen für die Einsatzserie '{shiftTitle}' ab {fromDate} abgesagt.",
+    "detailFrom": "Ab",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "footerNote": "Du erhältst diese E-Mail, weil du deine Anmeldungen für eine Einsatzserie auf {brandName} abgesagt hast.",
+    "greeting": "Hallo {firstName}, du hast deine Anmeldungen für eine Einsatzserie abgesagt.",
+    "heading": "Du hast eine Einsatzserie verlassen",
+    "note": "Ein:e Koordinator:in wurde informiert, damit die Lücken besetzt werden können.",
+    "previewText": "Du hast deine Anmeldungen für {shiftTitle} bei {organizationName} ab {fromDate} abgesagt.",
+    "subject": "Du hast {shiftTitle} verlassen"
+  },
+  "shiftSeriesVolunteerLeft": {
+    "buttonLabel": "Einsatzplan ansehen",
+    "coverage": "Jetzt angemeldet: {signedUp} von {minVolunteers}.",
+    "coverageNoMin": "Jetzt angemeldet: {signedUp}.",
+    "detailFrom": "Ab",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, {volunteerName} hat eine Einsatzserie verlassen, die du verwaltest.",
+    "heading": "Freiwillige:r hat eine Einsatzserie verlassen",
+    "note": "Möglicherweise musst du für die verbleibenden Termine Ersatz finden.",
+    "previewText": "{volunteerName} hat {shiftTitle} bei {organizationName} verlassen.",
+    "subject": "{volunteerName} hat {shiftTitle} verlassen"
+  },
+  "shiftDetailsChanged": {
+    "field": {
+      "startsAt": "Beginn",
+      "endsAt": "Ende",
+      "location": "Ort",
+      "instructions": "Beschreibung",
+      "title": "Titel"
+    },
+    "footerNote": "Du erhältst diese E-Mail, weil sich ein Einsatz, für den du angemeldet bist, auf {brandName} geändert hat.",
+    "greeting": "Hallo {firstName}, der Einsatz '{shiftTitle}' bei {organizationName} hat sich geändert.",
+    "heading": "Einsatzdetails geändert",
+    "note": "Du bist weiterhin für diesen Einsatz angemeldet – du musst nicht erneut zusagen.",
+    "previewText": "Die Details für {shiftTitle} bei {organizationName} haben sich geändert.",
+    "seriesGreeting": "Hallo {firstName}, die Einsatzserie '{shiftTitle}' bei {organizationName} hat sich geändert.",
+    "seriesHeading": "Details der Einsatzserie geändert",
+    "seriesRange": "Diese Änderung gilt für Einsätze ab {fromDate}.",
+    "subject": "Details geändert für {shiftTitle}",
+    "updated": "aktualisiert"
+  },
   "shiftInvited": {
     "buttonLabel": "Einsatz ansehen",
     "detailInstructions": "Beschreibung",
@@ -206,5 +357,115 @@
     },
     "scheduleRecurring": "{days}, {timeRange}",
     "subject": "Du bist zu {shiftTitle} eingeladen"
+  },
+  "shiftInstanceCallOut": {
+    "buttonLabel": "Ich kann helfen",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du für diesen Einsatz angefragt werden kannst auf {brandName}.",
+    "greeting": "Hallo {firstName}, {shiftTitle} bei {organizationName} braucht dringend noch Freiwillige.",
+    "heading": "Wir brauchen deine Hilfe",
+    "previewText": "{shiftTitle} bei {organizationName} braucht noch Freiwillige — kannst du helfen?",
+    "subject": "Dringend: {shiftTitle} braucht noch Freiwillige",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftInstanceCallOutNoRecipients": {
+    "buttonLabel": "Einsätze ansehen",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du einen Aufruf auf {brandName} gesendet hast.",
+    "greeting": "Hallo {firstName}, alle, die für {shiftTitle} infrage kommen, wurden bereits gefragt.",
+    "heading": "Niemand mehr zu fragen",
+    "note": "Es wurde keine E-Mail an Freiwillige gesendet — vielleicht möchtest du den Empfängerkreis erweitern oder den Einsatz anpassen.",
+    "previewText": "Alle, die für {shiftTitle} infrage kommen, wurden bereits gefragt.",
+    "subject": "Niemand mehr zu fragen für {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
+  "shiftInstanceCallOutSummary": {
+    "heading": "Einsatz ist unterbesetzt",
+    "greeting": "Hallo {firstName}, {shiftTitle} bei {organizationName} liegt unter der Mindestanzahl an Freiwilligen.",
+    "detailShift": "Einsatz",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "whenRange": "{date} · {timeRange}",
+    "detailStaffing": "Besetzung",
+    "staffingValue": "{filledCount} von {minVolunteers} bestätigt",
+    "noticeNotified": "Wir haben bereits {count} Freiwillige um Hilfe gebeten — hier ist erstmal nichts weiter zu tun.",
+    "noticeNoneAvailable": "Es standen niemand mehr zur automatischen Benachrichtigung zur Verfügung — vielleicht möchtest du direkt nachfragen.",
+    "buttonLabel": "Einsatz ansehen",
+    "subject": "{shiftTitle} braucht noch Freiwillige",
+    "previewText": "{shiftTitle} liegt unter der Mindestanzahl an Freiwilligen.",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwaltest."
+  },
+  "shiftInstanceUnderstaffedReminder": {
+    "heading": "Immer noch unterbesetzt",
+    "greeting": "Hallo {firstName}, {shiftTitle} bei {organizationName} liegt weiterhin unter der Mindestanzahl an Freiwilligen.",
+    "detailShift": "Einsatz",
+    "detailOrganization": "Organisation",
+    "detailWhen": "Wann",
+    "whenRange": "{date} · {timeRange}",
+    "detailStaffing": "Besetzung",
+    "staffingValue": "{filledCount} von {minVolunteers} bestätigt",
+    "buttonLabel": "Einsatz ansehen",
+    "subject": "Erinnerung: {shiftTitle} ist noch unterbesetzt",
+    "previewText": "{shiftTitle} liegt weiterhin unter der Mindestanzahl an Freiwilligen.",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwaltest."
+  },
+  "documentAwaitingSignature": {
+    "heading": "Ein Dokument wartet auf deine Unterschrift",
+    "greeting": "Hallo {firstName},",
+    "from": "von {organizationName} wartet auf deine Unterschrift.",
+    "detail": "Du kannst das Dokument lesen und herunterladen, bevor du unterschreibst — Unterschreiben ist ein einziger Tipp.",
+    "buttonLabel": "Zu meinen Dokumenten",
+    "note": "Das Dokument erscheint auch unter „Deine Dokumente“ in deinem Profil.",
+    "subject": "{documentName} von {organizationName} wartet auf deine Unterschrift",
+    "previewText": "{documentName} von {organizationName} wartet auf deine Unterschrift.",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Dokument von {organizationName} deine Unterschrift auf {brandName} benötigt."
+  },
+  "documentDeclinedByOrg": {
+    "heading": "Ein Dokument wurde abgelehnt",
+    "greeting": "Hallo {firstName},",
+    "from": "von {organizationName} wurde abgelehnt.",
+    "reasonLabel": "Genannter Grund:",
+    "buttonLabel": "Zu meinen Dokumenten",
+    "note": "Das Dokument kann nicht mehr unterschrieben werden. Die Organisation kann ein neues Dokument ausstellen.",
+    "subject": "{documentName} von {organizationName} wurde abgelehnt",
+    "previewText": "{documentName} von {organizationName} wurde abgelehnt.",
+    "footerNote": "Du erhältst diese E-Mail, weil ein Dokument von {organizationName} auf {brandName} abgelehnt wurde."
+  },
+  "documentDeclinedByVolunteer": {
+    "heading": "Ein:e Freiwillige:r hat ein Dokument abgelehnt",
+    "greeting": "Hallo {firstName},",
+    "declined": "hat {documentName} abgelehnt.",
+    "reasonLabel": "Genannter Grund:",
+    "buttonLabel": "Zu Abrechnungen",
+    "note": "Das Dokument muss korrigiert und neu ausgestellt werden, bevor es erneut unterschrieben werden kann.",
+    "subject": "{volunteerName} hat {documentName} abgelehnt",
+    "previewText": "{volunteerName} hat {documentName} abgelehnt.",
+    "footerNote": "Du erhältst diese E-Mail, weil du Abrechnungsdokumente auf {brandName} verwaltest."
+  },
+  "documentNames": {
+    "agreement": "Zusatzvereinbarung",
+    "timesheet": "Stundennachweis"
+  },
+  "volunteerDigest": {
+    "heading": "Deine Woche im Überblick",
+    "greeting": "Hallo {firstName}, das steht diese Woche für dich an.",
+    "myShiftsHeading": "Deine Einsätze",
+    "myShiftsSeeAll": "Alle deine Einsätze ansehen",
+    "pendingInvitesHeading": "Wartet auf deine Antwort",
+    "pendingInvitesSeeAll": "Alle Einladungen ansehen",
+    "needsVolunteersHeading": "Einsätze, die noch Freiwillige brauchen",
+    "needsVolunteersSeeAll": "Alle offenen Einsätze ansehen",
+    "rowWhen": "{date} · {timeRange}",
+    "reasonNeedsMore": "Braucht noch {count} weitere Freiwillige",
+    "reasonNoVolunteersYet": "Noch keine Freiwilligen",
+    "reasonHasRoom": "Hat noch Platz für weitere Freiwillige",
+    "subject": "Deine Woche im Überblick auf {brandName}",
+    "previewText": "Deine Einsätze, Einladungen und offene Einsätze für die kommende Woche.",
+    "footerNote": "Du erhältst diese wöchentliche Übersicht, weil du Mitglied einer Organisation auf {brandName} bist."
   }
 }

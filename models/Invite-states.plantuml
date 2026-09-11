@@ -1,18 +1,37 @@
 @startuml InviteStatusModel
 
-[*] --> INVITED : admin
-' means the member self-joined without an invite
-[*] --> SELF_JOINED : volunteer
-INVITED --> ACCEPTED : volunteer
-INVITED --> VOLUNTEER_REJECTED : volunteer
-VOLUNTEER_REJECTED -left-> ACCEPTED : volunteer
-SELF_JOINED -down-> CANCELLED : volunteer
-ACCEPTED -down-> CANCELLED : volunteer
-CANCELLED -up-> SELF_JOINED : volunteer
-CANCELLED -up-> ACCEPTED : volunteer
+title Shift and Event Invite State Model
 
-ACCEPTED --> ADMIN_REJECTED : admin
-INVITED -down-> ADMIN_REJECTED : admin
-ADMIN_REJECTED -up-> INVITED : admin
-SELF_JOINED --> ADMIN_REJECTED : admin
+[*] --> ADMIN_INVITED : admin invites
+[*] --> AWAITING_ADMIN_APPROVAL : volunteer joins \n approval enabled
+[*] --> WAITLIST_JOINED : volunteer joins \n approval disabled \n shift full
+[*] --> JOINED : volunteer joins \n approval disabled \n seat available
+
+ADMIN_INVITED --> VOLUNTEER_REJECTED : volunteer rejects
+ADMIN_INVITED --> AWAITING_ADMIN_APPROVAL : volunteer accepts \n approval enabled
+ADMIN_INVITED --> WAITLIST_JOINED : volunteer accepts \n approval disabled \n shift full
+ADMIN_INVITED --> JOINED : volunteer accepts \n approval disabled \n seat available
+ADMIN_INVITED --> ADMIN_REJECTED : admin rejects
+
+VOLUNTEER_REJECTED --> AWAITING_ADMIN_APPROVAL : volunteer re-joins \n approval enabled
+VOLUNTEER_REJECTED --> WAITLIST_JOINED : volunteer re-joins \n approval disabled \n shift full
+VOLUNTEER_REJECTED --> JOINED : volunteer re-joins \n approval disabled \n seat available
+
+AWAITING_ADMIN_APPROVAL --> ADMIN_REJECTED : admin rejects
+AWAITING_ADMIN_APPROVAL --> VOLUNTEER_REJECTED : volunteer cancels
+AWAITING_ADMIN_APPROVAL -right-> WAITLIST_JOINED : admin approvs \n shift full
+AWAITING_ADMIN_APPROVAL --> JOINED : admin approvs \n seat available
+
+WAITLIST_JOINED --> JOINED : seat becomes available
+WAITLIST_JOINED --> VOLUNTEER_CANCELLED : volunteer cancels
+WAITLIST_JOINED --> ADMIN_REJECTED : admin rejects
+
+JOINED --> VOLUNTEER_CANCELLED : volunteer cancels
+JOINED --> ADMIN_REJECTED : admin rejects
+
+VOLUNTEER_CANCELLED -up-> JOINED : volunteer re-joins \n seat available
+VOLUNTEER_CANCELLED -up-> WAITLIST_JOINED : volunteer re-joins \n shift full
+
+ADMIN_REJECTED -up-> ADMIN_INVITED : admin re-invites
+
 @enduml

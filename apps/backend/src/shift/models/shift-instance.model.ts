@@ -4,6 +4,7 @@ import { User } from '../../user/models/user.model';
 import { ShiftInviteStatus } from '../enums';
 import type { Shift } from './shift.model';
 import { Shift as ShiftModel } from './shift.model';
+import { ShiftInstanceCallOutSummary } from './shift-instance-call-out.model';
 import { ShiftInstanceInvite } from './shift-instance-invite.model';
 @ObjectType()
 export class ShiftInstance {
@@ -37,6 +38,9 @@ export class ShiftInstance {
   @Field(() => Int, { nullable: true })
   overrideMinVolunteers?: number | null;
 
+  @Field(() => ID, { nullable: true })
+  overrideReimbursementTypeId?: string | null;
+
   @Field(() => Boolean)
   isException!: boolean;
 
@@ -63,6 +67,12 @@ export class ShiftInstance {
 
   @Field(() => Boolean)
   isIntendingToJoin!: boolean;
+
+  @Field(() => ShiftInstanceCallOutSummary, { nullable: true })
+  lastCallOut?: ShiftInstanceCallOutSummary | null;
+
+  @Field(() => [ShiftInstanceCallOutSummary], { nullable: true })
+  callOuts?: ShiftInstanceCallOutSummary[] | null;
 }
 
 export const ShiftInstancePaginatedResponse =

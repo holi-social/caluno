@@ -118,7 +118,7 @@ describe('EventService.findAvailableEvents', () => {
     const rowsCallWhere = findMany.mock.calls[0]?.[0]?.where;
     expect(rowsCallWhere.NOT.invites).toEqual({
       userId: 'user-1',
-      status: { in: ['ACCEPTED', 'SELF_JOINED'] },
+      status: { in: ['JOINED'] },
     });
   });
 

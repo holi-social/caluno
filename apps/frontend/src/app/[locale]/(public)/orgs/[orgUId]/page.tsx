@@ -2,11 +2,13 @@ import { type DataClient, DataError, JoinStatus } from '@repo/data';
 import { CalendarCheckIcon, MapPinIcon, UsersIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
 import { DetailHero } from '@/components/detail-hero';
-import { OrgEventsList } from '@/domain/org-unit/components/org-events-list';
+import { OrgListSkeleton } from '@/domain/org-unit/components/org-detail-skeleton';
+import { OrgEventsSection } from '@/domain/org-unit/components/org-events-section';
 import { OrgJoinButton } from '@/domain/org-unit/components/org-join-button';
 import { OrgPageHeader } from '@/domain/org-unit/components/org-page-header';
-import { OrgShiftsList } from '@/domain/org-unit/components/org-shifts-list';
+import { OrgShiftsSection } from '@/domain/org-unit/components/org-shifts-section';
 import { resolveLocale } from '@/i18n/routing';
 import { getDataClient } from '@/lib/data-client';
 import { getInitials } from '@/lib/get-initials';
@@ -49,11 +51,6 @@ export default async function OrgPage({ params }: OrgPageProps) {
     throw error;
   }
 
-  const [events, shifts] = await Promise.all([
-    data.publicOrganizationUnit.findEvents(orgUId),
-    data.publicOrganizationUnit.findIndividualShifts(orgUId),
-  ]);
-
   return (
     <div className="relative flex min-h-screen flex-col">
       <div className="absolute inset-x-0 top-0 z-10">
@@ -70,8 +67,12 @@ export default async function OrgPage({ params }: OrgPageProps) {
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-20">
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
           <div className="order-2 flex min-w-0 flex-1 flex-col gap-8 lg:order-1 lg:max-w-[680px]">
-            <OrgEventsList events={events} />
-            <OrgShiftsList shifts={shifts} />
+            <Suspense fallback={<OrgListSkeleton />}>
+              <OrgEventsSection orgUId={orgUId} />
+            </Suspense>
+            <Suspense fallback={<OrgListSkeleton />}>
+              <OrgShiftsSection orgUId={orgUId} />
+            </Suspense>
           </div>
 
           <aside className="order-1 min-w-0 lg:order-2 lg:w-[392px] lg:shrink-0">

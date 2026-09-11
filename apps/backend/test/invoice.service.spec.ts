@@ -9,6 +9,9 @@ import {
   SigneeType,
 } from '../src/accounting/enums';
 import { ContractService } from '../src/accounting/services/contract.service';
+import { DocumentNotificationService } from '../src/accounting/services/document-notification.service';
+import { DocumentProfileRequirementService } from '../src/accounting/services/document-profile-requirement.service';
+import { DocumentRenderingService } from '../src/accounting/services/document-rendering.service';
 import { DocumentSigningService } from '../src/accounting/services/document-signing.service';
 import { DocumentTemplateService } from '../src/accounting/services/document-template.service';
 import { InvoiceService } from '../src/accounting/services/invoice.service';
@@ -31,7 +34,6 @@ import { PostHogService } from '../src/shared/observability/posthog.service';
 import { FileService } from '../src/storage/services/file.service';
 import {
   createCompletedTimeEntry,
-  createDocumentTemplate,
   createReimbursementType,
   createTwoStepTemplate,
 } from './factories/accounting.factory';
@@ -58,6 +60,7 @@ describe('InvoiceService', () => {
   let moduleRef: TestingModule;
   let db: Database;
   let service: InvoiceService;
+  const declinedByVolunteerCalls: unknown[] = [];
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -79,9 +82,15 @@ describe('InvoiceService', () => {
       {} as FileService,
       { capture: () => {} } as unknown as PostHogService,
     );
-    const documentTemplateService = new DocumentTemplateService(db, {
-      capture: () => {},
-    } as unknown as PostHogService);
+    const documentTemplateService = new DocumentTemplateService(
+      db,
+      {
+        capture: () => {},
+      } as unknown as PostHogService,
+      {
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+    );
     const documentSigningService = new DocumentSigningService(
       db,
       authService,
@@ -97,6 +106,18 @@ describe('InvoiceService', () => {
       db,
       documentTemplateService,
       documentSigningService,
+      {
+        notifyAwaitingVolunteerSignature: () => Promise.resolve(),
+        notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: () => Promise.resolve(),
+      } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
       { capture: () => {} } as unknown as PostHogService,
     );
     service = new InvoiceService(
@@ -105,6 +126,21 @@ describe('InvoiceService', () => {
       documentSigningService,
       reimbursementRateService,
       contractService,
+      {
+        notifyAwaitingVolunteerSignature: () => Promise.resolve(),
+        notifyDeclinedByOrg: () => Promise.resolve(),
+        notifyDeclinedByVolunteer: (input: unknown) => {
+          declinedByVolunteerCalls.push(input);
+          return Promise.resolve();
+        },
+      } as unknown as DocumentNotificationService,
+      {
+        missingProfileSources: () => Promise.resolve([]),
+        missingOrgProfileSources: () => Promise.resolve([]),
+      } as unknown as DocumentProfileRequirementService,
+      {
+        renderAndAttachPdf: () => Promise.resolve(null),
+      } as unknown as DocumentRenderingService,
       { capture: () => {} } as unknown as PostHogService,
     );
 
@@ -152,6 +188,13 @@ describe('InvoiceService', () => {
       requiredPermissionId: permission.id,
       signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
     });
+    const contractTemplate = await createTwoStepTemplate(db, {
+      organizationId: organization.id,
+      reimbursementTypeId: reimbursementType.id,
+      kind: DocumentKind.CONTRACT,
+      requiredPermissionId: permission.id,
+      signeeTypes: [SigneeType.VOLUNTEER, SigneeType.PERMISSION_HOLDER],
+    });
     const volunteer = await createUser(db);
     const timeEntry = await createCompletedTimeEntry(db, {
       organizationUnitId: root.id,
@@ -168,6 +211,7 @@ describe('InvoiceService', () => {
       volunteer,
       supervisor,
       timeEntry,
+      contractTemplate,
     };
   };
 
@@ -226,6 +270,63 @@ describe('InvoiceService', () => {
       expect(ids).toContain(inRange.id);
       expect(ids).not.toContain(outOfRange.id);
     });
+
+    it('scopes invoices to the requested organization unit', async () => {
+      const {
+        organization,
+        root,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const sibling = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: root.typeId,
+        name: 'sibling',
+        parentId: root.id,
+      });
+      const siblingEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: sibling.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-02T09:00:00.000Z'),
+        endedAt: new Date('2026-07-02T13:00:00.000Z'),
+      });
+
+      const inRoot = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: root.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01'),
+          periodEnd: new Date('2026-07-31'),
+        },
+        supervisor.id,
+      );
+      const inSibling = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: sibling.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [siblingEntry.id],
+          periodStart: new Date('2026-07-01'),
+          periodEnd: new Date('2026-07-31'),
+        },
+        supervisor.id,
+      );
+
+      const rootOnly = await service.findInvoicesForOrganization(
+        organization.id,
+        { organizationUnitId: root.id },
+      );
+      const ids = rootOnly.map((i) => i.id);
+      expect(ids).toContain(inRoot.id);
+      expect(ids).not.toContain(inSibling.id);
+    });
   });
 
   describe('findEligibleTimeEntries', () => {
@@ -252,7 +353,36 @@ describe('InvoiceService', () => {
       expect(eligible.every((entry) => entry.endedAt !== null)).toBe(true);
     });
 
-    it('excludes an entry already claimed by an invoice, even a declined one', async () => {
+    it('excludes an entry claimed by a live (non-declined) invoice', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const eligible = await service.findEligibleTimeEntries(
+        volunteer.id,
+        reimbursementType.id,
+      );
+      expect(eligible.map((e) => e.id)).not.toContain(timeEntry.id);
+    });
+
+    it('releases an entry back to the eligible pool once its invoice is declined', async () => {
       const {
         organization,
         reimbursementType,
@@ -279,7 +409,190 @@ describe('InvoiceService', () => {
         volunteer.id,
         reimbursementType.id,
       );
+      expect(eligible.map((e) => e.id)).toContain(timeEntry.id);
+    });
+
+    it('lets a replacement invoice be created for the hours of a declined one', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+
+      const declinedInvoice = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+      await service.declineInvoice(
+        declinedInvoice.id,
+        volunteer.id,
+        'changed my mind',
+      );
+
+      const replacement = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      expect(replacement.id).not.toBe(declinedInvoice.id);
+
+      // Retained as a record, not deleted.
+      const stillThere = await service.findInvoice(declinedInvoice.id);
+      expect(stillThere.invoiceStatus).toBe(InvoiceStatus.DECLINED);
+
+      // No longer selectable now that a live invoice holds it again.
+      const eligible = await service.findEligibleTimeEntries(
+        volunteer.id,
+        reimbursementType.id,
+      );
       expect(eligible.map((e) => e.id)).not.toContain(timeEntry.id);
+    });
+  });
+
+  describe('findVolunteersNeedingTimesheets', () => {
+    const yearPeriod = () =>
+      [
+        new Date('2026-01-01T00:00:00.000Z'),
+        new Date('2027-01-01T00:00:00.000Z'),
+      ] as const;
+
+    it('returns volunteers with an eligible (unclaimed, completed, in-period) time entry and its hours', async () => {
+      const { root, reimbursementType, volunteer, timeEntry } = await setup();
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        eligibleHours: 4,
+      });
+      expect(result[0]?.volunteerId).toBe(timeEntry.volunteerId);
+    });
+
+    it('excludes a volunteer whose only entry has already been claimed by an invoice', async () => {
+      const {
+        organization,
+        root,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result.map((r) => r.volunteerId)).not.toContain(volunteer.id);
+    });
+
+    it('excludes a volunteer whose only time entry has not been ended yet', async () => {
+      const { root, reimbursementType } = await setup();
+      const volunteer = await createUser(db);
+      const shift = await createShift(db, {
+        organizationUnitId: root.id,
+        createdById: volunteer.id,
+      });
+      const instance = await createShiftInstance(db, shift.id);
+      await db.insert(schema.timeEntries).values({
+        shiftInstanceId: instance.id,
+        organizationUnitId: root.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-01T09:00:00.000Z'),
+        endedAt: null,
+      });
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result.map((r) => r.volunteerId)).not.toContain(volunteer.id);
+    });
+
+    it('excludes entries that fall outside the requested period', async () => {
+      const { root } = await setup();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        new Date('2026-01-01T00:00:00.000Z'),
+        new Date('2026-07-01T00:00:00.000Z'),
+      );
+
+      expect(result).toEqual([]);
+    });
+
+    it('scopes the result to the requested organization unit', async () => {
+      const { root } = await setup();
+      const reimbursementType = await createReimbursementType(db);
+      const { organization, type } = await createOrganizationWithType(
+        db,
+        `Other Org ${crypto.randomUUID()}`,
+      );
+      const otherRoot = await createUnit(db, {
+        organizationId: organization.id,
+        typeId: type.id,
+        name: 'other-root',
+      });
+      const otherVolunteer = await createUser(db);
+      await createCompletedTimeEntry(db, {
+        organizationUnitId: otherRoot.id,
+        volunteerId: otherVolunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-01T09:00:00.000Z'),
+        endedAt: new Date('2026-07-01T13:00:00.000Z'),
+      });
+      const [periodStart, periodEnd] = yearPeriod();
+
+      const result = await service.findVolunteersNeedingTimesheets(
+        root.id,
+        periodStart,
+        periodEnd,
+      );
+
+      expect(result.map((r) => r.volunteerId)).not.toContain(otherVolunteer.id);
     });
   });
 
@@ -419,13 +732,8 @@ describe('InvoiceService', () => {
         volunteer,
         supervisor,
         timeEntry,
+        contractTemplate,
       } = await setup();
-      const contractTemplate = await createDocumentTemplate(db, {
-        organizationId: organization.id,
-        reimbursementTypeId: reimbursementType.id,
-        kind: DocumentKind.CONTRACT,
-        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
-      });
       await db.insert(schema.contracts).values({
         documentTemplateId: contractTemplate.id,
         volunteerId: volunteer.id,
@@ -450,6 +758,165 @@ describe('InvoiceService', () => {
       );
 
       expect(invoice.isNonCompliant).toBe(false);
+    });
+
+    it('auto-creates a DRAFT contract when the volunteer has no contract', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(1);
+      expect(contracts[0].contractStatus).toBe(ContractStatus.DRAFT);
+    });
+
+    it('createDraftInvoice creates a DRAFT invoice and a DRAFT contract', async () => {
+      const { organization, root, reimbursementType, volunteer, timeEntry } =
+        await setup();
+
+      const draft = await service.createDraftInvoice(
+        organization.id,
+        {
+          organizationUnitId: root.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-08-01T00:00:00.000Z'),
+        },
+        volunteer.id,
+      );
+
+      expect(draft.invoiceStatus).toBe(InvoiceStatus.DRAFT);
+
+      const invoices = await db.query.invoices.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(invoices).toHaveLength(1);
+      expect(invoices[0].invoiceStatus).toBe(InvoiceStatus.DRAFT);
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(1);
+      expect(contracts[0].contractStatus).toBe(ContractStatus.DRAFT);
+    });
+
+    it('does not create a second draft contract for the same volunteer, type and year', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const secondEntry = await createCompletedTimeEntry(db, {
+        organizationUnitId: timeEntry.organizationUnitId,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        startedAt: new Date('2026-07-02T09:00:00.000Z'),
+        endedAt: new Date('2026-07-02T13:00:00.000Z'),
+      });
+
+      const input = {
+        organizationUnitId: null,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        periodStart: new Date('2026-07-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+      };
+      await service.createInvoice(
+        organization.id,
+        { ...input, timeEntryIds: [timeEntry.id] },
+        supervisor.id,
+      );
+      await service.createInvoice(
+        organization.id,
+        { ...input, timeEntryIds: [secondEntry.id] },
+        supervisor.id,
+      );
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(1);
+      expect(contracts[0].contractStatus).toBe(ContractStatus.DRAFT);
+    });
+
+    it('drafts for the following year despite a prior-year contract ending Jan 1', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+        contractTemplate,
+      } = await setup();
+      await db.insert(schema.contracts).values({
+        documentTemplateId: contractTemplate.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        contractStatus: ContractStatus.AWAITING_VOLUNTEER_SIGNATURE,
+        periodStart: new Date('2026-01-01T00:00:00.000Z'),
+        periodEnd: new Date('2027-01-01T00:00:00.000Z'),
+        resolvedBody: { header: {}, blocks: [], footer: {} },
+      });
+
+      await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2027-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2027-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const contracts = await db.query.contracts.findMany({
+        where: {
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+        },
+      });
+      expect(contracts).toHaveLength(2);
+      const drafts = contracts.filter(
+        (c) => c.contractStatus === ContractStatus.DRAFT,
+      );
+      expect(drafts).toHaveLength(1);
     });
 
     it('claims the time entry so it cannot be pulled into a second invoice', async () => {
@@ -578,6 +1045,40 @@ describe('InvoiceService', () => {
       expect(declined.invoiceStatus).toBe(InvoiceStatus.DECLINED);
       expect(declined.declineReason).toBe('Wrong hours');
       expect(declined.declinedAtSigneeType).toBe(SigneeType.VOLUNTEER);
+    });
+
+    it('notifies the admin side when the volunteer declines (VOLI-1246)', async () => {
+      const {
+        organization,
+        reimbursementType,
+        volunteer,
+        supervisor,
+        timeEntry,
+      } = await setup();
+      const invoice = await service.createInvoice(
+        organization.id,
+        {
+          organizationUnitId: null,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          timeEntryIds: [timeEntry.id],
+          periodStart: new Date('2026-07-01T00:00:00.000Z'),
+          periodEnd: new Date('2026-07-31T00:00:00.000Z'),
+        },
+        supervisor.id,
+      );
+
+      const before = declinedByVolunteerCalls.length;
+      await service.declineInvoice(invoice.id, volunteer.id, 'Wrong hours');
+
+      expect(declinedByVolunteerCalls.length).toBe(before + 1);
+      expect(declinedByVolunteerCalls.at(-1)).toMatchObject({
+        organizationId: organization.id,
+        volunteerUserId: volunteer.id,
+        documentId: invoice.id,
+        documentKind: DocumentKind.INVOICE,
+        reason: 'Wrong hours',
+      });
     });
   });
 

@@ -1,13 +1,17 @@
 import { EventInviteStatus, ShiftInviteStatus } from '@repo/data';
-import type { ShiftVolunteeringDisplayState } from '@repo/ui';
+import type {
+  ShiftVolunteeringDisplayState,
+  VolunteeringActionLabel,
+} from '@repo/ui';
 
 /** Shared invite-status values for shift + event (identical GraphQL enums). */
 export type InviteStatus = ShiftInviteStatus | EventInviteStatus;
 
 const ADMIN_UNINVITE_SOURCE_STATUS_VALUES = new Set<string>([
-  ShiftInviteStatus.Invited,
-  ShiftInviteStatus.SelfJoined,
-  ShiftInviteStatus.Accepted,
+  ShiftInviteStatus.AdminInvited,
+  ShiftInviteStatus.AwaitingAdminApproval,
+  ShiftInviteStatus.WaitlistJoined,
+  ShiftInviteStatus.Joined,
 ]);
 
 /** Whether an admin can remove a volunteer (→ ADMIN_REJECTED). */
@@ -25,7 +29,7 @@ export function adminUninviteTargetStatus<S extends InviteStatus>(
   return ShiftInviteStatus.AdminRejected as S;
 }
 
-/** Whether an admin can re-invite a previously rejected volunteer (→ INVITED). */
+/** Whether an admin can re-invite a previously rejected volunteer (→ ADMIN_INVITED). */
 export function canAdminReinvite(status: InviteStatus): boolean {
   return (
     status === ShiftInviteStatus.AdminRejected ||
@@ -40,7 +44,39 @@ export function adminReinviteTargetStatus<S extends InviteStatus>(
   if (!canAdminReinvite(status)) {
     return null;
   }
-  return ShiftInviteStatus.Invited as S;
+  return ShiftInviteStatus.AdminInvited as S;
+}
+
+export function adminRowActions(
+  status: InviteStatus,
+): VolunteeringActionLabel[] {
+  switch (toInviteDisplayState(status)) {
+    case 'requested':
+      return ['Approve'];
+    case 'rejected':
+      return ['Invite'];
+    default:
+      return [];
+  }
+}
+
+export function adminChipTargetStatuses(
+  status: ShiftInviteStatus,
+): ShiftInviteStatus[] {
+  switch (status) {
+    case ShiftInviteStatus.AdminInvited:
+      return [ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.AwaitingAdminApproval:
+      return [ShiftInviteStatus.Joined, ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.Joined:
+      return [ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.WaitlistJoined:
+      return [ShiftInviteStatus.Joined, ShiftInviteStatus.AdminRejected];
+    case ShiftInviteStatus.AdminRejected:
+      return [ShiftInviteStatus.AdminInvited];
+    default:
+      return [];
+  }
 }
 
 /**
@@ -59,25 +95,28 @@ export function preselectedInviteMemberIds(
     .map((member) => member.id);
 }
 
-/** Domain invite status → backoffice display state (VOLI-842). */
+/** Domain invite status → backoffice display state (VOLI-842 / invite-status-model). */
 export function toInviteDisplayState(
   status: InviteStatus,
 ): ShiftVolunteeringDisplayState {
   switch (status) {
-    case ShiftInviteStatus.Invited:
-    case EventInviteStatus.Invited:
+    case ShiftInviteStatus.AdminInvited:
+    case EventInviteStatus.AdminInvited:
       return 'invited';
-    case ShiftInviteStatus.Accepted:
-    case EventInviteStatus.Accepted:
+    case ShiftInviteStatus.AwaitingAdminApproval:
+    case EventInviteStatus.AwaitingAdminApproval:
+      return 'requested';
+    case ShiftInviteStatus.WaitlistJoined:
+    case EventInviteStatus.WaitlistJoined:
+      return 'waitlisted';
+    case ShiftInviteStatus.Joined:
+    case EventInviteStatus.Joined:
       return 'accepted';
-    case ShiftInviteStatus.SelfJoined:
-    case EventInviteStatus.SelfJoined:
-      return 'signed_up';
     case ShiftInviteStatus.VolunteerRejected:
     case EventInviteStatus.VolunteerRejected:
       return 'declined';
-    case ShiftInviteStatus.Cancelled:
-    case EventInviteStatus.Cancelled:
+    case ShiftInviteStatus.VolunteerCancelled:
+    case EventInviteStatus.VolunteerCancelled:
       return 'cancelled';
     case ShiftInviteStatus.AdminRejected:
     case EventInviteStatus.AdminRejected:
@@ -89,6 +128,21 @@ export function toInviteDisplayState(
   }
 }
 
+export function partitionInvitesByWaitlist<T extends { status: InviteStatus }>(
+  volunteers: readonly T[],
+): { invites: T[]; waitlisted: T[] } {
+  const waitlisted = volunteers.filter(
+    (invite) => invite.status === ShiftInviteStatus.WaitlistJoined,
+  );
+  const invites = volunteers.filter(
+    (invite) => invite.status !== ShiftInviteStatus.WaitlistJoined,
+  );
+  return {
+    invites,
+    waitlisted,
+  };
+}
+
 export type InviteStatusCounts = {
   invited: number;
   accepted: number;
@@ -96,6 +150,7 @@ export type InviteStatusCounts = {
   declined: number;
   cancelled: number;
   rejected: number;
+  waitlisted: number;
 };
 
 export function countInviteDisplayStates(
@@ -108,6 +163,7 @@ export function countInviteDisplayStates(
     declined: 0,
     cancelled: 0,
     rejected: 0,
+    waitlisted: 0,
   };
 
   for (const status of statuses) {
@@ -130,6 +186,13 @@ export function countInviteDisplayStates(
       case 'rejected':
         counts.rejected += 1;
         break;
+      case 'requested':
+        // Count approval requests under invited for summary until UI splits
+        counts.invited += 1;
+        break;
+      case 'waitlisted':
+        counts.waitlisted += 1;
+        break;
       default:
         break;
     }
@@ -146,6 +209,7 @@ export function formatInviteStatusSummary(
     invited: string;
     accepted: string;
     signedUp: string;
+    waitlisted: string;
     spots: string;
   },
 ): string {
@@ -154,6 +218,9 @@ export function formatInviteStatusSummary(
     `${counts.accepted} ${labels.accepted}`,
     `${counts.signedUp} ${labels.signedUp}`,
   ];
+  if (counts.waitlisted > 0) {
+    parts.push(`${counts.waitlisted} ${labels.waitlisted}`);
+  }
   if (spots != null) {
     parts.push(`${spots} ${labels.spots}`);
   }

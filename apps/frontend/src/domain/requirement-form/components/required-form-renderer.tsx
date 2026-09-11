@@ -21,7 +21,6 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type Control,
-  Controller,
   type FieldErrors,
   type Resolver,
   useForm,
@@ -31,10 +30,10 @@ import { z } from 'zod';
 import { submitRequiredForm } from '@/domain/requirement-form/actions';
 import {
   buildFieldSchema,
-  FieldRenderer,
   type RenderableField,
   useValidationMessages,
 } from './field-renderer';
+import { FormBlockSection } from './form-block-section';
 
 export type RequiredFormItem = {
   form: RequiredForm;
@@ -386,9 +385,9 @@ export function RequiredFormRenderer({
             <h2 className="mt-1 text-lg font-semibold">
               {currentForm.form.name}
             </h2>
-            {currentForm.form.description && (
+            {currentForm.form.description?.trim() && (
               <p className="mt-1 text-sm text-muted-foreground">
-                {currentForm.form.description}
+                {currentForm.form.description.trim()}
               </p>
             )}
           </div>
@@ -515,39 +514,12 @@ function FormBlocks({
   return (
     <div className="space-y-8">
       {blocks.map((block) => (
-        <div key={block.id} className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold">{block.title}</h3>
-            {block.description && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {block.description}
-              </p>
-            )}
-          </div>
-
-          {(block.fields?.length ?? 0) === 0 && (
-            <p className="text-muted-foreground text-sm">{tForm('noFields')}</p>
-          )}
-
-          <div className="space-y-4">
-            {block.fields?.map((field: RequiredFormField) => (
-              <Controller
-                key={field.id}
-                name={field.id}
-                control={control}
-                defaultValue=""
-                render={({ field: ctrlField }) => (
-                  <FieldRenderer
-                    field={field as unknown as RenderableField}
-                    value={ctrlField.value ?? ''}
-                    onChange={ctrlField.onChange}
-                    error={errors[field.id]?.message}
-                  />
-                )}
-              />
-            ))}
-          </div>
-        </div>
+        <FormBlockSection
+          key={block.id}
+          block={block}
+          control={control}
+          errors={errors}
+        />
       ))}
     </div>
   );

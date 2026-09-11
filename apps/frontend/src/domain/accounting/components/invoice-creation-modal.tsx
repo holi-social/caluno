@@ -1,6 +1,6 @@
 'use client';
 
-import { parseTemplateBody } from '@repo/data';
+import { DataError, PermissionKey, parseTemplateBody } from '@repo/data';
 import {
   useActiveDocumentTemplate,
   useAdminUserProfile,
@@ -8,15 +8,23 @@ import {
   useCurrentOrg,
   useEffectiveRates,
   useEligibleTimeEntriesForInvoice,
+  usePermissions,
   useReimbursementTypes,
+  useYearlyUsage,
 } from '@repo/data/react';
-import { format } from 'date-fns';
+import { Input } from '@repo/ui';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { formatEuro } from '@/lib/formatting/formats';
+import { FORM_ID as ORG_UNIT_EDIT_SHEET_ID } from '@/domain/org-unit/components/org-unit-create-edit-sheet';
+import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  type DerivedField,
+  deriveEditableFields,
+} from '../lib/creation-fields';
 import { mapEligibleTimeEntry } from '../lib/creation-modal.utils';
-import { centsToEuros } from '../lib/money';
+import { centsToEuros, formatHourlyRate } from '../lib/money';
 import {
   apiDocumentKindFor,
   reimbursementTypeKeyFor,
@@ -30,6 +38,7 @@ import {
 import { EligibleHoursCard } from './eligible-hours-card';
 import { InfoPanel } from './info-panel';
 import { InvoiceCapCard } from './invoice-cap-card';
+import { ManualCapEditor } from './manual-cap-editor';
 import type { DateRange } from './period-picker';
 import { lastMonthRange, PeriodPicker, thisMonthRange } from './period-picker';
 import { getKnownOrgValues } from './template/builder-document-presets';
@@ -39,12 +48,6 @@ import type {
 } from './template/builder-types';
 import { getManualFieldValue } from './template/builder-types';
 import { GeneratedDocumentPreview } from './template/generated-document-preview';
-
-/** "Anna Müller" -> { first: "Anna", last: "Müller" } — matches the Vorname/Nachname fields the invoice text binds separately. */
-function splitName(name: string): { first: string; last: string } {
-  const [first, ...rest] = name.trim().split(/\s+/);
-  return { first: first ?? name, last: rest.join(' ') };
-}
 
 /** "05.07.2026, 09:00–13:00" -> { begin: "05.07.2026, 09:00", end: "05.07.2026, 13:00" } — the table's Beginn/Ende columns need separate timestamps, `EligibleHourLine` stores one combined string. */
 function splitDateTimeRange(dateTime: string): { begin: string; end: string } {
@@ -79,16 +82,6 @@ function formatDocumentNumber(
   }
 }
 
-interface NameFieldState {
-  value: string;
-  provenance: 'profile' | 'override';
-}
-
-interface IbanFieldState {
-  value: string | null;
-  provenance: 'profile' | 'override' | 'gap';
-}
-
 interface InvoiceCreationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -119,12 +112,17 @@ export function InvoiceCreationModal({
 }: InvoiceCreationModalProps) {
   const t = useTranslations('Accounting.reimbursements.invoiceModal');
   const tFields = useTranslations('Accounting.templates.builder.dataSources');
+  const tManual = useTranslations(
+    'Accounting.templates.builder.manualFieldLabels',
+  );
   const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
   const tPeriod = useTranslations(
     'Accounting.reimbursements.invoiceModal.periodPicker',
   );
 
   const org = useCurrentOrg();
+  const router = useRouter();
+  const permissionsQuery = usePermissions();
 
   const typesQuery = useReimbursementTypes();
   const ratesQuery = useEffectiveRates(orgUId);
@@ -160,12 +158,15 @@ export function InvoiceCreationModal({
     ? parseTemplateBody(contractTemplateQuery.data.body)
     : null;
 
-  const [nameField, setNameField] = useState<NameFieldState | null>(null);
-  const [addressField, setAddressField] = useState<IbanFieldState | null>(null);
-  const [ibanField, setIbanField] = useState<IbanFieldState | null>(null);
+  const [derivedFields, setDerivedFields] = useState<DerivedField[] | null>(
+    null,
+  );
+  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [period, setPeriod] = useState<DateRange>(thisMonthRange);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendErrorCode, setSendErrorCode] = useState<string | null>(null);
 
   const eligibleQuery = useEligibleTimeEntriesForInvoice({
     volunteerId: volunteerId ?? undefined,
@@ -173,9 +174,17 @@ export function InvoiceCreationModal({
     periodStart: period.from?.toISOString(),
     periodEnd: (period.to ?? period.from)?.toISOString(),
   });
+  const yearlyUsageQuery = useYearlyUsage(
+    reimbursementType?.id,
+    period.from?.getFullYear(),
+  );
+  const formatting = useFormatting();
   const lines = useMemo(
-    () => (eligibleQuery.data ?? []).map(mapEligibleTimeEntry),
-    [eligibleQuery.data],
+    () =>
+      (eligibleQuery.data ?? []).map((entry) =>
+        mapEligibleTimeEntry(entry, formatting),
+      ),
+    [eligibleQuery.data, formatting],
   );
 
   const createInvoice = useCreateInvoice();
@@ -184,9 +193,8 @@ export function InvoiceCreationModal({
   // is targeted — everything gets re-seeded from the freshly loaded data below.
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset keyed on identity change, not a dependency read by the effect body
   useEffect(() => {
-    setNameField(null);
-    setAddressField(null);
-    setIbanField(null);
+    setDerivedFields(null);
+    setEditedValues({});
     setPeriod(thisMonthRange());
   }, [volunteerId, docId]);
 
@@ -217,30 +225,46 @@ export function InvoiceCreationModal({
     eligibleQuery.isError ||
     reimbursementTypeMissing;
 
+  // The first query that failed carries the actual reason (e.g. "No invoice
+  // template configured for reimbursement type …") — shown in the dialog so
+  // the coordinator can see what's really wrong, not just the generic copy.
+  const loadError =
+    typesQuery.error ??
+    ratesQuery.error ??
+    profileQuery.error ??
+    invoiceTemplateQuery.error ??
+    contractTemplateQuery.error ??
+    eligibleQuery.error;
+
+  // The most common blocker: the org has the reimbursement type but no
+  // invoice template yet (org-default or unit-override). Offer a direct CTA
+  // to the template builder instead of a dead end.
+  const noInvoiceTemplate =
+    invoiceTemplateQuery.error instanceof DataError &&
+    invoiceTemplateQuery.error.options?.code === 'NOT_FOUND';
+  const createTemplateCta = () =>
+    router.push(`/admin/${orgUId}/accounting/settings/templates`);
+
   const status: DocumentCreationLoadStatus = hasError
     ? 'error'
-    : dataReady
-      ? 'loaded'
-      : 'loading';
+    : sendError
+      ? 'error'
+      : dataReady
+        ? 'loaded'
+        : 'loading';
 
-  // Seed the editable fields once from the loaded profile, then leave them
-  // alone — later re-renders shouldn't clobber a coordinator's edits.
+  // Seed the editable fields once from the loaded profile/template, then leave
+  // them alone — later re-renders shouldn't clobber a coordinator's edits.
   useEffect(() => {
-    if (!volunteerId || !volunteerName || nameField || !profileLoaded) return;
+    if (!dataReady || !template || derivedFields || !volunteerName) return;
     const profileData = (profileQuery.data?.data ?? {}) as Record<
       string,
       unknown
     >;
-    const address =
-      typeof profileData.address === 'string' ? profileData.address : null;
-    const iban = typeof profileData.iban === 'string' ? profileData.iban : null;
-    setNameField({ value: volunteerName, provenance: 'profile' });
-    setAddressField({
-      value: address,
-      provenance: address ? 'profile' : 'gap',
-    });
-    setIbanField({ value: iban, provenance: iban ? 'profile' : 'gap' });
-  }, [volunteerId, volunteerName, nameField, profileLoaded, profileQuery.data]);
+    setDerivedFields(
+      deriveEditableFields(template, profileData, volunteerName),
+    );
+  }, [dataReady, template, derivedFields, profileQuery.data, volunteerName]);
 
   // Rendered unconditionally (per the ContractCreationModal precedent) so the
   // Dialog can drive its own open/close animation; nothing below needs the
@@ -255,13 +279,28 @@ export function InvoiceCreationModal({
   )
     return null;
 
+  const isEdited = (fieldId: string) => Object.hasOwn(editedValues, fieldId);
+  const currentValue = (
+    fieldId: string,
+    fallback: string | null,
+  ): string | null =>
+    isEdited(fieldId) ? (editedValues[fieldId] ?? null) : fallback;
+
+  const handleFieldChange = (fieldId: string) => (value: string) => {
+    setEditedValues((prev) => ({ ...prev, [fieldId]: value }));
+  };
+
   const selectedLines = lines.filter((line) => checkedIds.has(line.id));
   const selectedHours = selectedLines.reduce(
     (sum, line) => sum + line.hours,
     0,
   );
   const selectedAmount = selectedHours * ratePerHour;
-  const projectedAfter = usedBeforeAmount + selectedAmount;
+  const usedBefore =
+    yearlyUsageQuery.data?.usedCents !== undefined
+      ? centsToEuros(yearlyUsageQuery.data.usedCents)
+      : usedBeforeAmount;
+  const projectedAfter = usedBefore + selectedAmount;
 
   const toggleLine = (id: string) => {
     setCheckedIds((prev) => {
@@ -275,6 +314,8 @@ export function InvoiceCreationModal({
   const handleSend = async () => {
     if (!reimbursementType) return;
     setIsSending(true);
+    setSendError(null);
+    setSendErrorCode(null);
     try {
       await createInvoice.mutateAsync({
         organizationUnitId: orgUId,
@@ -283,16 +324,48 @@ export function InvoiceCreationModal({
         periodStart: (period.from ?? new Date()).toISOString(),
         periodEnd: (period.to ?? period.from ?? new Date()).toISOString(),
         timeEntryIds: selectedLines.map((line) => line.id),
+        fieldOverrides: (derivedFields ?? []).flatMap((field) =>
+          isEdited(field.fieldId)
+            ? field.fieldIds.map((id) => ({
+                fieldId: id,
+                value: editedValues[field.fieldId] ?? '',
+              }))
+            : [],
+        ),
       });
       onOpenChange(false);
       toast.success(t('sentToast', { name: volunteerName }));
       onSent();
-    } catch {
+    } catch (error) {
+      // Surface the real server error (e.g. "No invoice template configured
+      // for reimbursement type …") instead of a generic "try again", and keep
+      // the modal open so the coordinator can act on the reason.
       toast.error(t('sendErrorToast', { name: volunteerName }));
+      if (error instanceof Error) {
+        setSendError(error.message || null);
+        setSendErrorCode(
+          error instanceof DataError ? (error.options?.code ?? null) : null,
+        );
+      } else {
+        setSendError(null);
+        setSendErrorCode(null);
+      }
     } finally {
       setIsSending(false);
     }
   };
+
+  const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  const sendErrorIsOrgProfile = /organization is missing/i.test(
+    sendError ?? '',
+  );
+  const canEditOrg =
+    permissionsQuery.data?.some((p) => p.key === PermissionKey.OrgEdit) ??
+    false;
+  const editOrgProfileCta = () =>
+    router.push(
+      `/admin/${orgUId}/settings/org-units?sheet=${ORG_UNIT_EDIT_SHEET_ID}&id=${orgUId}`,
+    );
 
   const pauschaleLabel = tPauschale(
     `type${getPauschaleKey(pauschale).toUpperCase()}` as Parameters<
@@ -311,26 +384,19 @@ export function InvoiceCreationModal({
     ? getManualFieldValue(template, 'kostenstelle')
     : undefined;
 
-  const { first, last } = splitName(nameField?.value ?? volunteerName);
-
   const values: Partial<Record<DataSourceKey, string>> = {
     ...getKnownOrgValues({
       pauschale,
       orgName: org.name,
       orgAddress: org.address,
-      // orgCity/orgLegalRep: no such field exists on the org profile yet
-      // (see OrganizationData) — a real gap, left unresolved rather than
-      // invented.
+      orgCity: org.city,
+      orgLegalRep: org.legalRep,
       hourlyRateCents: effectiveRate?.hourlyRateCents,
       yearlyLimitCents:
         effectiveRate?.reimbursementType.yearlyLimitCents ??
         reimbursementType?.yearlyLimitCents,
     }),
-    volunteer_first_name: first,
-    volunteer_last_name: last,
-    volunteer_address: addressField?.value ?? undefined,
-    volunteer_iban: ibanField?.value ?? undefined,
-    generated_date: format(new Date(), 'dd.MM.yyyy'),
+    generated_date: formatting.formatDate(new Date()),
     document_number:
       template?.invoiceNumberFormat && template
         ? formatDocumentNumber(
@@ -339,9 +405,30 @@ export function InvoiceCreationModal({
             kostenstelle,
           )
         : undefined,
-    period_start: format(period.from ?? new Date(), 'dd.MM.yyyy'),
-    period_end: format(period.to ?? new Date(), 'dd.MM.yyyy'),
+    period_start: formatting.formatDate(period.from ?? new Date()),
+    period_end: formatting.formatDate(period.to ?? new Date()),
+    contract_period: `${formatting.formatDate(period.from ?? new Date())} – ${formatting.formatDate(
+      period.to ?? new Date(),
+    )}`,
+    // The Jahresdeckel sentence's "already received" figure is a running
+    // calendar-year-to-date sum, not the invoice's own (monthly) period — so
+    // its stated period runs from Jan 1 of that year through this period's
+    // end, matching what the backend actually sums at generation time.
+    already_received_period: `${formatting.formatDate(
+      new Date((period.from ?? new Date()).getFullYear(), 0, 1),
+    )} – ${formatting.formatDate(period.to ?? new Date())}`,
+    already_received_amount:
+      yearlyUsageQuery.data?.usedCents !== undefined
+        ? `${centsToEuros(yearlyUsageQuery.data.usedCents).toLocaleString(
+            'de-DE',
+          )} €`
+        : undefined,
   };
+  for (const field of derivedFields ?? []) {
+    if (field.kind !== 'bound' || !field.source) continue;
+    const value = currentValue(field.fieldId, field.value);
+    if (value) values[field.source] = value;
+  }
 
   const tableBlock = template?.blocks.find((b) => b.kind === 'table');
   const firstColumnSource =
@@ -367,6 +454,7 @@ export function InvoiceCreationModal({
       end,
       `${line.hours}h`,
       `${ratePerHour.toFixed(2)} €`,
+      formatHourlyRate(line.hours * ratePerHour),
     ];
   });
   const tableTotalRow = [
@@ -374,11 +462,12 @@ export function InvoiceCreationModal({
     '',
     'Summe',
     `${selectedHours}h`,
-    formatEuro(selectedAmount),
+    '',
+    formatHourlyRate(selectedAmount),
   ];
   // The Pauschale reimbursement itself isn't a VAT-liable supply, but the rate is always 0% —
   // stated on every invoice regardless, never computed from the total.
-  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '0,00 €'];
+  const tableVatRow = ['', '', 'zzgl. 0 % USt.', '', '', '0,00 €'];
 
   return (
     <DocumentCreationDialog
@@ -387,8 +476,45 @@ export function InvoiceCreationModal({
       embedded={embedded}
       title={t('title')}
       status={status}
-      errorTitle={t('loadErrorTitle')}
-      errorDescription={t('loadError', { name: volunteerName })}
+      errorTitle={
+        sendErrorIsOrgProfile
+          ? t('orgProfileErrorTitle')
+          : sendError
+            ? t('sendErrorTitle')
+            : t('loadErrorTitle')
+      }
+      errorDescription={
+        sendErrorIsOrgProfile
+          ? t('orgProfileErrorDescription')
+          : sendError
+            ? t('sendError', { name: volunteerName })
+            : t('loadError', { name: volunteerName })
+      }
+      errorMessage={
+        sendErrorIsOrgProfile
+          ? undefined
+          : (sendError ??
+            (loadError instanceof Error ? loadError.message : undefined))
+      }
+      errorCtaLabel={
+        sendErrorIsOrgProfile
+          ? canEditOrg
+            ? t('editProfileCta')
+            : undefined
+          : noInvoiceTemplate || sendErrorIsNoTemplate
+            ? t('noTemplateCta')
+            : undefined
+      }
+      errorCtaAction={
+        sendErrorIsOrgProfile
+          ? canEditOrg
+            ? editOrgProfileCta
+            : undefined
+          : noInvoiceTemplate || sendErrorIsNoTemplate
+            ? createTemplateCta
+            : undefined
+      }
+      errorCtaCentered={sendErrorIsOrgProfile}
       fieldsSkeletonKeys={['name', 'iban', 'period', 'cap', 'hours']}
       cancelLabel={t('cancel')}
       sendLabel={t('sendForSigning')}
@@ -417,40 +543,44 @@ export function InvoiceCreationModal({
         )
       }
       fields={
-        nameField &&
-        addressField &&
-        ibanField && (
+        derivedFields && (
           <>
-            <AccountingProfileFieldCard
-              label={t('nameFieldLabel')}
-              value={nameField.value}
-              provenance={nameField.provenance}
-              volunteerName={volunteerName}
-              docType="invoice"
-              onSave={(value) =>
-                setNameField({ value, provenance: 'override' })
-              }
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_address')}
-              value={addressField.value}
-              provenance={addressField.provenance}
-              volunteerName={volunteerName}
-              docType="invoice"
-              onSave={(value) =>
-                setAddressField({ value, provenance: 'override' })
-              }
-            />
-            <AccountingProfileFieldCard
-              label={tFields('volunteer_iban')}
-              value={ibanField.value}
-              provenance={ibanField.provenance}
-              volunteerName={volunteerName}
-              docType="invoice"
-              onSave={(value) =>
-                setIbanField({ value, provenance: 'override' })
-              }
-            />
+            {derivedFields.map((field) =>
+              field.kind === 'bound' ? (
+                <AccountingProfileFieldCard
+                  key={field.fieldId}
+                  label={tFields(
+                    field.labelKey as Parameters<typeof tFields>[0],
+                  )}
+                  value={currentValue(field.fieldId, field.value)}
+                  provenance={
+                    isEdited(field.fieldId)
+                      ? 'override'
+                      : field.provenance === 'template'
+                        ? 'gap'
+                        : field.provenance
+                  }
+                  volunteerName={volunteerName}
+                  docType="invoice"
+                  onSave={handleFieldChange(field.fieldId)}
+                />
+              ) : (
+                <InfoPanel
+                  key={field.fieldId}
+                  title={tManual(
+                    field.labelKey as Parameters<typeof tManual>[0],
+                  )}
+                >
+                  <Input
+                    className="mt-2"
+                    value={currentValue(field.fieldId, field.value) ?? ''}
+                    onChange={(e) =>
+                      handleFieldChange(field.fieldId)(e.target.value)
+                    }
+                  />
+                </InfoPanel>
+              ),
+            )}
             <InfoPanel title={t('periodFieldLabel')}>
               <div className="mt-2">
                 <PeriodPicker
@@ -475,10 +605,19 @@ export function InvoiceCreationModal({
               </div>
             </InfoPanel>
             <InvoiceCapCard
-              usedBefore={usedBeforeAmount}
+              usedBefore={usedBefore}
               projectedAfter={projectedAfter}
               total={totalCapAmount}
             />
+            {reimbursementType && (
+              <ManualCapEditor
+                volunteerId={volunteerId}
+                reimbursementTypeId={reimbursementType.id}
+                year={period.from?.getFullYear() ?? new Date().getFullYear()}
+                usedBefore={usedBefore}
+                selectedAmount={selectedAmount}
+              />
+            )}
             <EligibleHoursCard
               lines={lines}
               selectedIds={checkedIds}

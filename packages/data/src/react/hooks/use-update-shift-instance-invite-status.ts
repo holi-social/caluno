@@ -21,6 +21,11 @@ export function useUpdateShiftInstanceInviteStatus() {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myShiftInstances'] });
+      queryClient.invalidateQueries({ queryKey: ['myShiftInstancesInfinite'] });
+      queryClient.invalidateQueries({ queryKey: ['availableShiftInstances'] });
+      queryClient.invalidateQueries({
+        queryKey: ['availableShiftInstancesInfinite'],
+      });
     },
   });
 }

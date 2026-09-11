@@ -17,7 +17,12 @@ import {
 } from '@repo/ui';
 import { UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  getDocLineSummary,
+  getPickerAnnotations,
+} from '../lib/board-data.utils';
 import { ContractCreationModal } from './contract-creation-modal';
 import {
   DocTypeHeader,
@@ -25,7 +30,7 @@ import {
   type PauschalenType,
 } from './doc-type-header';
 import { InvoiceCreationModal } from './invoice-creation-modal';
-import type { BoardDocument, BoardVolunteer } from './reimbursements-board';
+import type { BoardVolunteer } from './reimbursements-board';
 import { STATUS_META } from './reimbursements-volunteer-group';
 
 type DocKind = 'contract' | 'invoice';
@@ -33,6 +38,17 @@ type DocKind = 'contract' | 'invoice';
 interface DocLine {
   kind: DocKind;
   pauschale: PauschalenType;
+}
+
+/**
+ * Base UI combobox item shape. The input shows the selected item's `label`
+ * (the volunteer's name) while `value` keeps the volunteer id — without the
+ * label, the input would display the raw uuid after selection.
+ */
+interface VolunteerOption {
+  value: string;
+  label: string;
+  volunteer: BoardVolunteer;
 }
 
 // Grouped by Pauschale type, not by kind.
@@ -45,29 +61,6 @@ const LINES: DocLine[] = [
 
 function lineKey(line: DocLine): string {
   return `${line.kind}-${line.pauschale}`;
-}
-
-interface DocLineSummary {
-  count: number;
-  latest?: BoardDocument;
-}
-
-function getDocLineSummary(vol: BoardVolunteer, line: DocLine): DocLineSummary {
-  const prefix = line.kind === 'contract' ? 'contract' : 'timesheet';
-  const matches = vol.documents.filter(
-    (d) =>
-      (d.pauschale ?? vol.pauschale) === line.pauschale &&
-      d.status.startsWith(prefix),
-  );
-  const latest = matches.reduce<BoardDocument | undefined>((acc, d) => {
-    if (!acc) return d;
-    const accDate = acc.lastActionDate?.getTime();
-    const dDate = d.lastActionDate?.getTime();
-    if (dDate === undefined) return acc;
-    if (accDate === undefined) return d;
-    return dDate > accDate ? d : acc;
-  }, undefined);
-  return { count: matches.length, latest };
 }
 
 // Mirrors buildContractMissingDocs' id scheme for contracts.
@@ -98,6 +91,7 @@ export function CreateDocumentModal({
   const tCommon = useTranslations('Common');
   const tDocs = useTranslations('Accounting.reimbursements.docs');
   const tSections = useTranslations('Accounting.templates.sections');
+  const { formatDate } = useFormatting();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [volunteerId, setVolunteerId] = useState<string | null>(null);
@@ -114,9 +108,14 @@ export function CreateDocumentModal({
   }, [open]);
 
   const volunteer = volunteers.find((v) => v.id === volunteerId) ?? null;
+  const volunteerOptions = useMemo(
+    () => volunteers.map((v) => ({ value: v.id, label: v.name, volunteer: v })),
+    [volunteers],
+  );
   const existingDoc =
     volunteer && selectedLine
-      ? getDocLineSummary(volunteer, selectedLine).latest
+      ? getDocLineSummary(volunteer, selectedLine.kind, selectedLine.pauschale)
+          .latest
       : undefined;
   const docId =
     volunteer && selectedLine
@@ -157,9 +156,9 @@ export function CreateDocumentModal({
             className="flex-1 space-y-6 overflow-y-auto p-6"
           >
             <Combobox
-              items={volunteers}
-              onValueChange={(id: string | null) => {
-                setVolunteerId(id);
+              items={volunteerOptions}
+              onValueChange={(option: VolunteerOption | null) => {
+                setVolunteerId(option?.value ?? null);
                 setSelectedLine(null);
               }}
             >
@@ -176,11 +175,39 @@ export function CreateDocumentModal({
                   {t('createDocumentModal.noVolunteersFound')}
                 </ComboboxEmpty>
                 <ComboboxList>
-                  {(vol: BoardVolunteer) => (
-                    <ComboboxItem key={vol.id} value={vol.id}>
-                      {vol.name}
-                    </ComboboxItem>
-                  )}
+                  {(option: VolunteerOption) => {
+                    const annotations = getPickerAnnotations(option.volunteer);
+                    return (
+                      <ComboboxItem key={option.value} value={option}>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate">{option.label}</span>
+                          {annotations.contracts.map((annotation) => (
+                            <span
+                              key={annotation.pauschale}
+                              className="truncate text-xs text-muted-foreground"
+                            >
+                              {tSections(getPauschaleKey(annotation.pauschale))}
+                              {': '}
+                              {t(
+                                `createDocumentModal.contractState.${annotation.state}` as Parameters<
+                                  typeof t
+                                >[0],
+                              )}
+                            </span>
+                          ))}
+                          <span className="truncate text-xs text-muted-foreground">
+                            {annotations.latestTimesheetDate
+                              ? t('createDocumentModal.latestTimesheet', {
+                                  date: formatDate(
+                                    annotations.latestTimesheetDate,
+                                  ),
+                                })
+                              : t('createDocumentModal.noTimesheetYet')}
+                          </span>
+                        </div>
+                      </ComboboxItem>
+                    );
+                  }}
                 </ComboboxList>
               </ComboboxContent>
             </Combobox>
@@ -194,73 +221,76 @@ export function CreateDocumentModal({
                   {LINES.map((line) => {
                     const { count, latest } = getDocLineSummary(
                       volunteer,
-                      line,
+                      line.kind,
+                      line.pauschale,
                     );
                     const selected =
                       selectedLine && lineKey(selectedLine) === lineKey(line);
                     return (
-                      <button
-                        key={lineKey(line)}
-                        type="button"
-                        onClick={() => setSelectedLine(line)}
-                        className={cn(
-                          'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
-                          selected
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                            : 'border-border bg-card hover:bg-muted',
-                        )}
-                      >
-                        <DocTypeHeader
-                          kind={line.kind}
-                          pauschale={line.pauschale}
-                          topLine=""
-                          name={lineName(line)}
-                          className="min-w-0 flex-1"
-                        />
-
-                        <div className="min-w-0 flex-1 text-sm">
-                          {count > 0 ? (
-                            <>
-                              <p className="text-card-foreground">
-                                {t('createDocumentModal.documentCount', {
-                                  count,
-                                })}
-                              </p>
-                              {latest && (
-                                <p className="text-xs text-muted-foreground">
-                                  {t(
-                                    `docs.statusLabel.${STATUS_META[latest.status].labelKey}` as Parameters<
-                                      typeof t
-                                    >[0],
-                                  )}
-                                  {latest.lastActionDate
-                                    ? ` · ${latest.lastActionDate}`
-                                    : ''}
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className="text-muted-foreground">
-                              {t('createDocumentModal.noDocumentYet')}
-                            </p>
+                      // The "view volunteer" stub button below sits as a
+                      // sibling overlay, not a descendant: nesting a
+                      // <button> inside this row's <button> would be
+                      // invalid HTML (and breaks hydration).
+                      <div key={lineKey(line)} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLine(line)}
+                          className={cn(
+                            'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
+                            count > 0 && 'pr-28',
+                            selected
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                              : 'border-border bg-card hover:bg-muted',
                           )}
-                        </div>
+                        >
+                          <DocTypeHeader
+                            kind={line.kind}
+                            pauschale={line.pauschale}
+                            topLine=""
+                            name={lineName(line)}
+                            className="min-w-0 flex-1"
+                          />
+
+                          <div className="min-w-0 flex-1 text-sm">
+                            {count > 0 ? (
+                              <>
+                                <p className="text-card-foreground">
+                                  {t('createDocumentModal.documentCount', {
+                                    count,
+                                  })}
+                                </p>
+                                {latest && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {t(
+                                      `docs.statusLabel.${STATUS_META[latest.status].labelKey}` as Parameters<
+                                        typeof t
+                                      >[0],
+                                    )}
+                                    {latest.lastActionDate
+                                      ? ` · ${latest.lastActionDate}`
+                                      : ''}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-muted-foreground">
+                                {t('createDocumentModal.noDocumentYet')}
+                              </p>
+                            )}
+                          </div>
+                        </button>
 
                         {count > 0 && (
-                          <Button
+                          // A stub for now — needs a real userId to open
+                          // the volunteer-profile sheet.
+                          <button
                             type="button"
-                            size="sm"
-                            variant="outline"
-                            className="shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Stub — needs a real userId to open the admin/volunteers 'volunteer-profile' sheet.
-                            }}
+                            className="absolute inset-y-0 right-3 my-auto inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground shadow-xs"
                           >
                             {t('createDocumentModal.viewVolunteer')}
-                          </Button>
+                          </button>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

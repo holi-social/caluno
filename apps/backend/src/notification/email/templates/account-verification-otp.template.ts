@@ -30,7 +30,7 @@ export async function accountVerificationOtpTemplate(
     ${text(otp, {
       size: '32px',
       weight: 700,
-      color: emailTheme.colors.greenDark,
+      color: emailTheme.colors.primaryText,
       align: 'center',
       padding: '8px 0 20px',
       letterSpacing: '0.16em',

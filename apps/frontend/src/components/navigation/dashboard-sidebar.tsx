@@ -16,18 +16,19 @@ import {
   SidebarMenuItem,
 } from '@repo/ui';
 import {
+  ArrowUpRight,
   BuildingIcon,
   CalendarIcon,
   ClipboardListIcon,
   ClockIcon,
   CoinsIcon,
-  HandHeart,
+  HeartHandshake,
+  IdCard,
   LayoutListIcon,
   LogOutIcon,
   NetworkIcon,
   ScanQrCode,
   ShieldIcon,
-  SquareArrowOutUpRight,
   TicketIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -89,20 +90,9 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         count: pendingCount,
       },
       {
-        titleKey: 'checkIn',
-        href: '/check-in',
-        icon: ScanQrCode,
-        trailingIcon: SquareArrowOutUpRight,
-      },
-      {
         titleKey: 'requirementForms',
         href: `/admin/${orgUId}/requirement-forms`,
         icon: ClipboardListIcon,
-      },
-      {
-        titleKey: 'volunteering',
-        href: `/`,
-        icon: HandHeart,
       },
     ];
   }, [orgUId, pendingCount]);
@@ -139,8 +129,33 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         icon: NetworkIcon,
         permission: PermissionKey.OrgView,
       },
+      {
+        titleKey: 'idVerification',
+        href: `/admin/${orgUId}/settings/id-verification`,
+        icon: IdCard,
+        permission: PermissionKey.OrgView,
+      },
     ].filter((item) => !item.permission || permissionSet.has(item.permission));
   }, [orgUId, permissionSet]);
+
+  const shortcutItems = useMemo(() => {
+    if (!orgUId) return [];
+
+    return [
+      {
+        titleKey: 'checkVolunteersIn',
+        href: '/check-in',
+        icon: ScanQrCode,
+        trailingIcon: ArrowUpRight,
+      },
+      {
+        titleKey: 'volunteeringApp',
+        href: `/`,
+        icon: HeartHandshake,
+        trailingIcon: ArrowUpRight,
+      },
+    ];
+  }, [orgUId]);
 
   async function handleSignOut() {
     await signOut();
@@ -176,9 +191,7 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                             {t(item.titleKey as Parameters<typeof t>[0])}
                           </span>
                         </span>
-                        {'trailingIcon' in item && item.trailingIcon ? (
-                          <item.trailingIcon className="h-4 w-4 text-muted-foreground" />
-                        ) : 'count' in item && item.count ? (
+                        {'count' in item && item.count ? (
                           <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
                             {item.count}
                           </span>
@@ -227,6 +240,34 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
                         <span>
                           {t(item.titleKey as Parameters<typeof t>[0])}
                         </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {shortcutItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t('shortcuts')}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {shortcutItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href={item.href}
+                        className="flex items-center justify-between w-full"
+                      >
+                        <span className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>
+                            {t(item.titleKey as Parameters<typeof t>[0])}
+                          </span>
+                        </span>
+                        <item.trailingIcon className="h-4 w-4 text-muted-foreground" />
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

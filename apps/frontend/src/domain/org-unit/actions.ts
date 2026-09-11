@@ -28,6 +28,9 @@ export const createOrgUnit = actionClient
       phone: parsedInput.phone || null,
       description: parsedInput.description || null,
       address: parsedInput.address || null,
+      city: parsedInput.city || null,
+      zipCode: parsedInput.zipCode || null,
+      legalRep: parsedInput.legalRep || null,
     };
 
     return await data.organizationUnit.create(input);
@@ -51,6 +54,9 @@ export const updateOrgUnit = actionClient
       phone: parsedInput.phone || null,
       description: parsedInput.description || null,
       address: parsedInput.address || null,
+      city: parsedInput.city || null,
+      zipCode: parsedInput.zipCode || null,
+      legalRep: parsedInput.legalRep || null,
     };
 
     return await data.organizationUnit.update(id, input);

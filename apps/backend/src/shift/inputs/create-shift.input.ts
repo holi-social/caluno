@@ -17,6 +17,9 @@ export class CreateShiftInput {
   @Field(() => ID, { nullable: true })
   eventId?: string | null;
 
+  @Field(() => ID, { nullable: true })
+  reimbursementTypeId?: string | null;
+
   @Field(() => String, { nullable: true })
   instructions?: string | null;
 
@@ -40,6 +43,9 @@ export class CreateShiftInput {
 
   @Field(() => Int, { nullable: true })
   minVolunteers?: number | null;
+
+  @Field(() => Boolean, { nullable: true })
+  joinRequiresApproval?: boolean | null;
 
   @Field(() => String, { nullable: true })
   rrule?: string | null;

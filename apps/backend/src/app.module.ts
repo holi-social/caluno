@@ -1,17 +1,22 @@
 import { join } from 'node:path';
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
+import { Module, Scope } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ScheduleModule } from '@nestjs/schedule';
 import { SentryModule } from '@sentry/nestjs/setup';
-import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
+import {
+  AuthService,
+  AuthModule as BetterAuthModule,
+} from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import { Logger } from 'nestjs-pino';
 import { AccountingModule } from './accounting/accounting.module';
 import { type BetterAuthLogger, createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
+import { createSessionCachingAuthGuard } from './auth/guards/auth.guard';
 import { PermissionGuard } from './auth/guards/permission.guard';
 import { type Database, DatabaseModule } from './database/database.module';
 import { DATABASE_CONNECTION } from './database/database-connection';
@@ -64,6 +69,7 @@ const autoSchemaFile =
       delimiter: '.',
       global: true,
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     AppI18nModule,
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
@@ -90,6 +96,7 @@ const autoSchemaFile =
       inject: [UserService],
     }),
     BetterAuthModule.forRootAsync({
+      disableGlobalAuthGuard: true,
       imports: [
         DatabaseModule,
         ConfigModule,
@@ -168,6 +175,27 @@ const autoSchemaFile =
                   event: POSTHOG_EVENT.USER_SIGN_UP,
                   userId,
                   properties: { surface: POSTHOG_SURFACE.AUTH },
+                });
+              },
+              onEmailVerified: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_UPDATE,
+                  userId,
+                  properties: {
+                    surface: POSTHOG_SURFACE.AUTH,
+                    source: 'email_verified',
+                    updated_field: 'email_verified',
+                  },
+                });
+              },
+              onPasswordResetCompleted: (userId) => {
+                postHogService.capture({
+                  event: POSTHOG_EVENT.USER_UPDATE,
+                  userId,
+                  properties: {
+                    surface: POSTHOG_SURFACE.AUTH,
+                    source: 'password_reset',
+                  },
                 });
               },
               sendResetPassword: async ({ email, token, userId, headers }) => {
@@ -274,6 +302,12 @@ const autoSchemaFile =
     {
       provide: APP_INTERCEPTOR,
       useClass: LoaderInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      scope: Scope.REQUEST,
+      useFactory: createSessionCachingAuthGuard,
+      inject: [Reflector, AuthService],
     },
     {
       provide: APP_GUARD,

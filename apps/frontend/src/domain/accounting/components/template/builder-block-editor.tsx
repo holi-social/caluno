@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Button,
   Input,
   Label,
   RadioGroup,
@@ -20,21 +19,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@repo/ui';
-import {
-  CheckIcon,
-  LockIcon,
-  PencilIcon,
-  TriangleAlertIcon,
-} from 'lucide-react';
+import { LockIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import type { DocumentKind } from '../doc-type-header';
 import { InfoPanel } from '../info-panel';
 import { TemplateBuilderPeriodPicker } from './builder-period-picker';
 import {
   type DataSourceKey,
   FIELD_ORIGIN,
+  type FieldOrigin,
   getFirstOccurrenceLineByFieldId,
   type InvoiceNumberFormat,
   type TableFirstColumnSource,
@@ -52,7 +47,12 @@ import {
  * blocks. The legal text stays organized by clause; the editor groups the same fields by
  * what a coordinator is actually filling in (org info, volunteer info, engagement terms).
  */
-const ORG_SOURCES: DataSourceKey[] = ['org_name', 'org_address', 'org_city'];
+const ORG_SOURCES: DataSourceKey[] = [
+  'org_name',
+  'org_address',
+  'org_city',
+  'org_legal_rep',
+];
 const VOLUNTEER_SOURCES: DataSourceKey[] = [
   'volunteer_first_name',
   'volunteer_last_name',
@@ -213,6 +213,23 @@ function ProfileGapBadge({ t }: { t: ReturnType<typeof useTranslations> }) {
   );
 }
 
+function sourceLabelKey(origin: FieldOrigin | undefined): string {
+  switch (origin) {
+    case 'organization_profile':
+      return 'fieldSource.organizationProfile';
+    case 'rate_settings':
+      return 'fieldSource.rateSettings';
+    case 'yearly_limit':
+      return 'fieldSource.yearlyLimit';
+    case 'generation_time':
+      return 'fieldSource.generationTime';
+    case 'volunteer_profile':
+      return 'fieldSource.volunteerProfile';
+    default:
+      return 'fieldSource.volunteerProfile';
+  }
+}
+
 function FieldRow({
   field,
   line,
@@ -224,70 +241,26 @@ function FieldRow({
   hideTitle = false,
 }: FieldRowProps) {
   const t = useTranslations('Accounting.templates.builder');
-  const tCommon = useTranslations('Common');
   const inputId = useId();
   const title = getFieldTitle(field, t);
-  // Only meaningful on the bound branch below — hoisted so hook order never
-  // depends on which branch a given field takes.
-  const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState('');
-  const [override, setOverride] = useState<string | null>(null);
 
   if (field.value.kind === 'bound') {
     const isGap = profileGaps.has(field.value.source);
     const known = knownValues[field.value.source];
     const origin = FIELD_ORIGIN[field.value.source];
-    const effectiveValue = override ?? known;
-    // Matches the reimbursements dashboard's profile-field cards: a value that
-    // exists is editable via a pencil; anything not yet known is a plain
-    // placeholder — nothing to edit until a real volunteer/document exists.
-    const hasValue = !!effectiveValue && !isGap;
+    const hasValue = !!known && !isGap;
     const placeholderExample =
       PLACEHOLDER_EXAMPLES[field.value.source] ?? title;
 
-    function handleEdit() {
-      setDraft(effectiveValue ?? '');
-      setIsEditing(true);
-    }
-    function handleSave() {
-      setOverride(draft);
-      setIsEditing(false);
-    }
-
     const body = hasValue ? (
-      isEditing ? (
-        <div className="flex items-center gap-1">
-          <Input
-            aria-label={title}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            autoFocus
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-md"
-            onClick={handleSave}
-          >
-            <CheckIcon />
-            <span className="sr-only">{tCommon('save')}</span>
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-0.5">
-          <p className="text-base text-foreground">{effectiveValue}</p>
-          {(origin === 'rate_settings' ||
-            origin === 'organization_profile') && (
-            <p className="text-xs text-muted-foreground">
-              {t(
-                origin === 'rate_settings'
-                  ? 'fieldSource.rateSettings'
-                  : 'fieldSource.organizationProfile',
-              )}
-            </p>
-          )}
-        </div>
-      )
+      <div className="space-y-0.5">
+        <p className="text-base text-foreground">{known}</p>
+        {origin && (
+          <p className="text-xs text-muted-foreground">
+            {t(sourceLabelKey(origin))}
+          </p>
+        )}
+      </div>
     ) : isGap ? (
       <div className="space-y-0.5">
         <p className="text-base italic text-muted-foreground">
@@ -310,11 +283,7 @@ function FieldRow({
           {placeholderExample}
         </p>
         <p className="text-xs text-muted-foreground">
-          {t(
-            origin === 'generation_time'
-              ? 'fieldSource.generationTime'
-              : 'fieldSource.volunteerProfile',
-          )}
+          {t(sourceLabelKey(origin))}
         </p>
       </div>
     );
@@ -322,24 +291,7 @@ function FieldRow({
     if (hideTitle) return <div className="py-1">{body}</div>;
 
     return (
-      <InfoPanel
-        variant="outline"
-        title={title}
-        headerRight={
-          hasValue &&
-          !isEditing && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleEdit}
-            >
-              <PencilIcon />
-              <span className="sr-only">{tCommon('edit')}</span>
-            </Button>
-          )
-        }
-      >
+      <InfoPanel variant="outline" title={title}>
         {body}
       </InfoPanel>
     );

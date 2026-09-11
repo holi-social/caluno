@@ -51,7 +51,7 @@ export function CreateFormDialog({
         organizationUnitId: orgUId,
         organizationId,
         name: name.trim(),
-        description: description.trim() || undefined,
+        description,
       });
       if (result?.serverError) {
         toast.error(result.serverError);

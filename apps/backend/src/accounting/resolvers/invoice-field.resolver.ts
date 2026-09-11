@@ -22,6 +22,8 @@ import type { InvoiceSignatureEntity } from '../schemas/invoice-signature.schema
 import type { InvoiceStatusChangeEntity } from '../schemas/invoice-status-change.schema';
 import type { InvoiceTimeEntryEntity } from '../schemas/invoice-time-entry.schema';
 import type { ReimbursementTypeEntity } from '../schemas/reimbursement-type.schema';
+import { DocumentProfileRequirementService } from '../services/document-profile-requirement.service';
+import { AccountingOrganizationLoader } from './accounting-organization.loader';
 import { AccountingUserLoader } from './accounting-user.loader';
 import { InvoiceLoader } from './invoice.loader';
 
@@ -42,6 +44,7 @@ export class InvoiceFieldResolver {
     private readonly invoiceStatusChangeMapper: InvoiceStatusChangeMapper,
     private readonly invoiceTimeEntryMapper: InvoiceTimeEntryMapper,
     private readonly fileService: FileService,
+    private readonly documentProfileRequirementService: DocumentProfileRequirementService,
   ) {}
 
   @ResolveField(() => DocumentTemplate)
@@ -114,6 +117,51 @@ export class InvoiceFieldResolver {
   ): Promise<string | null> {
     if (!invoice.fileId) return null;
     return this.fileService.resolvePublicUrlForUploadedFile(invoice.fileId);
+  }
+
+  @ResolveField(() => [String])
+  async missingProfileFields(
+    @Parent() invoice: MaybeWithRelations,
+    @Loader(InvoiceLoader) loader: InvoiceLoader,
+  ): Promise<string[]> {
+    let templateBody: unknown = invoice.documentTemplate?.body;
+    if (!templateBody) {
+      const full = await loader.invoiceWithRelationsById.load(invoice.id);
+      templateBody = full.documentTemplate?.body;
+    }
+    return this.documentProfileRequirementService.missingProfileSources(
+      invoice.volunteerId,
+      templateBody,
+    );
+  }
+
+  @ResolveField(() => [String])
+  async missingOrgProfileFields(
+    @Parent() invoice: MaybeWithRelations,
+    @Loader(InvoiceLoader) invoiceLoader: InvoiceLoader,
+    @Loader(AccountingOrganizationLoader)
+    orgLoader: AccountingOrganizationLoader,
+  ): Promise<string[]> {
+    let templateBody: unknown = invoice.documentTemplate?.body;
+    let organizationId = invoice.documentTemplate?.organizationId;
+    let organizationUnitId: string | undefined =
+      invoice.organizationUnitId ?? undefined;
+    if (!templateBody || !organizationId) {
+      const full = await invoiceLoader.invoiceWithRelationsById.load(
+        invoice.id,
+      );
+      templateBody = full.documentTemplate?.body;
+      organizationId = full.documentTemplate?.organizationId;
+      organizationUnitId = full.organizationUnitId ?? undefined;
+    }
+    if (!organizationId) return [];
+    const unit = organizationUnitId
+      ? await orgLoader.organizationUnitById.load(organizationUnitId)
+      : await orgLoader.rootUnitByOrganizationId.load(organizationId);
+    return this.documentProfileRequirementService.missingOrgProfileSourcesForUnit(
+      (unit ?? undefined) as Record<string, unknown> | undefined,
+      templateBody,
+    );
   }
 
   @ResolveField(() => User)

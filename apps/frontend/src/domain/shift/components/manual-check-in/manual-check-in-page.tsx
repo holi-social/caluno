@@ -1,0 +1,375 @@
+'use client';
+
+import {
+  useCheckInInviteToOrganization,
+  useCheckInInviteToShiftInstance,
+  useCheckInReadiness,
+  useCheckInShiftInstances,
+  useQueryClient,
+} from '@repo/data/react';
+import { Button, Card, CardContent } from '@repo/ui';
+import { endOfMonth, startOfMonth } from 'date-fns';
+import { ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
+import { UserCard } from '@/components/user-card';
+import { checkInVolunteer } from '@/domain/time-entry/actions';
+import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
+import {
+  resolveCheckInReadiness,
+  shouldShowIdVerification,
+} from '../../check-in-readiness';
+import {
+  applyDate,
+  applyOrgUnit,
+  applyShift,
+  applyShiftInstance,
+  type CheckInSelection,
+  pickInitialInstance,
+  toCheckInInstance,
+} from '../../check-in-selection';
+import { setCheckInSuccessPayload } from '../../check-in-success-dialog';
+import { AcceptMembershipSheet } from './accept-membership-sheet';
+import { CheckInReadinessCard } from './check-in-readiness-card';
+import { CheckInWithoutShiftWarningCard } from './check-in-without-shift-warning-card';
+import { DateSheet } from './date-sheet';
+import { IdVerificationCard } from './id-verification-card';
+import { OrgUnitSheet } from './org-unit-sheet';
+import { ShiftInstanceStepper } from './shift-instance-stepper';
+import { ShiftSheet } from './shift-sheet';
+import { shouldShowShiftlessCheckInWarning } from './shiftless-check-in-warning';
+
+type ManualCheckInPageProps = {
+  volunteer: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
+  };
+  orgUnits: Array<{ id: string; name: string }>;
+  initialOrgUnitId: string;
+  checkInId: string;
+};
+
+export function ManualCheckInPage({
+  volunteer,
+  orgUnits,
+  initialOrgUnitId,
+  checkInId,
+}: ManualCheckInPageProps) {
+  const t = useTranslations('CheckIn');
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { formatDate, formatTimeRange } = useFormatting();
+
+  const [selection, setSelection] = useState<CheckInSelection>(() => ({
+    orgUnitId: initialOrgUnitId,
+    date: new Date(),
+    shiftId: null,
+    shiftInstanceId: null,
+    selectedInstance: null,
+  }));
+  const [didPreselect, setDidPreselect] = useState(false);
+  // Kept beside the selection rather than in it: the date/shift the user
+  // already picked survives untouched while the rows are hidden, so
+  // unchecking the box brings them back exactly as they were.
+  const [withoutShift, setWithoutShift] = useState(false);
+  const [openSheet, setOpenSheet] = useState<
+    'orgUnit' | 'date' | 'shift' | 'acceptMembership' | null
+  >(null);
+
+  // The visible month drives the fetch; it also feeds the calendar dots and
+  // the day list, so one range query serves every consumer on the page.
+  const [visibleMonth, setVisibleMonth] = useState(() => new Date());
+
+  const { data: rawInstances, isPlaceholderData: instancesStale } =
+    useCheckInShiftInstances(
+      selection.orgUnitId,
+      startOfMonth(visibleMonth),
+      endOfMonth(visibleMonth),
+    );
+
+  const instances = useMemo(
+    () => (rawInstances ?? []).map(toCheckInInstance),
+    [rawInstances],
+  );
+
+  // Preselect the instance nearest to now, once, after the first load.
+  if (!didPreselect && rawInstances) {
+    setDidPreselect(true);
+    const initial = pickInitialInstance(instances, new Date());
+    if (initial) {
+      setSelection((current) => ({ ...current, ...initial }));
+    }
+  }
+
+  // Without a shift the whole flow — the readiness query, the mutation and
+  // the success payload — runs on a null instance, so it is resolved once
+  // here instead of at each call site.
+  const effectiveShiftInstanceId = withoutShift
+    ? null
+    : selection.shiftInstanceId;
+  const effectiveInstance = withoutShift ? null : selection.selectedInstance;
+
+  // Readiness: enabled once a shift instance is chosen, or as soon as the
+  // without-shift box is ticked, where a null instance is the point and only
+  // the membership facts come back. Every mutator in check-in-selection.ts
+  // writes shiftInstanceId and selectedInstance together, so they never
+  // disagree about which instance is current.
+  const { data: readiness } = useCheckInReadiness(
+    selection.orgUnitId,
+    volunteer.id,
+    effectiveShiftInstanceId,
+    { enabled: withoutShift || !!selection.shiftInstanceId },
+  );
+  const readinessState = readiness
+    ? resolveCheckInReadiness(
+        {
+          ...readiness,
+          openMembershipRequestId: readiness.openMembershipRequestId ?? null,
+        },
+        { requiresShift: !withoutShift },
+      )
+    : null;
+
+  // Without a shift there is nothing to be ready *for*, so the card earns its
+  // place only while it is blocking: not a member, or a membership request
+  // still waiting on an admin. The green ready banner stays hidden there.
+  const showReadinessCard = withoutShift
+    ? readinessState === 'notMember' || readinessState === 'pendingMembership'
+    : !!selection.shiftInstanceId;
+
+  // Informational only: never gates the check-in button, unlike the
+  // readiness card, which only earns its place while it blocks.
+  const showShiftlessWarning = shouldShowShiftlessCheckInWarning(withoutShift);
+
+  // The ID verification card is a read-only side output of the readiness
+  // facts: it never blocks check-in, and disappears for good once verified.
+  const showIdVerification =
+    readinessState && readiness
+      ? shouldShowIdVerification({
+          state: readinessState,
+          idVerificationEnabled: readiness.idVerificationEnabled,
+          idVerified: readiness.idVerified,
+          membershipId: readiness.membershipId ?? null,
+        })
+      : false;
+
+  // "Sent" is per (org unit) / (shift instance) — tracked as the id it was
+  // sent for, so switching to a different unit or instance re-arms the
+  // button instead of carrying a stale confirmation forward.
+  const [orgInviteSentFor, setOrgInviteSentFor] = useState<string | null>(null);
+  const [shiftInviteSentFor, setShiftInviteSentFor] = useState<string | null>(
+    null,
+  );
+  const inviteToOrgMutation = useCheckInInviteToOrganization(
+    selection.orgUnitId,
+  );
+  const inviteToShiftMutation = useCheckInInviteToShiftInstance(
+    selection.orgUnitId,
+  );
+
+  const handleInviteToOrg = async () => {
+    try {
+      await inviteToOrgMutation.mutateAsync(volunteer.id);
+      setOrgInviteSentFor(selection.orgUnitId);
+    } catch {
+      toast.error(t('notMemberError'));
+    }
+  };
+
+  const handleInviteToShift = async () => {
+    if (!selection.shiftInstanceId) return;
+    try {
+      await inviteToShiftMutation.mutateAsync({
+        shiftInstanceId: selection.shiftInstanceId,
+        volunteerId: volunteer.id,
+      });
+      setShiftInviteSentFor(selection.shiftInstanceId);
+    } catch {
+      toast.error(t('notInShiftError'));
+    }
+  };
+
+  const [isSubmitPending, startSubmitTransition] = useTransition();
+
+  const handleSubmit = () => {
+    startSubmitTransition(async () => {
+      const result = await checkInVolunteer({
+        organizationUnitId: selection.orgUnitId,
+        volunteerId: volunteer.id,
+        shiftInstanceId: effectiveShiftInstanceId,
+      });
+
+      if (result?.serverError) {
+        toast.error(result.serverError);
+        await queryClient.invalidateQueries({
+          queryKey: ['check-in-readiness'],
+        });
+        return;
+      }
+
+      const startsAt = effectiveInstance
+        ? new Date(effectiveInstance.actualStartsAt)
+        : null;
+      const isToday =
+        !!startsAt && startsAt.toDateString() === new Date().toDateString();
+
+      setCheckInSuccessPayload({
+        volunteerName: volunteer.name,
+        volunteerImage: volunteer.image ?? null,
+        shiftTitle: effectiveInstance?.title ?? null,
+        timeRange: effectiveInstance
+          ? formatTimeRange(
+              effectiveInstance.actualStartsAt,
+              effectiveInstance.actualEndsAt,
+            )
+          : null,
+        dateLabel: startsAt
+          ? isToday
+            ? t('today')
+            : formatDate(startsAt)
+          : null,
+      });
+      router.push('/check-in');
+    });
+  };
+
+  return (
+    <Card>
+      <CardContent className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft />
+          </Button>
+          <h1 className="flex-1 text-center text-lg font-bold">
+            {t('checkInRunningTitle')}
+          </h1>
+          <div className="size-9 shrink-0" />
+        </div>
+
+        <ShiftInstanceStepper
+          selection={selection}
+          orgUnits={orgUnits}
+          withoutShift={withoutShift}
+          onWithoutShiftChange={setWithoutShift}
+          onOpenOrgUnit={() => setOpenSheet('orgUnit')}
+          onOpenDate={() => {
+            setVisibleMonth(selection.date ?? new Date());
+            setOpenSheet('date');
+          }}
+          onOpenShift={() => setOpenSheet('shift')}
+        />
+
+        <UserCard user={volunteer} size="lg" />
+
+        {showShiftlessWarning && <CheckInWithoutShiftWarningCard />}
+
+        {showReadinessCard && readinessState && (
+          <CheckInReadinessCard
+            state={readinessState}
+            checkInId={checkInId}
+            onInviteToOrg={handleInviteToOrg}
+            onOpenAcceptMembership={() => setOpenSheet('acceptMembership')}
+            onInviteToShift={handleInviteToShift}
+            isInviteToOrgPending={inviteToOrgMutation.isPending}
+            isInviteToOrgSent={orgInviteSentFor === selection.orgUnitId}
+            isInviteToShiftPending={inviteToShiftMutation.isPending}
+            isInviteToShiftSent={
+              shiftInviteSentFor === selection.shiftInstanceId
+            }
+          />
+        )}
+
+        {showIdVerification && readiness?.membershipId && (
+          <IdVerificationCard
+            organizationUnitId={selection.orgUnitId}
+            membershipId={readiness.membershipId}
+          />
+        )}
+
+        {readinessState === 'ready' && (
+          <Button
+            type="button"
+            size="lg"
+            variant={
+              showIdVerification && readiness?.membershipId
+                ? 'outline'
+                : 'default'
+            }
+            className="w-full"
+            disabled={isSubmitPending}
+            onClick={handleSubmit}
+          >
+            {t('checkInButton')}
+          </Button>
+        )}
+
+        <OrgUnitSheet
+          open={openSheet === 'orgUnit'}
+          onOpenChange={(open) => setOpenSheet(open ? 'orgUnit' : null)}
+          orgUnits={orgUnits}
+          selectedOrgUnitId={selection.orgUnitId}
+          onSelect={(orgUnitId) =>
+            setSelection((current) => applyOrgUnit(current, orgUnitId))
+          }
+        />
+
+        <DateSheet
+          open={openSheet === 'date'}
+          onOpenChange={(open) => setOpenSheet(open ? 'date' : null)}
+          instances={instances}
+          selectedDate={selection.date}
+          selectedShiftId={selection.shiftId}
+          month={visibleMonth}
+          onMonthChange={setVisibleMonth}
+          isLoadingInstances={instancesStale}
+          onSelect={(date) =>
+            setSelection((current) =>
+              applyDate(current, date, instances, new Date()),
+            )
+          }
+        />
+
+        <ShiftSheet
+          open={openSheet === 'shift'}
+          onOpenChange={(open) => setOpenSheet(open ? 'shift' : null)}
+          orgUnitId={selection.orgUnitId}
+          instances={instances}
+          selectedDate={selection.date}
+          selectedShiftInstanceId={selection.shiftInstanceId}
+          onSelectInstance={(instance) => {
+            // Instances are stale while the range query is in flight —
+            // applying one would resolve against the wrong month.
+            if (instancesStale) return;
+            setSelection((current) => applyShiftInstance(current, instance));
+          }}
+          onSelectShift={(shiftId) => {
+            if (instancesStale) return;
+            setSelection((current) =>
+              applyShift(current, shiftId, instances, new Date()),
+            );
+          }}
+        />
+
+        <AcceptMembershipSheet
+          open={openSheet === 'acceptMembership'}
+          onOpenChange={(open) =>
+            setOpenSheet(open ? 'acceptMembership' : null)
+          }
+          organizationUnitId={selection.orgUnitId}
+          volunteerId={volunteer.id}
+          membershipRequestId={readiness?.openMembershipRequestId ?? null}
+          onAccepted={() => setOpenSheet(null)}
+        />
+      </CardContent>
+    </Card>
+  );
+}

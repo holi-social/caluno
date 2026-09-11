@@ -15,7 +15,10 @@ import { ManualBaseline } from '../models/manual-baseline.model';
 import { ReimbursementType } from '../models/reimbursement-type.model';
 import { VolunteerYearlyUsage } from '../models/volunteer-yearly-usage.model';
 import { YearlyUsage } from '../models/yearly-usage.model';
-import { ReimbursementRateService } from '../services';
+import {
+  AccountingOrgAccessService,
+  ReimbursementRateService,
+} from '../services';
 
 @Resolver(() => ReimbursementType)
 export class ReimbursementQueryResolver {
@@ -23,6 +26,7 @@ export class ReimbursementQueryResolver {
     private readonly reimbursementRateService: ReimbursementRateService,
     private readonly reimbursementTypeMapper: ReimbursementTypeMapper,
     private readonly organizationUnitService: OrganizationUnitService,
+    private readonly accountingOrgAccessService: AccountingOrgAccessService,
     private readonly userMapper: UserMapper,
     private readonly membershipService: MembershipService,
     private readonly userService: UserService,
@@ -42,12 +46,9 @@ export class ReimbursementQueryResolver {
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<EffectiveRate[]> {
     const organizationId =
-      await this.organizationUnitService.findOrganizationIdByUnitId(
+      await this.accountingOrgAccessService.resolveEnabledOrganizationId(
         context.organizationUnitId,
       );
-    if (!organizationId) {
-      return [];
-    }
     if (
       organizationUnitId &&
       organizationUnitId !== context.organizationUnitId
@@ -91,13 +92,9 @@ export class ReimbursementQueryResolver {
     @Args('year', { type: () => Int }) year: number,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<VolunteerYearlyUsage[]> {
-    const organizationId =
-      await this.organizationUnitService.findOrganizationIdByUnitId(
-        context.organizationUnitId,
-      );
-    if (!organizationId) {
-      throw new NotFoundGraphQLError('Organization not found');
-    }
+    await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+      context.organizationUnitId,
+    );
     if (organizationUnitId !== context.organizationUnitId) {
       await this.assertUnitInScope(context, organizationUnitId);
     }
@@ -127,6 +124,9 @@ export class ReimbursementQueryResolver {
     reimbursementTypeId: string,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<BundleDownloadStatus | null> {
+    await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+      context.organizationUnitId,
+    );
     await this.assertVolunteerInScope(context, volunteerId);
 
     const status = await this.reimbursementRateService.getBundleDownloadStatus(
@@ -147,6 +147,9 @@ export class ReimbursementQueryResolver {
     @Args('year', { type: () => Int }) year: number,
     @Context() context: AuthenticatedGraphQLContext,
   ): Promise<ManualBaseline | null> {
+    await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+      context.organizationUnitId,
+    );
     await this.assertVolunteerInScope(context, volunteerId);
 
     const baseline = await this.reimbursementRateService.getManualBaseline(

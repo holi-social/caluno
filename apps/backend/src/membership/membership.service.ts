@@ -7,8 +7,13 @@ import type { RoleEntity } from '../auth/schemas/role.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { ConflictGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import {
+  ConflictGraphQLError,
+  ForbiddenGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import { NotificationService } from '../notification';
+import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
 import { RequiredFormTargetType } from '../requirement-profile/enums';
 import type { RequirementProfileEntity } from '../requirement-profile/schemas/requirement-profile.schema';
 import { FormSubmissionService } from '../requirement-profile/services/form-submission.service';
@@ -29,6 +34,9 @@ import {
   type MembershipRequestMetadata,
 } from './schemas/membership-request.schema';
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Injectable()
 export class MembershipService {
   private readonly logger = new Logger(MembershipService.name);
@@ -42,6 +50,7 @@ export class MembershipService {
     private readonly requiredFormService: RequiredFormService,
     private readonly formSubmissionService: FormSubmissionService,
     private readonly postHogService: PostHogService,
+    private readonly organizationUnitDataService: OrganizationUnitDataService,
   ) {}
 
   private appendIntendedIdsToMetadata(
@@ -145,6 +154,77 @@ export class MembershipService {
   }
 
   /**
+   * Membership on the earliest unit in the given id list. The list is
+   * expected to be an ancestor chain ordered self-first (see
+   * `OrganizationUnitDataService.listInclusiveAncestorUnitIds`), so an
+   * exact-unit membership wins over any ancestor one, and a nearer ancestor
+   * wins over a farther one.
+   */
+  async findMembershipInUnits(
+    userId: string,
+    organizationUnitIds: string[],
+  ): Promise<MembershipEntity | null> {
+    if (organizationUnitIds.length === 0) return null;
+    const rows = await this.db.query.memberships.findMany({
+      where: { userId, organizationUnitId: { in: organizationUnitIds } },
+    });
+    if (rows.length === 0) return null;
+    for (const unitId of organizationUnitIds) {
+      const match = rows.find((row) => row.organizationUnitId === unitId);
+      if (match) return match;
+    }
+    return null;
+  }
+
+  /**
+   * Marks a membership as ID-verified (or clears it). The membership may sit
+   * on the caller's unit or one of its ancestors — check-in membership is
+   * ancestor-inclusive everywhere else, so verification follows the same
+   * rule. Both columns are always written together: verified ⇔ idVerifiedAt
+   * IS NOT NULL.
+   */
+  async setMembershipIdVerified(
+    membershipId: string,
+    organizationUnitId: string,
+    verified: boolean,
+    actorUserId: string,
+  ): Promise<MembershipEntity> {
+    const membership = await this.db.query.memberships.findFirst({
+      where: { id: membershipId },
+    });
+
+    if (!membership) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    const allowedUnitIds =
+      await this.organizationUnitDataService.listInclusiveAncestorUnitIds(
+        organizationUnitId,
+      );
+    if (!allowedUnitIds.includes(membership.organizationUnitId ?? '')) {
+      throw new ForbiddenGraphQLError(
+        'Membership does not belong to the current organization unit.',
+      );
+    }
+
+    const [updated] = await this.db
+      .update(schema.memberships)
+      .set(
+        verified
+          ? { idVerifiedAt: new Date(), idVerifiedById: actorUserId }
+          : { idVerifiedAt: null, idVerifiedById: null },
+      )
+      .where(eq(schema.memberships.id, membershipId))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundGraphQLError('Membership not found');
+    }
+
+    return updated;
+  }
+
+  /**
    * Read-only membership state for a user against an org unit — the same
    * lookups `requestOrgJoin` does before it would create anything, exposed
    * separately so a page can show the right button state before the user
@@ -177,6 +257,26 @@ export class MembershipService {
     return JoinStatus.NONE;
   }
 
+  /**
+   * The volunteer's open (PENDING) membership request against this exact
+   * unit, if any — used by the check-in readiness gate, which needs the
+   * request's own id rather than the derived `getMembershipState` enum.
+   */
+  async findPendingMembershipRequest(
+    userId: string,
+    organizationUnitId: string,
+  ): Promise<{ id: string } | null> {
+    const request = await this.db.query.membershipRequests.findFirst({
+      where: {
+        userId,
+        organizationUnitId,
+        status: MembershipRequestStatus.PENDING,
+      },
+      columns: { id: true },
+    });
+    return request ?? null;
+  }
+
   async getPendingOrganizationUnitIds(userId: string): Promise<string[]> {
     const requests = await this.db.query.membershipRequests.findMany({
       where: {
@@ -199,6 +299,7 @@ export class MembershipService {
       with: {
         user: true,
         organizationUnit: true,
+        idVerifiedBy: true,
         roles: {
           with: {
             role: true,
@@ -324,6 +425,86 @@ export class MembershipService {
     }
 
     return false;
+  }
+
+  /**
+   * Batched variant of {@link isMemberOfUnitOrAncestor}: returns the subset of
+   * `unitIds` where the user holds a membership on the unit itself or on any
+   * of its ancestors within the same organization. Runs a constant number of
+   * queries regardless of `unitIds.length` — use this instead of looping the
+   * single-unit method.
+   */
+  async filterUnitsWhereMemberOrAncestor(
+    userId: string,
+    unitIds: string[],
+  ): Promise<Set<string>> {
+    // Non-UUID strings can never match a uuid column; drop them so the
+    // `in` filter below never hits a cast error.
+    const validUnitIds = unitIds.filter((id) => UUID_RE.test(id));
+    if (validUnitIds.length === 0) return new Set();
+
+    const requestedUnits = await this.db.query.organizationUnits.findMany({
+      where: { id: { in: validUnitIds } },
+      columns: { id: true, organizationId: true },
+    });
+    if (requestedUnits.length === 0) return new Set();
+
+    const userMemberships = await this.db.query.memberships.findMany({
+      where: { userId },
+      with: {
+        organizationUnit: {
+          columns: { id: true, organizationId: true },
+        },
+      },
+    });
+
+    // Member unit ids grouped by organization.
+    const memberUnitIdsByOrg = new Map<string, Set<string>>();
+    for (const membership of userMemberships) {
+      const unit = membership.organizationUnit;
+      if (!unit?.organizationId) continue;
+      const set = memberUnitIdsByOrg.get(unit.organizationId) ?? new Set();
+      set.add(unit.id);
+      memberUnitIdsByOrg.set(unit.organizationId, set);
+    }
+
+    const organizationIds = [
+      ...new Set(
+        requestedUnits
+          .map((unit) => unit.organizationId)
+          .filter((id): id is string => !!id),
+      ),
+    ];
+    if (organizationIds.length === 0) return new Set();
+
+    const orgUnits = await this.db.query.organizationUnits.findMany({
+      where: { organizationId: { in: organizationIds } },
+      columns: { id: true, parentId: true },
+    });
+    const parentByUnitId = new Map<string, string | null>();
+    for (const unit of orgUnits) {
+      parentByUnitId.set(unit.id, unit.parentId);
+    }
+
+    const eligible = new Set<string>();
+    for (const unit of requestedUnits) {
+      const memberUnitIds = unit.organizationId
+        ? memberUnitIdsByOrg.get(unit.organizationId)
+        : undefined;
+      if (!memberUnitIds || memberUnitIds.size === 0) continue;
+
+      // Walk upward; first member-owned ancestor wins.
+      let currentUnitId: string | null = unit.id;
+      while (currentUnitId) {
+        if (memberUnitIds.has(currentUnitId)) {
+          eligible.add(unit.id);
+          break;
+        }
+        currentUnitId = parentByUnitId.get(currentUnitId) ?? null;
+      }
+    }
+
+    return eligible;
   }
 
   private async notifyMembershipRequested(
@@ -531,6 +712,7 @@ export class MembershipService {
     id: string,
     organizationUnitId: string,
     reviewerId: string,
+    source: 'membership_approve' | 'check_in' = 'membership_approve',
   ): Promise<MembershipRequestEntity> {
     const { membershipRequest, organizationUnit } = await this.db.transaction(
       async (tx) => {
@@ -652,7 +834,7 @@ export class MembershipService {
             organization_id: organizationUnit.organizationId,
             organization_unit_id: organizationUnitId,
             membership_request_id: membershipRequest.id,
-            source: 'membership_approve',
+            source,
           },
         });
         this.postHogService.capture({
@@ -662,7 +844,7 @@ export class MembershipService {
             surface: POSTHOG_SURFACE.BACKOFFICE,
             organization_id: organizationUnit.organizationId,
             organization_unit_id: organizationUnitId,
-            source: 'membership_approve',
+            source,
           },
         });
         const membershipCount = await this.countUserMembershipsInOrganization(
@@ -677,7 +859,7 @@ export class MembershipService {
               surface: POSTHOG_SURFACE.BACKOFFICE,
               organization_id: organizationUnit.organizationId,
               organization_unit_id: organizationUnitId,
-              source: 'membership_approve',
+              source,
             },
           });
         }
@@ -714,6 +896,15 @@ export class MembershipService {
           membership_request_id: request.id,
         },
       });
+
+      if (orgUnit) {
+        this.notificationService.notifyMembershipRejected({
+          organizationUnitId,
+          organizationName: orgUnit.name,
+          userId: request.userId,
+          rejectionReason: rejectionReason || null,
+        });
+      }
     }
 
     return request;
@@ -826,6 +1017,23 @@ export class MembershipService {
         identity.organizationUnitId,
       );
       return { row: deleted, identity };
+    });
+
+    const orgUnit = row.organizationUnitId
+      ? await this.db.query.organizationUnits.findFirst({
+          where: { id: row.organizationUnitId },
+        })
+      : undefined;
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.ORGANIZATION_UNIT_LEAVE,
+      userId: identity.userId,
+      properties: {
+        surface: POSTHOG_SURFACE.BACKOFFICE,
+        organization_id: orgUnit?.organizationId ?? undefined,
+        organization_unit_id: row.organizationUnitId ?? undefined,
+        membership_id: row.id,
+        source: 'admin',
+      },
     });
 
     void this.notifyMembershipRemoved(

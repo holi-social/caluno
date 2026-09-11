@@ -11,11 +11,11 @@ export class OrgPage {
   }
 
   get nameInput() {
-    return this.page.locator('#name');
+    return this.page.getByLabel('Organization name');
   }
 
   get descriptionInput() {
-    return this.page.locator('#description');
+    return this.page.getByLabel('Description');
   }
 
   get createButton() {
@@ -50,7 +50,7 @@ export class OrgPage {
     await expect(this.nameInput).toBeVisible();
     await this.nameInput.fill(name);
     await this.createButton.click();
-    await this.page.waitForURL(ORG_DASHBOARD, { timeout: 20000 });
+    await this.page.waitForURL(ORG_DASHBOARD);
     const match = this.page.url().match(/\/admin\/([0-9a-f-]{36})/);
     if (!match)
       throw new Error(`Org dashboard URL not matched: ${this.page.url()}`);
@@ -62,21 +62,20 @@ export class OrgPage {
     await expect(this.page.getByRole('heading', { name })).toBeVisible();
   }
 
-  // --- create-organization form: additional fields + validation helpers ---
   get contactEmailInput() {
-    return this.page.locator('#contactEmail');
+    return this.page.getByLabel('Email', { exact: true });
   }
 
   get phoneInput() {
-    return this.page.locator('#phone');
+    return this.page.getByLabel('Phone');
   }
 
   get websiteUrlInput() {
-    return this.page.locator('#websiteUrl');
+    return this.page.getByLabel('Website');
   }
 
   get addressInput() {
-    return this.page.locator('#address');
+    return this.page.getByLabel('Address');
   }
 
   async submit() {
@@ -136,7 +135,6 @@ export class OrgPage {
     });
   }
 
-  // --- logo upload ---
   get logoInput() {
     return this.page.locator('input[type=file]');
   }

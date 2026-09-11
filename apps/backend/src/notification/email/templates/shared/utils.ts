@@ -36,9 +36,22 @@ export function volunteersAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/volunteers`;
 }
 
+/** Deep link to the Abrechnungen (reimbursements) admin queue, where a declined document shows up needing correction and reissue. */
+export function reimbursementsAdminUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/accounting/reimbursements`;
+}
+
 /** Deep link to the shifts admin page for managing schedules. */
 export function shiftsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts`;
+}
+
+export function shiftInstanceAdminUrl(
+  organizationUnitId: string,
+  shiftId: string,
+  instanceId: string,
+): string {
+  return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/shifts/${encodeURIComponent(shiftId)}/instances/${encodeURIComponent(instanceId)}`;
 }
 
 /** Public deep link to a shift, optionally scoped to a specific instance. */
@@ -59,4 +72,34 @@ export function eventPublicUrl(eventId: string): string {
 /** Deep link to the events admin page for managing an org unit's events. */
 export function eventsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/events`;
+}
+
+/** Public deep link to an organization unit's join page. */
+export function publicOrganizationUnitUrl(organizationUnitId: string): string {
+  return `${resolveAppUrl()}/orgs/${encodeURIComponent(organizationUnitId)}`;
+}
+
+/**
+ * Deep link to the volunteer's profile — its "Your organizations" section
+ * links into each membership, whose page holds "Your documents". There is no
+ * standalone /profile/memberships route, so the profile is the closest valid
+ * target.
+ */
+export function volunteerProfileUrl(): string {
+  return `${resolveAppUrl()}/profile`;
+}
+
+/** The volunteering side's home page — not org-scoped, spans all of a volunteer's organizations. */
+export function volunteeringHomeUrl(): string {
+  return resolveAppUrl();
+}
+
+/** Deep link to the volunteer's pending shift/event invitations. */
+export function myInvitationsUrl(): string {
+  return `${resolveAppUrl()}/invitations`;
+}
+
+/** Deep link to the volunteering side's open-shift discovery page. */
+export function discoverShiftsUrl(): string {
+  return `${resolveAppUrl()}/discover`;
 }

@@ -49,6 +49,9 @@ export default async function ShiftInstanceDetailPage({
   const title = instance.overrideTitle ?? instance.master.title;
   const imageUrl = instance.master.imageUrl;
   const canAddImage = canManage && !isInstanceInThePast;
+  const callOuts = canManage
+    ? await data.shift.findCallOutHistory(instanceId)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -73,6 +76,7 @@ export default async function ShiftInstanceDetailPage({
               instanceId={instanceId}
               isRecurring={isRecurring}
               instanceDate={new Date(instance.actualStartsAt)}
+              disableDelete={isInstanceInThePast}
               trigger={
                 <Button
                   variant="destructive"
@@ -138,6 +142,7 @@ export default async function ShiftInstanceDetailPage({
             actualEndsAt={instance.actualEndsAt}
             createdAt={instance.master.createdAt}
             createdBy={instance.master.createdBy ?? null}
+            callOuts={callOuts}
           />
         </aside>
       </div>
@@ -148,7 +153,12 @@ export default async function ShiftInstanceDetailPage({
         instanceId={instanceId}
         invites={instance.invites ?? []}
         spotsLeft={instance.spotsLeft}
+        filledCount={instance.filledCount}
+        maxVolunteers={
+          instance.overrideMaxVolunteers ?? instance.master.maxVolunteers
+        }
         canManage={canManage}
+        isInstanceInThePast={isInstanceInThePast}
       />
     </div>
   );

@@ -1,22 +1,21 @@
 import { test } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
-import { MailinatorPage } from '../pages/MailinatorPage';
 import { OrgPage } from '../pages/org/OrgPage';
 import { SignupPage } from '../pages/SignupPage';
 import { ShiftsPage } from '../pages/shifts/ShiftsPage';
 import { VerifyEmailPage } from '../pages/VerifyEmailPage';
+import { Mailbox } from '../utils/mailbox';
 import { TEST_PASSWORD } from '../utils/test-data';
 
 /**
  * Smoke — full happy path. The only suite that creates a real account.
  * Signup -> Email Verification -> Login -> Create Organization -> Create Shift.
- * The verification code is read from a Mailinator public inbox (see MailinatorPage).
+ * The verification code is read from the Mailpit mailbox (see utils/mailbox).
  */
 test('signup -> verify email -> login -> create org -> create shift', async ({
   page,
-  context,
 }) => {
-  const { inbox, emailAddress } = MailinatorPage.uniqueInbox();
+  const emailAddress = Mailbox.uniqueAddress();
   const orgName = `E2E Org ${Date.now()}`;
   const shiftName = `E2E Shift ${Date.now()}`;
 
@@ -34,9 +33,7 @@ test('signup -> verify email -> login -> create org -> create shift', async ({
   });
 
   await test.step('verify email', async () => {
-    const mailinator = await MailinatorPage.open(context, inbox);
-    const code = await mailinator.getVerificationCode();
-    await mailinator.close();
+    const code = await Mailbox.getVerificationCode(emailAddress);
     await verify.verify(code);
   });
 
@@ -59,7 +56,13 @@ test('signup -> verify email -> login -> create org -> create shift', async ({
 
   await test.step('create shift', async () => {
     await shifts.openCreateForm();
-    await shifts.createShift(shiftName);
+    await shifts.createShift({
+      name: shiftName,
+      startTime: '09:00',
+      endTime: '17:00',
+      recurrence: 'Does not repeat',
+      openShift: true,
+    });
     await shifts.expectShiftCreated();
   });
 });

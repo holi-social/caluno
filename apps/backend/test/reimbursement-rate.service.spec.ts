@@ -63,6 +63,7 @@ describe('ReimbursementRateService', () => {
       {} as RequiredFormService,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture: () => {} } as unknown as PostHogService,
+      {} as never,
     );
     service = new ReimbursementRateService(
       db,
@@ -530,6 +531,72 @@ describe('ReimbursementRateService', () => {
         usedCents: 15_000,
         limitCents: 84_000,
         remainingCents: 69_000,
+      });
+    });
+
+    it('excludes invoices whose own period ends after the given asOfDate, for reissue-consistency', async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const { organization } = await createOrganizationWithType(
+        db,
+        `Yearly Usage Cutoff Org ${crypto.randomUUID()}`,
+      );
+      const volunteer = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+
+      const insertInvoice = (overrides: {
+        totalAmountCents: number;
+        periodStart: Date;
+        periodEnd: Date;
+      }) =>
+        db.insert(schema.invoices).values({
+          documentTemplateId: template.id,
+          volunteerId: volunteer.id,
+          reimbursementTypeId: reimbursementType.id,
+          periodStart: overrides.periodStart,
+          periodEnd: overrides.periodEnd,
+          totalAmountCents: overrides.totalAmountCents,
+          totalHours: 1,
+          resolvedBody: { header: {}, blocks: [], footer: {} },
+          invoiceStatus: InvoiceStatus.READY,
+        });
+
+      // January and March payouts land before the July cutoff; August lands after.
+      await insertInvoice({
+        totalAmountCents: 10_000,
+        periodStart: new Date('2026-01-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-01-31T00:00:00.000Z'),
+      });
+      await insertInvoice({
+        totalAmountCents: 20_000,
+        periodStart: new Date('2026-03-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-03-31T00:00:00.000Z'),
+      });
+      await insertInvoice({
+        totalAmountCents: 40_000,
+        periodStart: new Date('2026-08-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-08-31T00:00:00.000Z'),
+      });
+
+      // Reissuing a July document must keep reporting the same year-to-date
+      // figure it originally stated, regardless of invoices created since.
+      const usage = await service.getYearlyUsage(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        new Date('2026-07-31T23:59:59.000Z'),
+      );
+
+      expect(usage).toEqual({
+        usedCents: 30_000,
+        limitCents: 84_000,
+        remainingCents: 54_000,
       });
     });
   });

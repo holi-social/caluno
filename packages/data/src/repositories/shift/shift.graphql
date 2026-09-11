@@ -7,13 +7,16 @@ query GetShift($id: String!) {
     location
     imageUrl
     visibility
+    joinRequiresApproval
     createdAt
     maxVolunteers
     minVolunteers
+    reimbursementTypeId
     rrule
     originalStartsAt
     durationMinutes
     organizationUnitId
+    reimbursementTypeKey
     requiredFormsCount
     requiredForms {
       ...RequiredFormRefFields
@@ -55,6 +58,7 @@ query GetShifts($limit: Int!, $offset: Int!) {
       visibility
       maxVolunteers
       minVolunteers
+      reimbursementTypeId
       requiredFormsCount
       createdBy {
         id
@@ -200,11 +204,51 @@ mutation UpdateShiftInstanceInviteStatus(
   }
 }
 
+mutation SendShiftInstanceCallOut($instanceId: String!) {
+  sendShiftInstanceCallOut(instanceId: $instanceId) {
+    recipientCount
+    sentToManagerFallback
+  }
+}
+
+query GetShiftInstanceCallOutSummary($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    lastCallOut {
+      sentAt
+      recipientCount
+      source
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+
+query GetShiftInstanceCallOutHistory($id: ID!) {
+  shiftInstance(id: $id) {
+    id
+    callOuts {
+      sentAt
+      recipientCount
+      source
+      sentBy {
+        id
+        name
+        image
+      }
+    }
+  }
+}
+
 mutation JoinShiftInstance($instanceId: String!) {
   joinShiftInstance(instanceId: $instanceId) {
     status
     shiftInstance {
       id
+      myInviteStatus
       actualStartsAt
       actualEndsAt
       overrideTitle
@@ -292,6 +336,7 @@ query GetShiftInstance($id: ID!) {
     overrideInstructions
     overrideMaxVolunteers
     overrideMinVolunteers
+    overrideReimbursementTypeId
     isCancelled
     filledCount
     spotsLeft
@@ -306,6 +351,7 @@ query GetShiftInstance($id: ID!) {
       instructions
       minVolunteers
       maxVolunteers
+      reimbursementTypeId
       visibility
       rrule
       createdAt
@@ -346,6 +392,7 @@ query GetWeeklyShifts(
     isCancelled
     overrideMinVolunteers
     overrideMaxVolunteers
+    overrideReimbursementTypeId
     master {
       id
       title
@@ -353,6 +400,7 @@ query GetWeeklyShifts(
       maxVolunteers
       visibility
       rrule
+      reimbursementTypeId
     }
     volunteers {
       id
@@ -414,6 +462,7 @@ fragment VolunteerHomeShiftInstance on ShiftInstance {
     location
     rrule
     maxVolunteers
+    reimbursementTypeKey
     organizationUnit {
       id
       name
@@ -493,6 +542,41 @@ mutation CheckIn($shiftInstanceId: ID!) {
 
 mutation CheckOut($shiftInstanceId: ID!) {
   checkOut(shiftInstanceId: $shiftInstanceId) {
+    id
+  }
+}
+
+query GetCheckInShiftInstances(
+  $startsAfter: DateTime!
+  $endsBefore: DateTime!
+) {
+  checkInShiftInstances(startsAfter: $startsAfter, endsBefore: $endsBefore) {
+    id
+    actualStartsAt
+    actualEndsAt
+    overrideTitle
+    master {
+      id
+      title
+    }
+  }
+}
+
+query GetCheckInShifts($search: String) {
+  checkInShifts(search: $search) {
+    id
+    title
+  }
+}
+
+mutation CheckInInviteToShiftInstance(
+  $shiftInstanceId: ID!
+  $volunteerId: ID!
+) {
+  checkInInviteToShiftInstance(
+    shiftInstanceId: $shiftInstanceId
+    volunteerId: $volunteerId
+  ) {
     id
   }
 }

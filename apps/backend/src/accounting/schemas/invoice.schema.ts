@@ -12,6 +12,7 @@ import {
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { enumValues } from '../../database/typeutil';
+import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
 import { files } from '../../storage/schemas/file.schema';
 import { InvoiceStatus } from '../enums';
 import { documentTemplates } from './document-template.schema';
@@ -40,6 +41,10 @@ export const invoices = snakeCase.table('invoices', {
   reimbursementTypeId: uuid('reimbursement_type_id')
     .references(() => reimbursementTypes.id, { onDelete: 'restrict' })
     .notNull(),
+  organizationUnitId: uuid('organization_unit_id').references(
+    () => organizationUnits.id,
+    { onDelete: 'restrict' },
+  ),
   fileId: uuid('file_id').references(() => files.id, { onDelete: 'set null' }),
   invoiceStatus: invoiceStatusEnum('invoice_status')
     .$type<InvoiceStatus>()
@@ -54,6 +59,10 @@ export const invoices = snakeCase.table('invoices', {
   }).notNull(),
   isNonCompliant: boolean('is_non_compliant').notNull().default(false),
   resolvedBody: jsonb('resolved_body').$type<InvoiceBody>().notNull(),
+  fieldOverrides: jsonb('field_overrides')
+    .$type<Record<string, string>>()
+    .notNull()
+    .default({}),
   declineReason: text('decline_reason'),
   declinedByUserId: text('declined_by_user_id').references(() => users.id, {
     onDelete: 'restrict',

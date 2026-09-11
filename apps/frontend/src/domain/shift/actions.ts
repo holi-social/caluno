@@ -44,11 +44,13 @@ export const createShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
+      joinRequiresApproval: parsedInput.joinRequiresApproval ?? false,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId ?? null,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
+      reimbursementTypeId: parsedInput.reimbursementTypeId ?? null,
       requiredFormIds: parsedInput.requiredFormIds,
     };
 
@@ -82,11 +84,13 @@ export const updateShift = actionClient
       visibility: parsedInput.openShift
         ? ShiftVisibility.AllMembers
         : ShiftVisibility.InvitedMembers,
+      joinRequiresApproval: parsedInput.joinRequiresApproval ?? false,
       invitedMemberIds: parsedInput.invitedMemberIds,
       rrule,
       imageFileId: parsedInput.imageFileId,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
+      reimbursementTypeId: parsedInput.reimbursementTypeId ?? null,
       requiredFormIds: parsedInput.requiredFormIds,
     };
 
@@ -117,6 +121,7 @@ export const updateShiftInstance = actionClient
         instructions: parsedInput.instructions,
         minVolunteers: parsedInput.minVolunteers ?? null,
         maxVolunteers: parsedInput.maxVolunteers ?? null,
+        reimbursementTypeId: parsedInput.reimbursementTypeId ?? null,
         requiredFormIds: parsedInput.requiredFormIds,
         // Image always lands on the shift master (backend keeps a one-off
         // instance's master in sync even without applyToAllFuture), so it
@@ -201,3 +206,11 @@ export const updateShiftInstanceInviteStatus = actionClient
       );
     },
   );
+
+export const sendShiftInstanceCallOut = actionClient
+  .inputSchema(z.object({}))
+  .bindArgsSchemas([z.string(), z.string()])
+  .action(async ({ bindArgsParsedInputs: [orgUId, instanceId] }) => {
+    const data = await getDataClient({ orgUId });
+    return await data.shift.sendCallOut(instanceId);
+  });

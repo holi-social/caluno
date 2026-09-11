@@ -1,0 +1,153 @@
+import { Inject, Injectable } from '@nestjs/common';
+import type { Database } from '../../database/database.module';
+import { DATABASE_CONNECTION } from '../../database/database-connection';
+import { UserProfileService } from '../../requirement-profile/services/user-profile.service';
+import {
+  type TemplateBodyShape as BodyShape,
+  type TemplateLineShape as LineShape,
+  ORG_SOURCE_TO_ORG_COLUMN,
+  PROFILE_SOURCE_TO_PROFILE_KEY,
+} from './document-template.types';
+
+/**
+ * Computes which of the profile-required data sources a document's template
+ * actually uses (on enabled lines) and whether the volunteer's profile is
+ * missing any of them. Shared by the sign gate (Block: don't let a document be
+ * signed with gaps) and the GraphQL `missingProfileFields` resolver that lets
+ * the volunteer card surface a "complete your profile" call to action.
+ */
+@Injectable()
+export class DocumentProfileRequirementService {
+  constructor(
+    @Inject(DATABASE_CONNECTION)
+    private readonly db: Database,
+    private readonly userProfileService: UserProfileService,
+  ) {}
+
+  /** The profile-required DataSourceKeys the template binds on enabled lines. */
+  requiredProfileSources(body: unknown): string[] {
+    const template = (body ?? {}) as BodyShape;
+    const sources = new Set<string>();
+
+    const collectLine = (line: LineShape | undefined) => {
+      if (!line || line.enabled === false) return;
+      for (const field of line.fields ?? []) {
+        if (
+          field.value.kind === 'bound' &&
+          field.value.source in PROFILE_SOURCE_TO_PROFILE_KEY
+        ) {
+          sources.add(field.value.source);
+        }
+      }
+    };
+
+    collectLine(template.header?.orgIdentityLine);
+    for (const metaLine of template.header?.metaLines ?? []) {
+      collectLine(metaLine);
+    }
+    for (const block of template.blocks ?? []) {
+      if (block.enabled === false) continue;
+      collectLine(block.line);
+      for (const line of block.lines ?? []) collectLine(line);
+    }
+    collectLine(template.footer?.closingLine);
+
+    return [...sources];
+  }
+
+  /**
+   * The profile-required source keys the document needs that the volunteer has
+   * not yet supplied. Empty when the document is ready to be signed.
+   */
+  async missingProfileSources(
+    volunteerId: string,
+    templateBody: unknown,
+  ): Promise<string[]> {
+    const required = this.requiredProfileSources(templateBody);
+    if (required.length === 0) return [];
+    const profile = await this.userProfileService.findByUserId(volunteerId);
+    const data = (profile?.data ?? {}) as Record<string, unknown>;
+
+    return required.filter((source) => {
+      const key = PROFILE_SOURCE_TO_PROFILE_KEY[source];
+      const value = data[key];
+      return typeof value !== 'string' || value.trim() === '';
+    });
+  }
+
+  private requiredOrgSources(body: unknown): string[] {
+    const template = (body ?? {}) as BodyShape;
+    const sources = new Set<string>();
+
+    const collectLine = (line: LineShape | undefined) => {
+      if (!line || line.enabled === false) return;
+      for (const field of line.fields ?? []) {
+        if (
+          field.value.kind === 'bound' &&
+          field.value.source in ORG_SOURCE_TO_ORG_COLUMN
+        ) {
+          sources.add(field.value.source);
+        }
+      }
+    };
+
+    collectLine(template.header?.orgIdentityLine);
+    for (const metaLine of template.header?.metaLines ?? []) {
+      collectLine(metaLine);
+    }
+    for (const block of template.blocks ?? []) {
+      if (block.enabled === false) continue;
+      collectLine(block.line);
+      for (const line of block.lines ?? []) collectLine(line);
+    }
+    collectLine(template.footer?.closingLine);
+
+    return [...sources];
+  }
+
+  /**
+   * The org-profile source keys (e.g. org_city/org_address) a document's
+   * template needs that the given org unit has not yet supplied. Pure and
+   * synchronous so callers that already have the unit (e.g. a batched
+   * DataLoader) can skip the extra per-row query in `missingOrgProfileSources`.
+   */
+  missingOrgProfileSourcesForUnit(
+    unit: Record<string, unknown> | undefined,
+    templateBody: unknown,
+  ): string[] {
+    const required = this.requiredOrgSources(templateBody);
+    if (required.length === 0) return [];
+    if (!unit) return [];
+
+    return required.filter((source) => {
+      const column = ORG_SOURCE_TO_ORG_COLUMN[source];
+      if (column === 'name') return false; // always present
+      const value = unit[column];
+      return typeof value !== 'string' || value.trim() === '';
+    });
+  }
+
+  /**
+   * The org-profile source keys (e.g. org_city/org_address) a document's
+   * template needs that the org's root/creating unit has not yet supplied.
+   * Empty when the unit's profile is complete enough to create the document.
+   * Reads the unit by id — the same entity the overview Edit edits, so what an
+   * account manager sees and what the document renders stay in sync.
+   */
+  async missingOrgProfileSources(
+    organizationId: string,
+    organizationUnitId: string | null | undefined,
+    templateBody: unknown,
+  ): Promise<string[]> {
+    if (this.requiredOrgSources(templateBody).length === 0) return [];
+    const unit = await this.db.query.organizationUnits.findFirst({
+      where: organizationUnitId
+        ? { id: organizationUnitId }
+        : { organizationId, parentId: { isNull: true } },
+    });
+    return this.missingOrgProfileSourcesForUnit(
+      unit as unknown as Record<string, unknown> | undefined,
+      templateBody,
+    );
+  }
+}

@@ -10,6 +10,10 @@ const messages = {
   startTimeRequired: 'Start time is required',
   endTimeRequired: 'End time is required',
   minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+  recurrenceEndRequired: 'End date is required',
+  recurrenceEndBeforeStart: 'End date cannot be before the start date',
+  endMustBeLaterThanStart: 'End time must be later than start time',
+  shorterThan24Hours: 'Shift must be shorter than 24 hours.',
 };
 
 function baseShift(overrides: Record<string, unknown> = {}) {
@@ -82,6 +86,113 @@ describe('shiftFormSchema min/max volunteers', () => {
   });
 });
 
+describe('shiftFormSchema recurrence end', () => {
+  const messages = {
+    nameRequired: 'Name is required',
+    startTimeRequired: 'Start time is required',
+    endTimeRequired: 'End time is required',
+    minMaxVolunteers: 'Minimum volunteers cannot exceed maximum volunteers',
+    recurrenceEndRequired: 'End date is required',
+    recurrenceEndBeforeStart: 'End date cannot be before the start date',
+  };
+
+  it('accepts Never with no end date', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'never',
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects On without an end date', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'on',
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'recurrenceEndsAt',
+      );
+      expect(issue?.message).toBe(messages.recurrenceEndRequired);
+    }
+  });
+
+  it('rejects an end date before the series start day', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'on',
+        recurrenceEndsAt: new Date('2026-07-31T09:00:00Z'),
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'recurrenceEndsAt',
+      );
+      expect(issue?.message).toBe(messages.recurrenceEndBeforeStart);
+    }
+  });
+
+  it('accepts an end date on the series start day', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'on',
+        recurrenceEndsAt: new Date('2026-08-01T09:00:00Z'),
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('shiftFormSchema overnight duration', () => {
+  it('accepts an overnight span under 24 hours', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        startsAt: new Date('2026-09-11T18:00:00.000Z'),
+        endsAt: new Date('2026-09-11T23:00:00.000Z'),
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects equal start and end', () => {
+    const at = new Date('2026-09-11T18:00:00.000Z');
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({ startsAt: at, endsAt: new Date(at.getTime()) }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'endsAt',
+      );
+      expect(issue?.message).toBe(messages.endMustBeLaterThanStart);
+    }
+  });
+
+  it('rejects a 24-hour span', () => {
+    const result = shiftFormSchema(messages).safeParse(
+      baseShift({
+        startsAt: new Date('2026-09-11T18:00:00.000Z'),
+        endsAt: new Date('2026-09-12T18:00:00.000Z'),
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'endsAt',
+      );
+      expect(issue?.message).toBe(messages.shorterThan24Hours);
+    }
+  });
+});
+
 function baseInstance(overrides: Record<string, unknown> = {}) {
   return {
     name: 'Morning shift',
@@ -141,12 +252,59 @@ describe('editShiftInstanceFormSchema', () => {
       baseInstance({
         applyToAllFuture: true,
         recurrenceDays: ['MONDAY', 'WEDNESDAY'],
+        recurrenceEndMode: 'never',
         imageFileId: '11111111-1111-4111-8111-111111111111',
         openShift: false,
         requiredFormIds: ['form-1'],
       }),
     );
     expect(result.success).toBe(true);
+  });
+
+  it('does not require an end date on single-instance edit', () => {
+    const result = editShiftInstanceFormSchema(messages).safeParse(
+      baseInstance({
+        applyToAllFuture: false,
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'on',
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects On without an end date when applying to all future', () => {
+    const result = editShiftInstanceFormSchema(messages).safeParse(
+      baseInstance({
+        applyToAllFuture: true,
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'on',
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'recurrenceEndsAt',
+      );
+      expect(issue?.message).toBe(messages.recurrenceEndRequired);
+    }
+  });
+
+  it('rejects an end date before the instance start when applying to all future', () => {
+    const result = editShiftInstanceFormSchema(messages).safeParse(
+      baseInstance({
+        applyToAllFuture: true,
+        recurrenceDays: ['MONDAY'],
+        recurrenceEndMode: 'on',
+        recurrenceEndsAt: new Date('2026-07-31T09:00:00Z'),
+      }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (item) => item.path[0] === 'recurrenceEndsAt',
+      );
+      expect(issue?.message).toBe(messages.recurrenceEndBeforeStart);
+    }
   });
 });
 

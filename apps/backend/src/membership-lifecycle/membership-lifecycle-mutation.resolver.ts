@@ -46,6 +46,23 @@ export class MembershipLifecycleMutationResolver {
     return this.membershipRequestMapper.toModelOrThrow(entity);
   }
 
+  @Permissions(PERMISSIONS.CHECK_IN_MANAGE)
+  @Mutation(() => MembershipRequest)
+  async checkInApproveMembershipRequest(
+    @Args('requestId', { type: () => ID }) requestId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
+  ): Promise<MembershipRequest> {
+    const entity =
+      await this.membershipLifecycleOrchestrator.approveMembershipRequest(
+        requestId,
+        context.organizationUnitId,
+        session.user.id,
+        'check_in',
+      );
+    return this.membershipRequestMapper.toModelOrThrow(entity);
+  }
+
   @Permissions(PERMISSIONS.VOLUNTEER_EDIT)
   @Mutation(() => MembershipRequest)
   async rejectMembershipRequest(

@@ -2,12 +2,16 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { MembershipModule } from '../membership/membership.module';
+import { NotificationModule } from '../notification/notification.module';
 import { OrganizationModule } from '../organization/organization.module';
 import { OrganizationUnitDataModule } from '../organization/organization-unit-data.module';
+import { RequirementProfileModule } from '../requirement-profile/requirement-profile.module';
 import { StorageModule } from '../storage/storage.module';
 import { TimeTrackingModule } from '../time-tracking/time-tracking.module';
 import { UserModule } from '../user/user.module';
+import { AccountingController } from './accounting.controller';
 import './enums/register-graphql-enums';
+import { TimeEntryClosedListener } from './listeners/time-entry-closed.listener';
 import {
   ContractMapper,
   ContractSignatureMapper,
@@ -35,6 +39,7 @@ import {
   DocumentTemplateMutationResolver,
   DocumentTemplateQueryResolver,
   DocumentTemplateSigneesLoader,
+  InviteAllowanceQueryResolver,
   InvoiceFieldResolver,
   InvoiceLoader,
   InvoiceMutationResolver,
@@ -42,18 +47,25 @@ import {
   InvoiceSignatureFieldResolver,
   InvoiceStatusChangeFieldResolver,
   InvoiceTimeEntryFieldResolver,
+  MyDocumentsQueryResolver,
   ReimbursementMutationResolver,
   ReimbursementQueryResolver,
   ReimbursementRateFieldResolver,
   TemplateSigneeFieldResolver,
 } from './resolvers';
 import {
+  AccountingOrgAccessService,
+  BundleDownloadService,
   ContractService,
+  DocumentNotificationService,
+  DocumentProfileRequirementService,
   DocumentRenderingService,
   DocumentSigningService,
   DocumentTemplateService,
+  InviteAllowanceEligibilityService,
   InvoiceService,
   ReimbursementRateService,
+  VolunteerDocumentsService,
 } from './services';
 
 @Module({
@@ -66,14 +78,24 @@ import {
     TimeTrackingModule,
     MembershipModule,
     StorageModule,
+    NotificationModule,
+    RequirementProfileModule,
   ],
+  controllers: [AccountingController],
   providers: [
+    TimeEntryClosedListener,
+    AccountingOrgAccessService,
+    BundleDownloadService,
+    VolunteerDocumentsService,
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentRenderingService,
+    DocumentProfileRequirementService,
     DocumentSigningService,
+    DocumentNotificationService,
     ContractService,
     InvoiceService,
+    InviteAllowanceEligibilityService,
     ContractMapper,
     ContractSignatureMapper,
     ContractStatusChangeMapper,
@@ -109,11 +131,15 @@ import {
     DocumentTemplateSigneesLoader,
     ContractLoader,
     InvoiceLoader,
+    MyDocumentsQueryResolver,
+    InviteAllowanceQueryResolver,
   ],
   exports: [
     ReimbursementRateService,
     DocumentTemplateService,
     DocumentSigningService,
+    DocumentNotificationService,
+    DocumentRenderingService,
     ContractService,
     InvoiceService,
   ],

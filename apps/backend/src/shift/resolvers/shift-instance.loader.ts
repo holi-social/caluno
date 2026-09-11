@@ -3,12 +3,17 @@ import DataLoader from 'dataloader';
 import { RegisterLoader } from '../../graphql/interceptors';
 import { ShiftInviteStatus } from '../enums';
 import type { ShiftInstanceEntity } from '../schemas/shift-instance.schema';
+import type { ShiftCallOutSummary } from '../services/shift-call-out.service';
+import { ShiftCallOutService } from '../services/shift-call-out.service';
 import { ShiftService } from '../shift.service';
 
 @RegisterLoader()
 @Injectable({ scope: Scope.REQUEST })
 export class ShiftInstanceLoader {
-  constructor(private readonly shiftService: ShiftService) {}
+  constructor(
+    private readonly shiftService: ShiftService,
+    private readonly shiftCallOutService: ShiftCallOutService,
+  ) {}
 
   public readonly filledCountByInstanceId = new DataLoader<string, number>(
     async (instanceIds) => {
@@ -18,6 +23,26 @@ export class ShiftInstanceLoader {
       return instanceIds.map((id) => counts.get(id) ?? 0);
     },
   );
+
+  public readonly lastCallOutByInstanceId = new DataLoader<
+    string,
+    ShiftCallOutSummary | null
+  >(async (instanceIds) => {
+    const summaries = await this.shiftCallOutService.getLastCallOutSummaries(
+      instanceIds as string[],
+    );
+    return instanceIds.map((id) => summaries.get(id) ?? null);
+  });
+
+  public readonly callOutsByInstanceId = new DataLoader<
+    string,
+    ShiftCallOutSummary[]
+  >(async (instanceIds) => {
+    const history = await this.shiftCallOutService.getCallOutHistory(
+      instanceIds as string[],
+    );
+    return instanceIds.map((id) => history.get(id) ?? []);
+  });
 
   public readonly instancesByShiftId = new DataLoader<
     string,

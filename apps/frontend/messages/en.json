@@ -87,10 +87,62 @@
     }
   },
   "CheckIn": {
+    "acceptMembershipButton": "Accept membership",
+    "acceptMembershipError": "Couldn't accept membership. Try again.",
+    "acceptMembershipSheetTitle": "Review membership",
+    "alreadyCheckedInButton": "Go to check-out",
+    "alreadyCheckedInDescription": "This volunteer already has an open check-in for this shift.",
+    "alreadyCheckedInTitle": "Already checked in",
+    "checkInButton": "Check in",
+    "checkInRunningTitle": "Checkin running",
+    "checkInSectionDescription": "Check this volunteer in for a new shift without closing the open entries.",
+    "checkInSectionTitle": "New check-in",
+    "checkInWithoutShift": "Check in without shift",
+    "dateSheetTitle": "Select date",
+    "foundOnOtherDays": "Found on other days",
+    "idVerificationButton": "Confirm ID",
+    "idVerificationDescription": "Ask the volunteer for their ID and confirm the name matches.",
+    "idVerificationError": "Could not confirm the ID.",
+    "idVerificationTitle": "ID not verified",
+    "inviteSentConfirmation": "Invitation sent",
     "manualCheckin": "Manual checkin",
     "myQrCodeTab": "My QR code",
+    "noShiftsFound": "No shifts found",
+    "noVolunteersFound": "No volunteer found",
+    "notInShiftButton": "Invite to shift",
+    "notInShiftDescription": "This volunteer hasn't joined this shift yet.",
+    "notInShiftError": "Couldn't invite volunteer to shift. Try again.",
+    "notInShiftTitle": "Not part of this shift",
+    "notMemberButton": "Invite to the org",
+    "notMemberDescription": "This volunteer isn't a member of this organisation yet.",
+    "notMemberError": "Couldn't invite volunteer to organisation. Try again.",
+    "notMemberTitle": "Not in your organisation",
+    "openEntriesDescription": "This volunteer is still checked in. Select an entry to check them out.",
+    "openEntriesTitle": "Open check-ins",
+    "orgUnitRowLabel": "Org unit",
+    "orgUnitSheetTitle": "Select org unit",
+    "pendingMembershipDescription": "This volunteer has asked to join. Accept their request to continue.",
+    "pendingMembershipTitle": "Waiting to join the organisation",
     "qrScannerTab": "QR Scanner",
-    "scanACode": "Scan a code"
+    "readyBannerTitle": "Good to go",
+    "requiredFormMissing": "Missing",
+    "requiredFormSubmitted": "Submitted",
+    "saveSelection": "Save selection",
+    "scanACode": "Scan a code",
+    "searchVolunteerPlaceholder": "Search for a volunteer",
+    "selectDatePlaceholder": "Select the date",
+    "selectOrgUnit": "Select org unit",
+    "selectShiftPlaceholder": "Select the shift",
+    "shiftSearchPlaceholder": "Shift name",
+    "shiftSheetTitle": "Select shift",
+    "shiftlessWarningDuplicateAtSubmit": "If this volunteer already has an open check-in without a shift, the check-in will fail with an error.",
+    "shiftlessWarningEmptyTaskCell": "The Stundennachweis PDF shows an empty task column unless notes are added to the entry.",
+    "shiftlessWarningNoReimbursement": "These hours get no reimbursement type. They won't enter the Stundennachweis or payment pipeline unless you edit the entry later.",
+    "shiftlessWarningNoShiftStats": "The hours count toward general totals only, not toward any shift's capacity or planning.",
+    "shiftlessWarningTitle": "Checking in without a shift",
+    "successDialogCloseButton": "Done",
+    "successDialogTitle": "Successfully checked in",
+    "today": "Today"
   },
   "Common": {
     "avatarAlt": "Avatar of {name}",
@@ -216,7 +268,9 @@
           "accepted": "Accepted",
           "declined": "Declined",
           "cancelled": "Canceled",
-          "rejected": "Rejected"
+          "rejected": "Rejected",
+          "requested": "Requested",
+          "waitlisted": "Waitlisted"
         },
         "actionUninvite": "Uninvite",
         "uninviteSuccess": "Volunteer removed from event",
@@ -281,6 +335,9 @@
     "aboutHeading": "About the event",
     "badge": "Event",
     "coverImageAlt": "Cover image for {title}",
+    "cancelParticipation": "Cancel participation",
+    "canceledNote": "You canceled your participation in this event.",
+    "canceledToast": "Participation canceled.",
     "followCta": "Step up to help",
     "followNote": "Get invited to shifts, or sign up for one yourself.",
     "followingCta": "You're helping",
@@ -295,7 +352,7 @@
       "requirementsNeededToast": "Please complete all required forms first",
       "title": "Join {eventTitle}"
     },
-    "fullyBooked": "Fully booked",
+    "fullyBooked": "Full - waitlist available",
     "noShifts": "No shifts planned yet.",
     "noShiftsOnDay": "No shifts on this day.",
     "pendingCta": "Pending request",
@@ -314,7 +371,10 @@
     "showAllShifts": "Show all shifts",
     "spotsLeft": "{n, plural, one {# spot left} other {# spots left}}",
     "today": "Today",
-    "unlimitedSpots": "Open"
+    "unlimitedSpots": "Open",
+    "withdrawRequest": "Withdraw request",
+    "withdrawnNote": "You withdrew your request to join this event.",
+    "withdrawnToast": "Request withdrawn."
   },
   "LocaleSwitcher": {
     "label": "Language"
@@ -349,6 +409,72 @@
       "fieldColumn": "Field",
       "noFields": "This form has no fields.",
       "submittedOn": "Submitted on {date}"
+    },
+    "documents": {
+      "title": "Your documents",
+      "subtitle": "Agreements and timesheets for reimbursements",
+      "names": {
+        "agreement": "Supplementary agreement",
+        "timesheet": "Timesheet"
+      },
+      "status": {
+        "awaiting-signature": "To sign",
+        "awaiting-countersignature": "To countersign",
+        "signed": "Active",
+        "declined": "Declined"
+      },
+      "figures": "{shifts} Shifts · {hours} hours · {amount}",
+      "lines": {
+        "generated": "Generated on {date} by {name}",
+        "signedByMe": "You signed on {date}",
+        "countersignedBy": "{name} countersigned on {date}",
+        "declinedBy": "{name} declined on {date}"
+      },
+      "actions": {
+        "download": "Download",
+        "sign": "Sign",
+        "decline": "Decline"
+      },
+      "missingProfileWarning": "Your profile is missing details this document needs.",
+      "missingProfileCta": "Complete your profile to sign",
+      "toasts": {
+        "signed": "{name} signed.",
+        "signedError": "{name} could not be signed. Please try again.",
+        "declined": "{name} declined.",
+        "declinedError": "{name} could not be declined. Please try again.",
+        "downloadUnavailable": "The document is not available for download yet."
+      },
+      "empty": {
+        "title": "No documents yet",
+        "description": "Agreements and timesheets this organisation generates for you will appear here."
+      },
+      "declineSheet": {
+        "title": "Decline document",
+        "description": "This organisation needs to understand why you are declining this {documentName}.",
+        "reasonLabel": "Reason for declining",
+        "reasonPlaceholder": "Explain why you are declining the document…",
+        "submit": "Decline"
+      },
+      "preview": {
+        "title": "{name}",
+        "unavailable": "The document is not available for preview yet.",
+        "error": "The preview could not be loaded.",
+        "retry": "Try again",
+        "errorHelp": "Go to your membership for help",
+        "signDisabledHint": "You can only sign or decline once you've viewed the document in the preview."
+      },
+      "downloadUnavailableNote": "PDF not available yet."
+    }
+  },
+  "IdVerification": {
+    "page": {
+      "title": "ID verification",
+      "subtitle": "Manage ID verification for {orgName}."
+    },
+    "card": {
+      "label": "Enable ID verification",
+      "description": "When enabled, supervisors are prompted to check a volunteer's ID at check-in. Verification is optional and never blocks check-in.",
+      "updateError": "Could not save the ID verification setting."
     }
   },
   "MembershipRequest": {
@@ -495,8 +621,10 @@
   "Navigation": {
     "admin": "Admin",
     "checkIn": "Check in",
+    "checkVolunteersIn": "Check volunteers in",
     "events": "Events",
     "home": "Home",
+    "idVerification": "ID verification",
     "myTime": "Your records",
     "orgUnits": "Org units",
     "organizationSettings": "Organization settings",
@@ -509,12 +637,15 @@
     "roles": "Roles",
     "selectOrganization": "Select organization",
     "shifts": "Shifts",
+    "shortcuts": "Shortcuts",
     "timesheets": "Timesheets",
-    "volunteering": "Volunteering",
+    "volunteeringApp": "Volunteering app",
     "volunteers": "Volunteers",
     "accounting": "Accounting",
     "reimbursements": "Reimbursements",
-    "accountingSettings": "Settings"
+    "accountingSettings": "Settings",
+    "myDocuments": "My documents",
+    "myDocumentsBadge": "{count} documents need your signature"
   },
   "OrgDetail": {
     "aboutHeading": "About us",
@@ -526,7 +657,7 @@
     "eventMetaUnlimited": "{shifts, plural, one {# shift} other {# shifts}} · Open",
     "eventsCount": "{n, plural, one {# event} other {# events}}",
     "eventsHeading": "Events",
-    "fullyBooked": "Fully booked",
+    "fullyBooked": "Full - waitlist available",
     "memberCount": "{n, plural, one {# member} other {# members}}",
     "noEvents": "No events yet.",
     "noShifts": "No individual shifts yet.",
@@ -560,6 +691,12 @@
     "form": {
       "addressLabel": "Address",
       "addressPlaceholder": "e.g. 123 Main St, City",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g. Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "e.g. 10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Describe this organizational unit...",
       "emailLabel": "Email",
@@ -646,7 +783,9 @@
         "firstName": "As on your ID",
         "iban": "For expense and allowance payments",
         "lastName": "As on your ID",
-        "preferredName": "If you'd like to be called something else"
+        "preferredName": "If you'd like to be called something else",
+        "bic": "Bank identifier code (BIC) for your account",
+        "taxId": "Your tax identification number (for expense reports)"
       }
     },
     "language": "Language",
@@ -853,6 +992,8 @@
       "firstName": "First name",
       "gender": "Gender",
       "iban": "IBAN",
+      "bic": "BIC",
+      "taxId": "Tax ID",
       "infoText": "Info text",
       "labelLabel": "Label",
       "labelPlaceholder": "e.g. Favorite color",
@@ -938,6 +1079,7 @@
       "fieldRequired": "{label} is required",
       "invalidCharacters": "{label} contains invalid characters",
       "invalidIban": "{label} must be a valid IBAN",
+      "invalidBic": "{label} must be a valid BIC",
       "invalidOptions": "{label} contains invalid options",
       "labelRequired": "Label is required",
       "maxChars": "{label} must be {maxLen} characters or fewer",
@@ -1032,7 +1174,25 @@
     }
   },
   "Settings": {
-    "title": "Settings"
+    "title": "Settings",
+    "organizationProfile": {
+      "title": "Organization profile",
+      "subtitle": "Update your organization's address and contact details.",
+      "addressLabel": "Organization address",
+      "addressPlaceholder": "123 Main St",
+      "cityLabel": "City",
+      "cityPlaceholder": "Berlin",
+      "zipCodeLabel": "Postal code",
+      "zipCodePlaceholder": "10115",
+      "contactEmailLabel": "Contact email",
+      "contactEmailPlaceholder": "contact@organization.org",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 (555) 123-4567",
+      "websiteLabel": "Website",
+      "websitePlaceholder": "https://organization.org",
+      "saved": "Organization updated",
+      "saveFailed": "Failed to update organization"
+    }
   },
   "Shift": {
     "action": {
@@ -1054,45 +1214,27 @@
     },
     "card": {
       "inviteAria": "Invite",
+      "inviteToShift": "Invite to the shift",
       "invited": "Invited",
       "noVolunteers": "No volunteers invited",
-      "openInstanceAria": "Open"
+      "openInstanceAria": "Open",
+      "waitlist": "Waitlist",
+      "waitlistInviteError": "Could not invite volunteer",
+      "waitlistInviteSuccess": "Volunteer invited to the shift"
     },
     "checkIn": {
-      "checkIn": "Check in",
-      "checkInTitle": "Check-in",
-      "checkInWithShift": "Choose a shift instead",
-      "checkInWithoutShift": "Check in without a shift",
       "checkOut": "Check-out",
       "checkOutTitle": "Check-out",
       "checkedInAt": "Checked in: {time}",
-      "checkingIn": "Checking in...",
       "checkingOut": "Checking out...",
       "checkingOutAt": "Checking out: {time}",
       "generalCheckIn": "General check-in",
-      "invalidCheckin": {
-        "blocked": {
-          "description": "The volunteer is not permitted to check-in. They must contact headquarters for assistance.",
-          "title": "Check-in denied"
-        },
-        "notMember": {
-          "description": "The volunteer is not a member of this organization unit.",
-          "title": "Check-in denied"
-        }
-      },
-      "noShiftSelected": "No shift selected",
-      "selectOrgDescription": "Choose the organization you want to check the volunteer into.",
-      "selectOrgTitle": "Check-in",
-      "successNext": "Next",
-      "tryAgain": "Try again",
-      "volunteerCheckedIn": "Volunteer checked in",
-      "volunteerCheckedOut": "Volunteer checked out",
-      "volunteerNotFoundDescription": "There is no volunteer that matches this QR ID. The QR ID may have been re-generated and so this QR ID is no longer valid. <tryAgain>Try again</tryAgain> by entering the QR ID manually or search for the volunteer to check them in.",
-      "volunteerNotFoundTitle": "Volunteer does not exist"
+      "volunteerCheckedOut": "Volunteer checked out"
     },
-    "checkInSelector": {
-      "empty": "No volunteer found",
-      "placeholder": "Select a volunteer"
+    "compensation": {
+      "agreementNote": "Accepting this shift means you'll be sent a reimbursement agreement to sign.",
+      "ehrenamt": "Compensated via volunteer allowance",
+      "uebungsleiter": "Compensated via trainer's allowance"
     },
     "detail": {
       "createdByLabel": "Created by",
@@ -1119,6 +1261,12 @@
         "updateFailedToast": "Failed to update required forms"
       },
       "statusLabel": "Status",
+      "urgentCallLabel": "Urgent Call",
+      "urgentCallNotified": "{count, plural, one {# volunteer notified} other {# volunteers notified}}",
+      "urgentCallSentByDate": "on {date}",
+      "urgentCallSentByPrefix": "Sent by",
+      "urgentCallAutomaticBadge": "Automatic",
+      "urgentCallHistoryCount": "{count, plural, one {# call} other {# calls}}",
       "visibilityLabel": "Visibility"
     },
     "editInstanceForm": {
@@ -1131,6 +1279,8 @@
     },
     "eventBadge": "Event",
     "form": {
+      "approvalRequiredDescription": "Anyone can request. They wait until you approve.",
+      "approvalRequiredLabel": "Approval required",
       "chooseDays": "Choose which days this shift repeats",
       "dateTimeLabel": "Date and time",
       "imageLabel": "Image",
@@ -1149,10 +1299,26 @@
       "noRecurrence": "No recurrence",
       "openShiftDescription": "The shift is visible for your volunteers on the platform. Any of your volunteers can sign up for this shift",
       "openShiftLabel": "Open shift",
+      "recurrenceEndDatePlaceholder": "Pick a date",
+      "recurrenceEnds": "End of series",
+      "recurrenceEndsNever": "Never",
+      "recurrenceEndsOn": "On",
+      "reimbursementTypeDescription": "Volunteer time on this shift will be eligible for a timesheet under this Pauschale",
+      "reimbursementTypeLabel": "Reimbursable Pauschale",
+      "reimbursementTypeNone": "Not reimbursable",
       "recurring": "Recurring shift",
       "timeRangeConstraint": "Shifts must start and end within ({window})."
     },
     "instanceDetail": {
+      "callOutCta": "Urgent Call",
+      "callOutDialog": {
+        "confirm": "Urgent Call",
+        "description": "This sends an urgent call to everyone eligible to help with this shift, asking them to join. It won't add anyone to the roster.",
+        "error": "Failed to send the urgent call. {error}",
+        "noRecipients": "Nobody was left to ask — we've emailed you instead.",
+        "success": "Urgent call sent to {count, plural, one {# volunteer} other {# volunteers}}.",
+        "title": "Send an urgent call?"
+      },
       "deleteAria": "Delete",
       "deleteDialog": {
         "description": "This shift is part of a series. Choose whether to delete just this shift or every upcoming shift.",
@@ -1181,22 +1347,29 @@
     },
     "inviteStatus": {
       "accepted": "Accepted",
+      "actionApprove": "Approve",
       "actionInvite": "Invite",
-      "actionUninvite": "Uninvite",
+      "approveSuccess": "Volunteer approved",
+      "approveWaitlistedSuccess": "Shift is full — volunteer added to the waitlist",
       "cancelled": "Canceled",
+      "changeStatusAria": "Change volunteer status",
+      "capacityBadge": "{filled} / {max} spots filled",
+      "capacityBadgeNoMax": "{filled} volunteers",
       "declined": "Declined",
-      "inviteError": "Could not invite volunteer",
-      "inviteSuccess": "Volunteer invited again",
+      "declineSuccess": "Volunteer declined",
       "invited": "Invited",
+      "inviteSuccess": "Volunteer invited again",
+      "pendingApproval": "Pending approval",
       "rejected": "Rejected",
       "signedUp": "Signed up",
+      "statusChangeError": "Could not change the volunteer's status",
       "summaryAccepted": "accepted",
       "summaryInvited": "invited",
       "summarySignedUp": "signed up",
       "summarySpots": "spots",
-      "uninviteError": "Could not remove volunteer",
-      "uninviteSuccess": "Volunteer removed from shift",
-      "volunteersTitle": "Volunteers"
+      "summaryWaitlisted": "waitlisted",
+      "volunteersTitle": "Volunteers",
+      "waitlisted": "On waitlist"
     },
     "join": {
       "accept": "Accept",
@@ -1214,8 +1387,13 @@
       "joinShift": "Join shift",
       "joined": "You have joined the shift",
       "joining": "Joining...",
+      "joinWaitlist": "Join the waitlist",
       "keepShift": "Keep shift",
+      "leaveWaitlist": "Leave the waitlist",
+      "leftWaitlist": "You've left the waitlist.",
       "pending": "Your membership request is pending. You will be added to this shift once approved.",
+      "pendingApproval": "Waiting for approval",
+      "withdrewApproval": "You've withdrawn your request.",
       "pendingCta": "Request pending",
       "pendingMessage": "Your membership request for this organization is pending approval. You will be able to join this shift once approved.",
       "reenter": "Re-enter shift",
@@ -1224,10 +1402,17 @@
       "requestSent": "Request sent",
       "requirementsFallback": "Requirement profile ui (to be implemented)",
       "requirementsNeeded": "Requirements needed: {missing}{hasCompleted, select, yes { (already completed: {completed})} other {}}",
-      "unexpected": "Unexpected response from server"
+      "unexpected": "Unexpected response from server",
+      "waitlistJoined": "You're on the waitlist. We'll email you if a spot opens up."
     },
     "loading": "Loading...",
     "notFound": "Shift not found.",
+    "paidMarker": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "ehrenamtShort": "Ehrenamt",
+      "uebungsleiter": "Übungsleiterpauschale",
+      "uebungsleiterShort": "Übungsleiter"
+    },
     "page": {
       "createButton": "Create shift",
       "subtitle": "Shift details",
@@ -1318,10 +1503,28 @@
     },
     "transferList": {
       "addAria": "Add",
-      "removeAria": "Remove"
+      "allowance": {
+        "eligible": "Eligible",
+        "nearlyExhausted": "Allowance nearly exhausted",
+        "noAgreement": "Agreement needed",
+        "wouldExceed": "Would exceed allowance!"
+      },
+      "available": "Available",
+      "confirmExceedAllowance": {
+        "cancel": "Cancel",
+        "confirm": "Invite anyway",
+        "description": "Paying {name} for this shift would take them past their annual allowance ceiling. You can still invite them, but double check this is intended.",
+        "title": "This would exceed {name}'s allowance"
+      },
+      "invited": "Invited",
+      "removeAria": "Remove",
+      "searchPlaceholder": "Name or email"
     },
     "validation": {
       "endTimeRequired": "End time is required",
+      "endMustBeLaterThanStart": "End time must be later than start time",
+      "continuesIntoNextDay": "This shift continues into the next day.",
+      "shorterThan24Hours": "Shift must be shorter than 24 hours.",
       "instanceClearRecurrenceUnsupported": "You can't remove the recurrence here. Edit it on the Edit shift page instead.",
       "instanceDateMismatch": "The date doesn't match this occurrence. Reopen the edit form and try again.",
       "instanceRecurrenceConflict": "The new recurrence doesn't include this occurrence's day. Adjust the recurrence or edit a different occurrence.",
@@ -1329,6 +1532,8 @@
       "minMaxVolunteers": "Minimum volunteers cannot exceed maximum volunteers",
       "nameRequired": "Name is required",
       "organizationUnitRequired": "Organization unit is required",
+      "recurrenceEndBeforeStart": "End date cannot be before the start date",
+      "recurrenceEndRequired": "End date is required",
       "shiftIdRequired": "Shift ID is required",
       "startTimeRequired": "Start time is required",
       "windowViolation": "Must fall within the event window"
@@ -1340,6 +1545,7 @@
   },
   "ShiftDetail": {
     "acceptedBadge": "Accepted",
+    "pendingApprovalBadge": "Waiting for approval",
     "back": "Back",
     "cancelUntilNote": "You can cancel until {date}.",
     "cancelledBadge": "Canceled",
@@ -1376,6 +1582,8 @@
     "spotsFull": "· full",
     "spotsTaken": "{filled} of {max} spots taken",
     "timeLabel": "Time",
+    "waitlistBadge": "You're on the waitlist",
+    "waitlistNote": "If a spot opens up, we'll email you so you can claim it.",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & where"
   },
@@ -1421,11 +1629,17 @@
       "notesLabel": "Notes",
       "notesPlaceholder": "Add any notes about this time entry...",
       "notTiedToShiftLabel": "Not tied to a shift",
-      "selectShiftHint": "Select a shift to view available dates",
+      "paidTimeLabel": "Paid time",
+      "pauschaleTypeLabel": "Pauschale type",
+      "pauschaleTypePlaceholder": "Select a Pauschale type",
+      "noShiftsMatching": "No shifts match your search.",
+      "noShiftsOnDay": "No shifts on this day.",
+      "selectedShiftInstanceLabel": "Selected: {title} · {range}",
       "selectShiftLabel": "Select shift",
-      "selectShiftPlaceholder": "Select a shift",
       "selectVolunteerLabel": "Select volunteer",
       "selectVolunteerPlaceholder": "Select a volunteer",
+      "shiftDatePlaceholder": "Pick a date",
+      "shiftSearchPlaceholder": "Search shift",
       "startEndTimeLabel": "Start and end time"
     },
     "format": {
@@ -1435,9 +1649,9 @@
       "createButton": "Add time entry",
       "title": "Timesheets"
     },
-    "picker": {
-      "shiftInstanceLabel": "{title} · {date} {startTime}–{endTime}",
-      "shiftLabel": "{title} · {pattern} {startTime}–{endTime}"
+    "pauschaleType": {
+      "ehrenamt": "Ehrenamtspauschale",
+      "uebungsleiter": "Übungsleiterpauschale"
     },
     "sheet": {
       "createDescription": "Record a new time entry for a volunteer shift session.",
@@ -1455,6 +1669,7 @@
     "validation": {
       "endedAtRequired": "End time is required",
       "organizationUnitRequired": "Organization unit is required",
+      "reimbursementTypeRequired": "Pauschale type is required",
       "shiftInstanceRequired": "Shift date is required",
       "startedAtRequired": "Start time is required",
       "timeEntryIdRequired": "Time entry ID is required",
@@ -1517,6 +1732,14 @@
       "birthdayLabel": "Birthday",
       "emailLabel": "Email",
       "formFallback": "Form",
+      "idVerification": {
+        "label": "{status, select, verified {ID verified} other {ID unverified}}",
+        "unverifyTitle": "Remove ID verification?",
+        "unverifyDescription": "The volunteer will be flagged as unverified at their next check-in.",
+        "unverifyCancel": "Cancel",
+        "unverifyConfirm": "Remove verification",
+        "updateError": "Could not update the ID verification status."
+      },
       "noSubmissions": "No submitted forms yet.",
       "qrIdLabel": "QR ID",
       "submittedForms": "Submitted forms",
@@ -1554,7 +1777,7 @@
     "eventCoverImageAlt": "Cover image for {title}",
     "filterNextWeek": "Next week",
     "filterThisWeekend": "This weekend",
-    "fullyBooked": "Fully booked",
+    "fullyBooked": "Full - waitlist available",
     "goToToday": "Go to today",
     "goToTop": "Go to top",
     "greeting": "Hi, {firstName}!",
@@ -1573,6 +1796,7 @@
     "loadPast": "Load past",
     "overlapWarning": "You have overlapping shifts in your schedule",
     "partOfEvent": "Part of {event}",
+    "pendingApprovalBadge": "Waiting for approval",
     "pendingBadge": "Pending",
     "pendingRequestBody": "An admin is reviewing your request. This usually takes a few days.",
     "pendingRequestContact": "Questions? {name} can help.",
@@ -1583,6 +1807,7 @@
     "timerStartsIn": "starts in {time}",
     "timerVolunteering": "You're volunteering for {time}",
     "todayButton": "Today",
+    "waitlistBadge": "You're on the waitlist",
     "weekly": "Weekly",
     "yourEventsEmpty": "You have no upcoming events.",
     "yourEventsHeading": "Your events",
@@ -1628,6 +1853,7 @@
       "subtitle": "Create, sign, and download documents.",
       "createDocument": "Create document",
       "periodLabel": "Period",
+      "yearLabel": "Year",
       "periodPicker": {
         "allTime": "All time",
         "thisMonth": "This month",
@@ -1672,6 +1898,8 @@
         "allDoneHint": "No open documents in this period.",
         "filtered": "No entries in this category."
       },
+      "loadError": "Reimbursements could not be loaded.",
+      "loadErrorHint": "Something went wrong. Please try again.",
       "resetPrototype": "Reset prototype",
       "resetPrototypeToast": "Prototype data reset.",
       "createDocumentModal": {
@@ -1685,14 +1913,24 @@
         "documentCount": "{count, plural, =1 {1 document} other {# documents}}",
         "viewVolunteer": "View volunteer",
         "createButton": "Create {kind}",
-        "createButtonEmpty": "Create new document"
+        "createButtonEmpty": "Create new document",
+        "contractState": {
+          "none": "No contract yet",
+          "awaiting-signature": "Awaiting signature",
+          "awaiting-countersignature": "Awaiting countersignature",
+          "active": "Active",
+          "declined": "Declined"
+        },
+        "latestTimesheet": "Latest timesheet · {date}",
+        "noTimesheetYet": "No timesheet yet"
       },
       "bundle": {
         "actionLabel": "Download bundle",
         "readyCount": "{count} ready",
         "lastDownloaded": "last downloaded by <name>{by}</name> on {at}",
         "neverDownloaded": "not downloaded yet",
-        "unknownUser": "unknown"
+        "unknownUser": "unknown",
+        "downloadError": "The bundle could not be downloaded. Please try again."
       },
       "batchBar": {
         "selected": "{count} selected",
@@ -1701,7 +1939,8 @@
         "bundleAll": "Download all bundles",
         "mixed": "Mixed selection",
         "clearSelection": "Clear",
-        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}"
+        "bundleDownloadToast": "{count, plural, =1 {Bundle download started.} other {{count} bundle downloads started.}}",
+        "bundleDownloadErrorToast": "Bundle download failed. Please try again."
       },
       "actionToasts": {
         "create": "{count, plural, =1 {Created for {name}.} other {{count} created.}}",
@@ -1725,7 +1964,8 @@
             "coordSign": "Coordinator",
             "superSign": "Supervisor",
             "active": "Active",
-            "ready": "Ready"
+            "ready": "Ready",
+            "actorOrg": "Organization"
           },
           "limitSection": "Annual budget",
           "invoicesPaidOut": "Paid out",
@@ -1750,14 +1990,17 @@
             "grossAmount": "Gross amount",
             "rateTooltip": "Default hourly rate for this allowance type. Shifts can use a different rate.",
             "viewBtn": "View timesheets"
-          }
+          },
+          "pdfUnavailableNote": "PDF not available yet."
         },
         "statusLabel": {
           "contractGenerate": "Create contract",
+          "contractDraft": "Draft",
           "contractSigningVol": "Waiting for signature",
           "contractSigningCoord": "Countersignature required",
           "contractActive": "Active contract",
           "timesheetGenerate": "Create timesheet",
+          "timesheetDraft": "Draft",
           "timesheetSigningVol": "Waiting for signature",
           "timesheetSigningSuper": "Supervisor signature",
           "timesheetReady": "Ready to go",
@@ -1818,6 +2061,12 @@
         "sendErrorToast": "Couldn't send the contract to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load profile data",
         "loadError": "{name}'s profile data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the contract",
+        "sendError": "The contract couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create a contract template",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "hoursUnitMonth": "month",
         "hoursUnitWeek": "week",
         "hoursUnitHint": "per {unit}",
@@ -1838,6 +2087,12 @@
         "sendErrorToast": "Couldn't send the invoice to {name}. Please try again.",
         "loadErrorTitle": "Couldn't load invoice data",
         "loadError": "{name}'s invoice data couldn't be loaded. Please close this and try again.",
+        "sendErrorTitle": "Couldn't send the invoice",
+        "sendError": "The invoice couldn't be sent to {name}. Please try again.",
+        "noTemplateCta": "Create an invoice template",
+        "orgProfileErrorTitle": "Complete your organization profile",
+        "orgProfileErrorDescription": "Your organization is missing details needed to create this document. Add them to continue.",
+        "editProfileCta": "Edit your profile",
         "nameFieldLabel": "Name",
         "periodFieldLabel": "Billing period",
         "periodPicker": {
@@ -1850,6 +2105,16 @@
           "title": "Yearly cap",
           "value": "{before} → {after}",
           "subline": "of {total} yearly cap"
+        },
+        "manualCap": {
+          "title": "Initial amount",
+          "editButtonLabel": "Edit initial amount",
+          "saveButtonLabel": "Save initial amount",
+          "cancelButtonLabel": "Cancel",
+          "inputLabel": "Initial amount in euros",
+          "projectedAfter": "Projected after this invoice: {after}",
+          "successToast": "Initial amount saved.",
+          "errorToast": "The initial amount couldn't be saved. Please try again."
         },
         "hoursCard": {
           "title": "Eligible hours",
@@ -1864,6 +2129,18 @@
           "signatureSupervisor": "Supervisor signature",
           "unsigned": "Not yet signed"
         }
+      },
+      "signToasts": {
+        "contract": "Contract countersigned for {name}.",
+        "contractError": "Contract could not be countersigned for {name}.",
+        "invoice": "Timesheet countersigned for {name}.",
+        "invoiceError": "Timesheet could not be countersigned for {name}."
+      },
+      "declineToasts": {
+        "contract": "Contract declined for {name}.",
+        "contractError": "Contract could not be declined for {name}.",
+        "invoice": "Timesheet declined for {name}.",
+        "invoiceError": "Timesheet could not be declined for {name}."
       }
     },
     "templates": {
@@ -1886,6 +2163,11 @@
         "saveButton": "Save template",
         "saveSuccessToast": "Template saved",
         "saveErrorToast": "The template could not be saved. Please try again.",
+        "orgProfile": {
+          "blockedMessage": "Your organization info is missing details this template needs. Complete the organization info before saving.",
+          "blockedCta": "Complete organization info",
+          "blockedAskSomeone": "Ask someone who can manage the organization to complete the organization info."
+        },
         "previewScrollRegionLabel": "Document preview, scrollable",
         "preview": {
           "disclaimerBadge": "Preview",
@@ -1948,6 +2230,7 @@
           "contract-lifespan": "Contract period",
           "tasks": "Task description",
           "hours-amount": "Hours",
+          "hours-unit": "Hours unit",
           "freeform-text": "Freeform text",
           "kostenstelle": "Kostenstelle",
           "kostentraeger": "Kostenträger",
@@ -2022,6 +2305,15 @@
           "signees": "{count, plural, =1 {1 signature} other {# signatures}}"
         }
       }
+    }
+  },
+  "MyDocuments": {
+    "title": "My documents",
+    "backLabel": "Back",
+    "loadMore": "Load more ({remaining})",
+    "empty": {
+      "title": "No documents yet",
+      "description": "Agreements and timesheets from your organizations will appear here."
     }
   }
 }

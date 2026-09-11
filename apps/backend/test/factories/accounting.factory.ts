@@ -102,12 +102,14 @@ export const createTwoStepTemplate = async (
     kind: DocumentKind;
     requiredPermissionId: string;
     signeeTypes: [SigneeType, SigneeType];
+    body?: DocumentTemplateBody;
   },
 ) =>
   createDocumentTemplate(db, {
     organizationId: args.organizationId,
     reimbursementTypeId: args.reimbursementTypeId,
     kind: args.kind,
+    body: args.body,
     signees: [
       { order: 0, signeeType: args.signeeTypes[0] },
       {
