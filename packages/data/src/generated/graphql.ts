@@ -774,6 +774,7 @@ export type Mutation = {
   updateFormBlockField: FormBlock;
   updateMembersForShiftInstance: ShiftInstance;
   updateMembershipRoles: Membership;
+  updateMyAccountSettings: User;
   updateMyImage: User;
   updateMyLocale: User;
   updateMyUserProfile: UserProfile;
@@ -1178,6 +1179,11 @@ export type MutationUpdateMembersForShiftInstanceArgs = {
 export type MutationUpdateMembershipRolesArgs = {
   membershipId: Scalars['ID']['input'];
   roleIds: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationUpdateMyAccountSettingsArgs = {
+  input: UpdateMyAccountSettingsInput;
 };
 
 
@@ -2556,6 +2562,13 @@ export type UpdateFormBlockInput = {
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateMyAccountSettingsInput = {
+  emailPlatformEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  emailUrgentCallsEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  emailWeeklyUpdateEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  locale?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateMyImageInput = {
   imageFileId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2673,6 +2686,12 @@ export type User = {
   __typename?: 'User';
   checkInId: Scalars['ID']['output'];
   email: Scalars['String']['output'];
+  /** Whether the volunteer receives platform emails (invitations, joining, cancellations, shift changes, membership). */
+  emailPlatformEnabled: Scalars['Boolean']['output'];
+  /** Whether the volunteer receives urgent call-out emails. */
+  emailUrgentCallsEnabled: Scalars['Boolean']['output'];
+  /** Whether the volunteer receives the weekly plan email. */
+  emailWeeklyUpdateEnabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   image?: Maybe<Scalars['String']['output']>;
   locale?: Maybe<Scalars['String']['output']>;
@@ -4045,7 +4064,7 @@ export type CheckOutVolunteerMutation = { __typename?: 'Mutation', checkOutVolun
 export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string, locale?: string | null } };
+export type GetMeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string, locale?: string | null, emailWeeklyUpdateEnabled: boolean, emailUrgentCallsEnabled: boolean, emailPlatformEnabled: boolean } };
 
 export type GetUserQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -4087,6 +4106,13 @@ export type UpdateMyImageMutationVariables = Exact<{
 
 
 export type UpdateMyImageMutation = { __typename?: 'Mutation', updateMyImage: { __typename?: 'User', id: string, image?: string | null } };
+
+export type UpdateMyAccountSettingsMutationVariables = Exact<{
+  input: UpdateMyAccountSettingsInput;
+}>;
+
+
+export type UpdateMyAccountSettingsMutation = { __typename?: 'Mutation', updateMyAccountSettings: { __typename?: 'User', id: string, locale?: string | null, emailWeeklyUpdateEnabled: boolean, emailUrgentCallsEnabled: boolean, emailPlatformEnabled: boolean } };
 
 export const ContractSummaryFieldsFragmentDoc = gql`
     fragment ContractSummaryFields on Contract {
@@ -7448,6 +7474,9 @@ export const GetMeDocument = gql`
     image
     checkInId
     locale
+    emailWeeklyUpdateEnabled
+    emailUrgentCallsEnabled
+    emailPlatformEnabled
   }
 }
     `;
@@ -7518,6 +7547,17 @@ export const UpdateMyImageDocument = gql`
   updateMyImage(input: $input) {
     id
     image
+  }
+}
+    `;
+export const UpdateMyAccountSettingsDocument = gql`
+    mutation UpdateMyAccountSettings($input: UpdateMyAccountSettingsInput!) {
+  updateMyAccountSettings(input: $input) {
+    id
+    locale
+    emailWeeklyUpdateEnabled
+    emailUrgentCallsEnabled
+    emailPlatformEnabled
   }
 }
     `;
@@ -8065,6 +8105,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     UpdateMyImage(variables: UpdateMyImageMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateMyImageMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<UpdateMyImageMutation>({ document: UpdateMyImageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateMyImage', 'mutation', variables);
+    },
+    UpdateMyAccountSettings(variables: UpdateMyAccountSettingsMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateMyAccountSettingsMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<UpdateMyAccountSettingsMutation>({ document: UpdateMyAccountSettingsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateMyAccountSettings', 'mutation', variables);
     }
   };
 }
