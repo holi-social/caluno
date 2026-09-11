@@ -9,6 +9,7 @@ import {
   paragraph,
   renderEmail,
   strong,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface MembershipRemovedTemplateData {
@@ -42,9 +43,14 @@ export async function membershipRemovedTemplate(
       organizationName: data.organizationName,
     }),
     body,
-    footerNote: t('membershipRemoved.footerNote', {
-      organizationName: data.organizationName,
-      brandName,
-    }),
+    footerNote: [
+      t('membershipRemoved.footerNote', {
+        organizationName: data.organizationName,
+        brandName,
+      }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

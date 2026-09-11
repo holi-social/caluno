@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../../database/database.module';
 import { DATABASE_CONNECTION } from '../../database/database-connection';
 import * as schema from '../../database/schema';
@@ -72,7 +73,9 @@ export class VolunteerDigestService {
   private async findDigestRecipientIds(): Promise<string[]> {
     const rows = await this.db
       .selectDistinct({ userId: schema.memberships.userId })
-      .from(schema.memberships);
+      .from(schema.memberships)
+      .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
+      .where(eq(schema.users.emailWeeklyUpdateEnabled, true));
 
     return rows
       .map((row) => row.userId)
