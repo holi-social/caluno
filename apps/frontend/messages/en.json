@@ -182,6 +182,7 @@
   },
   "Error": {
     "digestLabel": "ID: {digest}",
+    "generic": "Something went wrong",
     "goHome": "Go home",
     "orgNotFound": {
       "description": "The organization you're looking for doesn't exist.",
