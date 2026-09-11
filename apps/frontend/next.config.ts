@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
@@ -64,13 +65,26 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
     remotePatterns: storageImagePatterns(),
   },
+  webpack: (config) => {
+    // Keep singleton packages shared with @repo/ui on one resolved copy.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      sonner: path.join(process.cwd(), 'node_modules/sonner'),
+      '@teispace/next-themes': path.join(
+        process.cwd(),
+        'node_modules/@teispace/next-themes',
+      ),
+    };
+    return config;
+  },
   turbopack: {
-    // Bun's isolated linker installs one sonner copy per workspace
-    // (apps/frontend + packages/ui resolve to different store entries), so
-    // without this alias `toast` calls and the mounted `<Toaster/>` use two
-    // different store instances and toasts never render.
+    // Bun's isolated linker installs one copy per workspace (apps/frontend +
+    // packages/ui resolve to different store entries). Without these aliases:
+    // - `toast` and `<Toaster/>` use two sonner stores and toasts never render
+    // - `@repo/ui`'s `useTheme()` misses the app's ThemeProvider context
     resolveAlias: {
       sonner: './node_modules/sonner',
+      '@teispace/next-themes': './node_modules/@teispace/next-themes',
     },
     rules: {
       '*.svg': {
