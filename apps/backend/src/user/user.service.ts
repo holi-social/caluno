@@ -4,7 +4,10 @@ import type { UserEntity } from '../auth/schemas/auth.schema';
 import type { Database } from '../database/database.module';
 import { DATABASE_CONNECTION } from '../database/database-connection';
 import * as schema from '../database/schema';
-import { NotFoundGraphQLError } from '../graphql/errors';
+import {
+  BadRequestGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import { type Locale, resolveRequestLocale } from '../graphql/locale';
 import type { OrganizationUserProfileEntity } from '../requirement-profile/schemas/organization-user-profile.schema';
 import {
@@ -80,6 +83,61 @@ export class UserService {
         },
       });
     }
+    return user;
+  }
+
+  async updateAccountSettings(
+    userId: string,
+    settings: {
+      locale?: string;
+      emailWeeklyUpdateEnabled?: boolean;
+      emailUrgentCallsEnabled?: boolean;
+      emailPlatformEnabled?: boolean;
+    },
+  ): Promise<UserEntity> {
+    const changes: {
+      locale?: string;
+      emailWeeklyUpdateEnabled?: boolean;
+      emailUrgentCallsEnabled?: boolean;
+      emailPlatformEnabled?: boolean;
+    } = {};
+    if (settings.locale !== undefined) {
+      changes.locale = settings.locale;
+    }
+    if (settings.emailWeeklyUpdateEnabled !== undefined) {
+      changes.emailWeeklyUpdateEnabled = settings.emailWeeklyUpdateEnabled;
+    }
+    if (settings.emailUrgentCallsEnabled !== undefined) {
+      changes.emailUrgentCallsEnabled = settings.emailUrgentCallsEnabled;
+    }
+    if (settings.emailPlatformEnabled !== undefined) {
+      changes.emailPlatformEnabled = settings.emailPlatformEnabled;
+    }
+
+    const updatedFields = Object.keys(changes).sort();
+    if (updatedFields.length === 0) {
+      throw new BadRequestGraphQLError('No account settings provided');
+    }
+
+    const [user] = await this.db
+      .update(schema.users)
+      .set(changes)
+      .where(eq(schema.users.id, userId))
+      .returning();
+
+    if (!user) {
+      throw new NotFoundGraphQLError('User not found');
+    }
+
+    this.postHogService.capture({
+      event: POSTHOG_EVENT.USER_UPDATE,
+      userId,
+      properties: {
+        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        updated_field: updatedFields.join(','),
+      },
+    });
+
     return user;
   }
 
