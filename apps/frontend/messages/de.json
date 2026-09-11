@@ -776,8 +776,20 @@
   },
   "Profile": {
     "accountSettings": "Kontoeinstellungen",
+    "accountSettingsSaved": "Kontoeinstellungen aktualisiert",
+    "accountSettingsSaveFailed": "Kontoeinstellungen konnten nicht aktualisiert werden",
     "edit": "Bearbeiten",
+    "emailAuthNote": "E-Mails zum Zurücksetzen des Passworts und zur Bestätigung kommen immer an.",
     "emailLocked": "Mit deiner Anmeldung verknüpft",
+    "emailOff": "Aus",
+    "emailOn": "Ein",
+    "emailPlatform": "Plattform",
+    "emailPlatformDescription": "Einladungen, Beitritte, Absagen, Schichtänderungen und Mitgliedschaft.",
+    "emailSettings": "E-Mails",
+    "emailUrgentCalls": "Dringende Aufrufe",
+    "emailUrgentCallsDescription": "Dringende Aufrufe für unterbesetzte Schichten.",
+    "emailWeeklyUpdate": "Wöchentliche Übersicht",
+    "emailWeeklyUpdateDescription": "Die wöchentliche Planungs-E-Mail am Sonntag.",
     "identity": {
       "subtitles": {
         "firstName": "Wie auf deinem Ausweis",
