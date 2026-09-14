@@ -27,6 +27,7 @@ export default async function RoleUpdatePage({
 
   return (
     <RoleForm
+      mode="edit"
       title={t('editTitle')}
       description={t('editDescription')}
       organizationUnitId={orgUId}

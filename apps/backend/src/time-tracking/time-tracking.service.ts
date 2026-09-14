@@ -27,6 +27,7 @@ import { PostHogService } from '../shared/observability/posthog.service';
 import { ShiftInviteStatus } from '../shift/enums';
 import { ShiftService } from '../shift/shift.service';
 import { UserService } from '../user/user.service';
+import { isUniqueConstraintViolation } from '../utils/constraint-violation.util';
 import { AddTimeEntryInput } from './inputs/add-time-entry.input';
 import { CloseTimeEntryInput } from './inputs/close-time-enty-input';
 import { UpdateTimeEntryInput } from './inputs/update-time-entry.input';
@@ -111,8 +112,11 @@ export class TimeTrackingService {
       return timeEntry;
     } catch (error) {
       if (
-        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
-        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+        isUniqueConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isUniqueConstraintViolation(
+          error,
+          UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT,
+        )
       ) {
         throw new ConflictGraphQLError('Already checked in');
       }
@@ -252,8 +256,11 @@ export class TimeTrackingService {
       return timeEntry;
     } catch (error) {
       if (
-        isConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
-        isConstraintViolation(error, UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT)
+        isUniqueConstraintViolation(error, UNIQUE_OPEN_ENTRY_CONSTRAINT) ||
+        isUniqueConstraintViolation(
+          error,
+          UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT,
+        )
       ) {
         throw new ConflictGraphQLError('Already checked in');
       }
@@ -795,24 +802,3 @@ const UNIQUE_OPEN_ENTRY_CONSTRAINT =
 
 const UNIQUE_OPEN_SHIFTLESS_ENTRY_CONSTRAINT =
   'uq_time_entries_open_shiftless_per_org_volunteer';
-
-// Drizzle wraps postgres errors, so the driver error lives on `error.cause`.
-// '23505' is the Postgres unique-violation SQLSTATE.
-const isConstraintViolation = (
-  error: unknown,
-  constraintName: string,
-): boolean => {
-  const driverError =
-    error instanceof Error && 'cause' in error && error.cause
-      ? error.cause
-      : error;
-
-  return (
-    !!driverError &&
-    typeof driverError === 'object' &&
-    'code' in driverError &&
-    driverError.code === '23505' &&
-    'constraint' in driverError &&
-    driverError.constraint === constraintName
-  );
-};
