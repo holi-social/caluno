@@ -1,36 +1,42 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCurrentOrg, useOrgUId } from '@repo/data/react';
+import { useCurrentOrg, useOrgUId, useQueryClient } from '@repo/data/react';
 import { Button, Field, FieldError, FieldLabel, Input } from '@repo/ui';
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { updateOrganization } from '@/domain/organization/actions';
+import { updateOrganizationProfile } from '@/domain/organization/actions';
 import {
   type UpdateOrganizationFormValues,
   updateOrganizationSchema,
 } from '@/domain/organization/schemas';
+import { useRouter } from '@/i18n/navigation';
 
 interface OrganizationProfileFormProps {
+  /** The org's root unit: where the profile lives and accounting reads it. */
+  rootUnitId: string;
   organization: {
     address?: string | null;
     city?: string | null;
     zipCode?: string | null;
+    legalRep?: string | null;
     contactEmail?: string | null;
     phone?: string | null;
     websiteUrl?: string | null;
-    logoUrl?: string | null;
   };
 }
 
 export function OrganizationProfileForm({
+  rootUnitId,
   organization,
 }: OrganizationProfileFormProps) {
   const organizationId = useCurrentOrg().organizationId;
   const organizationUnitId = useOrgUId();
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const t = useTranslations('Settings.organizationProfile');
   const tCommon = useTranslations('Common');
   const [isPending, startTransition] = useTransition();
@@ -44,9 +50,11 @@ export function OrganizationProfileForm({
     defaultValues: {
       organizationId,
       organizationUnitId,
+      rootUnitId,
       address: organization.address ?? '',
       city: organization.city ?? '',
       zipCode: organization.zipCode ?? '',
+      legalRep: organization.legalRep ?? '',
       contactEmail: organization.contactEmail ?? '',
       phone: organization.phone ?? '',
       websiteUrl: organization.websiteUrl ?? '',
@@ -55,15 +63,23 @@ export function OrganizationProfileForm({
 
   const onSubmit = (values: UpdateOrganizationFormValues) => {
     startTransition(async () => {
-      const result = await updateOrganization({
-        ...values,
-        logoUrl: organization.logoUrl ?? null,
-      });
+      const result = await updateOrganizationProfile(values);
 
       if (result?.serverError) {
         toast.error(result.serverError);
       } else {
         toast.success(t('saved'));
+        // Accounting reads these details: clear its cached readiness and the
+        // unit, and reload the org data the page was rendered with.
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ['accounting', 'setup-status'],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['organization-unit', rootUnitId],
+          }),
+        ]);
+        router.refresh();
       }
     });
   };
@@ -110,6 +126,20 @@ export function OrganizationProfileForm({
             )}
           </Field>
         </div>
+
+        <Field>
+          <FieldLabel htmlFor="legalRep">{t('legalRepLabel')}</FieldLabel>
+          <Input
+            id="legalRep"
+            placeholder={t('legalRepPlaceholder')}
+            disabled={isPending}
+            aria-invalid={!!errors.legalRep}
+            {...register('legalRep')}
+          />
+          {errors.legalRep && (
+            <FieldError>{errors.legalRep.message}</FieldError>
+          )}
+        </Field>
 
         <Field>
           <FieldLabel htmlFor="contactEmail">

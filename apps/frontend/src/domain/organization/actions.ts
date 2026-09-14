@@ -2,7 +2,7 @@
 
 import type {
   CreateOrganizationInput,
-  UpdateOrganizationInput,
+  UpdateOrganizationUnitInput,
 } from '@repo/data';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -65,22 +65,25 @@ export async function createOrganization(
   redirect(`/admin/${org.root.id}`);
 }
 
-export const updateOrganization = actionClient
+export const updateOrganizationProfile = actionClient
   .inputSchema(updateOrganizationSchema)
   .action(async ({ parsedInput }) => {
     const data = await getDataClient({
       orgUId: parsedInput.organizationUnitId,
     });
 
-    const input: UpdateOrganizationInput = {
+    // Only the profile fields: the unit update leaves omitted fields (name,
+    // type, description, logo) untouched.
+    const input: UpdateOrganizationUnitInput = {
+      organizationId: parsedInput.organizationId,
       address: parsedInput.address || null,
       city: parsedInput.city || null,
       zipCode: parsedInput.zipCode || null,
+      legalRep: parsedInput.legalRep || null,
       contactEmail: parsedInput.contactEmail || null,
       phone: parsedInput.phone || null,
       websiteUrl: parsedInput.websiteUrl || null,
-      logoUrl: parsedInput.logoUrl ?? null,
     };
 
-    return await data.organization.update(parsedInput.organizationId, input);
+    return await data.organizationUnit.update(parsedInput.rootUnitId, input);
   });

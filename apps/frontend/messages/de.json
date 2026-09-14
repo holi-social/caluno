@@ -1195,6 +1195,8 @@
       "cityPlaceholder": "Berlin",
       "zipCodeLabel": "Postleitzahl",
       "zipCodePlaceholder": "10115",
+      "legalRepLabel": "Vertretungsberechtigte Person",
+      "legalRepPlaceholder": "z. B. Erika Musterfrau",
       "contactEmailLabel": "Kontakt-E-Mail",
       "contactEmailPlaceholder": "kontakt@organisation.org",
       "phoneLabel": "Telefon",

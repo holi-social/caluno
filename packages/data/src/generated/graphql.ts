@@ -21,11 +21,22 @@ export type Scalars = {
   JSON: { input: Record<string, unknown>; output: Record<string, unknown>; }
 };
 
+/** The org details documents for this unit render, inherited from parent units where blank. */
+export type AccountingOrgProfile = {
+  __typename?: 'AccountingOrgProfile';
+  address?: Maybe<Scalars['String']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  legalRep?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  zipCode?: Maybe<Scalars['String']['output']>;
+};
+
 export type AccountingSetupStatus = {
   __typename?: 'AccountingSetupStatus';
   canCreateDocuments: Scalars['Boolean']['output'];
   canManageTemplates: Scalars['Boolean']['output'];
   missingOrgProfileFields: Array<Scalars['String']['output']>;
+  orgProfile?: Maybe<AccountingOrgProfile>;
   orgProfileComplete: Scalars['Boolean']['output'];
   slots: Array<AccountingTemplateSlotStatus>;
 };
@@ -3028,7 +3039,7 @@ export type MyDocumentSummaryQuery = { __typename?: 'Query', myDocumentSummary: 
 export type GetAccountingSetupStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAccountingSetupStatusQuery = { __typename?: 'Query', accountingSetupStatus: { __typename?: 'AccountingSetupStatus', orgProfileComplete: boolean, missingOrgProfileFields: Array<string>, canCreateDocuments: boolean, slots: Array<{ __typename?: 'AccountingTemplateSlotStatus', reimbursementTypeId: string, reimbursementTypeKey: ReimbursementTypeKey, hasContractTemplate: boolean, hasInvoiceTemplate: boolean, ready: boolean }> } };
+export type GetAccountingSetupStatusQuery = { __typename?: 'Query', accountingSetupStatus: { __typename?: 'AccountingSetupStatus', orgProfileComplete: boolean, missingOrgProfileFields: Array<string>, canCreateDocuments: boolean, orgProfile?: { __typename?: 'AccountingOrgProfile', name: string, address?: string | null, city?: string | null, zipCode?: string | null, legalRep?: string | null } | null, slots: Array<{ __typename?: 'AccountingTemplateSlotStatus', reimbursementTypeId: string, reimbursementTypeKey: ReimbursementTypeKey, hasContractTemplate: boolean, hasInvoiceTemplate: boolean, ready: boolean }> } };
 
 export type EventListFieldsFragment = { __typename?: 'Event', id: string, title: string, slug: string, startsAt: string, endsAt: string, shiftsCount: number, requiredFormsCount: number, coverUrl?: string | null, signedUpCount: number };
 
@@ -5013,6 +5024,13 @@ export const MyDocumentSummaryDocument = gql`
 export const GetAccountingSetupStatusDocument = gql`
     query GetAccountingSetupStatus {
   accountingSetupStatus {
+    orgProfile {
+      name
+      address
+      city
+      zipCode
+      legalRep
+    }
     orgProfileComplete
     missingOrgProfileFields
     canCreateDocuments

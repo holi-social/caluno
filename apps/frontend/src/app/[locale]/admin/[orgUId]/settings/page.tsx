@@ -20,9 +20,12 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const data = await getDataClient({ orgUId });
   const t = await getTranslations({ locale, namespace: 'Settings' });
 
-  const organization = await data.organization.findById(org.organizationId);
+  // The organization profile lives on the root unit: the record the overview
+  // edits and accounting documents read.
+  const root = await data.organization.findRootUnit(org.organizationId);
+  const rootUnit = root ? await data.organizationUnit.findById(root.id) : null;
 
-  if (!organization) {
+  if (!rootUnit) {
     notFound();
   }
 
@@ -35,7 +38,12 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         </p>
       </div>
 
-      {canEdit && <OrganizationProfileForm organization={organization} />}
+      {canEdit && (
+        <OrganizationProfileForm
+          rootUnitId={rootUnit.id}
+          organization={rootUnit}
+        />
+      )}
     </div>
   );
 }

@@ -1195,6 +1195,8 @@
       "cityPlaceholder": "Berlin",
       "zipCodeLabel": "Postal code",
       "zipCodePlaceholder": "10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
       "contactEmailLabel": "Contact email",
       "contactEmailPlaceholder": "contact@organization.org",
       "phoneLabel": "Phone",
