@@ -2,6 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccountingSetupStatus {
+  canCreateDocuments: Boolean!
+  canManageTemplates: Boolean!
+  missingOrgProfileFields: [String!]!
+  orgProfileComplete: Boolean!
+  slots: [AccountingTemplateSlotStatus!]!
+}
+
+type AccountingTemplateSlotStatus {
+  hasContractTemplate: Boolean!
+  hasInvoiceTemplate: Boolean!
+  ready: Boolean!
+  reimbursementTypeId: ID!
+  reimbursementTypeKey: ReimbursementTypeKey!
+}
+
 input AddTimeEntryInput {
   endedAt: DateTime
   notes: String
@@ -26,8 +42,11 @@ type CheckInContext {
 
 type CheckInReadiness {
   hasOpenTimeEntry: Boolean!
+  idVerificationEnabled: Boolean!
+  idVerified: Boolean!
   isMember: Boolean!
   isParticipating: Boolean!
+  membershipId: ID
   openMembershipRequestId: ID
   shiftInviteStatus: ShiftInviteStatus
 }
@@ -319,6 +338,7 @@ type Event {
   joinRequiresApproval: Boolean!
   location: String
   logoUrl: String
+  myInviteStatus: EventInviteStatus
   myInvitedAt: DateTime
   myJoinStatus: JoinStatus!
   organizationUnit: EventOrganizationUnit
@@ -609,6 +629,8 @@ type ManualBaseline {
 type Membership {
   createdAt: DateTime!
   id: ID!
+  idVerifiedAt: DateTime
+  idVerifiedBy: User
   organizationUnit: OrganizationUnit!
   roles: [Role!]!
   user: User!
@@ -689,11 +711,13 @@ type Mutation {
   recordBundleDownload(invoiceIds: [ID!], reimbursementTypeId: ID!, volunteerId: ID!): BundleDownloadStatus!
   regenerateFormShareToken(id: String!): RequirementForm!
   rejectMembershipRequest(id: ID!, organizationUnitId: ID!, rejectionReason: String!): MembershipRequest!
+  remindShiftInstanceInvite(instanceId: String!, userId: String!): DateTime!
   removeMembership(id: ID!): Membership!
   removeMembershipRequest(id: ID!): MembershipRequest!
   sendShiftInstanceCallOut(instanceId: String!): ShiftInstanceCallOutResult!
   setEventRequiredForms(eventId: ID!, formIds: [String!]!): [RequiredFormRef!]!
   setManualBaseline(amountCents: Int!, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): ManualBaseline!
+  setMembershipIdVerified(membershipId: ID!, verified: Boolean!): Membership!
   setReimbursementRate(hourlyRateCents: Int!, organizationUnitId: ID, reimbursementTypeId: ID!): ReimbursementRate!
   setRequiredForms(formIds: [String!]!, organizationUnitId: String!): [RequiredFormRef!]!
   setShiftInstanceRequiredForms(formIds: [String!]!, instanceId: ID!): [RequiredFormRef!]!
@@ -709,6 +733,7 @@ type Mutation {
   updateFormBlockField(fieldId: String!, input: UpdateFormBlockFieldInput!): FormBlock!
   updateMembersForShiftInstance(instanceId: String!, inviteToAllInstances: Boolean, memberIds: [String!]!): ShiftInstance!
   updateMembershipRoles(membershipId: ID!, roleIds: [ID!]!): Membership!
+  updateMyAccountSettings(input: UpdateMyAccountSettingsInput!): User!
   updateMyImage(input: UpdateMyImageInput!): User!
   updateMyLocale(locale: String!): User!
   updateMyUserProfile(input: UpdateUserProfileInput!): UserProfile!
@@ -779,6 +804,7 @@ type OrganizationUnit {
   deletedAt: DateTime
   description: String
   id: ID!
+  idVerificationEnabled: Boolean!
   legalRep: String
   logoUrl: String
   memberCount: Int!
@@ -873,6 +899,7 @@ enum PermissionKey {
 }
 
 type Query {
+  accountingSetupStatus: AccountingSetupStatus!
   activeDocumentTemplate(kind: DocumentKind!, organizationUnitId: ID, reimbursementTypeId: ID!): DocumentTemplate!
   activeShiftInstances: [ShiftInstance!]!
   adminUserProfile(userId: String!): UserProfile
@@ -1309,6 +1336,7 @@ type ShiftInstanceCallOutSummary {
 type ShiftInstanceInvite {
   createdAt: DateTime!
   id: ID!
+  remindedAt: DateTime
   status: ShiftInviteStatus!
   updatedAt: DateTime!
   user: User!
@@ -1434,6 +1462,13 @@ input UpdateFormBlockInput {
   title: String
 }
 
+input UpdateMyAccountSettingsInput {
+  emailPlatformEnabled: Boolean
+  emailUrgentCallsEnabled: Boolean
+  emailWeeklyUpdateEnabled: Boolean
+  locale: String
+}
+
 input UpdateMyImageInput {
   imageFileId: String
 }
@@ -1455,6 +1490,7 @@ input UpdateOrganizationUnitInput {
   city: String
   contactEmail: String
   description: String
+  idVerificationEnabled: Boolean
   legalRep: String
   logoFileId: String
   name: String
@@ -1549,6 +1585,17 @@ input UpdateUserProfileInput {
 type User {
   checkInId: ID!
   email: String!
+
+  """
+  Whether the volunteer receives platform emails (invitations, joining, cancellations, shift changes, membership).
+  """
+  emailPlatformEnabled: Boolean!
+
+  """Whether the volunteer receives urgent call-out emails."""
+  emailUrgentCallsEnabled: Boolean!
+
+  """Whether the volunteer receives the weekly plan email."""
+  emailWeeklyUpdateEnabled: Boolean!
   id: ID!
   image: String
   locale: String

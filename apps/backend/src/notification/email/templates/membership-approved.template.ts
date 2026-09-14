@@ -11,6 +11,7 @@ import {
   paragraph,
   renderEmail,
   strong,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface MembershipApprovedTemplateData {
@@ -55,9 +56,14 @@ export async function membershipApprovedTemplate(
       organizationName: data.organizationName,
     }),
     body,
-    footerNote: t('membershipApproved.footerNote', {
-      organizationName: data.organizationName,
-      brandName,
-    }),
+    footerNote: [
+      t('membershipApproved.footerNote', {
+        organizationName: data.organizationName,
+        brandName,
+      }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

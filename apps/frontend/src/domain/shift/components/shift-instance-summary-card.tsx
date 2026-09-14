@@ -1,8 +1,8 @@
 'use client';
 
 import { Card, CardContent, Separator } from '@repo/ui';
-import { useLocale } from 'next-intl';
 import type { ReactNode } from 'react';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 interface ShiftInstanceSummaryCardProps {
   title: string;
@@ -17,19 +17,12 @@ export function ShiftInstanceSummaryCard({
   endsAt,
   children,
 }: ShiftInstanceSummaryCardProps) {
-  const locale = useLocale();
-  const formatWithOptions = (date: Date, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, options).format(date);
+  const { formatDate, formatTimeRange } = useFormatting();
 
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: 'short',
     month: 'long',
     day: 'numeric',
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
   };
 
   return (
@@ -37,13 +30,12 @@ export function ShiftInstanceSummaryCard({
       <CardContent className="flex justify-between items-start gap-4">
         <div>
           <p className="text-lg font-semibold">
-            {formatWithOptions(startsAt, dateOptions)}
+            {formatDate(startsAt, dateOptions)}
           </p>
           <p className="text-muted-foreground">{title}</p>
         </div>
         <p className="text-lg font-semibold whitespace-nowrap">
-          {formatWithOptions(startsAt, timeOptions)} -{' '}
-          {formatWithOptions(endsAt, timeOptions)}
+          {formatTimeRange(startsAt, endsAt)}
         </p>
       </CardContent>
       {children && (

@@ -9,6 +9,7 @@ import {
   paragraph,
   renderEmail,
   strong,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface MembershipRejectedTemplateData {
@@ -49,9 +50,14 @@ export async function membershipRejectedTemplate(
       organizationName: data.organizationName,
     }),
     body,
-    footerNote: t('membershipRejected.footerNote', {
-      organizationName: data.organizationName,
-      brandName,
-    }),
+    footerNote: [
+      t('membershipRejected.footerNote', {
+        organizationName: data.organizationName,
+        brandName,
+      }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

@@ -78,7 +78,7 @@ git merge-tree --write-tree origin/main HEAD
 
 **Done when** that exits 0.
 
-If it doesn't: `git rebase origin/main` and resolve. Additive hunks (imports, lockfile regenerate, both sides keep) — fix them. **Severe** (same hunk, two intents, you would have to invent the merge) — ask, then wait. Feature branch only; `git push --force-with-lease` after a rebase of an already-pushed branch, never `main`.
+If it doesn't: `git merge main` and resolve. Additive hunks (imports, lockfile regenerate, both sides keep) — fix them. **Severe** (same hunk, two intents, you would have to invent the merge) — ask, then wait. Feature branch only; `git push` after a merge of an already-pushed branch, never `main`.
 
 ## 5. Open with `gh`
 

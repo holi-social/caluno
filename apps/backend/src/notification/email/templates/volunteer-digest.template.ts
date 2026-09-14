@@ -13,6 +13,7 @@ import {
   renderEmail,
   shiftCard,
   shiftPublicUrl,
+  unsubscribeFooterNote,
   volunteeringHomeUrl,
 } from './shared';
 
@@ -134,11 +135,18 @@ export async function volunteerDigestTemplate(
     ${sections.join(divider('24px 0'))}
   `);
 
+  const unsubscribeNote = unsubscribeFooterNote(t);
+
   return renderEmail({
     templateName: 'volunteerDigestTemplate',
     subject: t('volunteerDigest.subject', { brandName }),
     previewText: t('volunteerDigest.previewText'),
     body,
-    footerNote: t('volunteerDigest.footerNote', { brandName }),
+    footerNote: [
+      t('volunteerDigest.footerNote', { brandName }),
+      unsubscribeNote,
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

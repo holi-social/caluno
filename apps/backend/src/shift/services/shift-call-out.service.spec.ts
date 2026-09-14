@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { filterRecipientsForEvent } from '../../notification/email-preferences';
 import { PostHogService } from '../../shared/observability/posthog.service';
 import { ShiftCallOutSource, ShiftVisibility } from '../enums';
 import { ShiftCallOutService } from './shift-call-out.service';
@@ -26,9 +27,14 @@ function makeInstance() {
   };
 }
 
-function setup() {
+function setup(
+  recipientPreferences: Record<
+    string,
+    { emailUrgentCallsEnabled?: boolean }
+  > = {},
+) {
   const insertedRows: Array<Record<string, unknown>> = [];
-  const sentEmails: Array<{ to: string }> = [];
+  const sentEmails: Array<{ to: string; subject: string; html: string }> = [];
 
   const db = {
     query: {
@@ -71,11 +77,13 @@ function setup() {
         name: userId,
         firstName: userId,
         locale: 'en',
+        ...recipientPreferences[userId],
       })),
+    filterRecipientsByEmailPreferences: filterRecipientsForEvent,
   };
 
   const emailService = {
-    send: async (options: { to: string }) => {
+    send: async (options: { to: string; subject: string; html: string }) => {
       sentEmails.push(options);
     },
   };
@@ -118,6 +126,38 @@ describe('ShiftCallOutService.sendCallOut', () => {
       'vol-1',
       'vol-3',
     ]);
+  });
+
+  it('skips volunteers who switched Urgent calls off and records no delivery for them', async () => {
+    const { service, insertedRows, sentEmails } = setup({
+      'vol-2': { emailUrgentCallsEnabled: false },
+    });
+
+    const result = await service.sendCallOut(
+      INSTANCE_ID,
+      ORG_UNIT_ID,
+      'actor-1',
+    );
+
+    expect(result.recipientCount).toBe(2);
+    expect(sentEmails.map((email) => email.to).sort()).toEqual([
+      'vol-1@example.com',
+      'vol-3@example.com',
+    ]);
+    expect(insertedRows.map((row) => row.recipientId).sort()).toEqual([
+      'vol-1',
+      'vol-3',
+    ]);
+  });
+
+  it('still emails a volunteer whose Urgent calls setting is on', async () => {
+    const { service, sentEmails } = setup({
+      'vol-2': { emailUrgentCallsEnabled: true },
+    });
+
+    await service.sendCallOut(INSTANCE_ID, ORG_UNIT_ID, 'actor-1');
+
+    expect(sentEmails).toHaveLength(3);
   });
 
   it('tags manual sends as MANUAL by default', async () => {

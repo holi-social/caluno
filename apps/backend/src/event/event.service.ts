@@ -30,6 +30,7 @@ import {
   ACTIVE_EVENT_INVITE_STATUSES,
   ADMIN_LIST_EVENT_INVITE_STATUSES,
   canTransitionInviteStatus,
+  isVolunteerEventParticipationWithdrawal,
   isVolunteerJoinResolveSource,
   PARTICIPATING_EVENT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
@@ -999,6 +1000,16 @@ export class EventService {
     if (!canTransitionInviteStatus(invite.status, targetStatus)) {
       throw new BadRequestGraphQLError(
         `Cannot transition invite status from ${invite.status} to ${targetStatus}`,
+      );
+    }
+
+    if (
+      !isAdminActor &&
+      isVolunteerEventParticipationWithdrawal(invite.status, targetStatus) &&
+      Date.now() > event.startsAt.getTime()
+    ) {
+      throw new BadRequestGraphQLError(
+        'You can no longer cancel your participation after the event has started',
       );
     }
 

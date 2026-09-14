@@ -79,6 +79,13 @@ export function adminChipTargetStatuses(
   }
 }
 
+export function canRemindInvitee(
+  status: InviteStatus,
+  remindedAt?: Date | string | null,
+): boolean {
+  return status === ShiftInviteStatus.AdminInvited && remindedAt == null;
+}
+
 /**
  * Invite-sheet defaults: keep ADMIN_REJECTED off the Invited column so saving
  * the sheet (e.g. to add someone else) does not silently re-invite them.

@@ -11,6 +11,7 @@ import { useLocale } from 'next-intl';
 import { useMemo } from 'react';
 import type { DateRange } from '../components/period-picker';
 import { boardYear, buildBoardVolunteers } from '../lib/board-data.utils';
+import { isBoardInitialLoad } from '../lib/board-loading';
 
 interface UseReimbursementBoardDataInput {
   orgUId: string;
@@ -93,12 +94,16 @@ export function useReimbursementBoardData({
 
   return {
     volunteers,
-    isLoading:
-      rosterQuery.isFetching ||
-      contractsQuery.isFetching ||
-      invoicesQuery.isFetching ||
-      needsTimesheetQuery.isFetching ||
-      paidShiftQuery.isFetching,
+    // Only the first load for this mount may blank the board out. A refetch
+    // triggered by a mutation's invalidation must leave it standing — see
+    // isBoardInitialLoad.
+    isLoading: isBoardInitialLoad([
+      rosterQuery,
+      contractsQuery,
+      invoicesQuery,
+      needsTimesheetQuery,
+      paidShiftQuery,
+    ]),
     error:
       rosterQuery.error ??
       contractsQuery.error ??

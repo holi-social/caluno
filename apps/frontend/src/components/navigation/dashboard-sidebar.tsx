@@ -23,6 +23,7 @@ import {
   ClockIcon,
   CoinsIcon,
   HeartHandshake,
+  IdCard,
   LayoutListIcon,
   LogOutIcon,
   NetworkIcon,
@@ -126,6 +127,12 @@ export function DashboardSidebar({ permissions }: DashboardSidebarProps) {
         titleKey: 'orgUnits',
         href: `/admin/${orgUId}/settings/org-units`,
         icon: NetworkIcon,
+        permission: PermissionKey.OrgView,
+      },
+      {
+        titleKey: 'idVerification',
+        href: `/admin/${orgUId}/settings/id-verification`,
+        icon: IdCard,
         permission: PermissionKey.OrgView,
       },
     ].filter((item) => !item.permission || permissionSet.has(item.permission));

@@ -21,4 +21,7 @@ export class ShiftInstanceInvite {
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => Date, { nullable: true })
+  remindedAt?: Date | null;
 }

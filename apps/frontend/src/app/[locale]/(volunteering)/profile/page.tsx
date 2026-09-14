@@ -74,7 +74,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
         <hr className="border-t border-border my-6" />
 
-        <AccountSection locale={me.locale ?? locale} />
+        <AccountSection
+          locale={me.locale ?? locale}
+          emailWeeklyUpdateEnabled={me.emailWeeklyUpdateEnabled}
+          emailUrgentCallsEnabled={me.emailUrgentCallsEnabled}
+          emailPlatformEnabled={me.emailPlatformEnabled}
+        />
       </div>
     </div>
   );

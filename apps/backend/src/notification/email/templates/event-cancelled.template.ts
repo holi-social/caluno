@@ -10,6 +10,7 @@ import {
   note,
   paragraph,
   renderEmail,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface EventCancelledTemplateData {
@@ -95,6 +96,11 @@ export async function eventCancelledTemplate(
       organizationName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('eventCancelled.footerNote', { brandName }),
+    footerNote: [
+      t('eventCancelled.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

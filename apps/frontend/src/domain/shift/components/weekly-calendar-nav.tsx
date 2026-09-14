@@ -3,9 +3,10 @@
 import { Button } from '@repo/ui';
 import { addDays, addWeeks, format, getISOWeek, subWeeks } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 import { useRouter } from '@/i18n/navigation';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 type WeeklyCalendarNavProps = {
   weekStart: Date;
@@ -22,7 +23,7 @@ export function WeeklyCalendarNav({
 }: WeeklyCalendarNavProps) {
   const router = useRouter();
   const t = useTranslations('Shift');
-  const formatter = useFormatter();
+  const { formatDate } = useFormatting();
 
   const navigate = useCallback(
     (direction: 'prev' | 'next') => {
@@ -50,8 +51,8 @@ export function WeeklyCalendarNav({
         <span className="font-bold">
           {t('calendar.week', { week: getISOWeek(weekStart) })}
         </span>{' '}
-        {formatter.dateTime(weekStart, { month: 'short', day: 'numeric' })} –{' '}
-        {formatter.dateTime(addDays(weekStart, 6), {
+        {formatDate(weekStart, { month: 'short', day: 'numeric' })} –{' '}
+        {formatDate(addDays(weekStart, 6), {
           month: 'short',
           day: 'numeric',
           year: 'numeric',

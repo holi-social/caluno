@@ -12,6 +12,7 @@ import {
   paragraph,
   renderEmail,
   shiftPublicUrl,
+  unsubscribeFooterNote,
 } from './shared';
 import { formatMultilineHtml } from './shared/utils';
 
@@ -111,6 +112,11 @@ export async function shiftInstanceInvitedTemplate(
       organizationName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('shiftInstanceInvited.footerNote', { brandName }),
+    footerNote: [
+      t('shiftInstanceInvited.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

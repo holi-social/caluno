@@ -69,7 +69,10 @@ function redirectToLocale(request: NextRequest, cookieLocale: Locale) {
       ? `/${cookieLocale}`
       : `/${cookieLocale}${pathWithoutLocale}`;
 
-  return NextResponse.redirect(new URL(targetPathname, request.url), 307);
+  const url = request.nextUrl.clone();
+  url.pathname = targetPathname;
+
+  return NextResponse.redirect(url, 307);
 }
 
 function getLocaleFromPathname(pathname: string): Locale | undefined {

@@ -13,8 +13,11 @@ export function useUpdateEventInviteStatus() {
   return useMutation({
     mutationFn: (variables: { eventId: string; status: EventInviteStatus }) =>
       repository.updateEventInviteStatus(variables.eventId, variables.status),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['myEvents'] });
+      queryClient.invalidateQueries({
+        queryKey: ['publicEvent', variables.eventId],
+      });
     },
   });
 }

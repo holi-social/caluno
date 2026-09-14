@@ -349,6 +349,7 @@ interface DocumentSheetProps {
   onDecline: (pair: DocVolPair, reason: string) => void;
   selectedDate: Date;
   orgUId: string;
+  canCreateDocuments: boolean;
 }
 
 export function DocumentSheet({
@@ -361,6 +362,7 @@ export function DocumentSheet({
   onDecline,
   selectedDate,
   orgUId,
+  canCreateDocuments,
 }: DocumentSheetProps) {
   const t = useTranslations('Accounting.reimbursements.docs');
   const ts = useTranslations('Accounting.reimbursements.docs.sheet');
@@ -795,7 +797,9 @@ export function DocumentSheet({
           {isDeclined ? (
             <Button
               className="w-full"
+              disabled={!canCreateDocuments}
               onClick={() => {
+                if (!canCreateDocuments) return;
                 onRequestCreate({ doc, vol });
                 onOpenChange(false);
               }}
@@ -814,11 +818,13 @@ export function DocumentSheet({
                 className="flex-1"
                 variant={actionKey === 'create' ? 'default' : 'outline'}
                 disabled={
-                  actionKey === 'countersign' &&
-                  (!canUserSign || isDetailLoading)
+                  (actionKey === 'countersign' &&
+                    (!canUserSign || isDetailLoading)) ||
+                  (actionKey === 'create' && !canCreateDocuments)
                 }
                 onClick={() => {
                   if (actionKey === 'create') {
+                    if (!canCreateDocuments) return;
                     onRequestCreate({ doc, vol });
                     onOpenChange(false);
                   } else {

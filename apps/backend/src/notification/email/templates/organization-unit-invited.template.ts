@@ -8,6 +8,7 @@ import {
   paragraph,
   publicOrganizationUnitUrl,
   renderEmail,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface OrganizationUnitInvitedTemplateData {
@@ -48,6 +49,11 @@ export async function organizationUnitInvitedTemplate(
       organizationUnitName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('organizationUnitInvited.footerNote', { brandName }),
+    footerNote: [
+      t('organizationUnitInvited.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

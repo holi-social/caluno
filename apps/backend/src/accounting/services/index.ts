@@ -1,4 +1,9 @@
 export { AccountingOrgAccessService } from './accounting-org-access.service';
+export {
+  AccountingSetupService,
+  type AccountingSetupStatusResult,
+  type AccountingTemplateSlotStatus,
+} from './accounting-setup.service';
 export { BundleDownloadService } from './bundle-download.service';
 export { ContractService } from './contract.service';
 export { DocumentNotificationService } from './document-notification.service';

@@ -8,6 +8,10 @@
     "previewText": "Your {brandName} verification code is {otp}.",
     "subject": "Your {brandName} verification code"
   },
+  "emailUnsubscribe": {
+    "label": "Manage your email preferences",
+    "prompt": "Don't want these emails anymore? {link}."
+  },
   "eventCancelled": {
     "detailEvent": "Event",
     "detailLocation": "Location",
@@ -196,6 +200,20 @@
     "subject": "You're invited to {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceJoinApproved": {
+    "buttonLabel": "View shift",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because your request to join a shift on {brandName} was approved.",
+    "greeting": "Hi {firstName}, good news — you've been accepted to join this shift.",
+    "heading": "You're confirmed for the shift",
+    "note": "Open the shift to see the details and your schedule.",
+    "previewText": "Your request to join {shiftTitle} at {organizationName} was approved.",
+    "subject": "You're confirmed for {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceJoined": {
     "buttonLabel": "View shift schedule",
     "detailOrganization": "Organization",
@@ -208,6 +226,34 @@
     "note": "The schedule is already updated.",
     "previewText": "{volunteerName} joined {shiftTitle} in {organizationName} on {startsAt}.",
     "subject": "{shiftTitle}: {volunteerName} joined"
+  },
+  "shiftInstanceJoinRequested": {
+    "buttonLabel": "Review request",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailStarts": "Starts",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage shifts on {brandName}.",
+    "greeting": "Hi {firstName}, a volunteer requested to join a shift you manage and is waiting for your approval.",
+    "heading": "A shift join request needs your approval",
+    "note": "Approve or decline the request to update the roster.",
+    "previewText": "{volunteerName} requested to join {shiftTitle} in {organizationName} on {startsAt}.",
+    "subject": "{shiftTitle}: {volunteerName} requested to join"
+  },
+  "shiftInstanceReminded": {
+    "buttonLabel": "View shift",
+    "detailInstructions": "Instructions",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you were invited to a shift on {brandName}.",
+    "greeting": "Hi {firstName}, this is a quick reminder about your shift invite.",
+    "heading": "Reminder: you're invited to a shift",
+    "note": "Open the shift to see the details and accept or decline.",
+    "previewText": "A quick reminder: you're invited to {shiftTitle} at {organizationName}.",
+    "subject": "Reminder: you're invited to {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
   },
   "shiftInstanceSeriesCancelled": {
     "bodyMessage": "All shifts in the '{shiftTitle}' series from {fromDate} onward have been cancelled.",

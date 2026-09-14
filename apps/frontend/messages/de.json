@@ -100,6 +100,10 @@
     "checkInWithoutShift": "Check-in ohne Schicht",
     "dateSheetTitle": "Datum wählen",
     "foundOnOtherDays": "An anderen Tagen gefunden",
+    "idVerificationButton": "Ausweis bestätigen",
+    "idVerificationDescription": "Bitte den Ausweis des Freiwilligen prüfen und den Namen abgleichen.",
+    "idVerificationError": "Der Ausweis konnte nicht bestätigt werden.",
+    "idVerificationTitle": "Ausweis nicht geprüft",
     "inviteSentConfirmation": "Einladung gesendet",
     "manualCheckin": "Manuelles Einchecken",
     "myQrCodeTab": "Mein QR-Code",
@@ -331,6 +335,9 @@
     "aboutHeading": "Über die Veranstaltung",
     "badge": "Veranstaltung",
     "coverImageAlt": "Titelbild für {title}",
+    "cancelParticipation": "Teilnahme absagen",
+    "canceledNote": "Du hast deine Teilnahme an dieser Veranstaltung abgesagt.",
+    "canceledToast": "Teilnahme abgesagt.",
     "followCta": "Jetzt mitmachen",
     "followNote": "Erhalte Einladungen zu Einsätzen oder melde dich selbst für einen an.",
     "followingCta": "Du machst mit",
@@ -345,7 +352,7 @@
       "requirementsNeededToast": "Bitte fülle zuerst alle erforderlichen Formulare aus",
       "title": "{eventTitle} beitreten"
     },
-    "fullyBooked": "Ausgebucht",
+    "fullyBooked": "Ausgebucht - Warteliste verfügbar",
     "noShifts": "Noch keine Einsätze geplant.",
     "noShiftsOnDay": "Keine Einsätze an diesem Tag.",
     "pendingCta": "Ausstehende Anfrage",
@@ -364,7 +371,10 @@
     "showAllShifts": "Alle Einsätze anzeigen",
     "spotsLeft": "{n, plural, one {# Platz frei} other {# Plätze frei}}",
     "today": "Heute",
-    "unlimitedSpots": "Offen"
+    "unlimitedSpots": "Offen",
+    "withdrawRequest": "Anfrage zurückziehen",
+    "withdrawnNote": "Du hast deine Anfrage für diese Veranstaltung zurückgezogen.",
+    "withdrawnToast": "Anfrage zurückgezogen."
   },
   "LocaleSwitcher": {
     "label": "Sprache"
@@ -454,6 +464,17 @@
         "signDisabledHint": "Du kannst erst unterschreiben oder ablehnen, wenn du das Dokument in der Vorschau angesehen hast."
       },
       "downloadUnavailableNote": "PDF noch nicht verfügbar."
+    }
+  },
+  "IdVerification": {
+    "page": {
+      "title": "Ausweisprüfung",
+      "subtitle": "Ausweisprüfung für {orgName} verwalten."
+    },
+    "card": {
+      "label": "Ausweisprüfung aktivieren",
+      "description": "Wenn aktiviert, werden Betreuer beim Check-in aufgefordert, den Ausweis eines Freiwilligen zu prüfen. Die Prüfung ist optional und blockiert den Check-in nicht.",
+      "updateError": "Die Einstellung konnte nicht gespeichert werden."
     }
   },
   "MembershipRequest": {
@@ -603,6 +624,7 @@
     "checkVolunteersIn": "Freiwillige einchecken",
     "events": "Veranstaltungen",
     "home": "Startseite",
+    "idVerification": "Ausweisprüfung",
     "myTime": "Deine Nachweise",
     "orgUnits": "Organisationseinheiten",
     "organizationSettings": "Organisationseinstellungen",
@@ -635,7 +657,7 @@
     "eventMetaUnlimited": "{shifts, plural, one {# Einsatz} other {# Einsätze}} · Offen",
     "eventsCount": "{n, plural, one {# Veranstaltung} other {# Veranstaltungen}}",
     "eventsHeading": "Veranstaltungen",
-    "fullyBooked": "Ausgebucht",
+    "fullyBooked": "Ausgebucht - Warteliste verfügbar",
     "memberCount": "{n, plural, one {# Mitglied} other {# Mitglieder}}",
     "noEvents": "Noch keine Veranstaltungen.",
     "noShifts": "Noch keine einzelnen Einsätze.",
@@ -754,8 +776,19 @@
   },
   "Profile": {
     "accountSettings": "Kontoeinstellungen",
+    "accountSettingsSaved": "Kontoeinstellungen aktualisiert",
+    "accountSettingsSaveFailed": "Kontoeinstellungen konnten nicht aktualisiert werden",
     "edit": "Bearbeiten",
     "emailLocked": "Mit deiner Anmeldung verknüpft",
+    "emailOff": "Aus",
+    "emailOn": "Ein",
+    "emailPlatform": "Plattform",
+    "emailPlatformDescription": "Einladungen, Beitritte, Absagen, Schichtänderungen und Mitgliedschaft.",
+    "emailSettings": "E-Mails",
+    "emailUrgentCalls": "Dringende Aufrufe",
+    "emailUrgentCallsDescription": "Dringende Aufrufe für unterbesetzte Schichten.",
+    "emailWeeklyUpdate": "Wöchentliche Übersicht",
+    "emailWeeklyUpdateDescription": "Die wöchentliche Planungs-E-Mail am Sonntag.",
     "identity": {
       "subtitles": {
         "firstName": "Wie auf deinem Ausweis",
@@ -1327,6 +1360,9 @@
       "accepted": "Angenommen",
       "actionApprove": "Genehmigen",
       "actionInvite": "Einladen",
+      "actionRemind": "Erinnern",
+      "actionReminded": "Erinnert",
+      "actionUninvite": "Zurückweisen",
       "approveSuccess": "Freiwillige:r genehmigt",
       "approveWaitlistedSuccess": "Einsatz ist voll — Freiwillige:r wurde auf die Warteliste gesetzt",
       "cancelled": "Zurückgezogen",
@@ -1339,6 +1375,9 @@
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
       "pendingApproval": "Genehmigung ausstehend",
       "rejected": "Zurückgewiesen",
+      "remindedAtTooltip": "Erinnert am {when}",
+      "remindError": "Erinnerung konnte nicht gesendet werden",
+      "remindSuccess": "Erinnerung an Freiwillige:n gesendet",
       "signedUp": "Selbst angemeldet",
       "statusChangeError": "Status der/des Freiwilligen konnte nicht geändert werden",
       "summaryAccepted": "angenommen",
@@ -1487,13 +1526,16 @@
         "noAgreement": "Vereinbarung nötig",
         "wouldExceed": "Überschreitet Limit!"
       },
+      "available": "Verfügbar",
       "confirmExceedAllowance": {
         "cancel": "Abbrechen",
         "confirm": "Trotzdem einladen",
         "description": "Die Auszahlung an {name} für diesen Einsatz würde den jährlichen Höchstbetrag überschreiten. Du kannst die Person trotzdem einladen, prüfe aber, ob das gewollt ist.",
         "title": "Dies würde das Limit von {name} überschreiten"
       },
-      "removeAria": "Entfernen"
+      "invited": "Eingeladen",
+      "removeAria": "Entfernen",
+      "searchPlaceholder": "Name oder E-Mail"
     },
     "validation": {
       "endTimeRequired": "Endzeit ist erforderlich",
@@ -1707,6 +1749,14 @@
       "birthdayLabel": "Geburtstag",
       "emailLabel": "E-Mail",
       "formFallback": "Formular",
+      "idVerification": {
+        "label": "{status, select, verified {Ausweis geprüft} other {Ausweis ungeprüft}}",
+        "unverifyTitle": "Ausweisprüfung entfernen?",
+        "unverifyDescription": "Der Freiwillige wird beim nächsten Check-in wieder als ungeprüft markiert.",
+        "unverifyCancel": "Abbrechen",
+        "unverifyConfirm": "Prüfung entfernen",
+        "updateError": "Der Ausweisstatus konnte nicht aktualisiert werden."
+      },
       "noSubmissions": "Noch keine eingereichten Formulare.",
       "qrIdLabel": "QR-ID",
       "submittedForms": "Eingereichte Formulare",
@@ -1744,7 +1794,7 @@
     "eventCoverImageAlt": "Titelbild für {title}",
     "filterNextWeek": "Nächste Woche",
     "filterThisWeekend": "Dieses Wochenende",
-    "fullyBooked": "Ausgebucht",
+    "fullyBooked": "Ausgebucht - Warteliste verfügbar",
     "goToToday": "Zu heute",
     "goToTop": "Nach oben",
     "greeting": "Hallo, {firstName}!",
@@ -1763,6 +1813,7 @@
     "loadPast": "Vergangene laden",
     "overlapWarning": "Du hast überschneidende Einsätze in deinem Plan",
     "partOfEvent": "Teil von {event}",
+    "pendingApprovalBadge": "Warte auf Freigabe",
     "pendingBadge": "Ausstehend",
     "pendingRequestBody": "Ein Admin schaut sich deine Anfrage an. Meistens dauert das ein paar Tage.",
     "pendingRequestContact": "Fragen? {name} kann helfen.",
@@ -1773,6 +1824,7 @@
     "timerStartsIn": "beginnt in {time}",
     "timerVolunteering": "Du hilfst seit {time}",
     "todayButton": "Heute",
+    "waitlistBadge": "Du bist auf der Warteliste",
     "weekly": "Wöchentlich",
     "yourEventsEmpty": "Du hast keine bevorstehenden Veranstaltungen.",
     "yourEventsHeading": "Deine Veranstaltungen",
@@ -1813,10 +1865,25 @@
         "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
       }
     },
+    "setupAlert": {
+      "orgProfileTitle": "Vervollständige zuerst dein Organisationsprofil",
+      "orgProfileBody": "Dokumente geben die Daten deiner Organisation wieder. Diese Angaben müssen vorhanden sein, bevor Vorlagen gespeichert werden können: {fields}.",
+      "orgProfileCta": "Zum Organisationsprofil",
+      "templatesTitle": "Richte zuerst deine Dokumentvorlagen ein",
+      "templatesBody": "Dokumente können erst erstellt werden, wenn für einen Pauschalentyp sowohl die Vereinbarung als auch der Stundennachweis als Vorlage vorliegen. Es fehlen noch: {pauschalen}.",
+      "templatesCta": "Zu den Vorlagen"
+    },
+    "orgProfileFields": {
+      "org_name": "Name",
+      "org_address": "Adresse",
+      "org_city": "Stadt",
+      "org_legal_rep": "Gesetzliche Vertretung"
+    },
     "reimbursements": {
       "title": "Abrechnungen",
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "periodLabel": "Zeitraum",
       "yearLabel": "Jahr",
       "periodPicker": {
@@ -2120,6 +2187,7 @@
         "invoice": "Stundennachweis"
       },
       "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "builder": {
         "breadcrumb": {
           "accounting": "Buchhaltung",

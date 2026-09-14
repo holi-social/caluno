@@ -72,6 +72,9 @@ export function useCreateDocumentTemplate() {
       queryClient.invalidateQueries({
         queryKey: ['accounting', 'document-templates'],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['accounting', 'setup-status'],
+      });
     },
   });
 }
@@ -96,6 +99,9 @@ export function useUpdateDocumentTemplate() {
       queryClient.invalidateQueries({
         queryKey: ['accounting', 'document-templates'],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['accounting', 'setup-status'],
+      });
     },
   });
 }
@@ -110,6 +116,9 @@ export function useDeleteDocumentTemplate() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['accounting', 'document-templates'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['accounting', 'setup-status'],
       });
     },
   });

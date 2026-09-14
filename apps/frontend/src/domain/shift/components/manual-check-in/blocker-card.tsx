@@ -12,6 +12,7 @@ type BlockerCardProps = {
   isActionPending?: boolean | undefined;
   isActionDone?: boolean | undefined;
   doneLabel?: string | undefined;
+  className?: string | undefined;
 };
 
 /**
@@ -28,9 +29,10 @@ export function BlockerCard({
   isActionPending,
   isActionDone,
   doneLabel,
+  className,
 }: BlockerCardProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
         <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           {icon}
@@ -41,7 +43,7 @@ export function BlockerCard({
         </div>
         <Button
           type="button"
-          variant="outline"
+          variant="default"
           disabled={isActionPending || isActionDone}
           onClick={onAction}
         >

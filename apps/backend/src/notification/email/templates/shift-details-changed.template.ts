@@ -9,6 +9,7 @@ import {
   note,
   paragraph,
   renderEmail,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface ShiftDetailsChangedTemplateData {
@@ -101,6 +102,11 @@ export async function shiftDetailsChangedTemplate(
       organizationName: data.organizationUnitName,
     }),
     body,
-    footerNote: t('shiftDetailsChanged.footerNote', { brandName }),
+    footerNote: [
+      t('shiftDetailsChanged.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

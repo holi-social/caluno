@@ -4,19 +4,13 @@ import { ShiftInviteStatus } from '../shift/enums';
 import {
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
-  PARTICIPATING_SHIFT_INVITE_STATUSES,
+  isVolunteerEventParticipationWithdrawal,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
   volunteerMayRequestInviteStatus,
 } from './invite-status';
 
 describe('invite-status', () => {
-  it('defines participating statuses as JOINED only', () => {
-    expect(PARTICIPATING_SHIFT_INVITE_STATUSES).toEqual([
-      ShiftInviteStatus.JOINED,
-    ]);
-  });
-
   it('returns true only for JOINED', () => {
     expect(isParticipatingShiftInviteStatus(ShiftInviteStatus.JOINED)).toBe(
       true,
@@ -298,6 +292,35 @@ describe('invite-status', () => {
           ShiftInviteStatus.VOLUNTEER_CANCELLED,
         ),
       ).toBe(true);
+    });
+  });
+
+  describe('isVolunteerEventParticipationWithdrawal', () => {
+    it('matches event cancel and pending withdraw only', () => {
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.JOINED,
+          EventInviteStatus.VOLUNTEER_CANCELLED,
+        ),
+      ).toBe(true);
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.AWAITING_ADMIN_APPROVAL,
+          EventInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(true);
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.ADMIN_INVITED,
+          EventInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(false);
+      expect(
+        isVolunteerEventParticipationWithdrawal(
+          EventInviteStatus.JOINED,
+          EventInviteStatus.VOLUNTEER_REJECTED,
+        ),
+      ).toBe(false);
     });
   });
 });

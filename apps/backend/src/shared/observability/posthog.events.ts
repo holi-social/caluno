@@ -230,6 +230,10 @@ export const POSTHOG_EVENT_REGISTRY = {
     'shift_instance_invite_update',
     'A shift instance invite status is updated.',
   ),
+  shift_instance_invite_send: defineEvent(
+    'shift_instance_invite_send',
+    'A reminder email is sent for an unanswered shift instance invite.',
+  ),
   shift_call_out_send: defineEvent(
     'shift_call_out_send',
     'A shift instance call-out email is sent.',

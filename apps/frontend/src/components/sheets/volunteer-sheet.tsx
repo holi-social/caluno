@@ -5,6 +5,7 @@ import {
   useAdminUserProfile,
   useFormSubmissionsForVolunteer,
   useMemberships,
+  useOrganizationUnit,
   useOrgUId,
   useUser,
 } from '@repo/data/react';
@@ -22,6 +23,7 @@ import {
 } from '@repo/ui';
 import { ExternalLink, UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { IdVerificationToggle } from '@/domain/memberships/components/id-verification-toggle';
 import { RemoveMembershipButton } from '@/domain/memberships/components/remove-membership-button';
 import { useSheet } from '@/hooks/use-sheet';
 import { Link } from '@/i18n/navigation';
@@ -84,6 +86,7 @@ function VolunteerSheetContent({
   const { data: submissions, isPending: submissionsPending } =
     useFormSubmissionsForVolunteer(userId);
   const { data: memberships } = useMemberships(orgUId);
+  const { data: orgUnit } = useOrganizationUnit(orgUId);
   const membership = memberships?.find((item) => item.user.id === userId);
 
   const profileData = (userProfile?.data ?? {}) as Record<string, unknown>;
@@ -113,6 +116,13 @@ function VolunteerSheetContent({
         <Badge variant={statusVariant(status)}>
           {statusLabel(tStatus, status)}
         </Badge>
+
+        {membership && orgUnit?.idVerificationEnabled && (
+          <IdVerificationToggle
+            membershipId={membership.id}
+            verified={membership.idVerifiedAt != null}
+          />
+        )}
       </div>
 
       <div>

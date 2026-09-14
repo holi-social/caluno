@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: EventPageProps) {
   try {
     event = await data.publicEvent.findById(eventId);
   } catch (error) {
-    if (error instanceof DataError) {
+    if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
     }
     return { title: 'Event — Caluno' };
@@ -49,7 +49,7 @@ export default async function EventPage({
   try {
     event = await data.publicEvent.findById(eventId);
   } catch (error) {
-    if (error instanceof DataError) {
+    if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
       notFound();
     }
     throw error;
@@ -137,7 +137,9 @@ export default async function EventPage({
               <EventFollowButton
                 eventId={event.id}
                 organizationUnitId={event.organizationUnit?.id}
+                startsAt={event.startsAt}
                 initialStatus={event.myJoinStatus}
+                initialInviteStatus={event.myInviteStatus}
                 membershipState={membershipState}
                 eventRequiredForms={event.requiredForms?.map((ref) => ref.form)}
                 organizationUnitRequiredForms={event.organizationUnit?.requiredForms?.map(

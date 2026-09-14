@@ -4,6 +4,7 @@ import { UserLocaleService } from '../i18n/user-locale.service';
 import { UserService } from '../user/user.service';
 import { maskEmail } from '../utils';
 import { EmailService } from './email/email.service';
+import { filterRecipientsForEvent } from './email-preferences';
 import type { NotificationEventPayloadMap } from './notification-event-map';
 import { NotificationEvent } from './notification-events';
 import { TypedNotificationEmitter } from './typed-notification-emitter.service';
@@ -14,6 +15,9 @@ export interface UserNotificationData {
   email: string;
   firstName: string;
   locale: Locale;
+  emailWeeklyUpdateEnabled?: boolean | null;
+  emailUrgentCallsEnabled?: boolean | null;
+  emailPlatformEnabled?: boolean | null;
 }
 
 export interface ResolveUserNotificationDataOptions {
@@ -40,6 +44,12 @@ type MembershipRejectedInput =
 
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
+
+type ShiftInstanceJoinRequestedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED];
+
+type ShiftInstanceJoinApprovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED];
 
 type ShiftInstanceInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED];
@@ -130,6 +140,9 @@ export class NotificationService {
       email: user.email,
       firstName: user.name.split(' ')[0],
       locale,
+      emailWeeklyUpdateEnabled: user.emailWeeklyUpdateEnabled,
+      emailUrgentCallsEnabled: user.emailUrgentCallsEnabled,
+      emailPlatformEnabled: user.emailPlatformEnabled,
     };
   }
 
@@ -146,6 +159,13 @@ export class NotificationService {
     return users.filter((user): user is UserNotificationData => Boolean(user));
   }
 
+  filterRecipientsByEmailPreferences(
+    recipients: UserNotificationData[],
+    event: NotificationEvent,
+  ): UserNotificationData[] {
+    return filterRecipientsForEvent(recipients, event);
+  }
+
   async sendNotification(
     userIds: string | string[],
     options: ResolveUserNotificationDataOptions,
@@ -153,12 +173,20 @@ export class NotificationService {
       recipient: UserNotificationData,
     ) => Promise<{ subject: string; html: string }>,
   ): Promise<void> {
-    const recipients = await this.resolveUsersNotificationData(
+    const resolved = await this.resolveUsersNotificationData(
       Array.isArray(userIds) ? userIds : [userIds],
       options,
     );
-    if (recipients.length === 0) {
+    if (resolved.length === 0) {
       this.logger.warn(`Can not resolve users for userIds: ${userIds}`);
+      return;
+    }
+
+    const recipients = this.filterRecipientsByEmailPreferences(
+      resolved,
+      options.event,
+    );
+    if (recipients.length === 0) {
       return;
     }
 
@@ -206,6 +234,16 @@ export class NotificationService {
 
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
+  }
+
+  notifyShiftInstanceJoinRequested(
+    input: ShiftInstanceJoinRequestedInput,
+  ): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED, input);
+  }
+
+  notifyShiftInstanceJoinApproved(input: ShiftInstanceJoinApprovedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED, input);
   }
 
   notifyShiftInstanceInvited(input: ShiftInstanceInvitedInput): void {

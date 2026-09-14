@@ -1,5 +1,6 @@
 import {
   Ban,
+  BellRing,
   Check,
   CircleCheck,
   CircleDashed,
@@ -265,6 +266,7 @@ export const volunteeringActionIcons: Partial<
   'Check in': ScanQrCode,
   'Check out': LogOut,
   Uninvite: Ban,
+  Remind: BellRing,
 };
 
 export type VolunteeringActionButtonStyle = {

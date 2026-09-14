@@ -11,13 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/ui';
-import { format } from 'date-fns';
 import { ChevronDownIcon, FileTextIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { API_URL } from '@/lib/constants';
 import { formatEuro } from '@/lib/formatting/formats';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
@@ -183,6 +183,7 @@ function BundleDownloadButton({
   orgUId,
 }: BundleDownloadButtonProps) {
   const t = useTranslations('Accounting.reimbursements');
+  const { formatDate } = useFormatting();
   const queryClient = useQueryClient();
   const { data: status, isLoading } = useBundleDownloadStatus(
     volunteerId,
@@ -250,7 +251,7 @@ function BundleDownloadButton({
                 by: status.downloadedByUser?.name
                   ? abbreviateName(status.downloadedByUser.name)
                   : t('bundle.unknownUser'),
-                at: format(new Date(status.downloadedAt), 'dd.MM.yyyy'),
+                at: formatDate(new Date(status.downloadedAt)),
                 // Stubbed: no volunteer-profile route exists yet
                 // in this prototype — becomes a real link there.
                 name: (chunks) => (
@@ -279,6 +280,7 @@ interface VolunteerTableGroupProps {
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
+  canCreateDocuments: boolean;
 }
 
 function VolunteerTableGroup({
@@ -289,6 +291,7 @@ function VolunteerTableGroup({
   docTypeFilter,
   dateRange,
   activeTile,
+  canCreateDocuments,
 }: VolunteerTableGroupProps) {
   const t = useTranslations('Accounting.reimbursements');
   const tSections = useTranslations('Accounting.templates.sections');
@@ -558,9 +561,11 @@ function VolunteerTableGroup({
                     <Button
                       size="sm"
                       variant={actionKey === 'create' ? 'default' : 'outline'}
+                      disabled={actionKey === 'create' && !canCreateDocuments}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (actionKey === 'create') {
+                          if (!canCreateDocuments) return;
                           onRequestCreate({ doc, vol });
                         } else {
                           onDocumentClick(doc, vol);
@@ -591,6 +596,7 @@ interface ReimbursementsTableProps {
   docTypeFilter: DocTypeFilter;
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
+  canCreateDocuments: boolean;
 }
 
 export function ReimbursementsTable({
@@ -601,6 +607,7 @@ export function ReimbursementsTable({
   docTypeFilter,
   dateRange,
   activeTile,
+  canCreateDocuments,
 }: ReimbursementsTableProps) {
   const t = useTranslations('Accounting.reimbursements');
 
@@ -633,6 +640,7 @@ export function ReimbursementsTable({
               docTypeFilter={docTypeFilter}
               dateRange={dateRange}
               activeTile={activeTile}
+              canCreateDocuments={canCreateDocuments}
             />
           ))}
         </TableBody>

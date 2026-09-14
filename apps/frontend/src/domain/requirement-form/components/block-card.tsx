@@ -4,9 +4,10 @@ import type { FormBlock, RequirementForm } from '@repo/data';
 import { Badge, Button, Card, CardContent } from '@repo/ui';
 import type { LucideIcon } from 'lucide-react';
 import { Eye, FileCheck, MapPin, Pencil, Trash2, User } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useSheetTrigger } from '@/hooks/use-sheet';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 import { ConfirmDialog } from './confirm-dialog';
 
 const BLOCK_ICONS: Record<string, LucideIcon> = {
@@ -26,7 +27,7 @@ export function BlockCard({
 }) {
   const t = useTranslations('RequirementForm.card');
   const tTable = useTranslations('RequirementForm.table');
-  const { dateTime } = useFormatter();
+  const { formatDateTime } = useFormatting();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { open: openSheet } = useSheetTrigger('block-form');
@@ -99,7 +100,7 @@ export function BlockCard({
           )}
 
           <p className="text-muted-foreground mt-4 text-xs">
-            {t('updated', { date: dateTime(new Date(block.updatedAt)) })}
+            {t('updated', { date: formatDateTime(new Date(block.updatedAt)) })}
           </p>
         </div>
 

@@ -8,9 +8,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@repo/ui';
-import { format } from 'date-fns';
 import { CalendarIcon, CheckIcon } from 'lucide-react';
 import { useState } from 'react';
+import { useFormatting } from '@/lib/formatting/use-formatting';
 
 export interface DateRange {
   from: Date | undefined;
@@ -51,12 +51,6 @@ function matchesPreset(
   );
 }
 
-function formatRange(value: DateRange): string {
-  if (!value.from) return '';
-  if (!value.to) return format(value.from, 'dd.MM.yyyy');
-  return `${format(value.from, 'dd.MM.yyyy')} – ${format(value.to, 'dd.MM.yyyy')}`;
-}
-
 interface PeriodPresetButtonProps {
   label: string;
   selected: boolean;
@@ -92,7 +86,7 @@ interface PeriodPickerProps {
   presets: PeriodPreset[];
   placeholderLabel: string;
   applyLabel: string;
-  /** Trigger text when the value doesn't match a preset. Defaults to the formatted "dd.MM.yyyy – dd.MM.yyyy" range. */
+  /** Trigger text when the value doesn't match a preset. Defaults to the locale-formatted start – end range. */
   customRangeLabel?: string;
   /** Selecting a preset commits and closes immediately instead of staging until Apply. */
   autoApplyPresets?: boolean;
@@ -126,13 +120,18 @@ export function PeriodPicker({
     value,
   );
 
+  const { formatDate } = useFormatting();
+
   const matchedPreset = presets.find((preset) =>
     matchesPreset(value, preset.range),
   );
   const buttonLabel = matchedPreset
     ? matchedPreset.label
     : value?.from
-      ? (customRangeLabel ?? formatRange(value))
+      ? (customRangeLabel ??
+        (value.to
+          ? `${formatDate(value.from)} – ${formatDate(value.to)}`
+          : formatDate(value.from)))
       : placeholderLabel;
 
   function handlePresetClick(preset: PeriodPreset) {

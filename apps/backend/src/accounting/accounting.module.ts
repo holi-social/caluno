@@ -28,6 +28,7 @@ import {
 import {
   AccountingOrganizationLoader,
   AccountingReferenceLoader,
+  AccountingSetupQueryResolver,
   AccountingUserLoader,
   ContractFieldResolver,
   ContractLoader,
@@ -55,6 +56,7 @@ import {
 } from './resolvers';
 import {
   AccountingOrgAccessService,
+  AccountingSetupService,
   BundleDownloadService,
   ContractService,
   DocumentNotificationService,
@@ -85,6 +87,7 @@ import {
   providers: [
     TimeEntryClosedListener,
     AccountingOrgAccessService,
+    AccountingSetupService,
     BundleDownloadService,
     VolunteerDocumentsService,
     ReimbursementRateService,
@@ -133,6 +136,7 @@ import {
     InvoiceLoader,
     MyDocumentsQueryResolver,
     InviteAllowanceQueryResolver,
+    AccountingSetupQueryResolver,
   ],
   exports: [
     ReimbursementRateService,

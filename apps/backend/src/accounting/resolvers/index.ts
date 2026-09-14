@@ -1,5 +1,6 @@
 export * from './accounting-organization.loader';
 export * from './accounting-reference.loader';
+export * from './accounting-setup-query.resolver';
 export * from './accounting-user.loader';
 export * from './contract.loader';
 export * from './contract-field.resolver';

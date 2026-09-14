@@ -38,6 +38,7 @@ import {
   canTransitionInviteStatus,
   isParticipatingShiftInviteStatus,
   isVolunteerJoinResolveSource,
+  MY_SHIFT_INVITE_STATUSES,
   PARTICIPATING_SHIFT_INVITE_STATUSES,
   resolveAdminApprovalTargetStatus,
   resolveVolunteerJoinTargetStatus,
@@ -421,7 +422,7 @@ export class ShiftService {
     limit: number,
     offset: number,
     order: SortOrder,
-    statuses: readonly ShiftInviteStatus[] = PARTICIPATING_SHIFT_INVITE_STATUSES,
+    statuses: readonly ShiftInviteStatus[] = MY_SHIFT_INVITE_STATUSES,
     includeIntended = false,
   ): Promise<{ instances: ShiftInstanceEntity[]; total: number }> {
     const organizationUnitIds =
@@ -742,7 +743,7 @@ export class ShiftService {
       NOT: {
         invites: {
           userId,
-          status: { in: [...PARTICIPATING_SHIFT_INVITE_STATUSES] },
+          status: { in: [...MY_SHIFT_INVITE_STATUSES] },
         },
       },
       OR: visibilityBranches,
@@ -1206,7 +1207,10 @@ export class ShiftService {
         // The insert above no-ops on conflict; resurrect the inactive row.
         await tx
           .update(schema.shiftInstanceInvites)
-          .set({ status: ShiftInviteStatus.ADMIN_INVITED })
+          .set({
+            status: ShiftInviteStatus.ADMIN_INVITED,
+            remindedAt: null,
+          })
           .where(
             and(
               eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
@@ -1330,7 +1334,10 @@ export class ShiftService {
           if (otherIdsToAdd.length > 0) {
             await tx
               .update(schema.shiftInstanceInvites)
-              .set({ status: inviteStatus })
+              .set({
+                status: inviteStatus,
+                remindedAt: null,
+              })
               .where(
                 and(
                   eq(schema.shiftInstanceInvites.instanceId, shiftInstanceId),
@@ -1474,7 +1481,10 @@ export class ShiftService {
         if (userIdsToAdd.length > 0) {
           await tx
             .update(schema.shiftInstanceInvites)
-            .set({ status: inviteStatus })
+            .set({
+              status: inviteStatus,
+              remindedAt: null,
+            })
             .where(
               and(
                 inArray(
@@ -2821,6 +2831,39 @@ export class ShiftService {
     }
   }
 
+  private async loadAndEmitShiftInstanceJoinApprovedNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoinApproved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance join approved notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async loadAndEmitShiftInstanceCancelledNotification(
     shift: ShiftEntity,
     instance: ShiftInstanceEntity,
@@ -3374,6 +3417,50 @@ export class ShiftService {
     }
   }
 
+  private async notifyShiftInstanceJoinRequested(
+    userId: string,
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const shiftManagers = await this.authService.findUsersWithPermission(
+        shift.organizationUnitId,
+        PERMISSIONS.SHIFT_EDIT,
+      );
+      const recipientUserIds = shiftManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoinRequested({
+        organizationUnitId: shift.organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        instanceId: instance.id,
+        requesterUserId: userId,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance join requested notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   async joinShiftInstance(
     userId: string,
     instanceId: string,
@@ -3489,6 +3576,8 @@ export class ShiftService {
             shiftInstanceId: instanceId,
             source,
           });
+        } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
+          void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
         }
       }
 
@@ -3525,6 +3614,8 @@ export class ShiftService {
         shiftInstanceId: instanceId,
         source,
       });
+    } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
+      void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
     }
   }
 
@@ -4153,7 +4244,10 @@ export class ShiftService {
     const instanceIds = instances.map((instance) => instance.id);
     await db
       .update(schema.shiftInstanceInvites)
-      .set({ status: ShiftInviteStatus.ADMIN_INVITED })
+      .set({
+        status: ShiftInviteStatus.ADMIN_INVITED,
+        remindedAt: null,
+      })
       .where(
         and(
           eq(schema.shiftInstanceInvites.userId, userId),
@@ -4239,7 +4333,10 @@ export class ShiftService {
 
     const [updated] = await this.db
       .update(schema.shiftInstanceInvites)
-      .set({ status: targetStatus })
+      .set({
+        status: targetStatus,
+        remindedAt: null,
+      })
       .where(eq(schema.shiftInstanceInvites.id, invite.id))
       .returning();
 
@@ -4253,6 +4350,28 @@ export class ShiftService {
 
     if (targetStatus === ShiftInviteStatus.JOINED) {
       void this.notifyShiftInstanceJoined(userId, instance.master, instance);
+
+      if (
+        invite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL &&
+        isAdminActor
+      ) {
+        void this.loadAndEmitShiftInstanceJoinApprovedNotification(
+          instance.master,
+          instance,
+          userId,
+        );
+      }
+    }
+
+    if (
+      invite.status === ShiftInviteStatus.ADMIN_REJECTED &&
+      targetStatus === ShiftInviteStatus.ADMIN_INVITED
+    ) {
+      void this.loadAndEmitShiftInstanceInvitedNotification(
+        instance.master,
+        instance,
+        [userId],
+      );
     }
 
     if (status === ShiftInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {

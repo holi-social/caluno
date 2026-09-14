@@ -65,6 +65,13 @@ const nextConfig: NextConfig = {
     remotePatterns: storageImagePatterns(),
   },
   turbopack: {
+    // Bun's isolated linker installs one sonner copy per workspace
+    // (apps/frontend + packages/ui resolve to different store entries), so
+    // without this alias `toast` calls and the mounted `<Toaster/>` use two
+    // different store instances and toasts never render.
+    resolveAlias: {
+      sonner: './node_modules/sonner',
+    },
     rules: {
       '*.svg': {
         loaders: ['@svgr/webpack'],
