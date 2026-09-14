@@ -69,6 +69,7 @@ export const NOTIFICATION_EMAIL_GROUP: Record<
 
   // Manager-facing — a manager is told what a volunteer did. Never gated.
   [NotificationEvent.SHIFT_INSTANCE_JOINED]: null,
+  [NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED]: null,
   [NotificationEvent.EVENT_JOINED]: null,
   [NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT]: null,
   [NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT]: null,

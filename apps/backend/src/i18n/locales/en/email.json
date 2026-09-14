@@ -227,6 +227,19 @@
     "previewText": "{volunteerName} joined {shiftTitle} in {organizationName} on {startsAt}.",
     "subject": "{shiftTitle}: {volunteerName} joined"
   },
+  "shiftInstanceJoinRequested": {
+    "buttonLabel": "Review request",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailStarts": "Starts",
+    "detailVolunteer": "Volunteer",
+    "footerNote": "You're receiving this because you can manage shifts on {brandName}.",
+    "greeting": "Hi {firstName}, a volunteer requested to join a shift you manage and is waiting for your approval.",
+    "heading": "A shift join request needs your approval",
+    "note": "Approve or decline the request to update the roster.",
+    "previewText": "{volunteerName} requested to join {shiftTitle} in {organizationName} on {startsAt}.",
+    "subject": "{shiftTitle}: {volunteerName} requested to join"
+  },
   "shiftInstanceReminded": {
     "buttonLabel": "View shift",
     "detailInstructions": "Instructions",

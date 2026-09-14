@@ -2,7 +2,7 @@ jest.mock('nanoid', () => ({
   customAlphabet: () => () => 'abcdefghijkl',
 }));
 
-import { ShiftInviteStatus } from './enums';
+import { ShiftInviteStatus, ShiftVisibility } from './enums';
 import { ShiftService } from './shift.service';
 
 function createShiftService(options: {
@@ -140,6 +140,108 @@ describe('ShiftService.updateShiftInstanceInviteStatus emails', () => {
       expect.objectContaining({
         recipientUserIds: ['volunteer-1'],
         shiftId: 'shift-1',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+});
+
+function createJoinRequestService(options: {
+  notifyShiftInstanceJoinRequested?: jest.Mock;
+  findUsersWithPermission?: jest.Mock;
+}) {
+  const db = {
+    query: {
+      shiftInstances: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'instance-1',
+          isCancelled: false,
+          overrideMaxVolunteers: null,
+          actualStartsAt: new Date('2026-08-01T09:00:00.000Z'),
+          actualEndsAt: new Date('2026-08-01T12:00:00.000Z'),
+          master: {
+            id: 'shift-1',
+            organizationUnitId: 'ou-1',
+            title: 'Evening shift',
+            isDeleted: false,
+            visibility: ShiftVisibility.ALL_MEMBERS,
+            joinRequiresApproval: true,
+            maxVolunteers: null,
+          },
+        }),
+      },
+      shiftInstanceInvites: {
+        findFirst: jest.fn().mockResolvedValue(undefined),
+      },
+      organizationUnits: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'ou-1',
+          name: 'Unit',
+          organizationId: 'org-1',
+        }),
+      },
+    },
+    insert: jest.fn().mockReturnValue({
+      values: jest.fn().mockReturnValue({
+        onConflictDoNothing: jest.fn().mockReturnValue({
+          returning: jest.fn().mockResolvedValue([
+            {
+              id: 'invite-1',
+              instanceId: 'instance-1',
+              userId: 'volunteer-1',
+            },
+          ]),
+        }),
+      }),
+    }),
+  };
+
+  return new ShiftService(
+    db as never,
+    {
+      findUsersWithPermission:
+        options.findUsersWithPermission ?? jest.fn().mockResolvedValue([]),
+    } as never,
+    {} as never,
+    { isMemberOfUnitOrAncestor: jest.fn().mockResolvedValue(true) } as never,
+    {
+      notifyShiftInstanceJoinRequested:
+        options.notifyShiftInstanceJoinRequested ?? jest.fn(),
+    } as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    {} as never,
+    { capture: jest.fn() } as never,
+    {} as never,
+  );
+}
+
+describe('ShiftService.joinShiftInstance emails', () => {
+  it('emails shift managers when a join request needs admin approval', async () => {
+    const notifyShiftInstanceJoinRequested = jest.fn();
+    const findUsersWithPermission = jest
+      .fn()
+      .mockResolvedValue([{ id: 'manager-1' }]);
+    const service = createJoinRequestService({
+      notifyShiftInstanceJoinRequested,
+      findUsersWithPermission,
+    });
+
+    await service.joinShiftInstance('volunteer-1', 'instance-1', {
+      formsAlreadySatisfied: true,
+    });
+    // notifyShiftInstanceJoinRequested is fired without awaiting it, so let
+    // its pending microtasks (organizationUnits lookup, permission lookup)
+    // settle before asserting.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(notifyShiftInstanceJoinRequested).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requesterUserId: 'volunteer-1',
+        recipientUserIds: ['manager-1'],
+        shiftId: 'shift-1',
+        shiftTitle: 'Evening shift',
         instanceId: 'instance-1',
       }),
     );

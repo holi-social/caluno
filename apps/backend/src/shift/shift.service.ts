@@ -3417,6 +3417,50 @@ export class ShiftService {
     }
   }
 
+  private async notifyShiftInstanceJoinRequested(
+    userId: string,
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const shiftManagers = await this.authService.findUsersWithPermission(
+        shift.organizationUnitId,
+        PERMISSIONS.SHIFT_EDIT,
+      );
+      const recipientUserIds = shiftManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoinRequested({
+        organizationUnitId: shift.organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        instanceId: instance.id,
+        requesterUserId: userId,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance join requested notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   async joinShiftInstance(
     userId: string,
     instanceId: string,
@@ -3532,6 +3576,8 @@ export class ShiftService {
             shiftInstanceId: instanceId,
             source,
           });
+        } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
+          void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
         }
       }
 
@@ -3568,6 +3614,8 @@ export class ShiftService {
         shiftInstanceId: instanceId,
         source,
       });
+    } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
+      void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
     }
   }
 

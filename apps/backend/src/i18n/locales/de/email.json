@@ -227,6 +227,19 @@
     "previewText": "{volunteerName} hat sich für {shiftTitle} bei {organizationName} am {startsAt} angemeldet.",
     "subject": "{shiftTitle}: {volunteerName} hat sich angemeldet"
   },
+  "shiftInstanceJoinRequested": {
+    "buttonLabel": "Anfrage prüfen",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailStarts": "Beginn",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, ein:e Freiwillige:r möchte einem Einsatz beitreten, den du verwaltest, und wartet auf deine Genehmigung.",
+    "heading": "Eine Einsatz-Anfrage wartet auf deine Genehmigung",
+    "note": "Genehmige oder lehne die Anfrage ab, um die Besetzung zu aktualisieren.",
+    "previewText": "{volunteerName} möchte {shiftTitle} bei {organizationName} am {startsAt} beitreten.",
+    "subject": "{shiftTitle}: {volunteerName} möchte beitreten"
+  },
   "shiftInstanceReminded": {
     "buttonLabel": "Einsatz ansehen",
     "detailInstructions": "Beschreibung",

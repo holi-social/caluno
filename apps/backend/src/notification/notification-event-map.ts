@@ -22,6 +22,7 @@ import type { ShiftInstanceCancelledPayload } from './payloads/shift-instance-ca
 import type { ShiftInstanceInviteReminderPayload } from './payloads/shift-instance-invite-reminder.payload';
 import type { ShiftInstanceInvitedPayload } from './payloads/shift-instance-invited.payload';
 import type { ShiftInstanceJoinApprovedPayload } from './payloads/shift-instance-join-approved.payload';
+import type { ShiftInstanceJoinRequestedPayload } from './payloads/shift-instance-join-requested.payload';
 import type { ShiftInstanceJoinedPayload } from './payloads/shift-instance-joined.payload';
 import type { ShiftInstanceLeftPayload } from './payloads/shift-instance-left.payload';
 import type { ShiftInstanceRemovedPayload } from './payloads/shift-instance-removed.payload';
@@ -42,6 +43,7 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.MEMBERSHIP_REMOVED]: MembershipRemovedPayload;
   [NotificationEvent.MEMBERSHIP_REJECTED]: MembershipRejectedPayload;
   [NotificationEvent.SHIFT_INSTANCE_JOINED]: ShiftInstanceJoinedPayload;
+  [NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED]: ShiftInstanceJoinRequestedPayload;
   [NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED]: ShiftInstanceJoinApprovedPayload;
   [NotificationEvent.SHIFT_INSTANCE_INVITED]: ShiftInstanceInvitedPayload;
   [NotificationEvent.SHIFT_INSTANCE_INVITE_REMINDER]: ShiftInstanceInviteReminderPayload;
