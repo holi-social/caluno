@@ -4616,8 +4616,7 @@ export class ShiftService {
       properties: {
         surface:
           input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
-          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN ||
-          input.source === POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE
+          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN
             ? POSTHOG_SURFACE.BACKOFFICE
             : POSTHOG_SURFACE.VOLUNTEERING,
         organization_id: await this.resolveOrganizationId(
