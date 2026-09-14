@@ -66,6 +66,10 @@ export function isSingleOccurrenceRrule(
   return /(?:^|;)COUNT=1(?:;|$)/.test(rrule);
 }
 
+export function isRecurringRrule(rrule: string | null | undefined): boolean {
+  return !isSingleOccurrenceRrule(rrule);
+}
+
 export function parseRruleDays(
   rrule: string | null | undefined,
 ): RecurrenceDayValue[] {
