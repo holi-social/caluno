@@ -9,16 +9,24 @@ import {
   RoleEntity,
   UserEntity,
 } from '../database/schema';
-import { ForbiddenGraphQLError, NotFoundGraphQLError } from '../graphql/errors';
+import {
+  ConflictGraphQLError,
+  ForbiddenGraphQLError,
+  NotFoundGraphQLError,
+} from '../graphql/errors';
 import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
 import {
   POSTHOG_EVENT,
   POSTHOG_SURFACE,
 } from '../shared/observability/posthog.events';
 import { PostHogService } from '../shared/observability/posthog.service';
+import { isUniqueConstraintViolation } from '../utils/constraint-violation.util';
 import { PERMISSION_GROUPS } from './constants/permission-groups';
 import { CreateRoleInput } from './inputs/create-role.input';
 import { UpdateRoleInput } from './inputs/update-role.input';
+
+const UNIQUE_ROLE_NAME_PER_ORG_CONSTRAINT =
+  'uq_roles_name_organization_unit_id';
 
 @Injectable()
 export class AuthService {
@@ -36,17 +44,32 @@ export class AuthService {
   ): Promise<RoleEntity> {
     const organization = await this.getOrganization(organizationUnitId);
 
-    const [role] = await this.db
-      .insert(schema.roles)
-      .values({
-        name: input.name,
-        description: input.description,
-        organizationId: organization.id,
-      })
-      .returning();
+    let role: RoleEntity;
+    try {
+      const [insertedRole] = await this.db
+        .insert(schema.roles)
+        .values({
+          name: input.name,
+          description: input.description,
+          organizationId: organization.id,
+        })
+        .returning();
 
-    if (!role) {
-      throw new Error('Failed to create organization unit role');
+      if (!insertedRole) {
+        throw new Error('Failed to create organization unit role');
+      }
+
+      role = insertedRole;
+    } catch (error) {
+      if (
+        isUniqueConstraintViolation(error, UNIQUE_ROLE_NAME_PER_ORG_CONSTRAINT)
+      ) {
+        throw new ConflictGraphQLError(
+          `A role named "${input.name}" already exists in this organization`,
+        );
+      }
+
+      throw error;
     }
 
     if (input.permissionIds.length) {
@@ -322,14 +345,32 @@ export class AuthService {
         updateData.description = input.description;
       }
 
-      const [role] = await tx
-        .update(schema.roles)
-        .set(updateData)
-        .where(eq(schema.roles.id, roleId))
-        .returning();
+      let role: RoleEntity;
+      try {
+        const [updatedRole] = await tx
+          .update(schema.roles)
+          .set(updateData)
+          .where(eq(schema.roles.id, roleId))
+          .returning();
 
-      if (!role) {
-        throw new NotFoundGraphQLError('Role not found');
+        if (!updatedRole) {
+          throw new NotFoundGraphQLError('Role not found');
+        }
+
+        role = updatedRole;
+      } catch (error) {
+        if (
+          isUniqueConstraintViolation(
+            error,
+            UNIQUE_ROLE_NAME_PER_ORG_CONSTRAINT,
+          )
+        ) {
+          throw new ConflictGraphQLError(
+            `A role named "${input.name}" already exists in this organization`,
+          );
+        }
+
+        throw error;
       }
 
       if (input.permissionIds !== undefined) {
