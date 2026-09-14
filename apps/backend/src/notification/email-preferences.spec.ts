@@ -27,6 +27,7 @@ describe('notification email groups', () => {
     for (const event of [
       NotificationEvent.SHIFT_INVITED,
       NotificationEvent.SHIFT_INSTANCE_INVITED,
+      NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED,
       NotificationEvent.EVENT_INVITED,
       NotificationEvent.ORGANIZATION_UNIT_INVITED,
     ]) {

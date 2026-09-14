@@ -5,6 +5,7 @@ import { createEmailTemplateContext } from '../email/email-template-context';
 import { shiftDetailsChangedTemplate } from '../email/templates/shift-details-changed.template';
 import { shiftInstanceCancelledTemplate } from '../email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from '../email/templates/shift-instance-invited.template';
+import { shiftInstanceJoinApprovedTemplate } from '../email/templates/shift-instance-join-approved.template';
 import { shiftInstanceJoinedTemplate } from '../email/templates/shift-instance-joined.template';
 import { shiftInstanceLeftTemplate } from '../email/templates/shift-instance-left.template';
 import { shiftInstanceRemovedTemplate } from '../email/templates/shift-instance-removed.template';
@@ -58,6 +59,37 @@ export class ShiftListener {
             volunteerName: volunteer.name,
             recipientFirstName: recipient.firstName,
             startsAt: payload.startsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED)
+  async handleShiftInstanceJoinApproved(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceJoinApprovedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
+            instanceId: payload.instanceId,
           },
           templateContext,
         );

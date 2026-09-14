@@ -2831,6 +2831,39 @@ export class ShiftService {
     }
   }
 
+  private async loadAndEmitShiftInstanceJoinApprovedNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoinApproved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance join approved notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async loadAndEmitShiftInstanceCancelledNotification(
     shift: ShiftEntity,
     instance: ShiftInstanceEntity,
@@ -4269,6 +4302,28 @@ export class ShiftService {
 
     if (targetStatus === ShiftInviteStatus.JOINED) {
       void this.notifyShiftInstanceJoined(userId, instance.master, instance);
+
+      if (
+        invite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL &&
+        isAdminActor
+      ) {
+        void this.loadAndEmitShiftInstanceJoinApprovedNotification(
+          instance.master,
+          instance,
+          userId,
+        );
+      }
+    }
+
+    if (
+      invite.status === ShiftInviteStatus.ADMIN_REJECTED &&
+      targetStatus === ShiftInviteStatus.ADMIN_INVITED
+    ) {
+      void this.loadAndEmitShiftInstanceInvitedNotification(
+        instance.master,
+        instance,
+        [userId],
+      );
     }
 
     if (status === ShiftInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {

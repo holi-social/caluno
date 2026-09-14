@@ -200,6 +200,20 @@
     "subject": "You're invited to {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceJoinApproved": {
+    "buttonLabel": "View shift",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because your request to join a shift on {brandName} was approved.",
+    "greeting": "Hi {firstName}, good news — you've been accepted to join this shift.",
+    "heading": "You're confirmed for the shift",
+    "note": "Open the shift to see the details and your schedule.",
+    "previewText": "Your request to join {shiftTitle} at {organizationName} was approved.",
+    "subject": "You're confirmed for {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceJoined": {
     "buttonLabel": "View shift schedule",
     "detailOrganization": "Organization",

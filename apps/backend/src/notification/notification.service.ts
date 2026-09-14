@@ -45,6 +45,9 @@ type MembershipRejectedInput =
 type ShiftInstanceJoinedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOINED];
 
+type ShiftInstanceJoinApprovedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED];
+
 type ShiftInstanceInvitedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_INVITED];
 
@@ -228,6 +231,10 @@ export class NotificationService {
 
   notifyShiftInstanceJoined(input: ShiftInstanceJoinedInput): void {
     this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOINED, input);
+  }
+
+  notifyShiftInstanceJoinApproved(input: ShiftInstanceJoinApprovedInput): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED, input);
   }
 
   notifyShiftInstanceInvited(input: ShiftInstanceInvitedInput): void {
