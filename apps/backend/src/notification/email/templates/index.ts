@@ -17,6 +17,7 @@ export { shiftDetailsChangedTemplate } from './shift-details-changed.template';
 export { shiftInstanceCancelledTemplate } from './shift-instance-cancelled.template';
 export { shiftInstanceInvitedTemplate } from './shift-instance-invited.template';
 export { shiftInstanceJoinedTemplate } from './shift-instance-joined.template';
+export { shiftInstanceWaitlistSpotOpenedTemplate } from './shift-instance-waitlist-spot-opened.template';
 export { shiftInstanceLeftTemplate } from './shift-instance-left.template';
 export { shiftInstanceRemovedTemplate } from './shift-instance-removed.template';
 export { shiftInstanceSeriesCancelledTemplate } from './shift-instance-series-cancelled.template';

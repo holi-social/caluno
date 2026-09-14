@@ -278,6 +278,20 @@
     "subject": "{volunteerName} hat {shiftTitle} verlassen",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceWaitlistSpotOpened": {
+    "buttonLabel": "Platz sichern",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du auf {brandName} auf der Warteliste für diesen Einsatz stehst.",
+    "greeting": "Hallo {firstName}, für einen Einsatz, auf den du wartest, ist gerade ein Platz frei geworden.",
+    "heading": "Ein Platz ist frei",
+    "note": "Wer zuerst kommt, mahlt zuerst — der Platz geht an die Person, die zuerst beitritt. Wenn jemand anderes schneller ist, bleibst du auf der Warteliste.",
+    "previewText": "Ein Platz ist frei für {shiftTitle} bei {organizationName} am {startsAt}.",
+    "subject": "Ein Platz ist frei: {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftSeriesLeft": {
     "bodyMessage": "Du hast deine Anmeldungen für die Einsatzserie '{shiftTitle}' ab {fromDate} abgesagt.",
     "detailFrom": "Ab",

@@ -26,6 +26,7 @@ import type { ShiftInstanceRemovedPayload } from './payloads/shift-instance-remo
 import type { ShiftInstanceSeriesCancelledPayload } from './payloads/shift-instance-series-cancelled.payload';
 import type { ShiftInstanceUnderstaffedReminderPayload } from './payloads/shift-instance-understaffed-reminder.payload';
 import type { ShiftInstanceVolunteerLeftPayload } from './payloads/shift-instance-volunteer-left.payload';
+import type { ShiftInstanceWaitlistSpotOpenedPayload } from './payloads/shift-instance-waitlist-spot-opened.payload';
 import type { ShiftInvitedPayload } from './payloads/shift-invited.payload';
 import type { ShiftSeriesLeftPayload } from './payloads/shift-series-left.payload';
 import type { ShiftSeriesRemovedPayload } from './payloads/shift-series-removed.payload';
@@ -48,6 +49,7 @@ export interface NotificationEventPayloadMap {
   [NotificationEvent.SHIFT_INSTANCE_LEFT]: ShiftInstanceLeftPayload;
   [NotificationEvent.SHIFT_SERIES_LEFT]: ShiftSeriesLeftPayload;
   [NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT]: ShiftInstanceVolunteerLeftPayload;
+  [NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED]: ShiftInstanceWaitlistSpotOpenedPayload;
   [NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT]: ShiftSeriesVolunteerLeftPayload;
   [NotificationEvent.SHIFT_DETAILS_CHANGED]: ShiftDetailsChangedPayload;
   [NotificationEvent.SHIFT_INVITED]: ShiftInvitedPayload;

@@ -13,6 +13,8 @@ export const NotificationEvent = {
   SHIFT_INSTANCE_REMOVED: 'notification.shift-instance.removed',
   SHIFT_SERIES_REMOVED: 'notification.shift.series-removed',
   SHIFT_INSTANCE_LEFT: 'notification.shift-instance.left',
+  SHIFT_INSTANCE_WAITLIST_SPOT_OPENED:
+    'notification.shift-instance.waitlist-spot-opened',
   SHIFT_SERIES_LEFT: 'notification.shift.series-left',
   SHIFT_INSTANCE_VOLUNTEER_LEFT: 'notification.shift-instance.volunteer-left',
   SHIFT_SERIES_VOLUNTEER_LEFT: 'notification.shift.series-volunteer-left',
