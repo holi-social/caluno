@@ -2488,6 +2488,101 @@ describe('ShiftService', () => {
     expect(invite?.status).toBe(ShiftInviteStatus.WAITLIST_JOINED);
   });
 
+  it('emails the waitlist when member-list removal drops a joined volunteer', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const shift = await createShift(db, {
+      organizationUnitId,
+      createdById: userId,
+      startsAt,
+      endsAt,
+      rrule: null,
+      maxVolunteers: 1,
+    });
+    const [instance] = await getInstances(shift.id);
+    const joinedUser = await createUser(db);
+    const waitlistedUser = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId: instance.id,
+        userId: joinedUser.id,
+        status: ShiftInviteStatus.JOINED,
+      },
+      {
+        instanceId: instance.id,
+        userId: waitlistedUser.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+    ]);
+
+    const spotOpened =
+      notificationService.notifyShiftInstanceWaitlistSpotOpened as ReturnType<
+        typeof mock
+      >;
+    spotOpened.mockClear();
+
+    // New member list keeps only the waitlisted volunteer.
+    await shiftService.updateMembersForShiftInstance(
+      instance.id,
+      [waitlistedUser.id],
+      organizationUnitId,
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(spotOpened).toHaveBeenCalledTimes(1);
+    expect(spotOpened).toHaveBeenCalledWith(
+      expect.objectContaining({
+        instanceId: instance.id,
+        recipientUserIds: [waitlistedUser.id],
+      }),
+    );
+  });
+
+  it('does not email the waitlist when removal only affects waitlisted members', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const shift = await createShift(db, {
+      organizationUnitId,
+      createdById: userId,
+      startsAt,
+      endsAt,
+      rrule: null,
+      maxVolunteers: 1,
+    });
+    const [instance] = await getInstances(shift.id);
+    const waitlistedUser = await createUser(db);
+    const otherWaitlisted = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId: instance.id,
+        userId: waitlistedUser.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+      {
+        instanceId: instance.id,
+        userId: otherWaitlisted.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+    ]);
+
+    const spotOpened =
+      notificationService.notifyShiftInstanceWaitlistSpotOpened as ReturnType<
+        typeof mock
+      >;
+    spotOpened.mockClear();
+
+    await shiftService.updateMembersForShiftInstance(
+      instance.id,
+      [waitlistedUser.id],
+      organizationUnitId,
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(spotOpened).not.toHaveBeenCalled();
+  });
+
   describe('overnight shifts', () => {
     it('stores a 5-hour duration when end is the next morning', async () => {
       const startsAt = new Date('2026-09-18T20:00:00.000Z');

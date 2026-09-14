@@ -1498,6 +1498,16 @@ export class ShiftService {
             removedUserId,
           );
         }
+        const removedJoinedMember = userIdsToRemove.some((removedId) =>
+          currentShiftInstance.invites.some(
+            (invite) =>
+              invite.userId === removedId &&
+              invite.status === ShiftInviteStatus.JOINED,
+          ),
+        );
+        if (removedJoinedMember) {
+          void this.notifyWaitlistOfOpenedSeat(shiftInstanceId);
+        }
       } else {
         const fromDate = currentShiftInstance.actualStartsAt;
         for (const removedUserId of userIdsToRemove) {
