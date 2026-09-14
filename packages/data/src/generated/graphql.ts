@@ -199,6 +199,7 @@ export type CreateFormBlockInput = {
 };
 
 export type CreateInvoiceInput = {
+  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
@@ -1652,6 +1653,7 @@ export type QueryEffectiveRatesArgs = {
 
 
 export type QueryEligibleTimeEntriesForInvoiceArgs = {
+  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
   periodStart?: InputMaybe<Scalars['DateTime']['input']>;
   reimbursementTypeId: Scalars['ID']['input'];
@@ -2069,7 +2071,10 @@ export type QueryWeeklyShiftsArgs = {
 
 
 export type QueryYearlyUsageArgs = {
+  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
+  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   reimbursementTypeId: Scalars['ID']['input'];
+  volunteerId: Scalars['ID']['input'];
   year: Scalars['Int']['input'];
 };
 
@@ -2771,8 +2776,11 @@ export type SetReimbursementRateMutationVariables = Exact<{
 export type SetReimbursementRateMutation = { __typename?: 'Mutation', setReimbursementRate: { __typename?: 'ReimbursementRate', id: string, hourlyRateCents: number } };
 
 export type GetYearlyUsageQueryVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
   reimbursementTypeId: Scalars['ID']['input'];
   year: Scalars['Int']['input'];
+  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
+  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -2897,6 +2905,7 @@ export type GetEligibleTimeEntriesForInvoiceQueryVariables = Exact<{
   reimbursementTypeId: Scalars['ID']['input'];
   periodStart?: InputMaybe<Scalars['DateTime']['input']>;
   periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
+  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -4612,8 +4621,14 @@ export const SetReimbursementRateDocument = gql`
 }
     `;
 export const GetYearlyUsageDocument = gql`
-    query GetYearlyUsage($reimbursementTypeId: ID!, $year: Int!) {
-  yearlyUsage(reimbursementTypeId: $reimbursementTypeId, year: $year) {
+    query GetYearlyUsage($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $asOfDate: DateTime, $excludeInvoiceId: ID) {
+  yearlyUsage(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+    asOfDate: $asOfDate
+    excludeInvoiceId: $excludeInvoiceId
+  ) {
     usedCents
     limitCents
     remainingCents
@@ -4782,12 +4797,13 @@ export const GetPaidShiftSignupVolunteersDocument = gql`
 }
     `;
 export const GetEligibleTimeEntriesForInvoiceDocument = gql`
-    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime) {
+    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime, $draftInvoiceId: ID) {
   eligibleTimeEntriesForInvoice(
     volunteerId: $volunteerId
     reimbursementTypeId: $reimbursementTypeId
     periodStart: $periodStart
     periodEnd: $periodEnd
+    draftInvoiceId: $draftInvoiceId
   ) {
     id
     startedAt

@@ -172,6 +172,7 @@ input CreateFormBlockInput {
 }
 
 input CreateInvoiceInput {
+  draftInvoiceId: ID
   fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
@@ -917,7 +918,7 @@ type Query {
   documentTemplate(id: ID!): DocumentTemplate!
   documentTemplates: [DocumentTemplate!]!
   effectiveRates(organizationUnitId: ID): [EffectiveRate!]!
-  eligibleTimeEntriesForInvoice(periodEnd: DateTime, periodStart: DateTime, reimbursementTypeId: ID!, volunteerId: ID!): [TimeEntry!]!
+  eligibleTimeEntriesForInvoice(draftInvoiceId: ID, periodEnd: DateTime, periodStart: DateTime, reimbursementTypeId: ID!, volunteerId: ID!): [TimeEntry!]!
   event(id: ID!): Event!
   eventInvites(eventId: ID!): [EventInvite!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
@@ -1005,7 +1006,7 @@ type Query {
   userByCheckInId(checkInId: String!): User
   volunteersNeedingTimesheets(periodEnd: DateTime, periodStart: DateTime): [VolunteerNeedsTimesheet!]!
   weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
-  yearlyUsage(reimbursementTypeId: ID!, year: Int!): YearlyUsage!
+  yearlyUsage(asOfDate: DateTime, excludeInvoiceId: ID, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): YearlyUsage!
 }
 
 type ReimbursementRate {
