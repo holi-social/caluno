@@ -1556,6 +1556,7 @@ export type Query = {
   timeEntry: TimeEntry;
   user?: Maybe<User>;
   userByCheckInId?: Maybe<User>;
+  volunteerYearlyUsage: YearlyUsage;
   volunteersNeedingTimesheets: Array<VolunteerNeedsTimesheet>;
   weeklyShifts: Array<ShiftInstance>;
   yearlyUsage: YearlyUsage;
@@ -2052,6 +2053,14 @@ export type QueryUserArgs = {
 
 export type QueryUserByCheckInIdArgs = {
   checkInId: Scalars['String']['input'];
+};
+
+
+export type QueryVolunteerYearlyUsageArgs = {
+  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
+  reimbursementTypeId: Scalars['ID']['input'];
+  volunteerId: Scalars['ID']['input'];
+  year: Scalars['Int']['input'];
 };
 
 
@@ -2779,6 +2788,16 @@ export type GetYearlyUsageQueryVariables = Exact<{
 
 
 export type GetYearlyUsageQuery = { __typename?: 'Query', yearlyUsage: { __typename?: 'YearlyUsage', usedCents: number, limitCents: number, remainingCents: number } };
+
+export type GetVolunteerYearlyUsageQueryVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
+  reimbursementTypeId: Scalars['ID']['input'];
+  year: Scalars['Int']['input'];
+  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetVolunteerYearlyUsageQuery = { __typename?: 'Query', volunteerYearlyUsage: { __typename?: 'YearlyUsage', usedCents: number, limitCents: number, remainingCents: number } };
 
 export type GetInviteAllowanceEligibilityQueryVariables = Exact<{
   organizationUnitId: Scalars['ID']['input'];
@@ -4617,6 +4636,20 @@ export const SetReimbursementRateDocument = gql`
 export const GetYearlyUsageDocument = gql`
     query GetYearlyUsage($reimbursementTypeId: ID!, $year: Int!) {
   yearlyUsage(reimbursementTypeId: $reimbursementTypeId, year: $year) {
+    usedCents
+    limitCents
+    remainingCents
+  }
+}
+    `;
+export const GetVolunteerYearlyUsageDocument = gql`
+    query GetVolunteerYearlyUsage($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $excludeInvoiceId: ID) {
+  volunteerYearlyUsage(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+    excludeInvoiceId: $excludeInvoiceId
+  ) {
     usedCents
     limitCents
     remainingCents
@@ -7606,6 +7639,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     GetYearlyUsage(variables: GetYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetYearlyUsageQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetYearlyUsageQuery>({ document: GetYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetYearlyUsage', 'query', variables);
+    },
+    GetVolunteerYearlyUsage(variables: GetVolunteerYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetVolunteerYearlyUsageQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetVolunteerYearlyUsageQuery>({ document: GetVolunteerYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetVolunteerYearlyUsage', 'query', variables);
     },
     GetInviteAllowanceEligibility(variables: GetInviteAllowanceEligibilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetInviteAllowanceEligibilityQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetInviteAllowanceEligibilityQuery>({ document: GetInviteAllowanceEligibilityDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetInviteAllowanceEligibility', 'query', variables);
