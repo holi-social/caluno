@@ -4001,6 +4001,16 @@ export class ShiftService {
         hasAvailableSeat: hasSeat,
         allowWaitlist: true,
       }) as ShiftInviteStatus;
+    } else if (
+      invite.status === ShiftInviteStatus.WAITLIST_JOINED &&
+      status === ShiftInviteStatus.JOINED &&
+      !isAdminActor
+    ) {
+      // Waitlist claim at series level (VOLI-1260): re-resolve by next-instance
+      // capacity — full keeps the volunteer on the waitlist, no error.
+      targetStatus = hasSeat
+        ? ShiftInviteStatus.JOINED
+        : ShiftInviteStatus.WAITLIST_JOINED;
     }
 
     this.assertInviteStatusTransition(invite.status, targetStatus);

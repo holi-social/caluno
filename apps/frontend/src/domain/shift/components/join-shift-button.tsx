@@ -107,7 +107,9 @@ export function JoinShiftButton({
         toast.success(
           resolvedStatus === ShiftInviteStatus.AwaitingAdminApproval
             ? t('join.requestSent')
-            : successMessage,
+            : resolvedStatus === ShiftInviteStatus.WaitlistJoined
+              ? t('join.waitlistJoined')
+              : successMessage,
         );
         onInviteStatusChange?.(resolvedStatus);
         router.refresh();
