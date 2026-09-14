@@ -43,8 +43,7 @@ export function RoleForm({
     register,
     handleSubmit,
     control,
-    watch,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isValid },
   } = useForm<RoleFormValues>({
     resolver: zodResolver(
       roleSchema({
@@ -62,9 +61,7 @@ export function RoleForm({
     mode: 'onChange',
   });
 
-  const permissionIds = watch('permissionIds');
-  const submitDisabled =
-    mode === 'create' ? permissionIds.length === 0 : !isDirty;
+  const submitDisabled = mode === 'create' ? !isValid : !isDirty || !isValid;
 
   const onSubmit = async (formData: RoleFormValues) => {
     setServerError(undefined);
