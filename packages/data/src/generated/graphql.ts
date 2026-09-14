@@ -199,6 +199,7 @@ export type CreateFormBlockInput = {
 };
 
 export type CreateInvoiceInput = {
+  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
@@ -1652,6 +1653,7 @@ export type QueryEffectiveRatesArgs = {
 
 
 export type QueryEligibleTimeEntriesForInvoiceArgs = {
+  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
   periodStart?: InputMaybe<Scalars['DateTime']['input']>;
   reimbursementTypeId: Scalars['ID']['input'];
@@ -2897,6 +2899,7 @@ export type GetEligibleTimeEntriesForInvoiceQueryVariables = Exact<{
   reimbursementTypeId: Scalars['ID']['input'];
   periodStart?: InputMaybe<Scalars['DateTime']['input']>;
   periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
+  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -4782,12 +4785,13 @@ export const GetPaidShiftSignupVolunteersDocument = gql`
 }
     `;
 export const GetEligibleTimeEntriesForInvoiceDocument = gql`
-    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime) {
+    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime, $draftInvoiceId: ID) {
   eligibleTimeEntriesForInvoice(
     volunteerId: $volunteerId
     reimbursementTypeId: $reimbursementTypeId
     periodStart: $periodStart
     periodEnd: $periodEnd
+    draftInvoiceId: $draftInvoiceId
   ) {
     id
     startedAt
