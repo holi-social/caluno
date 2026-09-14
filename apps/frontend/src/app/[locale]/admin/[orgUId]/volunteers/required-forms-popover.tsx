@@ -90,7 +90,6 @@ export function VolunteerRequiredFormsPopover({
       isPending={setRequiredForms.isPending}
       disabled={!canConfigure}
       disabledFormIds={disabledFormIds}
-      createNewHref={`/admin/${orgUId}/requirement-forms/new`}
       t={t}
       subtitle={t('subtitle', {
         brand: commonT('brand'),

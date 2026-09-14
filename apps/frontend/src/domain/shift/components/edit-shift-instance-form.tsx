@@ -9,7 +9,6 @@ import {
   useRequirementForms,
 } from '@repo/data/react';
 import {
-  Button,
   Card,
   Checkbox,
   DatePickerWithTimeRange,
@@ -27,7 +26,6 @@ import {
   Switch,
   Textarea,
 } from '@repo/ui';
-import { SquareArrowOutUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useId, useMemo, useState, useTransition } from 'react';
 import { type Resolver, useForm } from 'react-hook-form';
@@ -484,34 +482,15 @@ export const EditShiftInstanceForm = ({
             t={tForms}
           />
 
-          <div className="flex items-center gap-3">
-            <RequiredFormsAddExisting
-              availableForms={availableForms}
-              onAdd={handleAddForm}
-              open={commandOpen}
-              onOpenChange={setCommandOpen}
-              disabled={
-                pending || isLoadingForms || availableForms.length === 0
-              }
-              disabledFormIds={disabledFormIds}
-              t={tForms}
-            />
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() =>
-                setOpen(false, () => {
-                  router.push(`/admin/${orgUId}/requirement-forms/new`);
-                })
-              }
-            >
-              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
-              {tForms('createNew')}
-            </Button>
-          </div>
+          <RequiredFormsAddExisting
+            availableForms={availableForms}
+            onAdd={handleAddForm}
+            open={commandOpen}
+            onOpenChange={setCommandOpen}
+            disabled={pending || isLoadingForms || availableForms.length === 0}
+            disabledFormIds={disabledFormIds}
+            t={tForms}
+          />
 
           <RequiredFormsDedupHint t={tForms} />
         </div>
