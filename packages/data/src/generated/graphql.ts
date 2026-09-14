@@ -2057,6 +2057,7 @@ export type QueryUserByCheckInIdArgs = {
 
 
 export type QueryVolunteerYearlyUsageArgs = {
+  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
   excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   reimbursementTypeId: Scalars['ID']['input'];
   volunteerId: Scalars['ID']['input'];
@@ -2793,6 +2794,7 @@ export type GetVolunteerYearlyUsageQueryVariables = Exact<{
   volunteerId: Scalars['ID']['input'];
   reimbursementTypeId: Scalars['ID']['input'];
   year: Scalars['Int']['input'];
+  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
   excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
@@ -4643,11 +4645,12 @@ export const GetYearlyUsageDocument = gql`
 }
     `;
 export const GetVolunteerYearlyUsageDocument = gql`
-    query GetVolunteerYearlyUsage($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $excludeInvoiceId: ID) {
+    query GetVolunteerYearlyUsage($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $asOfDate: DateTime, $excludeInvoiceId: ID) {
   volunteerYearlyUsage(
     volunteerId: $volunteerId
     reimbursementTypeId: $reimbursementTypeId
     year: $year
+    asOfDate: $asOfDate
     excludeInvoiceId: $excludeInvoiceId
   ) {
     usedCents
