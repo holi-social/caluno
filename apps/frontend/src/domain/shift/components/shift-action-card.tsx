@@ -132,7 +132,7 @@ export function ShiftActionCard({
       case ShiftInviteStatus.AwaitingAdminApproval:
         return t('pendingNote');
       case ShiftInviteStatus.WaitlistJoined:
-        return t('waitlistNote');
+        return full ? t('waitlistNote') : t('waitlistSpotOpenNote');
       default:
         if (effectiveMembershipState === JoinStatus.Pending) {
           return t('pendingNote');
@@ -196,7 +196,7 @@ export function ShiftActionCard({
             {t('cancelledBadge')}
           </Badge>
         )}
-      {inviteStatus === ShiftInviteStatus.WaitlistJoined && (
+      {inviteStatus === ShiftInviteStatus.WaitlistJoined && full && (
         <Badge variant="outline" className="gap-1 bg-accent">
           <HourglassIcon className="size-3.5" />
           {t('waitlistBadge')}
