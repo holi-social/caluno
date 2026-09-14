@@ -2,6 +2,7 @@
 
 import {
   formatRrulePattern,
+  isRecurringRrule,
   ShiftInviteStatus,
   ShiftVisibility,
   type WeeklyShiftInstance,
@@ -164,7 +165,7 @@ export function ShiftCard({
             <span className="min-w-0 tabular-nums">
               {startTime} - {endTime}
             </span>
-            {instance.master.rrule && (
+            {isRecurringRrule(instance.master.rrule) && (
               <ActionTooltip label={formatRrulePattern(instance.master.rrule)}>
                 <span className="inline-flex shrink-0 text-muted-foreground">
                   <RepeatIcon className="size-3.5" />
