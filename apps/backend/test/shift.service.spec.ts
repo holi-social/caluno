@@ -2260,7 +2260,7 @@ describe('ShiftService', () => {
     });
   });
 
-  it('emails the waitlist instead of auto-promoting when a volunteer cancels', async () => {
+  it('emails the waitlist, when a volunteer cancels', async () => {
     const startsAt = new Date(Date.now() + 3600_000);
     const endsAt = new Date(Date.now() + 7200_000);
     const shift = await createShift(db, {

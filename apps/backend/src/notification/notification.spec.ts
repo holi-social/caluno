@@ -39,10 +39,10 @@ import { shiftInstanceCancelledTemplate } from './email/templates/shift-instance
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
 import { shiftInstanceLeftTemplate } from './email/templates/shift-instance-left.template';
-import { shiftInstanceWaitlistSpotOpenedTemplate } from './email/templates/shift-instance-waitlist-spot-opened.template';
 import { shiftInstanceRemovedTemplate } from './email/templates/shift-instance-removed.template';
 import { shiftInstanceSeriesCancelledTemplate } from './email/templates/shift-instance-series-cancelled.template';
 import { shiftInstanceVolunteerLeftTemplate } from './email/templates/shift-instance-volunteer-left.template';
+import { shiftInstanceWaitlistSpotOpenedTemplate } from './email/templates/shift-instance-waitlist-spot-opened.template';
 import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from './email/templates/shift-series-left.template';
 import { shiftSeriesRemovedTemplate } from './email/templates/shift-series-removed.template';

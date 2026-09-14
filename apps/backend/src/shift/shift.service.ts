@@ -3461,8 +3461,6 @@ export class ShiftService {
 
     if (existingInvite) {
       if (existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED) {
-        // Waitlist claim (VOLI-1260): a freed seat goes to whoever claims
-        // first. No seat → stay waitlisted, no error.
         if (!hasSeat) {
           return;
         }

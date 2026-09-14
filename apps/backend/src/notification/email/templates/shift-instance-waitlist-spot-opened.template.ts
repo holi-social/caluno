@@ -82,10 +82,9 @@ export async function shiftInstanceWaitlistSpotOpenedTemplate(
 
   const body = card(`
     ${heading(t('shiftInstanceWaitlistSpotOpened.heading'))}
-    ${paragraph(
-      t('shiftInstanceWaitlistSpotOpened.greeting', { firstName }),
-      { padding: '0 0 20px' },
-    )}
+    ${paragraph(t('shiftInstanceWaitlistSpotOpened.greeting', { firstName }), {
+      padding: '0 0 20px',
+    })}
     ${detailTable(buildDetailRows(data, context))}
     ${button({
       href: claimUrl,
