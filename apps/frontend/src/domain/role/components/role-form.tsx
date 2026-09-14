@@ -16,6 +16,7 @@ type PermissionGroup = GetPermissionGroupsQuery['permissionGroups'][number];
 interface RoleFormProps {
   organizationUnitId: string;
   permissionGroups: PermissionGroup[];
+  mode: 'create' | 'edit';
   initialValues?: Partial<RoleFormValues>;
   mutate: (formData: RoleFormValues) => Promise<{ serverError?: string }>;
   title: string;
@@ -25,6 +26,7 @@ interface RoleFormProps {
 export function RoleForm({
   organizationUnitId,
   permissionGroups,
+  mode,
   mutate,
   initialValues,
   title,
@@ -41,7 +43,8 @@ export function RoleForm({
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    watch,
+    formState: { errors, isDirty },
   } = useForm<RoleFormValues>({
     resolver: zodResolver(
       roleSchema({
@@ -56,7 +59,12 @@ export function RoleForm({
       permissionIds: [],
       ...initialValues,
     },
+    mode: 'onChange',
   });
+
+  const permissionIds = watch('permissionIds');
+  const submitDisabled =
+    mode === 'create' ? permissionIds.length === 0 : !isDirty;
 
   const onSubmit = async (formData: RoleFormValues) => {
     setServerError(undefined);
@@ -78,6 +86,7 @@ export function RoleForm({
       title={title}
       description={description}
       pending={pending}
+      submitDisabled={submitDisabled}
       open={open}
       onOpenChange={setOpen}
       formError={serverError}

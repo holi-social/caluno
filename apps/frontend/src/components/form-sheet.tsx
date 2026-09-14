@@ -25,6 +25,7 @@ type Props = React.PropsWithChildren & {
   open?: boolean;
   onOpenChange: (open: boolean) => void;
   pending?: boolean;
+  submitDisabled?: boolean;
   /** Stretch body to fill space between header and footer (for flex-growing content like transfer lists). */
   fillContent?: boolean;
 };
@@ -73,6 +74,7 @@ export const FormSheet = ({
   open = true,
   onOpenChange,
   pending = false,
+  submitDisabled = false,
   fillContent = false,
   children,
 }: Props) => {
@@ -118,7 +120,11 @@ export const FormSheet = ({
               </Button>
             </SheetClose>
 
-            <Button type="submit" className="flex-1" disabled={pending}>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={pending || submitDisabled}
+            >
               {pending ? t('saving') : t('saveChanges')}
             </Button>
           </SheetFooter>

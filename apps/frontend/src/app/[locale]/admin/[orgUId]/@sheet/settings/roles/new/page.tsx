@@ -16,6 +16,7 @@ export default async function CreateRolePage({ params }: CreateRolePageProps) {
 
   return (
     <RoleForm
+      mode="create"
       title={t('createTitle')}
       description={t('createDescription')}
       organizationUnitId={orgUId}
