@@ -83,11 +83,16 @@ describe('ShiftService', () => {
       organizationUnitService,
     );
 
+    const membershipService = {
+      isMemberOfUnitOrAncestor: async () => true,
+      getMembershipState: async () => 'JOINED',
+    } as unknown as MembershipService;
+
     shiftService = new ShiftService(
       db,
       {} as AuthService,
       {} as UserService,
-      {} as MembershipService,
+      membershipService,
       notificationService,
       {} as OrganizationService,
       {
@@ -95,7 +100,7 @@ describe('ShiftService', () => {
         resolvePublicUrlForUploadedFile: async () =>
           'https://example.com/image.png',
       } as never,
-      {} as never,
+      { getRequiredFormStatuses: async () => [] } as never,
       { shareSubmissionsWithOrgUnit: async () => {} } as never,
       { capture } as unknown as PostHogService,
       accountingOrgAccessService,
@@ -2403,6 +2408,84 @@ describe('ShiftService', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(spotOpened).not.toHaveBeenCalled();
+  });
+
+  it('lets a waitlisted volunteer claim a freed seat via join', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const shift = await createShift(db, {
+      organizationUnitId,
+      createdById: userId,
+      startsAt,
+      endsAt,
+      rrule: null,
+      maxVolunteers: 1,
+    });
+    const [instance] = await getInstances(shift.id);
+    const waitlistedUser = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values({
+      instanceId: instance.id,
+      userId: waitlistedUser.id,
+      status: ShiftInviteStatus.WAITLIST_JOINED,
+    });
+
+    capture.mockClear();
+
+    await shiftService.joinShiftInstance(waitlistedUser.id, instance.id);
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: waitlistedUser.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.JOINED);
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+        userId: waitlistedUser.id,
+        properties: expect.objectContaining({
+          source: 'waitlist_promote',
+          shift_instance_id: instance.id,
+        }),
+      }),
+    );
+  });
+
+  it('keeps a waitlisted volunteer waitlisted when joining a full instance', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const shift = await createShift(db, {
+      organizationUnitId,
+      createdById: userId,
+      startsAt,
+      endsAt,
+      rrule: null,
+      maxVolunteers: 1,
+    });
+    const [instance] = await getInstances(shift.id);
+    const joinedUser = await createUser(db);
+    const waitlistedUser = await createUser(db);
+
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId: instance.id,
+        userId: joinedUser.id,
+        status: ShiftInviteStatus.JOINED,
+      },
+      {
+        instanceId: instance.id,
+        userId: waitlistedUser.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+    ]);
+
+    await expect(
+      shiftService.joinShiftInstance(waitlistedUser.id, instance.id),
+    ).resolves.toBeUndefined();
+
+    const invite = await db.query.shiftInstanceInvites.findFirst({
+      where: { instanceId: instance.id, userId: waitlistedUser.id },
+    });
+    expect(invite?.status).toBe(ShiftInviteStatus.WAITLIST_JOINED);
   });
 
   describe('overnight shifts', () => {

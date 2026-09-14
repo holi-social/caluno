@@ -3450,10 +3450,37 @@ export class ShiftService {
     });
 
     if (existingInvite) {
+      if (existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED) {
+        // Waitlist claim (VOLI-1260): a freed seat goes to whoever claims
+        // first. No seat → stay waitlisted, no error.
+        if (!hasSeat) {
+          return;
+        }
+
+        this.assertInviteStatusTransition(
+          existingInvite.status,
+          ShiftInviteStatus.JOINED,
+        );
+
+        await db
+          .update(schema.shiftInstanceInvites)
+          .set({ status: ShiftInviteStatus.JOINED })
+          .where(eq(schema.shiftInstanceInvites.id, existingInvite.id));
+
+        void this.notifyShiftInstanceJoined(userId, shift, instance);
+        await this.captureShiftInstanceJoin({
+          userId,
+          organizationUnitId: shift.organizationUnitId,
+          shiftId: shift.id,
+          shiftInstanceId: instanceId,
+          source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+        });
+        return;
+      }
+
       if (
         isParticipatingShiftInviteStatus(existingInvite.status) ||
         existingInvite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL ||
-        existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED ||
         existingInvite.status === ShiftInviteStatus.ADMIN_REJECTED
       ) {
         return;
@@ -3760,7 +3787,8 @@ export class ShiftService {
 
     if (
       existingInvite &&
-      !isVolunteerJoinResolveSource(existingInvite.status)
+      !isVolunteerJoinResolveSource(existingInvite.status) &&
+      existingInvite.status !== ShiftInviteStatus.WAITLIST_JOINED
     ) {
       return this.buildRequestJoinShiftInstanceResult(
         userId,
@@ -3777,8 +3805,9 @@ export class ShiftService {
 
     if (
       existingInvite &&
-      isVolunteerJoinResolveSource(existingInvite.status) &&
-      !isAllowed
+      !isAllowed &&
+      (isVolunteerJoinResolveSource(existingInvite.status) ||
+        existingInvite.status === ShiftInviteStatus.WAITLIST_JOINED)
     ) {
       return this.buildRequestJoinShiftInstanceResult(
         userId,
