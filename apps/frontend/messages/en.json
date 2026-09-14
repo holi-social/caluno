@@ -1601,6 +1601,7 @@
     "timeLabel": "Time",
     "waitlistBadge": "You're on the waitlist",
     "waitlistNote": "If a spot opens up, we'll email you so you can claim it.",
+    "waitlistSpotOpenNote": "A spot just opened — join to claim it.",
     "whatYouDoHeading": "What you'll do",
     "whenWhereHeading": "When & where"
   },

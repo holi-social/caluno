@@ -3537,8 +3537,15 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
     }
   });
 
-  it('forbids volunteer from skipping waitlist WAITLIST_JOINED to JOINED', async () => {
-    const { id: shiftId } = await createShift(db, { organizationUnitId });
+  it('lets a waitlisted volunteer claim a freed seat via updateShiftInstanceInviteStatus', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+      maxVolunteers: 1,
+    });
     const instances = await db.query.shiftInstances.findMany({
       where: { masterId: shiftId },
     });
@@ -3581,7 +3588,83 @@ describe('ShiftInstance.invites (VOLI-842)', () => {
         headers: { 'x-organization-unit-id': organizationUnitId },
       });
 
-      expect(response.errors?.[0]?.message).toMatch(/permission|Forbidden/i);
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.updateShiftInstanceInviteStatus.status).toBe(
+        ShiftInviteStatus.JOINED,
+      );
+
+      const row = await db.query.shiftInstanceInvites.findFirst({
+        where: { instanceId, userId: volunteer.id },
+      });
+      expect(row?.status).toBe(ShiftInviteStatus.JOINED);
+    } finally {
+      setAuthMockUserId(originalUserId);
+    }
+  });
+
+  it('keeps a waitlisted volunteer on the waitlist when claiming a full instance', async () => {
+    const startsAt = new Date(Date.now() + 3600_000);
+    const endsAt = new Date(Date.now() + 7200_000);
+    const { id: shiftId } = await createShift(db, {
+      organizationUnitId,
+      startsAt,
+      endsAt,
+      maxVolunteers: 1,
+    });
+    const instances = await db.query.shiftInstances.findMany({
+      where: { masterId: shiftId },
+    });
+    const instanceId = instances[0]?.id;
+    expect(instanceId).toBeDefined();
+    if (!instanceId) {
+      throw new Error('Expected shift instance');
+    }
+
+    const joinedUser = await createUser(db);
+    const volunteer = await createUser(db);
+    await db.insert(schema.shiftInstanceInvites).values([
+      {
+        instanceId,
+        userId: joinedUser.id,
+        status: ShiftInviteStatus.JOINED,
+      },
+      {
+        instanceId,
+        userId: volunteer.id,
+        status: ShiftInviteStatus.WAITLIST_JOINED,
+      },
+    ]);
+
+    const originalUserId = getAuthMockUserId();
+    setAuthMockUserId(volunteer.id);
+    try {
+      const response = await graphqlRequest<{
+        updateShiftInstanceInviteStatus: { status: string };
+      }>(app, {
+        query: `
+          mutation UpdateInviteStatus(
+            $instanceId: String!
+            $status: ShiftInviteStatus!
+          ) {
+            updateShiftInstanceInviteStatus(
+              instanceId: $instanceId
+              status: $status
+            ) {
+              status
+            }
+          }
+        `,
+        variables: {
+          instanceId,
+          status: ShiftInviteStatus.JOINED,
+        },
+        headers: { 'x-organization-unit-id': organizationUnitId },
+      });
+
+      expect(response.errors).toBeUndefined();
+      expect(response.data?.updateShiftInstanceInviteStatus.status).toBe(
+        ShiftInviteStatus.WAITLIST_JOINED,
+      );
 
       const row = await db.query.shiftInstanceInvites.findFirst({
         where: { instanceId, userId: volunteer.id },

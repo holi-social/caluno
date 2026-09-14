@@ -51,6 +51,7 @@ export const NOTIFICATION_EMAIL_GROUP: Record<
   [NotificationEvent.SHIFT_INSTANCE_INVITED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_INVITE_REMINDER]: 'platform',
+  [NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED]: 'platform',
   [NotificationEvent.EVENT_INVITED]: 'platform',
   [NotificationEvent.ORGANIZATION_UNIT_INVITED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_CANCELLED]: 'platform',

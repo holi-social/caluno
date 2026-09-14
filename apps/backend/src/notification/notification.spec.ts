@@ -45,6 +45,7 @@ import { shiftInstanceLeftTemplate } from './email/templates/shift-instance-left
 import { shiftInstanceRemovedTemplate } from './email/templates/shift-instance-removed.template';
 import { shiftInstanceSeriesCancelledTemplate } from './email/templates/shift-instance-series-cancelled.template';
 import { shiftInstanceVolunteerLeftTemplate } from './email/templates/shift-instance-volunteer-left.template';
+import { shiftInstanceWaitlistSpotOpenedTemplate } from './email/templates/shift-instance-waitlist-spot-opened.template';
 import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from './email/templates/shift-series-left.template';
 import { shiftSeriesRemovedTemplate } from './email/templates/shift-series-removed.template';
@@ -674,6 +675,65 @@ describe('NotificationModule', () => {
       html: expected.html,
     });
     expect(expected.html).toContain('Bring gloves.<br />Arrive 10 min early.');
+  });
+
+  it('sends spot-opened email to each waitlisted volunteer', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'waitlist-1' ? 'Sam Waitlist' : 'Robin Waitlist',
+        email: id === 'waitlist-1' ? 'sam@example.com' : 'robin@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      instanceId: 'instance-1',
+      startsAt,
+      endsAt,
+      recipientUserIds: ['waitlist-1', 'waitlist-2'],
+    };
+    const templateData = (recipientFirstName: string) => ({
+      organizationUnitName: payload.organizationUnitName,
+      shiftId: payload.shiftId,
+      shiftTitle: payload.shiftTitle,
+      shiftLocation: payload.shiftLocation,
+      instanceId: payload.instanceId,
+      recipientFirstName,
+      startsAt,
+      endsAt,
+    });
+    const expectedSam = await shiftInstanceWaitlistSpotOpenedTemplate(
+      templateData('Sam'),
+      createFixtureTranslator('en'),
+    );
+    const expectedRobin = await shiftInstanceWaitlistSpotOpenedTemplate(
+      templateData('Robin'),
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceWaitlistSpotOpened(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledTimes(2);
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expectedSam.subject,
+      html: expectedSam.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'robin@example.com',
+      subject: expectedRobin.subject,
+      html: expectedRobin.html,
+    });
   });
 
   it('sends shift instance join approved email to the approved volunteer', async () => {

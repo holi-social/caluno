@@ -324,6 +324,20 @@
     "subject": "{volunteerName} left {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceWaitlistSpotOpened": {
+    "buttonLabel": "Claim your spot",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you're on the waitlist for this shift on {brandName}.",
+    "greeting": "Hi {firstName}, a spot just opened up on a shift you're waiting for.",
+    "heading": "A spot opened up",
+    "note": "First come, first served — the spot goes to whoever joins first. If someone else is quicker, you stay on the waitlist.",
+    "previewText": "A spot opened up for {shiftTitle} at {organizationName} on {startsAt}.",
+    "subject": "A spot opened up: {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftSeriesLeft": {
     "bodyMessage": "You've cancelled your signups for the '{shiftTitle}' series starting {fromDate}.",
     "detailFrom": "From",

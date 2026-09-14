@@ -162,7 +162,8 @@ export function isVolunteerJoinResolveSource(
 /**
  * Whether a non-admin (self) actor may request `to` from current `from`.
  * JOINED / WAITLIST_JOINED are only from volunteer join-resolve sources
- * (accept / re-join); admin approval and waitlist promotion are admin-only.
+ * (accept / re-join); admin approval is admin-only; a waitlisted volunteer
+ * may claim a freed seat themselves (VOLI-1260).
  */
 /** Volunteer self-withdraw/cancel on an event (not shift waitlist). */
 export function isVolunteerEventParticipationWithdrawal(
@@ -196,7 +197,10 @@ export function volunteerMayRequestInviteStatus(
     to === ShiftInviteStatus.JOINED ||
     to === ShiftInviteStatus.WAITLIST_JOINED
   ) {
-    return isVolunteerJoinResolveSource(from);
+    return (
+      isVolunteerJoinResolveSource(from) ||
+      from === ShiftInviteStatus.WAITLIST_JOINED
+    );
   }
 
   return true;

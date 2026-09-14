@@ -25,7 +25,7 @@ import {
   Button,
   cn,
 } from '@repo/ui';
-import { ArrowRightIcon, BanIcon, ClockIcon } from 'lucide-react';
+import { BanIcon, ClockIcon, ListPlusIcon, ListXIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -107,7 +107,9 @@ export function JoinShiftButton({
         toast.success(
           resolvedStatus === ShiftInviteStatus.AwaitingAdminApproval
             ? t('join.requestSent')
-            : successMessage,
+            : resolvedStatus === ShiftInviteStatus.WaitlistJoined
+              ? t('join.waitlistJoined')
+              : successMessage,
         );
         onInviteStatusChange?.(resolvedStatus);
         router.refresh();
@@ -355,6 +357,27 @@ export function JoinShiftButton({
   }
 
   if (inviteStatus === ShiftInviteStatus.WaitlistJoined) {
+    if (!isFull) {
+      // A seat is free — the waitlisted volunteer can claim it directly
+      // (first come, first served; backend re-checks capacity).
+      return (
+        <Button
+          onClick={handleReenter}
+          disabled={
+            joinShiftInstance.isPending ||
+            respondToInvite.isPending ||
+            !instanceId
+          }
+          size="xl"
+          className={className}
+        >
+          {joinShiftInstance.isPending || respondToInvite.isPending
+            ? t('join.joining')
+            : (label ?? t('join.joinShift'))}
+        </Button>
+      );
+    }
+
     return (
       <Button
         onClick={() => handleCancel(t('join.leftWaitlist'))}
@@ -363,7 +386,7 @@ export function JoinShiftButton({
         size="xl"
         className={className}
       >
-        <ArrowRightIcon className="size-5" />
+        <ListXIcon className="size-5" />
         {t('join.leaveWaitlist')}
       </Button>
     );
@@ -465,7 +488,7 @@ export function JoinShiftButton({
         size="xl"
         className={className}
       >
-        <ArrowRightIcon className="size-5" />
+        <ListPlusIcon className="size-5" />
         {joinShiftInstance.isPending
           ? t('join.joining')
           : t('join.joinWaitlist')}

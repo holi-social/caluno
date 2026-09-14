@@ -249,7 +249,7 @@ describe('invite-status', () => {
       ).toBe(true);
     });
 
-    it('blocks self-approve and waitlist skip', () => {
+    it('blocks self-approve but allows waitlist claim (VOLI-1260)', () => {
       expect(
         volunteerMayRequestInviteStatus(
           ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
@@ -261,7 +261,7 @@ describe('invite-status', () => {
           ShiftInviteStatus.WAITLIST_JOINED,
           ShiftInviteStatus.JOINED,
         ),
-      ).toBe(false);
+      ).toBe(true);
     });
 
     it('blocks admin-only targets', () => {

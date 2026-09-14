@@ -12,6 +12,7 @@ import { shiftInstanceLeftTemplate } from '../email/templates/shift-instance-lef
 import { shiftInstanceRemovedTemplate } from '../email/templates/shift-instance-removed.template';
 import { shiftInstanceSeriesCancelledTemplate } from '../email/templates/shift-instance-series-cancelled.template';
 import { shiftInstanceVolunteerLeftTemplate } from '../email/templates/shift-instance-volunteer-left.template';
+import { shiftInstanceWaitlistSpotOpenedTemplate } from '../email/templates/shift-instance-waitlist-spot-opened.template';
 import { shiftInvitedTemplate } from '../email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from '../email/templates/shift-series-left.template';
 import { shiftSeriesRemovedTemplate } from '../email/templates/shift-series-removed.template';
@@ -165,6 +166,37 @@ export class ShiftListener {
             startsAt: payload.startsAt,
             endsAt: payload.endsAt,
             instanceId: payload.instanceId,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED)
+  async handleShiftInstanceWaitlistSpotOpened(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceWaitlistSpotOpenedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            instanceId: payload.instanceId,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
           },
           templateContext,
         );
