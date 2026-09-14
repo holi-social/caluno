@@ -172,7 +172,6 @@ input CreateFormBlockInput {
 }
 
 input CreateInvoiceInput {
-  draftInvoiceId: ID
   fieldOverrides: [DocumentFieldOverrideInput!]
   organizationUnitId: ID
   periodEnd: DateTime!
@@ -918,7 +917,7 @@ type Query {
   documentTemplate(id: ID!): DocumentTemplate!
   documentTemplates: [DocumentTemplate!]!
   effectiveRates(organizationUnitId: ID): [EffectiveRate!]!
-  eligibleTimeEntriesForInvoice(draftInvoiceId: ID, periodEnd: DateTime, periodStart: DateTime, reimbursementTypeId: ID!, volunteerId: ID!): [TimeEntry!]!
+  eligibleTimeEntriesForInvoice(periodEnd: DateTime, periodStart: DateTime, reimbursementTypeId: ID!, volunteerId: ID!): [TimeEntry!]!
   event(id: ID!): Event!
   eventInvites(eventId: ID!): [EventInvite!]!
   eventShifts(eventId: ID!, limit: Int! = 10, offset: Int! = 0): ShiftPaginatedResponse!
@@ -1623,8 +1622,14 @@ type VolunteerInviteAllowance {
   volunteerId: ID!
 }
 
+"""
+A timesheet still to be created: a volunteer's unclaimed hours for one type in one Berlin month.
+"""
 type VolunteerNeedsTimesheet {
   eligibleHours: Float!
+  estimatedAmountCents: Int!
+  periodEnd: DateTime!
+  periodStart: DateTime!
   reimbursementType: ReimbursementType!
   volunteer: User!
 }
