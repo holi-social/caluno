@@ -300,6 +300,48 @@ describe('reimbursement-rate resolver unit scoping', () => {
     });
   });
 
+  describe('yearlyUsage', () => {
+    it("rejects a volunteer outside the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { branchA, branchB } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchB.id);
+
+      await expect(
+        queryResolver.yearlyUsage(
+          volunteer.id,
+          reimbursementType.id,
+          2026,
+          null,
+          null,
+          contextFor(branchA.id),
+        ),
+      ).rejects.toBeInstanceOf(NotFoundGraphQLError);
+    });
+
+    it("allows a volunteer within the caller's org subtree", async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        platformDefaultRateCents: 1_500,
+      });
+      const { branchA, branchASub } = await setupOrgTree();
+      const volunteer = await createUser(db);
+      await addMembership(db, volunteer.id, branchASub.id);
+
+      await expect(
+        queryResolver.yearlyUsage(
+          volunteer.id,
+          reimbursementType.id,
+          2026,
+          null,
+          null,
+          contextFor(branchA.id),
+        ),
+      ).resolves.toBeDefined();
+    });
+  });
+
   describe('bundleDownloadStatus / recordBundleDownload — scope check', () => {
     const sessionFor = (userId: string): UserSession =>
       ({ user: { id: userId } }) as UserSession;

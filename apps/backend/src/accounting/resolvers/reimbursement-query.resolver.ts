@@ -1,5 +1,4 @@
 import { Args, Context, ID, Int, Query, Resolver } from '@nestjs/graphql';
-import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PERMISSIONS } from '../../auth/constants';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
 import { NotFoundGraphQLError } from '../../graphql/errors';
@@ -71,17 +70,29 @@ export class ReimbursementQueryResolver {
     }));
   }
 
+  @Permissions(PERMISSIONS.ACCOUNTING_MANAGE)
   @Query(() => YearlyUsage)
   async yearlyUsage(
+    @Args('volunteerId', { type: () => ID }) volunteerId: string,
     @Args('reimbursementTypeId', { type: () => ID })
     reimbursementTypeId: string,
     @Args('year', { type: () => Int }) year: number,
-    @Session() session: UserSession,
+    @Args('asOfDate', { type: () => Date, nullable: true })
+    asOfDate: Date | null,
+    @Args('excludeInvoiceId', { type: () => ID, nullable: true })
+    excludeInvoiceId: string | null,
+    @Context() context: AuthenticatedGraphQLContext,
   ): Promise<YearlyUsage> {
+    await this.accountingOrgAccessService.resolveEnabledOrganizationId(
+      context.organizationUnitId,
+    );
+    await this.assertVolunteerInScope(context, volunteerId);
     return this.reimbursementRateService.getYearlyUsage(
-      session.user.id,
+      volunteerId,
       reimbursementTypeId,
       year,
+      asOfDate ?? undefined,
+      excludeInvoiceId ?? undefined,
     );
   }
 

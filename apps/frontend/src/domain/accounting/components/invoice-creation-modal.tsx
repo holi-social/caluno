@@ -174,10 +174,16 @@ export function InvoiceCreationModal({
     periodStart: period.from?.toISOString(),
     periodEnd: (period.to ?? period.from)?.toISOString(),
   });
-  const yearlyUsageQuery = useYearlyUsage(
-    reimbursementType?.id,
-    period.from?.getFullYear(),
-  );
+  const yearlyUsageQuery = useYearlyUsage({
+    volunteerId: volunteerId ?? undefined,
+    reimbursementTypeId: reimbursementType?.id,
+    year: period.from?.getFullYear(),
+    // Mirror the backend's Jahresdeckel definition: year-to-date as of this
+    // document's period end, excluding the document being previewed (a
+    // synthetic docId is ignored by the backend).
+    asOfDate: period.to?.toISOString(),
+    excludeInvoiceId: docId ?? undefined,
+  });
   const lines = useMemo(
     () => (eligibleQuery.data ?? []).map(mapEligibleTimeEntry),
     [eligibleQuery.data],

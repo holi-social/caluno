@@ -104,11 +104,20 @@ export class AccountingRepository extends BaseRepository {
     return data.setReimbursementRate;
   }
 
-  async findYearlyUsage(
-    reimbursementTypeId: string,
-    year: number,
-  ): Promise<RawYearlyUsage> {
-    const data = await this.sdk.GetYearlyUsage({ reimbursementTypeId, year });
+  async findYearlyUsage(input: {
+    volunteerId: string;
+    reimbursementTypeId: string;
+    year: number;
+    asOfDate?: string;
+    excludeInvoiceId?: string;
+  }): Promise<RawYearlyUsage> {
+    const data = await this.sdk.GetYearlyUsage({
+      volunteerId: input.volunteerId,
+      reimbursementTypeId: input.reimbursementTypeId,
+      year: input.year,
+      asOfDate: input.asOfDate,
+      excludeInvoiceId: input.excludeInvoiceId,
+    });
     return data.yearlyUsage;
   }
 

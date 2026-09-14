@@ -598,6 +598,169 @@ describe('ReimbursementRateService', () => {
         remainingCents: 54_000,
       });
     });
+
+    it('excludes the given invoice from the sum (the document being rendered)', async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const { organization } = await createOrganizationWithType(
+        db,
+        `Yearly Usage Exclude Org ${crypto.randomUUID()}`,
+      );
+      const volunteer = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+
+      const insertInvoice = (overrides: {
+        totalAmountCents: number;
+        periodStart: Date;
+      }) =>
+        db
+          .insert(schema.invoices)
+          .values({
+            documentTemplateId: template.id,
+            volunteerId: volunteer.id,
+            reimbursementTypeId: reimbursementType.id,
+            periodStart: overrides.periodStart,
+            periodEnd: overrides.periodStart,
+            totalAmountCents: overrides.totalAmountCents,
+            totalHours: 1,
+            resolvedBody: { header: {}, blocks: [], footer: {} },
+            invoiceStatus: InvoiceStatus.READY,
+          })
+          .returning({ id: schema.invoices.id });
+
+      await insertInvoice({
+        totalAmountCents: 10_000,
+        periodStart: new Date('2026-03-01T00:00:00.000Z'),
+      });
+      const [current] = await insertInvoice({
+        totalAmountCents: 25_000,
+        periodStart: new Date('2026-07-01T00:00:00.000Z'),
+      });
+
+      const usage = await service.getYearlyUsage(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        undefined,
+        current?.id,
+      );
+
+      expect(usage).toEqual({
+        usedCents: 10_000,
+        limitCents: 84_000,
+        remainingCents: 74_000,
+      });
+    });
+
+    it('ignores a non-UUID excludeInvoiceId (synthetic preview ids)', async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const { organization } = await createOrganizationWithType(
+        db,
+        `Yearly Usage Synthetic Org ${crypto.randomUUID()}`,
+      );
+      const volunteer = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+      await db.insert(schema.invoices).values({
+        documentTemplateId: template.id,
+        volunteerId: volunteer.id,
+        reimbursementTypeId: reimbursementType.id,
+        periodStart: new Date('2026-03-01T00:00:00.000Z'),
+        periodEnd: new Date('2026-03-01T00:00:00.000Z'),
+        totalAmountCents: 10_000,
+        totalHours: 1,
+        resolvedBody: { header: {}, blocks: [], footer: {} },
+        invoiceStatus: InvoiceStatus.READY,
+      });
+
+      const usage = await service.getYearlyUsage(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        undefined,
+        `${volunteer.id}-manual-invoice-ehrenamt`,
+      );
+
+      expect(usage.usedCents).toBe(10_000);
+    });
+
+    it('keeps the manual baseline when excluding the current invoice', async () => {
+      const reimbursementType = await createReimbursementType(db, {
+        yearlyLimitCents: 84_000,
+      });
+      const { organization } = await createOrganizationWithType(
+        db,
+        `Yearly Usage Baseline Exclude Org ${crypto.randomUUID()}`,
+      );
+      const volunteer = await createUser(db);
+      const editor = await createUser(db);
+      const template = await createDocumentTemplate(db, {
+        organizationId: organization.id,
+        reimbursementTypeId: reimbursementType.id,
+        kind: DocumentKind.INVOICE,
+        signees: [{ order: 0, signeeType: SigneeType.VOLUNTEER }],
+      });
+
+      const insertInvoice = (overrides: {
+        totalAmountCents: number;
+        periodStart: Date;
+      }) =>
+        db
+          .insert(schema.invoices)
+          .values({
+            documentTemplateId: template.id,
+            volunteerId: volunteer.id,
+            reimbursementTypeId: reimbursementType.id,
+            periodStart: overrides.periodStart,
+            periodEnd: overrides.periodStart,
+            totalAmountCents: overrides.totalAmountCents,
+            totalHours: 1,
+            resolvedBody: { header: {}, blocks: [], footer: {} },
+            invoiceStatus: InvoiceStatus.READY,
+          })
+          .returning({ id: schema.invoices.id });
+
+      await insertInvoice({
+        totalAmountCents: 10_000,
+        periodStart: new Date('2026-03-01T00:00:00.000Z'),
+      });
+      const [current] = await insertInvoice({
+        totalAmountCents: 25_000,
+        periodStart: new Date('2026-07-01T00:00:00.000Z'),
+      });
+      await service.setManualBaseline(
+        organization.id,
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        5_000,
+        editor.id,
+      );
+
+      const usage = await service.getYearlyUsage(
+        volunteer.id,
+        reimbursementType.id,
+        2026,
+        undefined,
+        current?.id,
+      );
+
+      // Prior invoice (10_000) + the manually-set initial amount (5_000);
+      // the current invoice is excluded, the baseline is untouched.
+      expect(usage.usedCents).toBe(15_000);
+    });
   });
 
   describe('getRosterYearlyUsage', () => {

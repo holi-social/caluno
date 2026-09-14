@@ -15,12 +15,19 @@ interface TimeEntryMock {
 }
 
 describe('DocumentRenderingService', () => {
+  let yearlyUsageCallArgs: unknown[] = [];
+
   const createService = (
     overrides: {
       saveFile?: (args: unknown) => Promise<{ id: string }>;
       rateCents?: number | undefined;
       profileData?: Record<string, unknown>;
       timeEntries?: TimeEntryMock[];
+      yearlyUsage?: {
+        usedCents: number;
+        limitCents: number;
+        remainingCents: number;
+      };
     } = {},
   ) => {
     const db = {
@@ -54,7 +61,10 @@ describe('DocumentRenderingService', () => {
     } as never;
     const reimbursementRateService = {
       getEffectiveRateCents: () => Promise.resolve(overrides.rateCents),
-      getYearlyUsage: () => Promise.resolve(undefined),
+      getYearlyUsage: (...args: unknown[]) => {
+        yearlyUsageCallArgs = args;
+        return Promise.resolve(overrides.yearlyUsage);
+      },
     } as never;
     const fileService = {
       saveGeneratedFile: (args: unknown) =>
@@ -378,6 +388,46 @@ describe('DocumentRenderingService', () => {
       ).invoiceTotalRowCells(8250);
 
       expect(cells).toEqual(['', '', 'Gesamtbetrag', '', '', '82,50 €']);
+    });
+  });
+
+  describe('Jahresdeckel already-received amount', () => {
+    const resolveValues = (
+      service: DocumentRenderingService,
+      document: InvoiceWithRelations,
+    ): Promise<Record<string, string>> =>
+      (
+        service as unknown as {
+          resolveValues: (
+            d: InvoiceWithRelations,
+          ) => Promise<Record<string, string>>;
+        }
+      ).resolveValues(document);
+
+    it('reports the year-to-date sum, excluding the current invoice by id', async () => {
+      yearlyUsageCallArgs = [];
+      const service = createService({
+        rateCents: 1500,
+        yearlyUsage: {
+          usedCents: 5_000,
+          limitCents: 84_000,
+          remainingCents: 79_000,
+        },
+      });
+
+      const values = await resolveValues(service, invoice());
+
+      // 50,00 € — the mocked usedCents, NOT usedCents minus the invoice's own
+      // 82,50 € (which would clamp to 0,00 €). The current document is excluded
+      // via its id, so its own amount is never subtracted.
+      expect(values.already_received_amount).toBe('50,00 €');
+      expect(yearlyUsageCallArgs).toEqual([
+        'vol-1',
+        'type-1',
+        2025,
+        new Date('2025-01-31'),
+        'invoice-1',
+      ]);
     });
   });
 });

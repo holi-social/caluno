@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { UserEntity } from '../../auth/schemas/auth.schema';
 import type { Database } from '../../database/database.module';
@@ -201,17 +202,27 @@ export class ReimbursementRateService {
    * drifting with invoices created after the fact (or "today"). Omitted for
    * the live in-app usage view, which has no such reissue-consistency
    * requirement and should reflect everything on record for the year.
+   *
+   * `excludeInvoiceId` drops a single invoice from the sum — the document
+   * currently being rendered/previewed, whose own amount is not yet
+   * "already received". Ignored when it isn't a UUID (the creation flow
+   * passes synthetic placeholder ids for documents that don't exist yet).
    */
   async getYearlyUsage(
     volunteerId: string,
     reimbursementTypeId: string,
     year: number,
     asOfDate?: Date,
+    excludeInvoiceId?: string,
   ): Promise<YearlyUsage> {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
     const reimbursementType =
       await this.findReimbursementTypeById(reimbursementTypeId);
+    const excludedId =
+      excludeInvoiceId && isUUID(excludeInvoiceId)
+        ? excludeInvoiceId
+        : undefined;
 
     const [invoices, baseline] = await Promise.all([
       this.db.query.invoices.findMany({
@@ -220,6 +231,7 @@ export class ReimbursementRateService {
           reimbursementTypeId,
           periodStart: { gte: yearStart, lt: yearEnd },
           ...(asOfDate ? { periodEnd: { lte: asOfDate } } : {}),
+          ...(excludedId ? { id: { ne: excludedId } } : {}),
         },
         columns: { totalAmountCents: true, invoiceStatus: true },
       }),

@@ -2023,7 +2023,10 @@ export type QueryWeeklyShiftsArgs = {
 
 
 export type QueryYearlyUsageArgs = {
+  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
+  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   reimbursementTypeId: Scalars['ID']['input'];
+  volunteerId: Scalars['ID']['input'];
   year: Scalars['Int']['input'];
 };
 
@@ -2710,8 +2713,11 @@ export type SetReimbursementRateMutationVariables = Exact<{
 export type SetReimbursementRateMutation = { __typename?: 'Mutation', setReimbursementRate: { __typename?: 'ReimbursementRate', id: string, hourlyRateCents: number } };
 
 export type GetYearlyUsageQueryVariables = Exact<{
+  volunteerId: Scalars['ID']['input'];
   reimbursementTypeId: Scalars['ID']['input'];
   year: Scalars['Int']['input'];
+  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
+  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -4522,8 +4528,14 @@ export const SetReimbursementRateDocument = gql`
 }
     `;
 export const GetYearlyUsageDocument = gql`
-    query GetYearlyUsage($reimbursementTypeId: ID!, $year: Int!) {
-  yearlyUsage(reimbursementTypeId: $reimbursementTypeId, year: $year) {
+    query GetYearlyUsage($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $asOfDate: DateTime, $excludeInvoiceId: ID) {
+  yearlyUsage(
+    volunteerId: $volunteerId
+    reimbursementTypeId: $reimbursementTypeId
+    year: $year
+    asOfDate: $asOfDate
+    excludeInvoiceId: $excludeInvoiceId
+  ) {
     usedCents
     limitCents
     remainingCents
