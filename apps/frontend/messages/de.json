@@ -2152,7 +2152,10 @@
           "title": "Abrechenbare Stunden",
           "rowCheckboxLabel": "{shiftName} in diesen Stundennachweis aufnehmen",
           "hoursValue": "{hours} Std.",
-          "editHint": "Um Stunden oder Einsatzdetails zu ändern, gehe zu <link>Zeitnachweise</link>."
+          "editHint": "Um Stunden oder Einsatzdetails zu ändern, gehe zu <link>Zeitnachweise</link>.",
+          "emptyOutsidePeriod": "{count, plural, one {# Zeiteintrag} other {# Zeiteinträge}} für diese Pauschale liegen außerhalb des gewählten Abrechnungszeitraums. Ändere den Abrechnungszeitraum, um sie aufzunehmen.",
+          "emptyOtherType": "In diesem Abrechnungszeitraum wurden Stunden unter {types} erfasst, nicht unter dieser Pauschale. Erstelle den Stundennachweis für diese Pauschale oder korrigiere die Pauschale des Einsatzes in den Zeitnachweisen.",
+          "emptyNothingTracked": "Für diese Pauschale sind keine abgeschlossenen, noch nicht abgerechneten Stunden erfasst. Erfasse zuerst Zeiten für diese Person oder prüfe, ob die Stunden bereits in einem anderen Stundennachweis sind."
         },
         "preview": {
           "disclaimerBadge": "Vorschau",

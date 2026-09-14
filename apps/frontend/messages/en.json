@@ -2152,7 +2152,10 @@
           "title": "Eligible hours",
           "rowCheckboxLabel": "Include {shiftName} in this invoice",
           "hoursValue": "{hours}h",
-          "editHint": "To edit hours or shift details, go to <link>Timesheets</link>."
+          "editHint": "To edit hours or shift details, go to <link>Timesheets</link>.",
+          "emptyOutsidePeriod": "{count, plural, one {# time entry} other {# time entries}} for this allowance fall outside the selected billing period. Change the billing period to include them.",
+          "emptyOtherType": "Hours in this billing period were tracked under {types}, not this allowance. Create the invoice for that allowance, or correct the shift's allowance in Timesheets.",
+          "emptyNothingTracked": "No completed, unbilled hours are tracked for this allowance. Track time for this volunteer first, or check whether the hours are already on another invoice."
         },
         "preview": {
           "disclaimerBadge": "Preview",
