@@ -6,6 +6,8 @@ export const NotificationEvent = {
   MEMBERSHIP_REMOVED: 'notification.membership.removed',
   MEMBERSHIP_REJECTED: 'notification.membership.rejected',
   SHIFT_INSTANCE_JOINED: 'notification.shift-instance.joined',
+  SHIFT_INSTANCE_JOIN_REQUESTED: 'notification.shift-instance.join-requested',
+  SHIFT_INSTANCE_JOIN_APPROVED: 'notification.shift-instance.join-approved',
   SHIFT_INSTANCE_INVITED: 'notification.shift-instance.invited',
   SHIFT_INSTANCE_CANCELLED: 'notification.shift-instance.cancelled',
   SHIFT_INSTANCE_SERIES_CANCELLED:
@@ -33,6 +35,12 @@ export const NotificationEvent = {
     'notification.shift-instance.call-out-summary',
   SHIFT_INSTANCE_UNDERSTAFFED_REMINDER:
     'notification.shift-instance.understaffed-reminder',
+  // Not routed through the emitter/listener — like the call-out mutation,
+  // the invite reminder needs the send outcome synchronously before
+  // stamping `remindedAt`, so it calls EmailService directly. The event
+  // constant exists only to label the resolveUserNotificationData
+  // "user not found" warning.
+  SHIFT_INSTANCE_INVITE_REMINDER: 'notification.shift-instance.invite-reminder',
   // Not routed through the emitter/listener — the weekly cron sends directly
   // via EmailService. The event constant exists only to label the
   // resolveUserNotificationData "user not found" warning.

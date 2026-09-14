@@ -117,4 +117,15 @@ describe('localePreferenceRedirect', () => {
       'http://localhost:3000/de/dashboard',
     );
   });
+
+  it('preserves the query string when redirecting to the cookie locale', () => {
+    const response = localePreferenceRedirect(
+      makeRequest('/reset-password?token=abc123', 'en'),
+    );
+
+    expect(response?.status).toBe(307);
+    expect(response?.headers.get('location')).toBe(
+      'http://localhost:3000/en/reset-password?token=abc123',
+    );
+  });
 });

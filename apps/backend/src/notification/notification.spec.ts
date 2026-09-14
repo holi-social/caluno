@@ -35,8 +35,11 @@ import { membershipRequestedTemplate } from './email/templates/membership-reques
 import { organizationCreatedTemplate } from './email/templates/organization-created.template';
 import { passwordResetTemplate } from './email/templates/password-reset.template';
 import { shiftDetailsChangedTemplate } from './email/templates/shift-details-changed.template';
+import { shiftInstanceCallOutTemplate } from './email/templates/shift-instance-call-out.template';
 import { shiftInstanceCancelledTemplate } from './email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from './email/templates/shift-instance-invited.template';
+import { shiftInstanceJoinApprovedTemplate } from './email/templates/shift-instance-join-approved.template';
+import { shiftInstanceJoinRequestedTemplate } from './email/templates/shift-instance-join-requested.template';
 import { shiftInstanceJoinedTemplate } from './email/templates/shift-instance-joined.template';
 import { shiftInstanceLeftTemplate } from './email/templates/shift-instance-left.template';
 import { shiftInstanceRemovedTemplate } from './email/templates/shift-instance-removed.template';
@@ -47,6 +50,7 @@ import { shiftInvitedTemplate } from './email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from './email/templates/shift-series-left.template';
 import { shiftSeriesRemovedTemplate } from './email/templates/shift-series-removed.template';
 import { shiftSeriesVolunteerLeftTemplate } from './email/templates/shift-series-volunteer-left.template';
+import { volunteerDigestTemplate } from './email/templates/volunteer-digest.template';
 import { DocumentListener } from './listeners/document.listener';
 import { EventListener } from './listeners/event.listener';
 import { MembershipListener } from './listeners/membership.listener';
@@ -533,6 +537,94 @@ describe('NotificationModule', () => {
     });
   });
 
+  it('sends shift instance join requested emails to each shift manager', async () => {
+    const startsAt = new Date('2026-07-01T10:00:00.000Z');
+    const users = new Map([
+      [
+        'volunteer-1',
+        {
+          id: 'volunteer-1',
+          name: 'Sam Volunteer',
+          email: 'volunteer@example.com',
+        },
+      ],
+      [
+        'manager-1',
+        {
+          id: 'manager-1',
+          name: 'Alice Manager',
+          email: 'alice@example.com',
+        },
+      ],
+      [
+        'manager-2',
+        {
+          id: 'manager-2',
+          name: 'Bob Manager',
+          email: 'bob@example.com',
+        },
+      ],
+    ]);
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve(users.get(id)),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      instanceId: 'instance-1',
+      requesterUserId: 'volunteer-1',
+      recipientUserIds: ['manager-1', 'manager-2'],
+      startsAt,
+    };
+    const expectedAlice = await shiftInstanceJoinRequestedTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        shiftId: payload.shiftId,
+        shiftTitle: payload.shiftTitle,
+        instanceId: payload.instanceId,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Alice',
+        startsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+    const expectedBob = await shiftInstanceJoinRequestedTemplate(
+      {
+        organizationUnitId: payload.organizationUnitId,
+        organizationUnitName: payload.organizationUnitName,
+        shiftId: payload.shiftId,
+        shiftTitle: payload.shiftTitle,
+        instanceId: payload.instanceId,
+        volunteerName: 'Sam Volunteer',
+        recipientFirstName: 'Bob',
+        startsAt,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceJoinRequested(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-1');
+    expect(userService.findById).toHaveBeenCalledWith('manager-2');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'alice@example.com',
+      subject: expectedAlice.subject,
+      html: expectedAlice.html,
+    });
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'bob@example.com',
+      subject: expectedBob.subject,
+      html: expectedBob.html,
+    });
+  });
+
   it('sends shift instance invited emails to invited volunteers', async () => {
     const startsAt = new Date('2026-07-10T09:00:00.000Z');
     const endsAt = new Date('2026-07-10T12:00:00.000Z');
@@ -641,6 +733,55 @@ describe('NotificationModule', () => {
       to: 'robin@example.com',
       subject: expectedRobin.subject,
       html: expectedRobin.html,
+    });
+  });
+
+  it('sends shift instance join approved email to the approved volunteer', async () => {
+    const startsAt = new Date('2026-07-10T09:00:00.000Z');
+    const endsAt = new Date('2026-07-10T12:00:00.000Z');
+
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Other User',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'other@example.com',
+      }),
+    );
+
+    const payload = {
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      userId: 'volunteer-1',
+      startsAt,
+      endsAt,
+      instanceId: 'instance-1',
+    };
+    const expected = await shiftInstanceJoinApprovedTemplate(
+      {
+        organizationUnitName: payload.organizationUnitName,
+        shiftId: payload.shiftId,
+        shiftTitle: payload.shiftTitle,
+        shiftLocation: payload.shiftLocation,
+        recipientFirstName: 'Sam',
+        startsAt,
+        endsAt,
+        instanceId: payload.instanceId,
+      },
+      createFixtureTranslator('en'),
+    );
+
+    notificationService.notifyShiftInstanceJoinApproved(payload);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(userService.findById).toHaveBeenCalledWith('volunteer-1');
+    expect(emailService.send).toHaveBeenCalledWith({
+      to: 'sam@example.com',
+      subject: expected.subject,
+      html: expected.html,
     });
   });
 
@@ -1560,6 +1701,137 @@ describe('NotificationModule', () => {
     expect(expected.html).toContain('5 of 6');
     expect(expected.html).toContain(
       `/admin/${payload.organizationUnitId}/shifts`,
+    );
+  });
+
+  it('carries the unsubscribe link in the weekly plan email', async () => {
+    const { html } = await volunteerDigestTemplate(
+      {
+        recipientFirstName: 'Sam',
+        myShifts: [],
+        pendingInvites: [],
+        needsVolunteersGroups: [],
+      },
+      createFixtureTranslator('en'),
+    );
+
+    expect(html).toContain('http://localhost:3000/unsubscribe');
+    expect(html).toContain('Manage your email preferences');
+  });
+
+  it('carries the unsubscribe link in the urgent call-out email', async () => {
+    const { html } = await shiftInstanceCallOutTemplate(
+      {
+        organizationUnitName: 'Acme Volunteers',
+        shiftId: 'shift-1',
+        shiftTitle: 'Morning Kitchen',
+        recipientFirstName: 'Sam',
+        startsAt: new Date('2026-07-10T09:00:00.000Z'),
+        endsAt: new Date('2026-07-10T12:00:00.000Z'),
+        instanceId: 'instance-1',
+      },
+      createFixtureTranslator('en'),
+    );
+
+    expect(html).toContain('http://localhost:3000/unsubscribe');
+    expect(html).toContain('Manage your email preferences');
+  });
+
+  it('does not email a volunteer who switched Platform off', async () => {
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+        emailPlatformEnabled: false,
+      }),
+    );
+
+    notificationService.notifyShiftInstanceCancelled({
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftId: 'shift-1',
+      shiftTitle: 'Morning Kitchen',
+      shiftLocation: 'Main hall',
+      recipientUserIds: ['volunteer-1'],
+      startsAt: new Date('2026-07-10T09:00:00.000Z'),
+      endsAt: new Date('2026-07-10T12:00:00.000Z'),
+      instanceId: 'instance-1',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('does not email a volunteer who switched Platform off about a membership change', async () => {
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+        emailPlatformEnabled: false,
+      }),
+    );
+
+    notificationService.notifyMembershipApproved({
+      userId: 'volunteer-1',
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('keeps emailing a volunteer whose Platform setting is on', async () => {
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: 'Sam Volunteer',
+        email: 'sam@example.com',
+        emailPlatformEnabled: true,
+      }),
+    );
+
+    notificationService.notifyMembershipApproved({
+      userId: 'volunteer-1',
+      organizationUnitId: 'unit-root-1',
+      organizationName: 'Acme Volunteers',
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps emailing a manager about a volunteer who switched Platform off', async () => {
+    // Manager-facing mail is about a volunteer but addressed to a manager, so
+    // the volunteer's own setting must not silence it.
+    userService.findById.mockImplementation((id: string) =>
+      Promise.resolve({
+        id,
+        name: id === 'volunteer-1' ? 'Sam Volunteer' : 'Alice Manager',
+        email: id === 'volunteer-1' ? 'sam@example.com' : 'alice@example.com',
+        emailPlatformEnabled: false,
+      }),
+    );
+
+    notificationService.notifyShiftInstanceJoined({
+      organizationUnitId: 'unit-root-1',
+      organizationUnitName: 'Acme Volunteers',
+      shiftTitle: 'Morning Kitchen',
+      joinedUserId: 'volunteer-1',
+      recipientUserIds: ['manager-1'],
+      startsAt: new Date('2026-07-10T09:00:00.000Z'),
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(emailService.send).toHaveBeenCalledTimes(1);
+    expect(emailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'alice@example.com' }),
     );
   });
 });

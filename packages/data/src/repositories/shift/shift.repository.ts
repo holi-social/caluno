@@ -18,6 +18,7 @@ import {
   type GetShiftQuery,
   type GetWeeklyShiftsQuery,
   type JoinShiftInstanceMutation,
+  type RemindShiftInstanceInviteMutation,
   type SendShiftInstanceCallOutMutation,
   type SetShiftInstanceRequiredFormsMutation,
   type SetShiftRequiredFormsMutation,
@@ -240,6 +241,17 @@ export class ShiftRepository extends BaseRepository {
   ): Promise<SendShiftInstanceCallOutMutation['sendShiftInstanceCallOut']> {
     const data = await this.sdk.SendShiftInstanceCallOut({ instanceId });
     return data.sendShiftInstanceCallOut;
+  }
+
+  async remindVolunteerAboutInvite(
+    instanceId: string,
+    userId: string,
+  ): Promise<RemindShiftInstanceInviteMutation['remindShiftInstanceInvite']> {
+    const data = await this.sdk.RemindShiftInstanceInvite({
+      instanceId,
+      userId,
+    });
+    return data.remindShiftInstanceInvite;
   }
 
   async updateShiftInstanceInviteStatus(

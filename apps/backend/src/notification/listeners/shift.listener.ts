@@ -5,6 +5,8 @@ import { createEmailTemplateContext } from '../email/email-template-context';
 import { shiftDetailsChangedTemplate } from '../email/templates/shift-details-changed.template';
 import { shiftInstanceCancelledTemplate } from '../email/templates/shift-instance-cancelled.template';
 import { shiftInstanceInvitedTemplate } from '../email/templates/shift-instance-invited.template';
+import { shiftInstanceJoinApprovedTemplate } from '../email/templates/shift-instance-join-approved.template';
+import { shiftInstanceJoinRequestedTemplate } from '../email/templates/shift-instance-join-requested.template';
 import { shiftInstanceJoinedTemplate } from '../email/templates/shift-instance-joined.template';
 import { shiftInstanceLeftTemplate } from '../email/templates/shift-instance-left.template';
 import { shiftInstanceRemovedTemplate } from '../email/templates/shift-instance-removed.template';
@@ -59,6 +61,79 @@ export class ShiftListener {
             volunteerName: volunteer.name,
             recipientFirstName: recipient.firstName,
             startsAt: payload.startsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED)
+  async handleShiftInstanceJoinRequested(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED],
+  ): Promise<void> {
+    const requester =
+      await this.notificationService.resolveUserNotificationData(
+        payload.requesterUserId,
+        {
+          event: NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED,
+        },
+      );
+    if (!requester) {
+      return;
+    }
+
+    await this.notificationService.sendNotification(
+      payload.recipientUserIds,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceJoinRequestedTemplate(
+          {
+            organizationUnitId: payload.organizationUnitId,
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            instanceId: payload.instanceId,
+            volunteerName: requester.name,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED)
+  async handleShiftInstanceJoinApproved(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceJoinApprovedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
+            instanceId: payload.instanceId,
           },
           templateContext,
         );

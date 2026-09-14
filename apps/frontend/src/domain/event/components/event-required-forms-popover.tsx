@@ -91,7 +91,6 @@ export function EventRequiredFormsPopover({
       isPending={setEventRequiredForms.isPending}
       disabled={!canConfigure}
       disabledFormIds={disabledFormIds}
-      createNewHref={`/admin/${orgUId}/requirement-forms/new`}
       t={t}
       subtitle={t('subtitle', {
         brand: commonT('brand'),

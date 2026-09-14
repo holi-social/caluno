@@ -8,6 +8,10 @@
     "previewText": "Dein {brandName}-Bestätigungscode ist {otp}.",
     "subject": "Dein {brandName}-Bestätigungscode"
   },
+  "emailUnsubscribe": {
+    "label": "E-Mail-Einstellungen verwalten",
+    "prompt": "Du möchtest diese E-Mails nicht mehr erhalten? {link}."
+  },
   "eventCancelled": {
     "detailEvent": "Event",
     "detailLocation": "Ort",
@@ -196,6 +200,20 @@
     "subject": "Du bist zu {shiftTitle} eingeladen",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceJoinApproved": {
+    "buttonLabel": "Einsatz ansehen",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil deine Anfrage zur Teilnahme an einem Einsatz auf {brandName} genehmigt wurde.",
+    "greeting": "Hallo {firstName}, gute Nachrichten – du wurdest für diesen Einsatz angenommen.",
+    "heading": "Du bist für den Einsatz bestätigt",
+    "note": "Öffne den Einsatz, um alle Details und deinen Plan zu sehen.",
+    "previewText": "Deine Anfrage zur Teilnahme an {shiftTitle} bei {organizationName} wurde genehmigt.",
+    "subject": "Du bist für {shiftTitle} bestätigt",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceJoined": {
     "buttonLabel": "Einsatzplan ansehen",
     "detailOrganization": "Organisation",
@@ -208,6 +226,34 @@
     "note": "Der Einsatzplan ist bereits aktualisiert.",
     "previewText": "{volunteerName} hat sich für {shiftTitle} bei {organizationName} am {startsAt} angemeldet.",
     "subject": "{shiftTitle}: {volunteerName} hat sich angemeldet"
+  },
+  "shiftInstanceJoinRequested": {
+    "buttonLabel": "Anfrage prüfen",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailStarts": "Beginn",
+    "detailVolunteer": "Freiwillige:r",
+    "footerNote": "Du erhältst diese E-Mail, weil du Einsätze auf {brandName} verwalten kannst.",
+    "greeting": "Hallo {firstName}, ein:e Freiwillige:r möchte einem Einsatz beitreten, den du verwaltest, und wartet auf deine Genehmigung.",
+    "heading": "Eine Einsatz-Anfrage wartet auf deine Genehmigung",
+    "note": "Genehmige oder lehne die Anfrage ab, um die Besetzung zu aktualisieren.",
+    "previewText": "{volunteerName} möchte {shiftTitle} bei {organizationName} am {startsAt} beitreten.",
+    "subject": "{shiftTitle}: {volunteerName} möchte beitreten"
+  },
+  "shiftInstanceReminded": {
+    "buttonLabel": "Einsatz ansehen",
+    "detailInstructions": "Beschreibung",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du zu einem Einsatz auf {brandName} eingeladen wurdest.",
+    "greeting": "Hallo {firstName}, eine kurze Erinnerung an deine Einsatz-Einladung.",
+    "heading": "Erinnerung: Du bist zu einem Einsatz eingeladen",
+    "note": "Öffne den Einsatz, um die Details zu sehen und an- oder abzusagen.",
+    "previewText": "Kurze Erinnerung: Du bist zu {shiftTitle} bei {organizationName} eingeladen.",
+    "subject": "Erinnerung: Du bist zu {shiftTitle} eingeladen",
+    "whenRange": "{date} · {timeRange}"
   },
   "shiftInstanceSeriesCancelled": {
     "bodyMessage": "Alle Einsätze der Serie \"{shiftTitle}\" ab {fromDate} wurden abgesagt.",

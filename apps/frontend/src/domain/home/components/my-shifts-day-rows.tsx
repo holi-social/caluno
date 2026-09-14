@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { clusterOverlappingShifts } from '../lib/date-helpers';
+import { isJoinedShiftRosterStatus } from '../lib/shift-roster-status';
 import type { DayGroup } from './day-timeline-view';
 import { ShiftCardMy } from './shift-card-my';
 import { ShiftCardMyShift } from './shift-card-my-shift';
@@ -25,9 +26,21 @@ interface ShiftRowCardProps {
 
 function ShiftRowCard({ shift, nextShiftId, now }: ShiftRowCardProps) {
   const isPending = shift.isIntendingToJoin;
-  if (shift.id === nextShiftId) {
+  if (
+    shift.id === nextShiftId &&
+    isJoinedShiftRosterStatus(shift.myInviteStatus)
+  ) {
     return (
       <ShiftCardMy
+        shiftInstance={shift}
+        showTime={false}
+        isPending={isPending}
+      />
+    );
+  }
+  if (shift.id === nextShiftId) {
+    return (
+      <ShiftCardMyShift
         shiftInstance={shift}
         showTime={false}
         isPending={isPending}

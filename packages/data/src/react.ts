@@ -22,6 +22,7 @@ export * from './generated/graphql';
 // Auth (better-auth client factory and enhanced methods)
 export * from './react/auth/auth-client';
 // Data fetching hooks
+export * from './react/hooks/use-accounting-setup-status';
 export * from './react/hooks/use-admin-user-profile';
 export * from './react/hooks/use-available-events';
 export * from './react/hooks/use-available-events-infinite';
@@ -66,6 +67,7 @@ export * from './react/hooks/use-shift-instances';
 export * from './react/hooks/use-shift-volunteers';
 export * from './react/hooks/use-time-entry-shift-instances';
 export * from './react/hooks/use-update-event-invite-status';
+export * from './react/hooks/use-update-my-account-settings';
 export * from './react/hooks/use-update-my-image';
 export * from './react/hooks/use-update-shift-instance-invite-status';
 export * from './react/hooks/use-update-user-locale';
@@ -89,6 +91,7 @@ export type {
   InvoiceSummary,
   MyDocumentSummaryData,
   MyDocumentsGroupData,
+  RawAccountingSetupStatus,
   RawBundleDownloadStatus,
   RawEffectiveRate,
   RawManualBaseline,
