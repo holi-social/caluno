@@ -1004,10 +1004,9 @@ type Query {
   timeEntry(id: String!): TimeEntry!
   user(id: String!): User
   userByCheckInId(checkInId: String!): User
-  volunteerYearlyUsage(asOfDate: DateTime, excludeInvoiceId: ID, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): YearlyUsage!
   volunteersNeedingTimesheets(periodEnd: DateTime, periodStart: DateTime): [VolunteerNeedsTimesheet!]!
   weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
-  yearlyUsage(reimbursementTypeId: ID!, year: Int!): YearlyUsage!
+  yearlyUsage(asOfDate: DateTime, excludeInvoiceId: ID, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): YearlyUsage!
 }
 
 type ReimbursementRate {
