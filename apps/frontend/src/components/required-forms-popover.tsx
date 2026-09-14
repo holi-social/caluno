@@ -23,7 +23,7 @@ interface RequiredFormsPopoverProps {
   isPending: boolean;
   disabled?: boolean;
   disabledFormIds?: Set<string>;
-  createNewHref: string;
+  createNewHref?: string;
   t: (key: string, values?: Record<string, string | number | Date>) => string;
   subtitle?: string;
   onOpenChange?: (open: boolean) => void;
@@ -126,12 +126,14 @@ export function RequiredFormsPopover({
               t={t}
             />
 
-            <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link href={createNewHref}>
-                <FilePlus className="mr-2 h-4 w-4" />
-                {t('createNew')}
-              </Link>
-            </Button>
+            {createNewHref ? (
+              <Button variant="outline" size="sm" className="flex-1" asChild>
+                <Link href={createNewHref}>
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  {t('createNew')}
+                </Link>
+              </Button>
+            ) : null}
           </div>
 
           <RequiredFormsDedupHint t={t} />
