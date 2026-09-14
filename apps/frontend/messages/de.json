@@ -776,8 +776,19 @@
   },
   "Profile": {
     "accountSettings": "Kontoeinstellungen",
+    "accountSettingsSaved": "Kontoeinstellungen aktualisiert",
+    "accountSettingsSaveFailed": "Kontoeinstellungen konnten nicht aktualisiert werden",
     "edit": "Bearbeiten",
     "emailLocked": "Mit deiner Anmeldung verknüpft",
+    "emailOff": "Aus",
+    "emailOn": "Ein",
+    "emailPlatform": "Plattform",
+    "emailPlatformDescription": "Einladungen, Beitritte, Absagen, Schichtänderungen und Mitgliedschaft.",
+    "emailSettings": "E-Mails",
+    "emailUrgentCalls": "Dringende Aufrufe",
+    "emailUrgentCallsDescription": "Dringende Aufrufe für unterbesetzte Schichten.",
+    "emailWeeklyUpdate": "Wöchentliche Übersicht",
+    "emailWeeklyUpdateDescription": "Die wöchentliche Planungs-E-Mail am Sonntag.",
     "identity": {
       "subtitles": {
         "firstName": "Wie auf deinem Ausweis",
@@ -1349,6 +1360,9 @@
       "accepted": "Angenommen",
       "actionApprove": "Genehmigen",
       "actionInvite": "Einladen",
+      "actionRemind": "Erinnern",
+      "actionReminded": "Erinnert",
+      "actionUninvite": "Zurückweisen",
       "approveSuccess": "Freiwillige:r genehmigt",
       "approveWaitlistedSuccess": "Einsatz ist voll — Freiwillige:r wurde auf die Warteliste gesetzt",
       "cancelled": "Zurückgezogen",
@@ -1361,6 +1375,9 @@
       "inviteSuccess": "Freiwillige:r erneut eingeladen",
       "pendingApproval": "Genehmigung ausstehend",
       "rejected": "Zurückgewiesen",
+      "remindedAtTooltip": "Erinnert am {when}",
+      "remindError": "Erinnerung konnte nicht gesendet werden",
+      "remindSuccess": "Erinnerung an Freiwillige:n gesendet",
       "signedUp": "Selbst angemeldet",
       "statusChangeError": "Status der/des Freiwilligen konnte nicht geändert werden",
       "summaryAccepted": "angenommen",
@@ -1848,10 +1865,25 @@
         "sectionSubtitle": "Alle Vorlagen für Dokumente, die zur Auszahlung der jeweiligen Pauschale benötigt werden."
       }
     },
+    "setupAlert": {
+      "orgProfileTitle": "Vervollständige zuerst dein Organisationsprofil",
+      "orgProfileBody": "Dokumente geben die Daten deiner Organisation wieder. Diese Angaben müssen vorhanden sein, bevor Vorlagen gespeichert werden können: {fields}.",
+      "orgProfileCta": "Zum Organisationsprofil",
+      "templatesTitle": "Richte zuerst deine Dokumentvorlagen ein",
+      "templatesBody": "Dokumente können erst erstellt werden, wenn für einen Pauschalentyp sowohl die Vereinbarung als auch der Stundennachweis als Vorlage vorliegen. Es fehlen noch: {pauschalen}.",
+      "templatesCta": "Zu den Vorlagen"
+    },
+    "orgProfileFields": {
+      "org_name": "Name",
+      "org_address": "Adresse",
+      "org_city": "Stadt",
+      "org_legal_rep": "Gesetzliche Vertretung"
+    },
     "reimbursements": {
       "title": "Abrechnungen",
       "subtitle": "Dokumente erstellen, gegenzeichnen, herunterladen.",
       "createDocument": "Dokument erstellen",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "periodLabel": "Zeitraum",
       "yearLabel": "Jahr",
       "periodPicker": {
@@ -2155,6 +2187,7 @@
         "invoice": "Stundennachweis"
       },
       "loadError": "Vorlagen konnten nicht geladen werden. Bitte Seite neu laden.",
+      "setupStatusError": "Der Einrichtungsstatus konnte nicht geprüft werden. Bitte Seite neu laden.",
       "builder": {
         "breadcrumb": {
           "accounting": "Buchhaltung",

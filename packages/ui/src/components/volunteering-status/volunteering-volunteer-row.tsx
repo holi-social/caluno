@@ -24,6 +24,7 @@ import type {
 } from './types';
 import {
   VolunteeringActionButtons,
+  type VolunteeringActionButtonsProps,
   type VolunteeringActionLabels,
 } from './volunteering-action-buttons';
 import { VolunteeringStatusLabel } from './volunteering-status-label';
@@ -67,6 +68,8 @@ export type VolunteeringVolunteerRowProps = {
   statusMenuAriaLabel?: string;
   /** When set, overrides default actions from status presentation. */
   actions?: VolunteeringActionLabel[];
+  disabledActions?: VolunteeringActionLabel[];
+  actionTooltips?: VolunteeringActionButtonsProps['actionTooltips'];
   /** Far-right icon-only actions (e.g. View profile, Check in). */
   iconActions?: VolunteeringActionLabel[];
   /** Localized button labels keyed by action id. */
@@ -87,6 +90,8 @@ export function VolunteeringVolunteerRow({
   statusOptions,
   statusMenuAriaLabel,
   actions: actionsOverride,
+  disabledActions,
+  actionTooltips,
   iconActions = [],
   actionLabels,
   onAction,
@@ -155,6 +160,8 @@ export function VolunteeringVolunteerRow({
         <VolunteeringActionButtons
           actions={actions}
           labels={actionLabels}
+          disabledActions={disabledActions}
+          actionTooltips={actionTooltips}
           onAction={onAction}
         />
       </div>

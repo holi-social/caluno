@@ -8,6 +8,10 @@
     "previewText": "Dein {brandName}-Bestätigungscode ist {otp}.",
     "subject": "Dein {brandName}-Bestätigungscode"
   },
+  "emailUnsubscribe": {
+    "label": "E-Mail-Einstellungen verwalten",
+    "prompt": "Du möchtest diese E-Mails nicht mehr erhalten? {link}."
+  },
   "eventCancelled": {
     "detailEvent": "Event",
     "detailLocation": "Ort",
@@ -208,6 +212,21 @@
     "note": "Der Einsatzplan ist bereits aktualisiert.",
     "previewText": "{volunteerName} hat sich für {shiftTitle} bei {organizationName} am {startsAt} angemeldet.",
     "subject": "{shiftTitle}: {volunteerName} hat sich angemeldet"
+  },
+  "shiftInstanceReminded": {
+    "buttonLabel": "Einsatz ansehen",
+    "detailInstructions": "Beschreibung",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du zu einem Einsatz auf {brandName} eingeladen wurdest.",
+    "greeting": "Hallo {firstName}, eine kurze Erinnerung an deine Einsatz-Einladung.",
+    "heading": "Erinnerung: Du bist zu einem Einsatz eingeladen",
+    "note": "Öffne den Einsatz, um die Details zu sehen und an- oder abzusagen.",
+    "previewText": "Kurze Erinnerung: Du bist zu {shiftTitle} bei {organizationName} eingeladen.",
+    "subject": "Erinnerung: Du bist zu {shiftTitle} eingeladen",
+    "whenRange": "{date} · {timeRange}"
   },
   "shiftInstanceSeriesCancelled": {
     "bodyMessage": "Alle Einsätze der Serie \"{shiftTitle}\" ab {fromDate} wurden abgesagt.",

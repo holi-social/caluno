@@ -10,6 +10,7 @@ import {
   note,
   paragraph,
   renderEmail,
+  unsubscribeFooterNote,
 } from './shared';
 
 export interface ShiftSeriesLeftTemplateData {
@@ -95,6 +96,11 @@ export async function shiftSeriesLeftTemplate(
       fromDate: formatDate(data.fromDate),
     }),
     body,
-    footerNote: t('shiftSeriesLeft.footerNote', { brandName }),
+    footerNote: [
+      t('shiftSeriesLeft.footerNote', { brandName }),
+      unsubscribeFooterNote(t),
+    ]
+      .filter(Boolean)
+      .join('<br />'),
   });
 }

@@ -28,6 +28,7 @@ import { ShiftInstanceCallOutResult } from '../models/shift-instance-call-out.mo
 import { ShiftInstanceInvite } from '../models/shift-instance-invite.model';
 import { ShiftInvite } from '../models/shift-invite.model';
 import { ShiftCallOutService } from '../services/shift-call-out.service';
+import { ShiftInviteReminderService } from '../services/shift-invite-reminder.service';
 import { ShiftService } from '../shift.service';
 
 @Resolver(() => Shift)
@@ -35,6 +36,7 @@ export class ShiftMutationResolver {
   constructor(
     private readonly shiftService: ShiftService,
     private readonly shiftCallOutService: ShiftCallOutService,
+    private readonly shiftInviteReminderService: ShiftInviteReminderService,
     private readonly shiftMapper: ShiftMapper,
     private readonly shiftInstanceMapper: ShiftInstanceMapper,
     private readonly shiftInviteMapper: ShiftInviteMapper,
@@ -310,6 +312,22 @@ export class ShiftMutationResolver {
   ): Promise<ShiftInstanceCallOutResult> {
     return this.shiftCallOutService.sendCallOut(
       instanceId,
+      context.organizationUnitId,
+      session.user.id,
+    );
+  }
+
+  @Permissions(PERMISSIONS.SHIFT_EDIT)
+  @Mutation(() => Date)
+  async remindShiftInstanceInvite(
+    @Args('instanceId', { type: () => String }) instanceId: string,
+    @Args('userId', { type: () => String }) userId: string,
+    @Context() context: AuthenticatedGraphQLContext,
+    @Session() session: UserSession,
+  ): Promise<Date> {
+    return this.shiftInviteReminderService.sendInviteReminder(
+      instanceId,
+      userId,
       context.organizationUnitId,
       session.user.id,
     );
