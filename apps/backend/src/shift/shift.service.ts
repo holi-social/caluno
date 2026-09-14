@@ -2831,6 +2831,39 @@ export class ShiftService {
     }
   }
 
+  private async loadAndEmitShiftInstanceJoinApprovedNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoinApproved({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance join approved notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async loadAndEmitShiftInstanceCancelledNotification(
     shift: ShiftEntity,
     instance: ShiftInstanceEntity,
@@ -3384,6 +3417,50 @@ export class ShiftService {
     }
   }
 
+  private async notifyShiftInstanceJoinRequested(
+    userId: string,
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      const shiftManagers = await this.authService.findUsersWithPermission(
+        shift.organizationUnitId,
+        PERMISSIONS.SHIFT_EDIT,
+      );
+      const recipientUserIds = shiftManagers
+        .filter((manager) => manager.id !== userId)
+        .map((manager) => manager.id);
+
+      if (recipientUserIds.length === 0) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceJoinRequested({
+        organizationUnitId: shift.organizationUnitId,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        instanceId: instance.id,
+        requesterUserId: userId,
+        recipientUserIds,
+        startsAt: instance.actualStartsAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance join requested notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   async joinShiftInstance(
     userId: string,
     instanceId: string,
@@ -3499,6 +3576,8 @@ export class ShiftService {
             shiftInstanceId: instanceId,
             source,
           });
+        } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
+          void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
         }
       }
 
@@ -3535,6 +3614,8 @@ export class ShiftService {
         shiftInstanceId: instanceId,
         source,
       });
+    } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
+      void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
     }
   }
 
@@ -4269,6 +4350,28 @@ export class ShiftService {
 
     if (targetStatus === ShiftInviteStatus.JOINED) {
       void this.notifyShiftInstanceJoined(userId, instance.master, instance);
+
+      if (
+        invite.status === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL &&
+        isAdminActor
+      ) {
+        void this.loadAndEmitShiftInstanceJoinApprovedNotification(
+          instance.master,
+          instance,
+          userId,
+        );
+      }
+    }
+
+    if (
+      invite.status === ShiftInviteStatus.ADMIN_REJECTED &&
+      targetStatus === ShiftInviteStatus.ADMIN_INVITED
+    ) {
+      void this.loadAndEmitShiftInstanceInvitedNotification(
+        instance.master,
+        instance,
+        [userId],
+      );
     }
 
     if (status === ShiftInviteStatus.ADMIN_REJECTED && actorUserId !== userId) {

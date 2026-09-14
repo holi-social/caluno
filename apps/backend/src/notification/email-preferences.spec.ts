@@ -27,6 +27,7 @@ describe('notification email groups', () => {
     for (const event of [
       NotificationEvent.SHIFT_INVITED,
       NotificationEvent.SHIFT_INSTANCE_INVITED,
+      NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED,
       NotificationEvent.EVENT_INVITED,
       NotificationEvent.ORGANIZATION_UNIT_INVITED,
     ]) {
@@ -55,6 +56,7 @@ describe('notification email groups', () => {
   it('leaves manager-facing email ungated', () => {
     for (const event of [
       NotificationEvent.SHIFT_INSTANCE_JOINED,
+      NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED,
       NotificationEvent.EVENT_JOINED,
       NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT,
       NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT,

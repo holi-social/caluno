@@ -49,6 +49,7 @@ export const NOTIFICATION_EMAIL_GROUP: Record<
   // Platform — things that happened to the volunteer, addressed to them.
   [NotificationEvent.SHIFT_INVITED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_INVITED]: 'platform',
+  [NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED]: 'platform',
   [NotificationEvent.SHIFT_INSTANCE_INVITE_REMINDER]: 'platform',
   [NotificationEvent.EVENT_INVITED]: 'platform',
   [NotificationEvent.ORGANIZATION_UNIT_INVITED]: 'platform',
@@ -68,6 +69,7 @@ export const NOTIFICATION_EMAIL_GROUP: Record<
 
   // Manager-facing — a manager is told what a volunteer did. Never gated.
   [NotificationEvent.SHIFT_INSTANCE_JOINED]: null,
+  [NotificationEvent.SHIFT_INSTANCE_JOIN_REQUESTED]: null,
   [NotificationEvent.EVENT_JOINED]: null,
   [NotificationEvent.SHIFT_INSTANCE_VOLUNTEER_LEFT]: null,
   [NotificationEvent.SHIFT_SERIES_VOLUNTEER_LEFT]: null,
