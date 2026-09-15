@@ -1622,9 +1622,6 @@ type VolunteerInviteAllowance {
   volunteerId: ID!
 }
 
-"""
-A timesheet still to be created: a volunteer's unclaimed hours for one type in one Berlin month.
-"""
 type VolunteerNeedsTimesheet {
   eligibleHours: Float!
   estimatedAmountCents: Int!
