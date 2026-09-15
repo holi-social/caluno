@@ -188,7 +188,7 @@ export function orderedListItem(
 
 export interface ShiftCardOptions {
   href: string;
-  /** The shift's cover image — falls back to a flat tinted block when null, matching the frontend card's no-image state. */
+  /** The shift's cover image — omitted entirely when null, leaving just the text card. */
   imageUrl: string | null;
   title: string;
   subtitle: string;
@@ -198,30 +198,43 @@ export interface ShiftCardOptions {
   last?: boolean;
 }
 
-const SHIFT_CARD_IMAGE_HEIGHT = '120px';
+const SHIFT_CARD_IMAGE_HEIGHT_PX = 120;
+const CONTENT_PADDING_TOP_PX = 12;
+const CONTENT_PADDING_BOTTOM_PX = 14;
+const CONTENT_PADDING_SIDE_PX = 14;
+
+const SHIFT_CARD_SHADOW =
+  '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)';
+
+const SHIFT_CARD_BADGE_TEXT = '#9c2f34';
 
 /**
  * A clickable shift card mirroring the frontend's volunteering-side shift
- * cards: a cover image banner (or a flat tinted fallback when the shift has
- * none) above a title, a subtitle line (org/date), and an optional reason
- * pill — the whole card is one link.
+ * cards: a cover image banner above a title, a subtitle line (org/date), and
+ * an optional reason pill — the whole card is one link. Shifts without a
+ * cover image skip the banner entirely and instead absorb its height into
+ * the text content's padding, so every card in a stack lines up at the same
+ * height rather than showing an empty image placeholder.
  */
 export function shiftCard(options: ShiftCardOptions): string {
   const { href, imageUrl, title, subtitle, meta, last = false } = options;
   const marginBottom = last ? '0' : '12px';
 
   const imageBlock = imageUrl
-    ? `<img src="${escapeHtml(imageUrl)}" width="600" alt="" style="display:block;width:100%;height:${SHIFT_CARD_IMAGE_HEIGHT};object-fit:cover;background-color:${colors.border};" />`
-    : `<div style="width:100%;height:${SHIFT_CARD_IMAGE_HEIGHT};background-color:${colors.bg};"></div>`;
+    ? `<img src="${escapeHtml(imageUrl)}" width="600" alt="" style="display:block;width:100%;height:${SHIFT_CARD_IMAGE_HEIGHT_PX}px;object-fit:cover;background-color:${colors.border};" />`
+    : '';
+
+  const extraPadding = imageUrl ? 0 : SHIFT_CARD_IMAGE_HEIGHT_PX / 2;
+  const contentPadding = `${CONTENT_PADDING_TOP_PX + extraPadding}px ${CONTENT_PADDING_SIDE_PX}px ${CONTENT_PADDING_BOTTOM_PX + extraPadding}px`;
 
   const metaBadge = meta
-    ? `<span style="display:inline-block;background-color:${colors.primarySoft};color:${colors.primaryText};border-radius:9999px;padding:3px 10px;font-size:12px;font-weight:600;margin-top:8px;">${meta}</span>`
+    ? `<span style="display:inline-block;background-color:${colors.primarySoft};color:${SHIFT_CARD_BADGE_TEXT};border-radius:9999px;padding:3px 10px;font-size:12px;font-weight:600;margin-top:8px;">${meta}</span>`
     : '';
 
   return text(
-    `<a href="${href}" style="text-decoration:none;display:block;border:1px solid ${colors.border};border-radius:12px;overflow:hidden;margin:0 0 ${marginBottom};">
+    `<a href="${href}" style="text-decoration:none;display:block;border:1px solid ${colors.border};border-radius:12px;overflow:hidden;margin:0 0 ${marginBottom};box-shadow:${SHIFT_CARD_SHADOW};">
       ${imageBlock}
-      <div style="padding:12px 14px 14px;">
+      <div style="padding:${contentPadding};">
         <div style="font-weight:600;color:${colors.ink};font-size:15px;line-height:1.4;">${title}</div>
         <div style="color:${colors.muted};font-size:13px;line-height:1.4;margin-top:2px;">${subtitle}</div>
         ${metaBadge}
