@@ -13,6 +13,7 @@ import { shiftInstanceRemovedTemplate } from '../email/templates/shift-instance-
 import { shiftInstanceSeriesCancelledTemplate } from '../email/templates/shift-instance-series-cancelled.template';
 import { shiftInstanceVolunteerLeftTemplate } from '../email/templates/shift-instance-volunteer-left.template';
 import { shiftInstanceWaitlistJoinedTemplate } from '../email/templates/shift-instance-waitlist-joined.template';
+import { shiftInstanceWaitlistPromotedTemplate } from '../email/templates/shift-instance-waitlist-promoted.template';
 import { shiftInstanceWaitlistSpotOpenedTemplate } from '../email/templates/shift-instance-waitlist-spot-opened.template';
 import { shiftInvitedTemplate } from '../email/templates/shift-invited.template';
 import { shiftSeriesLeftTemplate } from '../email/templates/shift-series-left.template';
@@ -157,6 +158,37 @@ export class ShiftListener {
           recipient.locale,
         );
         return shiftInstanceWaitlistJoinedTemplate(
+          {
+            organizationUnitName: payload.organizationUnitName,
+            shiftId: payload.shiftId,
+            shiftTitle: payload.shiftTitle,
+            shiftLocation: payload.shiftLocation,
+            recipientFirstName: recipient.firstName,
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt,
+            instanceId: payload.instanceId,
+          },
+          templateContext,
+        );
+      },
+    );
+  }
+
+  @OnEvent(NotificationEvent.SHIFT_INSTANCE_WAITLIST_PROMOTED)
+  async handleShiftInstanceWaitlistPromoted(
+    payload: NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_WAITLIST_PROMOTED],
+  ): Promise<void> {
+    await this.notificationService.sendNotification(
+      payload.userId,
+      {
+        event: NotificationEvent.SHIFT_INSTANCE_WAITLIST_PROMOTED,
+      },
+      async (recipient) => {
+        const templateContext = createEmailTemplateContext(
+          this.appI18n,
+          recipient.locale,
+        );
+        return shiftInstanceWaitlistPromotedTemplate(
           {
             organizationUnitName: payload.organizationUnitName,
             shiftId: payload.shiftId,

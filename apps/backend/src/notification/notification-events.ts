@@ -18,6 +18,8 @@ export const NotificationEvent = {
   SHIFT_INSTANCE_WAITLIST_SPOT_OPENED:
     'notification.shift-instance.waitlist-spot-opened',
   SHIFT_INSTANCE_WAITLIST_JOINED: 'notification.shift-instance.waitlist-joined',
+  SHIFT_INSTANCE_WAITLIST_PROMOTED:
+    'notification.shift-instance.waitlist-promoted',
   SHIFT_SERIES_LEFT: 'notification.shift.series-left',
   SHIFT_INSTANCE_VOLUNTEER_LEFT: 'notification.shift-instance.volunteer-left',
   SHIFT_SERIES_VOLUNTEER_LEFT: 'notification.shift.series-volunteer-left',

@@ -341,6 +341,20 @@
     "subject": "You're on the waitlist for {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceWaitlistPromoted": {
+    "buttonLabel": "View shift",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you were on the waitlist for this shift on {brandName}.",
+    "greeting": "Hi {firstName}, good news — a spot opened up and you're now confirmed for this shift.",
+    "heading": "You're off the waitlist",
+    "note": "Open the shift to see the details and your schedule.",
+    "previewText": "A spot opened up and you're now confirmed for {shiftTitle} at {organizationName}.",
+    "subject": "You're confirmed for {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceWaitlistSpotOpened": {
     "buttonLabel": "Claim your spot",
     "detailLocation": "Location",

@@ -30,6 +30,7 @@ describe('notification email groups', () => {
       NotificationEvent.SHIFT_INSTANCE_JOIN_APPROVED,
       NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED,
       NotificationEvent.SHIFT_INSTANCE_WAITLIST_JOINED,
+      NotificationEvent.SHIFT_INSTANCE_WAITLIST_PROMOTED,
       NotificationEvent.EVENT_INVITED,
       NotificationEvent.ORGANIZATION_UNIT_INVITED,
     ]) {

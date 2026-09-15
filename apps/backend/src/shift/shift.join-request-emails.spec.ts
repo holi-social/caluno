@@ -12,6 +12,7 @@ function createShiftService(options: {
   notifyShiftInstanceJoined?: jest.Mock;
   notifyShiftInstanceJoinApproved?: jest.Mock;
   notifyShiftInstanceWaitlistJoined?: jest.Mock;
+  notifyShiftInstanceWaitlistPromoted?: jest.Mock;
   notifyShiftInstanceInvited?: jest.Mock;
 }) {
   const db = {
@@ -83,6 +84,8 @@ function createShiftService(options: {
         options.notifyShiftInstanceJoinApproved ?? jest.fn(),
       notifyShiftInstanceWaitlistJoined:
         options.notifyShiftInstanceWaitlistJoined ?? jest.fn(),
+      notifyShiftInstanceWaitlistPromoted:
+        options.notifyShiftInstanceWaitlistPromoted ?? jest.fn(),
       notifyShiftInstanceInvited:
         options.notifyShiftInstanceInvited ?? jest.fn(),
     } as never,
@@ -175,6 +178,29 @@ describe('ShiftService.updateShiftInstanceInviteStatus emails', () => {
     );
   });
 
+  it('emails the volunteer a confirmation when claiming a freed seat off the waitlist', async () => {
+    const notifyShiftInstanceWaitlistPromoted = jest.fn();
+    const service = createShiftService({
+      inviteStatus: ShiftInviteStatus.WAITLIST_JOINED,
+      notifyShiftInstanceWaitlistPromoted,
+    });
+
+    await service.updateShiftInstanceInviteStatus(
+      'volunteer-1',
+      'instance-1',
+      ShiftInviteStatus.JOINED,
+      'volunteer-1',
+    );
+
+    expect(notifyShiftInstanceWaitlistPromoted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'volunteer-1',
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+
   it('does not send a join-approved email when a volunteer self-accepts an invite', async () => {
     const notifyShiftInstanceJoinApproved = jest.fn();
     const service = createShiftService({
@@ -220,6 +246,7 @@ function createJoinRequestService(options: {
   notifyShiftInstanceJoinRequested?: jest.Mock;
   notifyShiftInstanceJoined?: jest.Mock;
   notifyShiftInstanceWaitlistJoined?: jest.Mock;
+  notifyShiftInstanceWaitlistPromoted?: jest.Mock;
   findUsersWithPermission?: jest.Mock;
   joinRequiresApproval?: boolean;
   maxVolunteers?: number | null;
@@ -310,6 +337,8 @@ function createJoinRequestService(options: {
       notifyShiftInstanceJoined: options.notifyShiftInstanceJoined ?? jest.fn(),
       notifyShiftInstanceWaitlistJoined:
         options.notifyShiftInstanceWaitlistJoined ?? jest.fn(),
+      notifyShiftInstanceWaitlistPromoted:
+        options.notifyShiftInstanceWaitlistPromoted ?? jest.fn(),
     } as never,
     {} as never,
     {} as never,
@@ -394,6 +423,27 @@ describe('ShiftService.joinShiftInstance emails', () => {
 
     expect(notifyShiftInstanceJoined).not.toHaveBeenCalled();
     expect(notifyShiftInstanceWaitlistJoined).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'volunteer-1',
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+
+  it('emails a waitlisted volunteer a confirmation when they claim a freed seat', async () => {
+    const notifyShiftInstanceWaitlistPromoted = jest.fn();
+    const service = createJoinRequestService({
+      existingInvite: { status: ShiftInviteStatus.WAITLIST_JOINED },
+      notifyShiftInstanceWaitlistPromoted,
+    });
+
+    await service.joinShiftInstance('volunteer-1', 'instance-1', {
+      formsAlreadySatisfied: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(notifyShiftInstanceWaitlistPromoted).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'volunteer-1',
         shiftId: 'shift-1',
