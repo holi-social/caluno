@@ -10,7 +10,7 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 - `bun run lint` - Lint with Biome
 - `bun run format` - Format with Biome
 - `bun run check-types` - Check for type errors
-- `bun run test` - Jest unit tests (`src/**/*.spec.ts`; pattern: `src/notification/notification.spec.ts`)
+- `bun run test` - Unit tests (`bun test src`; `src/**/*.spec.ts`). Target a single file with `bun test src/notification/notification.spec.ts` — appending a path to `bun run test` runs the whole suite (bun ORs it with the script's `src` filter).
 - `bun test apps/backend/test/` - Bun integration tests; creates an isolated `${POSTGRES_DB}_test_<pid>_<id>` database per run, migrates/seeds, then drops it when the process exits
 - `bun run --cwd apps/backend test:integration` - Same as `bun test test/` from `apps/backend`
 - `bun run db:generate` - Generate database migrations based on schema changes
@@ -21,7 +21,7 @@ The backend api for securely managing volunteers and shifts in multi-tiered orga
 ### Test runners
 The backend has two test suites:
 
-1. **Unit tests** — Jest, files under `src/**/*.spec.ts`.
+1. **Unit tests** — `bun:test` (Jest-compatible API), files under `src/**/*.spec.ts`.
    - Use for pure business logic, event handlers, and utilities that do not touch the database.
    - Mock external collaborators (services, repositories, event emitters).
    - Run with `bun run test`.
