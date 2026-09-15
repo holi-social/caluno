@@ -1,0 +1,3 @@
+# Drizzle migration snapshots duplicate the entire schema once per migration
+# and dominate code searches.
+apps/backend/src/database/migrations/*/snapshot.json
