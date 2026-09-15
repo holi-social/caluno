@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'bun:test';
+import { beforeAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ConfigModule } from '@nestjs/config';
 import { Test, type TestingModule } from '@nestjs/testing';
 import {
@@ -16,12 +16,14 @@ import { DocumentTemplateService } from '../src/accounting/services/document-tem
 import { AuthService } from '../src/auth/auth.service';
 import { type Database, DatabaseModule } from '../src/database/database.module';
 import { DATABASE_CONNECTION } from '../src/database/database-connection';
+import { NotFoundGraphQLError } from '../src/graphql/errors';
 import type { MembershipService } from '../src/membership/membership.service';
 import type { NotificationService } from '../src/notification';
 import type { OrganizationMapper } from '../src/organization/mappers/organization.mapper';
 import { OrganizationService } from '../src/organization/organization.service';
 import type { OrganizationUnitService } from '../src/organization/organization-unit.service';
 import { OrganizationUnitDataService } from '../src/organization/organization-unit-data.service';
+import type { ObservabilityService } from '../src/shared/observability/observability.service';
 import type { PostHogService } from '../src/shared/observability/posthog.service';
 import type { FileService } from '../src/storage/services/file.service';
 import {
@@ -44,6 +46,16 @@ describe('TimeEntryClosedListener', () => {
   let moduleRef: TestingModule;
   let db: Database;
   let listener: TimeEntryClosedListener;
+  let organizationUnitDataService: OrganizationUnitDataService;
+  let contractService: ContractService;
+  const captureException = mock(() => {});
+  const observability = {
+    captureException,
+  } as unknown as ObservabilityService;
+
+  beforeEach(() => {
+    captureException.mockClear();
+  });
 
   beforeAll(async () => {
     await ensureTestDatabase();
@@ -53,7 +65,7 @@ describe('TimeEntryClosedListener', () => {
     db = moduleRef.get<Database>(DATABASE_CONNECTION);
 
     const postHog = { capture: () => {} } as unknown as PostHogService;
-    const organizationUnitDataService = new OrganizationUnitDataService(db);
+    organizationUnitDataService = new OrganizationUnitDataService(db);
     const authService = new AuthService(
       db,
       organizationUnitDataService,
@@ -71,7 +83,7 @@ describe('TimeEntryClosedListener', () => {
     const documentTemplateService = new DocumentTemplateService(db, postHog, {
       missingOrgProfileSources: () => Promise.resolve([]),
     } as unknown as DocumentProfileRequirementService);
-    const contractService = new ContractService(
+    contractService = new ContractService(
       db,
       documentTemplateService,
       new DocumentSigningService(db, authService, organizationService),
@@ -91,6 +103,7 @@ describe('TimeEntryClosedListener', () => {
       db,
       contractService,
       organizationUnitDataService,
+      observability,
     );
 
     registerTestResourceCleanup(async () => {
@@ -162,5 +175,40 @@ describe('TimeEntryClosedListener', () => {
     });
     expect(contracts).toHaveLength(1);
     expect(contracts[0]?.contractStatus).toBe(ContractStatus.DRAFT);
+  });
+
+  it('reports an unexpected failure to Sentry', async () => {
+    const { closedEntry } = await setup();
+    const entry = await closedEntry('2026-07-01');
+    const failingListener = new TimeEntryClosedListener(
+      db,
+      {
+        ensureDraftContract: () => Promise.reject(new Error('boom')),
+      } as unknown as ContractService,
+      organizationUnitDataService,
+      observability,
+    );
+
+    await failingListener.handleTimeEntryClosed({ timeEntryId: entry.id });
+
+    expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not report an expected domain error to Sentry', async () => {
+    const { closedEntry } = await setup();
+    const entry = await closedEntry('2026-07-01');
+    const failingListener = new TimeEntryClosedListener(
+      db,
+      {
+        ensureDraftContract: () =>
+          Promise.reject(new NotFoundGraphQLError('no contract template')),
+      } as unknown as ContractService,
+      organizationUnitDataService,
+      observability,
+    );
+
+    await failingListener.handleTimeEntryClosed({ timeEntryId: entry.id });
+
+    expect(captureException).not.toHaveBeenCalled();
   });
 });
