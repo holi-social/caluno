@@ -7,8 +7,11 @@ import { ShiftService } from './shift.service';
 
 function createShiftService(options: {
   inviteStatus: ShiftInviteStatus;
+  maxVolunteers?: number | null;
+  currentParticipantCount?: number;
   notifyShiftInstanceJoined?: jest.Mock;
   notifyShiftInstanceJoinApproved?: jest.Mock;
+  notifyShiftInstanceWaitlistJoined?: jest.Mock;
   notifyShiftInstanceInvited?: jest.Mock;
 }) {
   const db = {
@@ -25,7 +28,7 @@ function createShiftService(options: {
             title: 'Evening shift',
             location: 'Hall',
             instructions: null,
-            maxVolunteers: null,
+            maxVolunteers: options.maxVolunteers ?? null,
           },
         }),
       },
@@ -45,6 +48,15 @@ function createShiftService(options: {
         }),
       },
     },
+    select: jest.fn().mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        where: jest
+          .fn()
+          .mockResolvedValue([
+            { current: options.currentParticipantCount ?? 0 },
+          ]),
+      }),
+    }),
     update: jest.fn().mockReturnValue({
       set: jest.fn().mockReturnValue({
         where: jest.fn().mockReturnValue({
@@ -69,6 +81,8 @@ function createShiftService(options: {
       notifyShiftInstanceJoined: options.notifyShiftInstanceJoined ?? jest.fn(),
       notifyShiftInstanceJoinApproved:
         options.notifyShiftInstanceJoinApproved ?? jest.fn(),
+      notifyShiftInstanceWaitlistJoined:
+        options.notifyShiftInstanceWaitlistJoined ?? jest.fn(),
       notifyShiftInstanceInvited:
         options.notifyShiftInstanceInvited ?? jest.fn(),
     } as never,
@@ -97,6 +111,62 @@ describe('ShiftService.updateShiftInstanceInviteStatus emails', () => {
     );
 
     expect(notifyShiftInstanceJoinApproved).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'volunteer-1',
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+
+  it('emails the volunteer a waitlist notice when an admin approval loses the race for the last seat', async () => {
+    const notifyShiftInstanceJoinApproved = jest.fn();
+    const notifyShiftInstanceWaitlistJoined = jest.fn();
+    const service = createShiftService({
+      inviteStatus: ShiftInviteStatus.AWAITING_ADMIN_APPROVAL,
+      maxVolunteers: 1,
+      currentParticipantCount: 1,
+      notifyShiftInstanceJoinApproved,
+      notifyShiftInstanceWaitlistJoined,
+    });
+
+    await service.updateShiftInstanceInviteStatus(
+      'volunteer-1',
+      'instance-1',
+      ShiftInviteStatus.JOINED,
+      'admin-1',
+    );
+
+    expect(notifyShiftInstanceJoinApproved).not.toHaveBeenCalled();
+    expect(notifyShiftInstanceWaitlistJoined).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'volunteer-1',
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+
+  it('emails the volunteer a waitlist notice when accepting an admin invite to an already-full shift', async () => {
+    const notifyShiftInstanceJoined = jest.fn();
+    const notifyShiftInstanceWaitlistJoined = jest.fn();
+    const service = createShiftService({
+      inviteStatus: ShiftInviteStatus.ADMIN_INVITED,
+      maxVolunteers: 1,
+      currentParticipantCount: 1,
+      notifyShiftInstanceJoined,
+      notifyShiftInstanceWaitlistJoined,
+    });
+
+    await service.updateShiftInstanceInviteStatus(
+      'volunteer-1',
+      'instance-1',
+      ShiftInviteStatus.JOINED,
+      'volunteer-1',
+    );
+
+    expect(notifyShiftInstanceJoined).not.toHaveBeenCalled();
+    expect(notifyShiftInstanceWaitlistJoined).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'volunteer-1',
         shiftId: 'shift-1',
@@ -148,7 +218,13 @@ describe('ShiftService.updateShiftInstanceInviteStatus emails', () => {
 
 function createJoinRequestService(options: {
   notifyShiftInstanceJoinRequested?: jest.Mock;
+  notifyShiftInstanceJoined?: jest.Mock;
+  notifyShiftInstanceWaitlistJoined?: jest.Mock;
   findUsersWithPermission?: jest.Mock;
+  joinRequiresApproval?: boolean;
+  maxVolunteers?: number | null;
+  currentParticipantCount?: number;
+  existingInvite?: { status: ShiftInviteStatus };
 }) {
   const db = {
     query: {
@@ -163,15 +239,25 @@ function createJoinRequestService(options: {
             id: 'shift-1',
             organizationUnitId: 'ou-1',
             title: 'Evening shift',
+            location: 'Hall',
             isDeleted: false,
             visibility: ShiftVisibility.ALL_MEMBERS,
-            joinRequiresApproval: true,
-            maxVolunteers: null,
+            joinRequiresApproval: options.joinRequiresApproval ?? true,
+            maxVolunteers: options.maxVolunteers ?? null,
           },
         }),
       },
       shiftInstanceInvites: {
-        findFirst: jest.fn().mockResolvedValue(undefined),
+        findFirst: jest.fn().mockResolvedValue(
+          options.existingInvite
+            ? {
+                id: 'invite-1',
+                instanceId: 'instance-1',
+                userId: 'volunteer-1',
+                status: options.existingInvite.status,
+              }
+            : undefined,
+        ),
       },
       organizationUnits: {
         findFirst: jest.fn().mockResolvedValue({
@@ -181,6 +267,20 @@ function createJoinRequestService(options: {
         }),
       },
     },
+    select: jest.fn().mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        where: jest
+          .fn()
+          .mockResolvedValue([
+            { current: options.currentParticipantCount ?? 0 },
+          ]),
+      }),
+    }),
+    update: jest.fn().mockReturnValue({
+      set: jest.fn().mockReturnValue({
+        where: jest.fn().mockResolvedValue(undefined),
+      }),
+    }),
     insert: jest.fn().mockReturnValue({
       values: jest.fn().mockReturnValue({
         onConflictDoNothing: jest.fn().mockReturnValue({
@@ -207,6 +307,9 @@ function createJoinRequestService(options: {
     {
       notifyShiftInstanceJoinRequested:
         options.notifyShiftInstanceJoinRequested ?? jest.fn(),
+      notifyShiftInstanceJoined: options.notifyShiftInstanceJoined ?? jest.fn(),
+      notifyShiftInstanceWaitlistJoined:
+        options.notifyShiftInstanceWaitlistJoined ?? jest.fn(),
     } as never,
     {} as never,
     {} as never,
@@ -242,6 +345,58 @@ describe('ShiftService.joinShiftInstance emails', () => {
         recipientUserIds: ['manager-1'],
         shiftId: 'shift-1',
         shiftTitle: 'Evening shift',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+
+  it('emails a new volunteer a waitlist notice when the shift is already full', async () => {
+    const notifyShiftInstanceJoined = jest.fn();
+    const notifyShiftInstanceWaitlistJoined = jest.fn();
+    const service = createJoinRequestService({
+      joinRequiresApproval: false,
+      maxVolunteers: 1,
+      currentParticipantCount: 1,
+      notifyShiftInstanceJoined,
+      notifyShiftInstanceWaitlistJoined,
+    });
+
+    await service.joinShiftInstance('volunteer-1', 'instance-1', {
+      formsAlreadySatisfied: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(notifyShiftInstanceJoined).not.toHaveBeenCalled();
+    expect(notifyShiftInstanceWaitlistJoined).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'volunteer-1',
+        shiftId: 'shift-1',
+        instanceId: 'instance-1',
+      }),
+    );
+  });
+
+  it('emails a re-joining volunteer a waitlist notice when the shift is already full', async () => {
+    const notifyShiftInstanceJoined = jest.fn();
+    const notifyShiftInstanceWaitlistJoined = jest.fn();
+    const service = createJoinRequestService({
+      existingInvite: { status: ShiftInviteStatus.VOLUNTEER_CANCELLED },
+      maxVolunteers: 1,
+      currentParticipantCount: 1,
+      notifyShiftInstanceJoined,
+      notifyShiftInstanceWaitlistJoined,
+    });
+
+    await service.joinShiftInstance('volunteer-1', 'instance-1', {
+      formsAlreadySatisfied: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(notifyShiftInstanceJoined).not.toHaveBeenCalled();
+    expect(notifyShiftInstanceWaitlistJoined).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'volunteer-1',
+        shiftId: 'shift-1',
         instanceId: 'instance-1',
       }),
     );

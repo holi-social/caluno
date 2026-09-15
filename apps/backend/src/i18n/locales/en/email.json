@@ -327,6 +327,20 @@
     "subject": "{volunteerName} left {shiftTitle}",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceWaitlistJoined": {
+    "buttonLabel": "View shift",
+    "detailLocation": "Location",
+    "detailOrganization": "Organization",
+    "detailShift": "Shift",
+    "detailWhen": "When",
+    "footerNote": "You're receiving this because you're on the waitlist for this shift on {brandName}.",
+    "greeting": "Hi {firstName}, this shift already reached its maximum number of volunteers, so you've been added to the waitlist.",
+    "heading": "You're on the waitlist",
+    "note": "We'll email you if a spot opens up.",
+    "previewText": "{shiftTitle} at {organizationName} is full, so you've been added to the waitlist.",
+    "subject": "You're on the waitlist for {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceWaitlistSpotOpened": {
     "buttonLabel": "Claim your spot",
     "detailLocation": "Location",

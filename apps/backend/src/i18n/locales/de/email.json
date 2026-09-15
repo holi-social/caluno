@@ -327,6 +327,20 @@
     "subject": "{volunteerName} hat {shiftTitle} verlassen",
     "whenRange": "{date} · {timeRange}"
   },
+  "shiftInstanceWaitlistJoined": {
+    "buttonLabel": "Einsatz ansehen",
+    "detailLocation": "Ort",
+    "detailOrganization": "Organisation",
+    "detailShift": "Einsatz",
+    "detailWhen": "Wann",
+    "footerNote": "Du erhältst diese E-Mail, weil du auf {brandName} auf der Warteliste für diesen Einsatz stehst.",
+    "greeting": "Hallo {firstName}, dieser Einsatz hat bereits die maximale Anzahl an Freiwilligen erreicht, daher wurdest du auf die Warteliste gesetzt.",
+    "heading": "Du stehst auf der Warteliste",
+    "note": "Wir informieren dich per E-Mail, sobald ein Platz frei wird.",
+    "previewText": "{shiftTitle} bei {organizationName} ist voll, daher wurdest du auf die Warteliste gesetzt.",
+    "subject": "Du stehst auf der Warteliste für {shiftTitle}",
+    "whenRange": "{date} · {timeRange}"
+  },
   "shiftInstanceWaitlistSpotOpened": {
     "buttonLabel": "Platz sichern",
     "detailLocation": "Ort",
