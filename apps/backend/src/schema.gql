@@ -334,6 +334,7 @@ type DocumentTemplate {
 
 type EffectiveRate {
   hourlyRateCents: Int!
+  inheritedRateCents: Int!
   isOverride: Boolean!
   organizationUnitId: ID
   reimbursementType: ReimbursementType!
