@@ -1195,6 +1195,8 @@
       "cityPlaceholder": "Berlin",
       "zipCodeLabel": "Postal code",
       "zipCodePlaceholder": "10115",
+      "legalRepLabel": "Legal representative",
+      "legalRepPlaceholder": "e.g. Jane Doe",
       "contactEmailLabel": "Contact email",
       "contactEmailPlaceholder": "contact@organization.org",
       "phoneLabel": "Phone",
@@ -1878,6 +1880,7 @@
       "org_name": "Name",
       "org_address": "Address",
       "org_city": "City",
+      "org_zip": "Postal code",
       "org_legal_rep": "Legal representative"
     },
     "reimbursements": {
@@ -2307,6 +2310,7 @@
           "org_name": "Organisation name",
           "org_address": "Organisation address",
           "org_city": "City (Organisation)",
+          "org_zip": "Postal code (Organisation)",
           "org_legal_rep": "Legal representative",
           "pauschalen_type": "Pauschale type",
           "hourly_rate": "Hourly rate",
