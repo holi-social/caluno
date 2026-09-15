@@ -3,6 +3,7 @@ import type { Locale } from '../graphql/locale';
 import { UserLocaleService } from '../i18n/user-locale.service';
 import { UserService } from '../user/user.service';
 import { maskEmail } from '../utils';
+import type { EmailAttachment } from './email/email.service';
 import { EmailService } from './email/email.service';
 import { filterRecipientsForEvent } from './email-preferences';
 import type { NotificationEventPayloadMap } from './notification-event-map';
@@ -15,6 +16,7 @@ export interface UserNotificationData {
   email: string;
   firstName: string;
   locale: Locale;
+  checkInId: string;
   emailWeeklyUpdateEnabled?: boolean | null;
   emailUrgentCallsEnabled?: boolean | null;
   emailPlatformEnabled?: boolean | null;
@@ -143,6 +145,7 @@ export class NotificationService {
       email: user.email,
       firstName: user.name.split(' ')[0],
       locale,
+      checkInId: user.checkInId,
       emailWeeklyUpdateEnabled: user.emailWeeklyUpdateEnabled,
       emailUrgentCallsEnabled: user.emailUrgentCallsEnabled,
       emailPlatformEnabled: user.emailPlatformEnabled,
@@ -172,9 +175,11 @@ export class NotificationService {
   async sendNotification(
     userIds: string | string[],
     options: ResolveUserNotificationDataOptions,
-    callback: (
-      recipient: UserNotificationData,
-    ) => Promise<{ subject: string; html: string }>,
+    callback: (recipient: UserNotificationData) => Promise<{
+      subject: string;
+      html: string;
+      attachments?: EmailAttachment[];
+    }>,
   ): Promise<void> {
     const resolved = await this.resolveUsersNotificationData(
       Array.isArray(userIds) ? userIds : [userIds],
@@ -196,11 +201,12 @@ export class NotificationService {
     await Promise.all(
       recipients.map(async (recipient) => {
         try {
-          const { subject, html } = await callback(recipient);
+          const { subject, html, attachments } = await callback(recipient);
           await this.emailService.send({
             to: recipient.email,
             subject,
             html,
+            attachments,
           });
         } catch (error) {
           this.logger.error(

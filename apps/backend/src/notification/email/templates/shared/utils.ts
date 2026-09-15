@@ -37,6 +37,11 @@ export function volunteersAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/volunteers`;
 }
 
+/** Deep link a supervisor's scanner resolves to check a volunteer in — the same URL the frontend's own QR view encodes. */
+export function checkInAdminUrl(checkInId: string): string {
+  return `${resolveAppUrl()}/admin/check-in/${encodeURIComponent(checkInId)}`;
+}
+
 /** Deep link to the Abrechnungen (reimbursements) admin queue, where a declined document shows up needing correction and reissue. */
 export function reimbursementsAdminUrl(organizationUnitId: string): string {
   return `${resolveAppUrl()}/admin/${encodeURIComponent(organizationUnitId)}/accounting/reimbursements`;

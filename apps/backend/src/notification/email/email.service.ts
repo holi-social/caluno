@@ -3,11 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { maskEmail } from '../../utils';
 
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+}
+
 export interface EmailSendOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: EmailAttachment[];
 }
 
 interface ScalewayConfig {
@@ -80,6 +87,7 @@ export class EmailService {
           subject: options.subject,
           html: options.html,
           text: options.text ?? this.htmlToText(options.html),
+          attachments: options.attachments,
         });
         this.logger.debug(`Email sent to ${maskedTo} via SMTP`);
         return;
@@ -93,8 +101,11 @@ export class EmailService {
     }
 
     if (!this.scaleway) {
+      const attachmentNote = options.attachments?.length
+        ? ` attachments=${options.attachments.map((a) => a.filename).join(',')}`
+        : '';
       this.logger.log(
-        `[Email:LOG] to=${maskedTo} subject="${options.subject}"${
+        `[Email:LOG] to=${maskedTo} subject="${options.subject}"${attachmentNote}${
           this.logEmailContent
             ? `\n${options.html}`
             : ' (content omitted; set EMAIL_LOG_CONTENT=1 outside production to log)'
@@ -124,6 +135,11 @@ export class EmailService {
           html: options.html,
           text: options.text ?? this.htmlToText(options.html),
           project_id: this.scaleway.projectId,
+          attachments: options.attachments?.map((attachment) => ({
+            name: attachment.filename,
+            type: attachment.contentType,
+            content: attachment.content.toString('base64'),
+          })),
         }),
       });
     } catch (error) {

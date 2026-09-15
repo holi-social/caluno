@@ -40,6 +40,7 @@ export async function membershipApprovedTemplate(
         organizationName: data.organizationName,
       }),
     })}
+    ${paragraph(t('membershipApproved.checkInQrNote'))}
     ${divider()}
     ${heading(t('membershipApproved.nextStepsHeading'), { size: '18px', padding: '0 0 16px', letterSpacing: '-0.01em' })}
     ${orderedListItem(1, `${strong(t('membershipApproved.step1Title'))}: ${t('membershipApproved.step1Detail')}`)}
