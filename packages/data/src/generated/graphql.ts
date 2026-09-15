@@ -199,7 +199,6 @@ export type CreateFormBlockInput = {
 };
 
 export type CreateInvoiceInput = {
-  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
   organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd: Scalars['DateTime']['input'];
@@ -1653,7 +1652,6 @@ export type QueryEffectiveRatesArgs = {
 
 
 export type QueryEligibleTimeEntriesForInvoiceArgs = {
-  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
   periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
   periodStart?: InputMaybe<Scalars['DateTime']['input']>;
   reimbursementTypeId: Scalars['ID']['input'];
@@ -2734,9 +2732,13 @@ export type VolunteerInviteAllowance = {
   volunteerId: Scalars['ID']['output'];
 };
 
+/** A timesheet still to be created: a volunteer's unclaimed hours for one type in one Berlin month. */
 export type VolunteerNeedsTimesheet = {
   __typename?: 'VolunteerNeedsTimesheet';
   eligibleHours: Scalars['Float']['output'];
+  estimatedAmountCents: Scalars['Int']['output'];
+  periodEnd: Scalars['DateTime']['output'];
+  periodStart: Scalars['DateTime']['output'];
   reimbursementType: ReimbursementType;
   volunteer: User;
 };
@@ -2891,7 +2893,7 @@ export type GetVolunteersNeedingTimesheetsQueryVariables = Exact<{
 }>;
 
 
-export type GetVolunteersNeedingTimesheetsQuery = { __typename?: 'Query', volunteersNeedingTimesheets: Array<{ __typename?: 'VolunteerNeedsTimesheet', eligibleHours: number, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> };
+export type GetVolunteersNeedingTimesheetsQuery = { __typename?: 'Query', volunteersNeedingTimesheets: Array<{ __typename?: 'VolunteerNeedsTimesheet', periodStart: string, periodEnd: string, eligibleHours: number, estimatedAmountCents: number, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> };
 
 export type GetPaidShiftSignupVolunteersQueryVariables = Exact<{
   year: Scalars['Int']['input'];
@@ -2905,7 +2907,6 @@ export type GetEligibleTimeEntriesForInvoiceQueryVariables = Exact<{
   reimbursementTypeId: Scalars['ID']['input'];
   periodStart?: InputMaybe<Scalars['DateTime']['input']>;
   periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-  draftInvoiceId?: InputMaybe<Scalars['ID']['input']>;
 }>;
 
 
@@ -4778,7 +4779,10 @@ export const GetVolunteersNeedingTimesheetsDocument = gql`
       id
       key
     }
+    periodStart
+    periodEnd
     eligibleHours
+    estimatedAmountCents
   }
 }
     `;
@@ -4797,13 +4801,12 @@ export const GetPaidShiftSignupVolunteersDocument = gql`
 }
     `;
 export const GetEligibleTimeEntriesForInvoiceDocument = gql`
-    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime, $draftInvoiceId: ID) {
+    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime) {
   eligibleTimeEntriesForInvoice(
     volunteerId: $volunteerId
     reimbursementTypeId: $reimbursementTypeId
     periodStart: $periodStart
     periodEnd: $periodEnd
-    draftInvoiceId: $draftInvoiceId
   ) {
     id
     startedAt
