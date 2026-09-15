@@ -1860,8 +1860,9 @@
         },
         "rateUnit": "/hr",
         "provenance": {
-          "inherited": "Org default",
-          "inheritedFrom": "Inherited from {org}"
+          "inheritedFrom": "Inherited from {source}",
+          "replaces": "Replaces {source}: {rate}",
+          "replacesDefault": "Replaces default: {rate}"
         }
       },
       "templates": {

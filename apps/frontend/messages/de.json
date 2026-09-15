@@ -1860,8 +1860,9 @@
         },
         "rateUnit": "/Std.",
         "provenance": {
-          "inherited": "Standard",
-          "inheritedFrom": "Übernommen von {org}"
+          "inheritedFrom": "Übernommen von {source}",
+          "replaces": "Ersetzt {source}: {rate}",
+          "replacesDefault": "Ersetzt Standard: {rate}"
         }
       },
       "templates": {
