@@ -1,7 +1,7 @@
 # React component library for use in frontend
 
 - React components based on shadcn
-- Tailwind incl. theming provided by next-themes
+- Tailwind incl. theming provided by @teispace/next-themes
 - Storybook for viewing and documenting the components
 
 ## Commands

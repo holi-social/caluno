@@ -1,6 +1,6 @@
 'use client';
 
-import { useTheme } from '@teispace/next-themes';
+import { useTheme } from '@teispace/next-themes/hooks/use-theme';
 import {
   CircleCheckIcon,
   InfoIcon,

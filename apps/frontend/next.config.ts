@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
@@ -64,18 +63,6 @@ const nextConfig: NextConfig = {
     // Next.js 16 blocks localhost/private IPs in the image optimizer (SSRF protection).
     dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
     remotePatterns: storageImagePatterns(),
-  },
-  webpack: (config) => {
-    // Keep singleton packages shared with @repo/ui on one resolved copy.
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      sonner: path.join(process.cwd(), 'node_modules/sonner'),
-      '@teispace/next-themes': path.join(
-        process.cwd(),
-        'node_modules/@teispace/next-themes',
-      ),
-    };
-    return config;
   },
   turbopack: {
     // Bun's isolated linker installs one copy per workspace (apps/frontend +
