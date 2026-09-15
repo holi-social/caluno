@@ -10,6 +10,8 @@ export type PostHogSurface =
 
 export const POSTHOG_JOIN_SOURCE = {
   SELF_JOIN: 'self_join',
+  SELF: 'self',
+  ADMIN: 'admin',
   MEMBERSHIP_APPROVE: 'membership_approve',
   INVITE_ACCEPT: 'invite_accept',
   CHECK_IN: 'check_in',
@@ -209,10 +211,6 @@ export const POSTHOG_EVENT_REGISTRY = {
   shift_instance_invite: defineEvent(
     'shift_instance_invite',
     'Volunteers are invited to a shift instance.',
-  ),
-  shift_instance_join: defineEvent(
-    'shift_instance_join',
-    'A volunteer becomes a participant of a shift instance.',
   ),
   shift_instance_check_in: defineEvent(
     'shift_instance_check_in',

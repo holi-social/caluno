@@ -80,7 +80,7 @@ Add a noun here before inventing an event.
 | `otp` | Auth OTP |
 | `password_reset` | Auth password-reset email |
 
-Compound objects stay compound: `shift_instance_join` ≠ `shift_join`.
+Compound objects stay compound: `shift_instance_invite` ≠ `shift_invite`.
 
 ### Action list (closed)
 

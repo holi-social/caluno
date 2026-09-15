@@ -344,7 +344,7 @@ describe('ShiftService.updateShiftInstanceInviteStatus PostHog', () => {
     });
   });
 
-  it('tags the waitlist claim join with waitlist_promote source', async () => {
+  it('captures backoffice surface when an admin updates the invite', async () => {
     const capture = jest.fn();
     const service = createWaitlistService({
       capture,
@@ -357,22 +357,24 @@ describe('ShiftService.updateShiftInstanceInviteStatus PostHog', () => {
       'volunteer-1',
       'instance-1',
       ShiftInviteStatus.JOINED,
+      'admin-1',
     );
 
     expect(capture).toHaveBeenCalledWith({
-      event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
       userId: 'volunteer-1',
       properties: {
-        surface: POSTHOG_SURFACE.VOLUNTEERING,
+        surface: POSTHOG_SURFACE.BACKOFFICE,
         organization_id: 'org-1',
         organization_unit_id: 'ou-1',
-        source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+        source: POSTHOG_JOIN_SOURCE.ADMIN,
         shift_id: 'shift-1',
         shift_instance_id: 'instance-1',
+        invite_status: ShiftInviteStatus.JOINED,
+        previous_status: ShiftInviteStatus.WAITLIST_JOINED,
       },
     });
   });
-
   it('records previous_status when a volunteer leaves the waitlist', async () => {
     const capture = jest.fn();
     const service = createWaitlistService({
