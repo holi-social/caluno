@@ -19,6 +19,7 @@ import enEmail from '../i18n/locales/en/email.json';
 import { UserLocaleService } from '../i18n/user-locale.service';
 import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
+import { CheckInQrService } from './email/check-in-qr.service';
 import { EmailService } from './email/email.service';
 import { documentAwaitingSignatureTemplate } from './email/templates/document-awaiting-signature.template';
 import { documentDeclinedByOrgTemplate } from './email/templates/document-declined-by-org.template';
@@ -119,6 +120,7 @@ describe('NotificationModule', () => {
       providers: [
         TypedNotificationEmitter,
         NotificationService,
+        CheckInQrService,
         OrganizationListener,
         MembershipListener,
         ShiftListener,
@@ -313,11 +315,12 @@ describe('NotificationModule', () => {
     });
   });
 
-  it('sends membership approved email when event is emitted', async () => {
+  it('sends membership approved email with the check-in QR attached when event is emitted', async () => {
     const user = {
       id: 'user-member-1',
       name: 'Sam Smith',
       email: 'volunteer@example.com',
+      checkInId: 'checkin1abc23',
     };
     userService.findById.mockResolvedValue(user);
 
@@ -337,13 +340,24 @@ describe('NotificationModule', () => {
 
     notificationService.notifyMembershipApproved(payload);
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(userService.findById).toHaveBeenCalledWith(user.id);
+    expect(expected.html).toContain('cid:check-in-qr-code');
     expect(emailService.send).toHaveBeenCalledWith({
       to: user.email,
       subject: expected.subject,
       html: expected.html,
+      attachments: [
+        expect.objectContaining({
+          filename: 'Check-in-QR-Sam-Smith.pdf',
+          contentType: 'application/pdf',
+        }),
+        expect.objectContaining({
+          contentType: 'image/png',
+          cid: 'check-in-qr-code',
+        }),
+      ],
     });
   });
 
@@ -1801,7 +1815,7 @@ describe('NotificationModule', () => {
       organizationName: 'Acme Volunteers',
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(emailService.send).toHaveBeenCalledTimes(1);
   });

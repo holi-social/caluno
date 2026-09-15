@@ -1,4 +1,5 @@
 import type { EmailTemplateContext } from '../../../i18n/email-translate';
+import { CHECK_IN_QR_IMAGE_CID } from '../check-in-qr.service';
 import {
   button,
   card,
@@ -40,6 +41,13 @@ export async function membershipApprovedTemplate(
         organizationName: data.organizationName,
       }),
     })}
+    ${paragraph(t('membershipApproved.checkInQrNote'))}
+    <mj-image
+      src="cid:${CHECK_IN_QR_IMAGE_CID}"
+      alt="${escapeHtml(t('membershipApproved.checkInQrAlt'))}"
+      width="220px"
+      padding="0 0 24px"
+    />
     ${divider()}
     ${heading(t('membershipApproved.nextStepsHeading'), { size: '18px', padding: '0 0 16px', letterSpacing: '-0.01em' })}
     ${orderedListItem(1, `${strong(t('membershipApproved.step1Title'))}: ${t('membershipApproved.step1Detail')}`)}

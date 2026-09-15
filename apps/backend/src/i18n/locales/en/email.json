@@ -83,6 +83,9 @@
   },
   "membershipApproved": {
     "buttonLabel": "Open {organizationName}",
+    "checkInQrAlt": "Your check-in QR code",
+    "checkInQrCaption": "Show this code at check-in, or have it scanned by a supervisor.",
+    "checkInQrNote": "Your check-in QR code is below, and we've also attached it as a PDF. Print it out or keep it on your phone — you can show it at check-in any time, even without your Caluno login.",
     "footerNote": "You're receiving this because your membership request for {organizationName} was approved on {brandName}.",
     "greetingAfter": "has been approved. You can now browse shifts and sign up when something works for you.",
     "greetingBefore": "Hi {firstName}, your membership request for",

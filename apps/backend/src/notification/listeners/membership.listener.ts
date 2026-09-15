@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
+import {
+  CHECK_IN_QR_IMAGE_CID,
+  CheckInQrService,
+} from '../email/check-in-qr.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
 import { membershipApprovedTemplate } from '../email/templates/membership-approved.template';
 import { membershipLeftTemplate } from '../email/templates/membership-left.template';
@@ -16,6 +20,7 @@ export class MembershipListener {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly appI18n: AppI18nService,
+    private readonly checkInQrService: CheckInQrService,
   ) {}
 
   @OnEvent(NotificationEvent.MEMBERSHIP_REQUESTED)
@@ -70,7 +75,7 @@ export class MembershipListener {
           this.appI18n,
           recipient.locale,
         );
-        return membershipApprovedTemplate(
+        const { subject, html } = await membershipApprovedTemplate(
           {
             organizationUnitId: payload.organizationUnitId,
             organizationName: payload.organizationName,
@@ -78,6 +83,32 @@ export class MembershipListener {
           },
           templateContext,
         );
+
+        const { png, pdf } = await this.checkInQrService.generateAttachments(
+          recipient.checkInId,
+          recipient.name,
+          templateContext.t('membershipApproved.checkInQrCaption'),
+        );
+
+        return {
+          subject,
+          html,
+          attachments: [
+            {
+              filename: this.checkInQrService.attachmentFilename(
+                recipient.name,
+              ),
+              content: pdf,
+              contentType: 'application/pdf',
+            },
+            {
+              filename: 'check-in-qr.png',
+              content: png,
+              contentType: 'image/png',
+              cid: CHECK_IN_QR_IMAGE_CID,
+            },
+          ],
+        };
       },
     );
   }
