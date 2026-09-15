@@ -7,6 +7,7 @@ export interface EmailAttachment {
   filename: string;
   content: Buffer;
   contentType: string;
+  cid?: string;
 }
 
 export interface EmailSendOptions {
@@ -87,7 +88,10 @@ export class EmailService {
           subject: options.subject,
           html: options.html,
           text: options.text ?? this.htmlToText(options.html),
-          attachments: options.attachments,
+          attachments: options.attachments?.map((attachment) => ({
+            ...attachment,
+            contentDisposition: attachment.cid ? 'inline' : 'attachment',
+          })),
         });
         this.logger.debug(`Email sent to ${maskedTo} via SMTP`);
         return;
@@ -139,6 +143,7 @@ export class EmailService {
             name: attachment.filename,
             type: attachment.contentType,
             content: attachment.content.toString('base64'),
+            ...(attachment.cid ? { content_id: attachment.cid } : {}),
           })),
         }),
       });

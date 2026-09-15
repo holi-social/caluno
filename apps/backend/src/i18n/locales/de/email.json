@@ -83,8 +83,9 @@
   },
   "membershipApproved": {
     "buttonLabel": "{organizationName} öffnen",
+    "checkInQrAlt": "Dein Check-in-QR-Code",
     "checkInQrCaption": "Zeige diesen Code beim Check-in oder lass ihn von einer Aufsichtsperson scannen.",
-    "checkInQrNote": "Wir haben deinen persönlichen Check-in-QR-Code als PDF und PNG beigefügt – du kannst ihn ausdrucken oder auf deinem Handy speichern und beim Check-in vorzeigen, auch wenn du deine Caluno-Zugangsdaten gerade nicht griffbereit hast.",
+    "checkInQrNote": "Dein Check-in-QR-Code ist unten zu sehen und außerdem als PDF beigefügt. Du kannst ihn ausdrucken oder auf deinem Handy speichern – zeig ihn einfach beim Check-in, auch ohne Caluno-Login.",
     "footerNote": "Du erhältst diese E-Mail, weil deine Mitgliedschaftsanfrage für {organizationName} auf {brandName} genehmigt wurde.",
     "greetingAfter": "ist genehmigt. Du kannst jetzt Einsätze entdecken und dich anmelden, wenn etwas zu dir passt.",
     "greetingBefore": "Hallo {firstName}, deine Mitgliedschaftsanfrage für",

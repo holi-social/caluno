@@ -30,22 +30,18 @@ describe('CheckInQrService', () => {
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
-  it('builds recognisable, sanitized attachment filenames', () => {
-    expect(service.attachmentFilenames('Sam Smith')).toEqual({
-      png: 'Check-in-QR-Sam-Smith.png',
-      pdf: 'Check-in-QR-Sam-Smith.pdf',
-    });
-
-    expect(service.attachmentFilenames('José Müller')).toEqual({
-      png: 'Check-in-QR-Jose-Muller.png',
-      pdf: 'Check-in-QR-Jose-Muller.pdf',
-    });
+  it('builds a recognisable, sanitized PDF attachment filename', () => {
+    expect(service.attachmentFilename('Sam Smith')).toBe(
+      'Check-in-QR-Sam-Smith.pdf',
+    );
+    expect(service.attachmentFilename('José Müller')).toBe(
+      'Check-in-QR-Jose-Muller.pdf',
+    );
   });
 
   it('falls back to a generic name when nothing sanitizable remains', () => {
-    expect(service.attachmentFilenames('*** ///')).toEqual({
-      png: 'Check-in-QR-volunteer.png',
-      pdf: 'Check-in-QR-volunteer.pdf',
-    });
+    expect(service.attachmentFilename('*** ///')).toBe(
+      'Check-in-QR-volunteer.pdf',
+    );
   });
 });

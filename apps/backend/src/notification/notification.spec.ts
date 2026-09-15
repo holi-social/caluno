@@ -343,18 +343,19 @@ describe('NotificationModule', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(userService.findById).toHaveBeenCalledWith(user.id);
+    expect(expected.html).toContain('cid:check-in-qr-code');
     expect(emailService.send).toHaveBeenCalledWith({
       to: user.email,
       subject: expected.subject,
       html: expected.html,
       attachments: [
         expect.objectContaining({
-          filename: 'Check-in-QR-Sam-Smith.png',
-          contentType: 'image/png',
-        }),
-        expect.objectContaining({
           filename: 'Check-in-QR-Sam-Smith.pdf',
           contentType: 'application/pdf',
+        }),
+        expect.objectContaining({
+          contentType: 'image/png',
+          cid: 'check-in-qr-code',
         }),
       ],
     });
@@ -1814,7 +1815,7 @@ describe('NotificationModule', () => {
       organizationName: 'Acme Volunteers',
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(emailService.send).toHaveBeenCalledTimes(1);
   });

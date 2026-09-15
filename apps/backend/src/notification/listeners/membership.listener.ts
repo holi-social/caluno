@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AppI18nService } from '../../i18n/app-i18n.service';
-import { CheckInQrService } from '../email/check-in-qr.service';
+import {
+  CHECK_IN_QR_IMAGE_CID,
+  CheckInQrService,
+} from '../email/check-in-qr.service';
 import { createEmailTemplateContext } from '../email/email-template-context';
 import { membershipApprovedTemplate } from '../email/templates/membership-approved.template';
 import { membershipLeftTemplate } from '../email/templates/membership-left.template';
@@ -81,9 +84,6 @@ export class MembershipListener {
           templateContext,
         );
 
-        const filenames = this.checkInQrService.attachmentFilenames(
-          recipient.name,
-        );
         const { png, pdf } = await this.checkInQrService.generateAttachments(
           recipient.checkInId,
           recipient.name,
@@ -94,11 +94,18 @@ export class MembershipListener {
           subject,
           html,
           attachments: [
-            { filename: filenames.png, content: png, contentType: 'image/png' },
             {
-              filename: filenames.pdf,
+              filename: this.checkInQrService.attachmentFilename(
+                recipient.name,
+              ),
               content: pdf,
               contentType: 'application/pdf',
+            },
+            {
+              filename: 'check-in-qr.png',
+              content: png,
+              contentType: 'image/png',
+              cid: CHECK_IN_QR_IMAGE_CID,
             },
           ],
         };

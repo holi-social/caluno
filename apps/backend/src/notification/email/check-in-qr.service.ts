@@ -11,6 +11,8 @@ export interface CheckInQrAttachments {
 const QR_PNG_SIZE_PX = 512;
 const QR_PDF_IMAGE_SIZE_PT = 300;
 
+export const CHECK_IN_QR_IMAGE_CID = 'check-in-qr-code';
+
 @Injectable()
 export class CheckInQrService {
   async generateAttachments(
@@ -26,12 +28,9 @@ export class CheckInQrService {
     return { png, pdf };
   }
 
-  attachmentFilenames(volunteerName: string): { png: string; pdf: string } {
-    const slug = this.sanitizeFilenamePart(volunteerName);
-    return {
-      png: `Check-in-QR-${slug}.png`,
-      pdf: `Check-in-QR-${slug}.pdf`,
-    };
+  /** The PDF is the only user-facing attachment now — the PNG is embedded inline in the email body instead. */
+  attachmentFilename(volunteerName: string): string {
+    return `Check-in-QR-${this.sanitizeFilenamePart(volunteerName)}.pdf`;
   }
 
   private async generatePng(url: string): Promise<Buffer> {
