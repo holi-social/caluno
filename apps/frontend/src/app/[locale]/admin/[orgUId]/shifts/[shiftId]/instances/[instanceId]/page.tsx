@@ -60,18 +60,14 @@ export default async function ShiftInstanceDetailPage({
   const imageUrl = instance.master.imageUrl;
   const canAddImage = canManage && !isInstanceInThePast;
 
-  let callOuts: Awaited<ReturnType<typeof data.shift.findCallOutHistory>> | null =
-    null;
-  if (canManage) {
-    try {
-      callOuts = await data.shift.findCallOutHistory(instanceId);
-    } catch (error) {
-      if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
-        notFound();
-      }
-      throw error;
-    }
-  }
+  const callOuts = canManage
+    ? await data.shift.findCallOutHistory(instanceId).catch((error) => {
+        if (error instanceof DataError && error.options?.code === 'NOT_FOUND') {
+          notFound();
+        }
+        throw error;
+      })
+    : null;
 
   return (
     <div className="space-y-6">
