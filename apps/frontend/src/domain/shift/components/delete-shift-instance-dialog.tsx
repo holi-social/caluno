@@ -90,7 +90,9 @@ export function DeleteShiftInstanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger disabled={disableDelete}>{trigger}</DialogTrigger>
+      <DialogTrigger asChild disabled={disableDelete}>
+        {trigger}
+      </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
