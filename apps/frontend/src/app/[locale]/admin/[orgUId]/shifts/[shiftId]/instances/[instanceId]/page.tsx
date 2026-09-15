@@ -50,10 +50,8 @@ export default async function ShiftInstanceDetailPage({
     notFound();
   }
 
-  const isInstanceInThePast =
-    new Date(instance.actualEndsAt ?? 0) < new Date();
-  const isOpenShift =
-    instance.master.visibility === ShiftVisibility.AllMembers;
+  const isInstanceInThePast = new Date(instance.actualEndsAt ?? 0) < new Date();
+  const isOpenShift = instance.master.visibility === ShiftVisibility.AllMembers;
   const isRecurring = Boolean(instance.master.rrule);
 
   const title = instance.overrideTitle ?? instance.master.title;
