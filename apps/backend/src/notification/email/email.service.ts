@@ -165,8 +165,15 @@ export class EmailService {
   }
 
   private htmlToText(html: string): string {
-    return html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    let sanitized = html;
+    let previous: string;
+
+    do {
+      previous = sanitized;
+      sanitized = sanitized.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    } while (sanitized !== previous);
+
+    return sanitized
       .replace(/<[^>]+>/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
