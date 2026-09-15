@@ -2033,7 +2033,6 @@
           "contractSigningCoord": "Gegenzeichnung erforderlich",
           "contractActive": "Aktive Vereinbarung",
           "timesheetGenerate": "Stundennachweis erstellen",
-          "timesheetDraft": "Entwurf",
           "timesheetSigningVol": "Wartet auf Gegenzeichnung",
           "timesheetSigningSuper": "Supervisorunterschrift",
           "timesheetReady": "Bereit zur Abgabe",
