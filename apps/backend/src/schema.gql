@@ -333,11 +333,13 @@ type DocumentTemplate {
 }
 
 type EffectiveRate {
+  fallbackRateCents: Int!
   hourlyRateCents: Int!
-  inheritedRateCents: Int!
   isOverride: Boolean!
+  isOwnRate: Boolean!
   organizationUnitId: ID
   reimbursementType: ReimbursementType!
+  sourceUnitName: String
 }
 
 type Event {

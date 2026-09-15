@@ -356,11 +356,13 @@ export type DocumentTemplate = {
 
 export type EffectiveRate = {
   __typename?: 'EffectiveRate';
+  fallbackRateCents: Scalars['Int']['output'];
   hourlyRateCents: Scalars['Int']['output'];
-  inheritedRateCents: Scalars['Int']['output'];
   isOverride: Scalars['Boolean']['output'];
+  isOwnRate: Scalars['Boolean']['output'];
   organizationUnitId?: Maybe<Scalars['ID']['output']>;
   reimbursementType: ReimbursementType;
+  sourceUnitName?: Maybe<Scalars['String']['output']>;
 };
 
 export type Event = {
@@ -2777,7 +2779,7 @@ export type GetEffectiveRatesQueryVariables = Exact<{
 }>;
 
 
-export type GetEffectiveRatesQuery = { __typename?: 'Query', effectiveRates: Array<{ __typename?: 'EffectiveRate', hourlyRateCents: number, isOverride: boolean, inheritedRateCents: number, organizationUnitId?: string | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey, legalReference: string, yearlyLimitCents: number, platformDefaultRateCents: number } }> };
+export type GetEffectiveRatesQuery = { __typename?: 'Query', effectiveRates: Array<{ __typename?: 'EffectiveRate', hourlyRateCents: number, isOverride: boolean, isOwnRate: boolean, fallbackRateCents: number, sourceUnitName?: string | null, organizationUnitId?: string | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey, legalReference: string, yearlyLimitCents: number, platformDefaultRateCents: number } }> };
 
 export type SetReimbursementRateMutationVariables = Exact<{
   reimbursementTypeId: Scalars['ID']['input'];
@@ -4616,7 +4618,9 @@ export const GetEffectiveRatesDocument = gql`
     }
     hourlyRateCents
     isOverride
-    inheritedRateCents
+    isOwnRate
+    fallbackRateCents
+    sourceUnitName
     organizationUnitId
   }
 }
