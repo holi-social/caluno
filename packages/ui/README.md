@@ -3,7 +3,7 @@
 React component library for use in web apps.
 
 - React components based on shadcn
-- Tailwind incl. theming providing by next-themes
+- Tailwind incl. theming provided by @teispace/next-themes
 - Storybook for viewing and documenting the components
 
 ## Adding a new component
