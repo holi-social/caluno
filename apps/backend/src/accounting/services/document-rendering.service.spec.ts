@@ -16,6 +16,7 @@ interface TimeEntryMock {
 
 describe('DocumentRenderingService', () => {
   let yearlyUsageCallArgs: unknown[] = [];
+  let rateCallArgs: unknown[] = [];
 
   const createService = (
     overrides: {
@@ -62,7 +63,10 @@ describe('DocumentRenderingService', () => {
         }),
     } as never;
     const reimbursementRateService = {
-      getEffectiveRateCents: () => Promise.resolve(overrides.rateCents),
+      getEffectiveRateCents: (...args: unknown[]) => {
+        rateCallArgs = args;
+        return Promise.resolve(overrides.rateCents);
+      },
       getYearlyUsage: (...args: unknown[]) => {
         yearlyUsageCallArgs = args;
         return Promise.resolve(overrides.yearlyUsage);
@@ -237,6 +241,21 @@ describe('DocumentRenderingService', () => {
       purpose: FilePurpose.DOCUMENT,
     });
     expect(saved).toHaveProperty('bytes');
+  });
+
+  it('resolves the rate at the document own unit, not the template unit', async () => {
+    rateCallArgs = [];
+    const service = createService({ rateCents: 1500 });
+    await service.generatePdf(
+      contract({
+        organizationUnitId: 'sub-unit',
+        documentTemplate: {
+          ...contract().documentTemplate,
+          organizationUnitId: null,
+        } as never,
+      }),
+    );
+    expect(rateCallArgs).toEqual(['org-1', 'sub-unit', 'type-1']);
   });
 
   it('renderAndAttachPdf never throws — returns null when the template is missing', async () => {

@@ -16,8 +16,12 @@ import {
   POSTHOG_SURFACE,
 } from '../../shared/observability/posthog.events';
 import { PostHogService } from '../../shared/observability/posthog.service';
-import type { EffectiveRate, YearlyUsage } from '../accounting.types';
-import { InvoiceStatus } from '../enums';
+import type {
+  EffectiveRate,
+  RateProvenance,
+  YearlyUsage,
+} from '../accounting.types';
+import { InvoiceStatus, RateProvenanceKind } from '../enums';
 import type { ReimbursementBundleDownloadEntity } from '../schemas/reimbursement-bundle-download.schema';
 import type { ManualBaselineEntity } from '../schemas/reimbursement-manual-baseline.schema';
 import type { ReimbursementRateEntity } from '../schemas/reimbursement-rate.schema';
@@ -78,7 +82,7 @@ export class ReimbursementRateService {
   async getEffectiveRates(
     organizationId: string,
     organizationUnitId?: string | null,
-  ): Promise<(EffectiveRate & { organizationUnitId: string | null })[]> {
+  ): Promise<EffectiveRate[]> {
     const [types, chain] = await Promise.all([
       this.db.query.reimbursementTypes.findMany(),
       this.resolutionChain(organizationUnitId),
@@ -102,14 +106,16 @@ export class ReimbursementRateService {
       ]),
     );
 
-    return types.map((reimbursementType) => {
-      for (const unitId of chain) {
+    const resolve = (
+      reimbursementType: ReimbursementTypeEntity,
+      links: (string | null)[],
+    ) => {
+      for (const unitId of links) {
         const override = overrideByKey.get(
           overrideKey(unitId, reimbursementType.id),
         );
         if (override) {
           return {
-            reimbursementType,
             hourlyRateCents: override.hourlyRateCents,
             isOverride: true,
             organizationUnitId: unitId,
@@ -117,11 +123,62 @@ export class ReimbursementRateService {
         }
       }
       return {
-        reimbursementType,
         hourlyRateCents: reimbursementType.platformDefaultRateCents,
         isOverride: false,
         organizationUnitId: null,
       };
+    };
+
+    // The chain starts at the requested unit itself, so dropping its first
+    // link resolves what the unit would fall back to without its own
+    // override — the parent's rate, or the platform default at the top.
+    const requestedUnitId = organizationUnitId ?? null;
+    const fallbackChain = chain.slice(1);
+    const [units, organization] = await Promise.all([
+      this.organizationUnitDataService.findByIds(unitIds),
+      this.db.query.organizations.findFirst({
+        where: { id: organizationId },
+        columns: { name: true },
+      }),
+    ]);
+    const unitNames = new Map(units.map((unit) => [unit.id, unit.name]));
+    // The org-wide row belongs to no unit, so it is attributed to the
+    // organisation itself.
+    const nameOf = (unitId: string | null) =>
+      unitId ? (unitNames.get(unitId) ?? null) : (organization?.name ?? null);
+
+    return types.map((reimbursementType) => {
+      const resolved = resolve(reimbursementType, chain);
+      return {
+        reimbursementType,
+        ...resolved,
+        provenance: provenanceOf(resolved),
+      };
+
+      function provenanceOf(rate: typeof resolved): RateProvenance {
+        if (!rate.isOverride) {
+          return {
+            kind: RateProvenanceKind.DEFAULT,
+            sourceName: null,
+            replacesRateCents: null,
+          };
+        }
+        if (rate.organizationUnitId !== requestedUnitId) {
+          return {
+            kind: RateProvenanceKind.INHERITED,
+            sourceName: nameOf(rate.organizationUnitId),
+            replacesRateCents: null,
+          };
+        }
+        const fallback = resolve(reimbursementType, fallbackChain);
+        return {
+          kind: RateProvenanceKind.OWN,
+          sourceName: fallback.isOverride
+            ? nameOf(fallback.organizationUnitId)
+            : null,
+          replacesRateCents: fallback.hourlyRateCents,
+        };
+      }
     });
   }
 

@@ -1,4 +1,5 @@
 import { InferResultType } from '../database/typeutil';
+import type { RateProvenanceKind } from './enums';
 import { ContractStatus, InvoiceStatus, SigneeType } from './enums';
 import type { ReimbursementTypeEntity } from './schemas/reimbursement-type.schema';
 
@@ -20,10 +21,19 @@ export type InvoiceFilter = {
   organizationUnitId?: string;
 };
 
+export type RateProvenance = {
+  kind: RateProvenanceKind;
+  sourceName: string | null;
+  replacesRateCents: number | null;
+};
+
 export type EffectiveRate = {
   reimbursementType: ReimbursementTypeEntity;
   hourlyRateCents: number;
   isOverride: boolean;
+  /** The unit whose override won, null for the org-wide row or the default. */
+  organizationUnitId: string | null;
+  provenance: RateProvenance;
 };
 
 /**

@@ -43,3 +43,9 @@ export enum DocumentStatusChange {
   DECLINED = 'DECLINED',
   EXPIRED = 'EXPIRED',
 }
+
+export enum RateProvenanceKind {
+  OWN = 'OWN',
+  INHERITED = 'INHERITED',
+  DEFAULT = 'DEFAULT',
+}

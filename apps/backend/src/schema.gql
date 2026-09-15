@@ -336,6 +336,7 @@ type EffectiveRate {
   hourlyRateCents: Int!
   isOverride: Boolean!
   organizationUnitId: ID
+  provenance: RateProvenance!
   reimbursementType: ReimbursementType!
 }
 
@@ -1018,6 +1019,18 @@ type Query {
   volunteersNeedingTimesheets(periodEnd: DateTime, periodStart: DateTime): [VolunteerNeedsTimesheet!]!
   weeklyShifts(endsBefore: DateTime = null, eventId: ID, limit: Int! = 15, offset: Int! = 0, startsAfter: DateTime = null): [ShiftInstance!]!
   yearlyUsage(asOfDate: DateTime, excludeInvoiceId: ID, reimbursementTypeId: ID!, volunteerId: ID!, year: Int!): YearlyUsage!
+}
+
+type RateProvenance {
+  kind: RateProvenanceKind!
+  replacesRateCents: Int
+  sourceName: String
+}
+
+enum RateProvenanceKind {
+  DEFAULT
+  INHERITED
+  OWN
 }
 
 type ReimbursementRate {

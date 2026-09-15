@@ -5,6 +5,7 @@ import {
   DocumentKind,
   DocumentStatusChange,
   InvoiceStatus,
+  RateProvenanceKind,
   ReimbursementTypeKey,
   RenewalCadence,
   SigneeType,
@@ -36,6 +37,10 @@ registerEnumType(InvoiceStatus, {
 
 registerEnumType(DocumentStatusChange, {
   name: 'DocumentStatusChange',
+});
+
+registerEnumType(RateProvenanceKind, {
+  name: 'RateProvenanceKind',
 });
 
 registerEnumType(InviteAllowanceState, {

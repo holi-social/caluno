@@ -11,6 +11,7 @@ export { InvoiceStatusChange } from './invoice-status-change.model';
 export { InvoiceTimeEntry } from './invoice-time-entry.model';
 export { PaidShiftSignupVolunteer } from './paid-shift-signup-volunteer.model';
 export { PendingSignee } from './pending-signee.model';
+export { RateProvenance } from './rate-provenance.model';
 export { ReimbursementRate } from './reimbursement-rate.model';
 export { ReimbursementType } from './reimbursement-type.model';
 export { ReimbursementTypeUsage } from './reimbursement-type-usage.model';

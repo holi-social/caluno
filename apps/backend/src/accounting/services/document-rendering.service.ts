@@ -715,7 +715,11 @@ export class DocumentRenderingService {
       if (!template) {
         return undefined;
       }
+      // The document's own unit first: a sub-org can use a template it
+      // inherited from a parent while setting a rate of its own, and the
+      // rate on the page must be the one that unit pays.
       const organizationUnitId =
+        document.organizationUnitId ??
         template.organizationUnitId ??
         (await this.resolveOrgRootUnitId(organizationId));
       return await this.reimbursementRateService.getEffectiveRateCents(
