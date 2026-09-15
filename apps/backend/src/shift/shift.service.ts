@@ -2874,6 +2874,72 @@ export class ShiftService {
     }
   }
 
+  private async loadAndEmitShiftInstanceWaitlistJoinedNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceWaitlistJoined({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance waitlist joined notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private async loadAndEmitShiftInstanceWaitlistPromotedNotification(
+    shift: ShiftEntity,
+    instance: ShiftInstanceEntity,
+    userId: string,
+  ): Promise<void> {
+    try {
+      const organizationUnit = await this.db.query.organizationUnits.findFirst({
+        where: { id: shift.organizationUnitId },
+        columns: { id: true, name: true },
+      });
+
+      if (!organizationUnit) {
+        return;
+      }
+
+      this.notificationService.notifyShiftInstanceWaitlistPromoted({
+        organizationUnitId: organizationUnit.id,
+        organizationUnitName: organizationUnit.name,
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        shiftLocation: shift.location,
+        userId,
+        startsAt: instance.actualStartsAt,
+        endsAt: instance.actualEndsAt,
+        instanceId: instance.id,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit shift instance waitlist promoted notification: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async loadAndEmitShiftInstanceCancelledNotification(
     shift: ShiftEntity,
     instance: ShiftInstanceEntity,
@@ -3563,6 +3629,11 @@ export class ShiftService {
           .where(eq(schema.shiftInstanceInvites.id, existingInvite.id));
 
         void this.notifyShiftInstanceJoined(userId, shift, instance);
+        void this.loadAndEmitShiftInstanceWaitlistPromotedNotification(
+          shift,
+          instance,
+          userId,
+        );
         await this.captureShiftInstanceInviteUpdate({
           userId,
           organizationUnitId: shift.organizationUnitId,
@@ -3608,6 +3679,12 @@ export class ShiftService {
           void this.notifyShiftInstanceJoined(userId, shift, instance);
         } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
           void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
+        } else if (targetStatus === ShiftInviteStatus.WAITLIST_JOINED) {
+          void this.loadAndEmitShiftInstanceWaitlistJoinedNotification(
+            shift,
+            instance,
+            userId,
+          );
         }
         await this.captureShiftInstanceInviteUpdate({
           userId,
@@ -3648,6 +3725,12 @@ export class ShiftService {
       void this.notifyShiftInstanceJoined(userId, shift, instance);
     } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
       void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
+    } else if (targetStatus === ShiftInviteStatus.WAITLIST_JOINED) {
+      void this.loadAndEmitShiftInstanceWaitlistJoinedNotification(
+        shift,
+        instance,
+        userId,
+      );
     }
     await this.captureShiftInstanceInviteUpdate({
       userId,
@@ -4426,7 +4509,23 @@ export class ShiftService {
           instance,
           userId,
         );
+      } else if (invite.status === ShiftInviteStatus.WAITLIST_JOINED) {
+        void this.loadAndEmitShiftInstanceWaitlistPromotedNotification(
+          instance.master,
+          instance,
+          userId,
+        );
       }
+    } else if (targetStatus === ShiftInviteStatus.WAITLIST_JOINED) {
+      // Whatever got them here — an admin's approval catching a full shift,
+      // or the volunteer's own accept/re-join losing the race for the last
+      // seat — they resolved to the waitlist above instead of the shift they
+      // expected; let them know it happened.
+      void this.loadAndEmitShiftInstanceWaitlistJoinedNotification(
+        instance.master,
+        instance,
+        userId,
+      );
     }
 
     if (

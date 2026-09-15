@@ -59,6 +59,12 @@ type ShiftInstanceInvitedInput =
 type ShiftInstanceWaitlistSpotOpenedInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED];
 
+type ShiftInstanceWaitlistJoinedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_WAITLIST_JOINED];
+
+type ShiftInstanceWaitlistPromotedInput =
+  NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_WAITLIST_PROMOTED];
+
 type ShiftInstanceCancelledInput =
   NotificationEventPayloadMap[typeof NotificationEvent.SHIFT_INSTANCE_CANCELLED];
 
@@ -264,6 +270,21 @@ export class NotificationService {
   ): void {
     this.emitter.emit(
       NotificationEvent.SHIFT_INSTANCE_WAITLIST_SPOT_OPENED,
+      input,
+    );
+  }
+
+  notifyShiftInstanceWaitlistJoined(
+    input: ShiftInstanceWaitlistJoinedInput,
+  ): void {
+    this.emitter.emit(NotificationEvent.SHIFT_INSTANCE_WAITLIST_JOINED, input);
+  }
+
+  notifyShiftInstanceWaitlistPromoted(
+    input: ShiftInstanceWaitlistPromotedInput,
+  ): void {
+    this.emitter.emit(
+      NotificationEvent.SHIFT_INSTANCE_WAITLIST_PROMOTED,
       input,
     );
   }
