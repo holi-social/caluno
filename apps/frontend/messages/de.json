@@ -1880,6 +1880,7 @@
       "org_name": "Name",
       "org_address": "Adresse",
       "org_city": "Stadt",
+      "org_zip": "Postleitzahl",
       "org_legal_rep": "Gesetzliche Vertretung"
     },
     "reimbursements": {
@@ -2309,6 +2310,7 @@
           "org_name": "Organisationsname",
           "org_address": "Organisationsadresse",
           "org_city": "Stadt (Organisation)",
+          "org_zip": "Postleitzahl (Organisation)",
           "org_legal_rep": "Gesetzliche Vertretung",
           "pauschalen_type": "Pauschalentyp",
           "hourly_rate": "Stundensatz",

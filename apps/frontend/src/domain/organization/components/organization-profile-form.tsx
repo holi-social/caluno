@@ -18,6 +18,12 @@ import { useRouter } from '@/i18n/navigation';
 interface OrganizationProfileFormProps {
   /** The org's root unit: where the profile lives and accounting reads it. */
   rootUnitId: string;
+  /**
+   * The organization row's logo, carried through on save. Not edited here —
+   * the org-unit form owns the logo — but the org row's value is still read
+   * elsewhere, so the profile save must not drop it.
+   */
+  logoUrl?: string | null;
   organization: {
     address?: string | null;
     city?: string | null;
@@ -31,6 +37,7 @@ interface OrganizationProfileFormProps {
 
 export function OrganizationProfileForm({
   rootUnitId,
+  logoUrl,
   organization,
 }: OrganizationProfileFormProps) {
   const organizationId = useCurrentOrg().organizationId;
@@ -63,7 +70,10 @@ export function OrganizationProfileForm({
 
   const onSubmit = (values: UpdateOrganizationFormValues) => {
     startTransition(async () => {
-      const result = await updateOrganizationProfile(values);
+      const result = await updateOrganizationProfile({
+        ...values,
+        logoUrl: logoUrl ?? null,
+      });
 
       if (result?.serverError) {
         toast.error(result.serverError);

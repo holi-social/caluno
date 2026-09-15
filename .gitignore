@@ -74,5 +74,9 @@ docs/superpowers/
 # Claude Code isolated worktrees
 .claude/worktrees/
 
+# Local git worktrees (each is a full checkout with its own biome.json, which
+# otherwise trips Biome's nested-root-config check)
+.worktrees/
+
 # Personal mise config
 mise.toml

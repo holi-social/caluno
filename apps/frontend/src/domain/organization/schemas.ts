@@ -15,6 +15,12 @@ export const updateOrganizationSchema = z.object({
   contactEmail: z.string().optional(),
   phone: z.string().optional(),
   websiteUrl: z.string().optional(),
+  /**
+   * Not edited here, only carried through: the organization row's logo is
+   * still read elsewhere (e.g. the join header), so the profile save must not
+   * drop it.
+   */
+  logoUrl: z.string().nullish(),
 });
 
 export type UpdateOrganizationFormValues = z.infer<

@@ -85,5 +85,17 @@ export const updateOrganizationProfile = actionClient
       websiteUrl: parsedInput.websiteUrl || null,
     };
 
-    return await data.organizationUnit.update(parsedInput.rootUnitId, input);
+    const unit = await data.organizationUnit.update(
+      parsedInput.rootUnitId,
+      input,
+    );
+
+    // Settings isn't a logo editor, but the organization row's logo is still
+    // read elsewhere (e.g. the join header). Carry the existing value through
+    // so saving the profile doesn't silently drop it.
+    await data.organization.update(parsedInput.organizationId, {
+      logoUrl: parsedInput.logoUrl ?? null,
+    });
+
+    return unit;
   });
