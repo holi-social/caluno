@@ -359,6 +359,7 @@ export type EffectiveRate = {
   hourlyRateCents: Scalars['Int']['output'];
   isOverride: Scalars['Boolean']['output'];
   organizationUnitId?: Maybe<Scalars['ID']['output']>;
+  provenance: RateProvenance;
   reimbursementType: ReimbursementType;
 };
 
@@ -2087,6 +2088,19 @@ export type QueryYearlyUsageArgs = {
   year: Scalars['Int']['input'];
 };
 
+export type RateProvenance = {
+  __typename?: 'RateProvenance';
+  kind: RateProvenanceKind;
+  replacesRateCents?: Maybe<Scalars['Int']['output']>;
+  sourceName?: Maybe<Scalars['String']['output']>;
+};
+
+export enum RateProvenanceKind {
+  Default = 'DEFAULT',
+  Inherited = 'INHERITED',
+  Own = 'OWN'
+}
+
 export type ReimbursementRate = {
   __typename?: 'ReimbursementRate';
   createdAt: Scalars['DateTime']['output'];
@@ -2776,7 +2790,7 @@ export type GetEffectiveRatesQueryVariables = Exact<{
 }>;
 
 
-export type GetEffectiveRatesQuery = { __typename?: 'Query', effectiveRates: Array<{ __typename?: 'EffectiveRate', hourlyRateCents: number, isOverride: boolean, organizationUnitId?: string | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey, legalReference: string, yearlyLimitCents: number, platformDefaultRateCents: number } }> };
+export type GetEffectiveRatesQuery = { __typename?: 'Query', effectiveRates: Array<{ __typename?: 'EffectiveRate', hourlyRateCents: number, isOverride: boolean, organizationUnitId?: string | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey, legalReference: string, yearlyLimitCents: number, platformDefaultRateCents: number }, provenance: { __typename?: 'RateProvenance', kind: RateProvenanceKind, sourceName?: string | null, replacesRateCents?: number | null } }> };
 
 export type SetReimbursementRateMutationVariables = Exact<{
   reimbursementTypeId: Scalars['ID']['input'];
@@ -4616,6 +4630,11 @@ export const GetEffectiveRatesDocument = gql`
     hourlyRateCents
     isOverride
     organizationUnitId
+    provenance {
+      kind
+      sourceName
+      replacesRateCents
+    }
   }
 }
     `;
