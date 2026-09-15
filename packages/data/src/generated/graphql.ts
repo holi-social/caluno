@@ -2743,7 +2743,6 @@ export type VolunteerInviteAllowance = {
   volunteerId: Scalars['ID']['output'];
 };
 
-/** A timesheet still to be created: a volunteer's unclaimed hours for one type in one Berlin month. */
 export type VolunteerNeedsTimesheet = {
   __typename?: 'VolunteerNeedsTimesheet';
   eligibleHours: Scalars['Float']['output'];

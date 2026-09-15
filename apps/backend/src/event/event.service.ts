@@ -1062,6 +1062,7 @@ export class EventService {
         source,
         event_id: eventId,
         invite_status: targetStatus,
+        previous_status: invite.status,
       },
     });
     if (targetStatus === EventInviteStatus.JOINED) {

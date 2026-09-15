@@ -3563,12 +3563,14 @@ export class ShiftService {
           .where(eq(schema.shiftInstanceInvites.id, existingInvite.id));
 
         void this.notifyShiftInstanceJoined(userId, shift, instance);
-        await this.captureShiftInstanceJoin({
+        await this.captureShiftInstanceInviteUpdate({
           userId,
           organizationUnitId: shift.organizationUnitId,
           shiftId: shift.id,
           shiftInstanceId: instanceId,
           source: POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE,
+          inviteStatus: ShiftInviteStatus.JOINED,
+          previousStatus: existingInvite.status,
         });
         return;
       }
@@ -3604,16 +3606,18 @@ export class ShiftService {
 
         if (targetStatus === ShiftInviteStatus.JOINED) {
           void this.notifyShiftInstanceJoined(userId, shift, instance);
-          await this.captureShiftInstanceJoin({
-            userId,
-            organizationUnitId: shift.organizationUnitId,
-            shiftId: shift.id,
-            shiftInstanceId: instanceId,
-            source,
-          });
         } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
           void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
         }
+        await this.captureShiftInstanceInviteUpdate({
+          userId,
+          organizationUnitId: shift.organizationUnitId,
+          shiftId: shift.id,
+          shiftInstanceId: instanceId,
+          source,
+          inviteStatus: targetStatus,
+          previousStatus: existingInvite.status,
+        });
       }
 
       return;
@@ -3642,16 +3646,17 @@ export class ShiftService {
 
     if (targetStatus === ShiftInviteStatus.JOINED) {
       void this.notifyShiftInstanceJoined(userId, shift, instance);
-      await this.captureShiftInstanceJoin({
-        userId,
-        organizationUnitId: shift.organizationUnitId,
-        shiftId: shift.id,
-        shiftInstanceId: instanceId,
-        source,
-      });
     } else if (targetStatus === ShiftInviteStatus.AWAITING_ADMIN_APPROVAL) {
       void this.notifyShiftInstanceJoinRequested(userId, shift, instance);
     }
+    await this.captureShiftInstanceInviteUpdate({
+      userId,
+      organizationUnitId: shift.organizationUnitId,
+      shiftId: shift.id,
+      shiftInstanceId: instanceId,
+      source,
+      inviteStatus: targetStatus,
+    });
   }
 
   async joinShift(
@@ -4152,6 +4157,7 @@ export class ShiftService {
         source,
         shift_id: shiftId,
         invite_status: targetStatus,
+        previous_status: invite.status,
       },
     });
     if (targetStatus === ShiftInviteStatus.JOINED) {
@@ -4165,7 +4171,10 @@ export class ShiftService {
               : POSTHOG_SURFACE.VOLUNTEERING,
           organization_id: organizationId,
           organization_unit_id: shift.organizationUnitId,
-          source: POSTHOG_JOIN_SOURCE.INVITE_ACCEPT,
+          source:
+            invite.status === ShiftInviteStatus.WAITLIST_JOINED
+              ? POSTHOG_JOIN_SOURCE.WAITLIST_PROMOTE
+              : POSTHOG_JOIN_SOURCE.INVITE_ACCEPT,
           shift_id: shiftId,
         },
       });
@@ -4450,43 +4459,18 @@ export class ShiftService {
       );
     }
 
-    const source = actorUserId === userId ? 'self' : 'admin';
-    const organizationId = await this.resolveOrganizationId(
-      instance.master.organizationUnitId,
-    );
-    this.postHogService.capture({
-      event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
+    await this.captureShiftInstanceInviteUpdate({
       userId,
-      properties: {
-        surface:
-          source === 'admin'
-            ? POSTHOG_SURFACE.BACKOFFICE
-            : POSTHOG_SURFACE.VOLUNTEERING,
-        organization_id: organizationId,
-        organization_unit_id: instance.master.organizationUnitId,
-        source,
-        shift_id: instance.master.id,
-        shift_instance_id: instanceId,
-        invite_status: targetStatus,
-      },
+      organizationUnitId: instance.master.organizationUnitId,
+      shiftId: instance.master.id,
+      shiftInstanceId: instanceId,
+      source:
+        actorUserId === userId
+          ? POSTHOG_JOIN_SOURCE.SELF
+          : POSTHOG_JOIN_SOURCE.ADMIN,
+      inviteStatus: targetStatus,
+      previousStatus: invite.status,
     });
-    if (targetStatus === ShiftInviteStatus.JOINED) {
-      this.postHogService.capture({
-        event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
-        userId,
-        properties: {
-          surface:
-            source === 'admin'
-              ? POSTHOG_SURFACE.BACKOFFICE
-              : POSTHOG_SURFACE.VOLUNTEERING,
-          organization_id: organizationId,
-          organization_unit_id: instance.master.organizationUnitId,
-          source: POSTHOG_JOIN_SOURCE.INVITE_ACCEPT,
-          shift_id: instance.master.id,
-          shift_instance_id: instanceId,
-        },
-      });
-    }
 
     return updated;
   }
@@ -4720,20 +4704,23 @@ export class ShiftService {
     return unit?.organizationId ?? undefined;
   }
 
-  private async captureShiftInstanceJoin(input: {
+  private async captureShiftInstanceInviteUpdate(input: {
     userId: string;
     organizationUnitId: string;
     shiftId: string;
     shiftInstanceId: string;
     source: PostHogJoinSource;
+    inviteStatus: ShiftInviteStatus;
+    previousStatus?: ShiftInviteStatus;
   }): Promise<void> {
     this.postHogService.capture({
-      event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+      event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
       userId: input.userId,
       properties: {
         surface:
           input.source === POSTHOG_JOIN_SOURCE.MEMBERSHIP_APPROVE ||
-          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN
+          input.source === POSTHOG_JOIN_SOURCE.CHECK_IN ||
+          input.source === POSTHOG_JOIN_SOURCE.ADMIN
             ? POSTHOG_SURFACE.BACKOFFICE
             : POSTHOG_SURFACE.VOLUNTEERING,
         organization_id: await this.resolveOrganizationId(
@@ -4743,6 +4730,10 @@ export class ShiftService {
         source: input.source,
         shift_id: input.shiftId,
         shift_instance_id: input.shiftInstanceId,
+        invite_status: input.inviteStatus,
+        ...(input.previousStatus
+          ? { previous_status: input.previousStatus }
+          : {}),
       },
     });
   }

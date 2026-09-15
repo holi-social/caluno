@@ -2441,11 +2441,13 @@ describe('ShiftService', () => {
     expect(invite?.status).toBe(ShiftInviteStatus.JOINED);
     expect(capture).toHaveBeenCalledWith(
       expect.objectContaining({
-        event: POSTHOG_EVENT.SHIFT_INSTANCE_JOIN,
+        event: POSTHOG_EVENT.SHIFT_INSTANCE_INVITE_UPDATE,
         userId: waitlistedUser.id,
         properties: expect.objectContaining({
           source: 'waitlist_promote',
           shift_instance_id: instance.id,
+          invite_status: ShiftInviteStatus.JOINED,
+          previous_status: ShiftInviteStatus.WAITLIST_JOINED,
         }),
       }),
     );
