@@ -2,9 +2,7 @@
 
 import type { RequiredForm } from '@repo/data/react';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@repo/ui';
-import { FilePlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from '@/i18n/navigation';
 import {
   RequiredFormsAddExisting,
   RequiredFormsDedupHint,

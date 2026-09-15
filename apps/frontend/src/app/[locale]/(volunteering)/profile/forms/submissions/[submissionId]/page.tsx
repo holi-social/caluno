@@ -13,7 +13,10 @@ export default async function FormSubmissionPage({ params }: Props) {
   const { submissionId } = await params;
 
   const data = await getDataClient();
-  const submission = await data.requirementForm.findMySubmission(submissionId);
+  const [submission, profile] = await Promise.all([
+    data.requirementForm.findMySubmission(submissionId),
+    data.requirementForm.getMyUserProfile(),
+  ]);
   if (!submission) notFound();
 
   const t = await getTranslations('MembershipDetail.submission');
@@ -40,6 +43,7 @@ export default async function FormSubmissionPage({ params }: Props) {
         <SubmissionView
           fields={fields}
           submissionValues={submission.values ?? []}
+          profileData={profile?.data ?? {}}
         />
       </div>
     </div>

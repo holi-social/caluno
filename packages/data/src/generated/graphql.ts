@@ -21,7 +21,6 @@ export type Scalars = {
   JSON: { input: Record<string, unknown>; output: Record<string, unknown>; }
 };
 
-/** The org details documents for this unit render, inherited from parent units where blank. */
 export type AccountingOrgProfile = {
   __typename?: 'AccountingOrgProfile';
   address?: Maybe<Scalars['String']['output']>;
