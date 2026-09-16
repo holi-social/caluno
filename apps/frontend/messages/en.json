@@ -2329,6 +2329,7 @@
           "volunteer_tax_id": "Tax ID (Volunteer)",
           "contract_period": "Contract period",
           "already_received_amount": "Amount already received",
+          "already_received_period": "Year to date (1 Jan to period end)",
           "yearly_limit_amount": "Yearly cap"
         }
       },
