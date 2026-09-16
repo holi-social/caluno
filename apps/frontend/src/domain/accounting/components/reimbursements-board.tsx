@@ -505,7 +505,10 @@ export function ReimbursementsBoard({
     // Never open a create modal whose template is missing — the admin would
     // only reach the raw "no template" dead end.
     const pauschale = pair.doc.pauschale ?? pair.vol.pauschale;
-    if (target && documentCreationBlockedFor(templateReadiness, pauschale, target)) {
+    if (
+      target &&
+      documentCreationBlockedFor(templateReadiness, pauschale, target)
+    ) {
       return;
     }
     if (target === 'contract') {
@@ -925,6 +928,7 @@ export function ReimbursementsBoard({
         volunteers={volunteers}
         onContractSent={() => {}}
         onInvoiceSent={() => {}}
+        templateReadiness={templateReadiness}
       />
     </div>
   );
