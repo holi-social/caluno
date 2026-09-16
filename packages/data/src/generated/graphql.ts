@@ -332,6 +332,7 @@ export enum DocumentStatusChange {
   Countersigned = 'COUNTERSIGNED',
   Created = 'CREATED',
   Declined = 'DECLINED',
+  DraftSuperseded = 'DRAFT_SUPERSEDED',
   Expired = 'EXPIRED',
   Signed = 'SIGNED'
 }
