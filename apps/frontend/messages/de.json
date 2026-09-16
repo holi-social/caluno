@@ -2338,6 +2338,7 @@
           "volunteer_tax_id": "Steueridentifikationsnummer",
           "contract_period": "Vereinbarungszeitraum",
           "already_received_amount": "Bereits erhaltener Betrag",
+          "already_received_period": "Jahr bis dato (1. Januar bis Zeitraum Ende)",
           "yearly_limit_amount": "Jahresdeckel"
         }
       },
