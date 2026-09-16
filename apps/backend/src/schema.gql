@@ -2,9 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-"""
-The org details documents for this unit render, inherited from parent units where blank.
-"""
 type AccountingOrgProfile {
   address: String
   city: String
