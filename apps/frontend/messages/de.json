@@ -2245,7 +2245,16 @@
           "incompleteCount": "{count, plural, one {Hier fehlt noch eine Angabe} other {Hier fehlen noch {count} Angaben}}",
           "notSetYet": "noch nicht festgelegt",
           "sameAsAbove": "gleicher Wert wie oben festgelegt",
-          "scrollRegionLabel": "Vorlagen-Editor, scrollbar"
+          "scrollRegionLabel": "Vorlagen-Editor, scrollbar",
+          "placeholderExamples": {
+            "volunteer_first_name": "Vorname",
+            "volunteer_last_name": "Name"
+          }
+        },
+        "blockHeadings": {
+          "persoenlicheDaten": "Persönliche Daten",
+          "stundennachweis": "Stundennachweis",
+          "jahresdeckelHinweis": "Bereits erhaltene Zahlungen"
         },
         "editorGroups": {
           "org": "Angaben der Organisation",
