@@ -1,0 +1,1 @@
+ALTER TYPE "document_status_change" ADD VALUE 'DRAFT_SUPERSEDED';

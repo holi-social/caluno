@@ -2176,6 +2176,7 @@
         "invoice": "Timesheet countersigned for {name}.",
         "invoiceError": "Timesheet could not be countersigned for {name}."
       },
+      "createUnavailable": "This document for {name} can no longer be created from here. Refresh the page and try again.",
       "declineToasts": {
         "contract": "Contract declined for {name}.",
         "contractError": "Contract could not be declined for {name}.",

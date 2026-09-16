@@ -2176,6 +2176,7 @@
         "invoice": "Stundennachweis für {name} gegengezeichnet.",
         "invoiceError": "Stundennachweis konnte für {name} nicht gegengezeichnet werden."
       },
+      "createUnavailable": "Dieses Dokument für {name} kann hier nicht mehr erstellt werden. Lade die Seite neu und versuche es erneut.",
       "declineToasts": {
         "contract": "Vereinbarung für {name} abgelehnt.",
         "contractError": "Vereinbarung konnte für {name} nicht abgelehnt werden.",
