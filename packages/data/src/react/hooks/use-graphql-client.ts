@@ -1,6 +1,7 @@
 'use client';
 import type { GraphQLClient } from 'graphql-request';
 import { createContext, useContext } from 'react';
+import { sdkErrorTranslation } from '../../errors/translate';
 import { getSdk } from '../../generated/graphql';
 
 const GraphQLClientContext = createContext<GraphQLClient | null>(null);
@@ -18,5 +19,7 @@ export function useGraphQLClient() {
 
 export function useSdk() {
   const client = useGraphQLClient();
-  return getSdk(client);
+  // Translate failures to DataError so hooks/consumers get the backend message
+  // and code, not graphql-request's raw serialized-response ClientError.
+  return getSdk(client, sdkErrorTranslation);
 }

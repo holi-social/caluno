@@ -5,7 +5,10 @@ import { Button } from '@repo/ui';
 import { AlertCircleIcon, PlusIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { documentCreationBlocker } from '../lib/setup-status';
+import {
+  documentCreationBlocker,
+  templateReadinessByPauschale,
+} from '../lib/setup-status';
 import { AccountingSetupAlert } from './accounting-setup-alert';
 import type { DateRange } from './period-picker';
 import { thisMonthRange } from './period-picker';
@@ -34,6 +37,9 @@ export function ReimbursementsPageHeader({
   // Fail closed: while the status is loading or errored we cannot prove the
   // gates are met, so the create paths stay disabled.
   const canCreateDocuments = setupStatusQuery.isSuccess && blocker === null;
+  // Per-Pauschale readiness so a row whose type has no template is disabled
+  // before it is clicked, not just blocked org-wide.
+  const templateReadiness = templateReadinessByPauschale(setupStatusQuery.data);
 
   return (
     <div className="space-y-6">
@@ -79,6 +85,7 @@ export function ReimbursementsPageHeader({
         createDocOpen={createDocOpen}
         onCreateDocOpenChange={setCreateDocOpen}
         canCreateDocuments={canCreateDocuments}
+        templateReadiness={templateReadiness}
       />
     </div>
   );

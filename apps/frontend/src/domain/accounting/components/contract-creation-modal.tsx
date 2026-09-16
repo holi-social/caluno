@@ -238,6 +238,10 @@ export function ContractCreationModal({
   };
 
   const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  // A missing template is an ordinary state, not an unexpected failure: show
+  // the dedicated copy + CTA and never the raw server message (it carries the
+  // internal reimbursement-type id).
+  const noTemplate = noContractTemplate || sendErrorIsNoTemplate;
   const sendErrorIsOrgProfile = /organization is missing/i.test(
     sendError ?? '',
   );
@@ -293,19 +297,23 @@ export function ContractCreationModal({
       errorTitle={
         sendErrorIsOrgProfile
           ? t('orgProfileErrorTitle')
-          : sendError
-            ? t('sendErrorTitle')
-            : t('loadErrorTitle')
+          : noTemplate
+            ? t('noTemplateTitle')
+            : sendError
+              ? t('sendErrorTitle')
+              : t('loadErrorTitle')
       }
       errorDescription={
         sendErrorIsOrgProfile
           ? t('orgProfileErrorDescription')
-          : sendError
-            ? t('sendError', { name: volunteerName })
-            : t('loadError', { name: volunteerName })
+          : noTemplate
+            ? t('noTemplateDescription', { pauschale: pauschaleLabel })
+            : sendError
+              ? t('sendError', { name: volunteerName })
+              : t('loadError', { name: volunteerName })
       }
       errorMessage={
-        sendErrorIsOrgProfile
+        sendErrorIsOrgProfile || noTemplate
           ? undefined
           : (sendError ??
             (loadError instanceof Error ? loadError.message : undefined))
@@ -315,7 +323,7 @@ export function ContractCreationModal({
           ? canEditOrg
             ? t('editProfileCta')
             : undefined
-          : noContractTemplate || sendErrorIsNoTemplate
+          : noTemplate
             ? t('noTemplateCta')
             : undefined
       }
@@ -324,7 +332,7 @@ export function ContractCreationModal({
           ? canEditOrg
             ? editOrgProfileCta
             : undefined
-          : noContractTemplate || sendErrorIsNoTemplate
+          : noTemplate
             ? createTemplateCta
             : undefined
       }

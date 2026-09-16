@@ -23,6 +23,11 @@ import {
   getDocLineSummary,
   getPickerAnnotations,
 } from '../lib/board-data.utils';
+import {
+  documentCreationBlockedFor,
+  type TemplateReadinessByPauschale,
+} from '../lib/setup-status';
+import { AlertIconTooltip } from './alert-icon-tooltip';
 import { ContractCreationModal } from './contract-creation-modal';
 import {
   DocTypeHeader,
@@ -77,6 +82,7 @@ interface CreateDocumentModalProps {
   volunteers: BoardVolunteer[];
   onContractSent: (docId: string) => void;
   onInvoiceSent: (docId: string) => void;
+  templateReadiness: TemplateReadinessByPauschale;
 }
 
 export function CreateDocumentModal({
@@ -86,6 +92,7 @@ export function CreateDocumentModal({
   volunteers,
   onContractSent,
   onInvoiceSent,
+  templateReadiness,
 }: CreateDocumentModalProps) {
   const t = useTranslations('Accounting.reimbursements');
   const tCommon = useTranslations('Common');
@@ -226,6 +233,14 @@ export function CreateDocumentModal({
                     );
                     const selected =
                       selectedLine && lineKey(selectedLine) === lineKey(line);
+                    // A missing template would only carry the admin into the
+                    // same dead end the modal's step 2 already guards against
+                    // — block the line here too instead of letting them pick it.
+                    const blocked = documentCreationBlockedFor(
+                      templateReadiness,
+                      line.pauschale,
+                      line.kind,
+                    );
                     return (
                       // The "view volunteer" stub button below sits as a
                       // sibling overlay, not a descendant: nesting a
@@ -234,13 +249,19 @@ export function CreateDocumentModal({
                       <div key={lineKey(line)} className="relative">
                         <button
                           type="button"
-                          onClick={() => setSelectedLine(line)}
+                          disabled={blocked}
+                          onClick={() => {
+                            if (blocked) return;
+                            setSelectedLine(line);
+                          }}
                           className={cn(
                             'flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-colors',
                             count > 0 && 'pr-28',
-                            selected
-                              ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                              : 'border-border bg-card hover:bg-muted',
+                            blocked
+                              ? 'cursor-not-allowed border-border bg-card opacity-50'
+                              : selected
+                                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                                : 'border-border bg-card hover:bg-muted',
                           )}
                         >
                           <DocTypeHeader
@@ -278,9 +299,16 @@ export function CreateDocumentModal({
                               </p>
                             )}
                           </div>
+
+                          {blocked && (
+                            <AlertIconTooltip
+                              hint={tDocs('statusLabel.templateMissingHint')}
+                              className="text-alert"
+                            />
+                          )}
                         </button>
 
-                        {count > 0 && (
+                        {count > 0 && !blocked && (
                           // A stub for now — needs a real userId to open
                           // the volunteer-profile sheet.
                           <button
