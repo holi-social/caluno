@@ -19,6 +19,10 @@ import { API_URL } from '@/lib/constants';
 import { formatEuro } from '@/lib/formatting/formats';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import { documentRowAction } from '../lib/board-data.utils';
+import {
+  documentCreationBlockedFor,
+  type TemplateReadinessByPauschale,
+} from '../lib/setup-status';
 import { AlertIconTooltip } from './alert-icon-tooltip';
 import type { PauschalenType } from './doc-type-header';
 import { DocTypeHeader, getPauschaleKey } from './doc-type-header';
@@ -275,6 +279,7 @@ interface VolunteerTableGroupProps {
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
   canCreateDocuments: boolean;
+  templateReadiness: TemplateReadinessByPauschale;
 }
 
 function VolunteerTableGroup({
@@ -286,6 +291,7 @@ function VolunteerTableGroup({
   dateRange,
   activeTile,
   canCreateDocuments,
+  templateReadiness,
 }: VolunteerTableGroupProps) {
   const t = useTranslations('Accounting.reimbursements');
   const tSections = useTranslations('Accounting.templates.sections');
@@ -417,9 +423,16 @@ function VolunteerTableGroup({
           // Contract-generate has nothing to show yet (no signing chain has
           // started); timesheet-generate already has computed hours/amount.
           const rowAction = documentRowAction(doc);
-          const canOpenSheet = rowAction !== 'none';
           const effectivePauschale = doc.pauschale ?? vol.pauschale;
           const docNonCompliant = isTimesheetNonCompliant(vol, doc);
+          const createBlocked =
+            actionKey === 'create' &&
+            documentCreationBlockedFor(
+              templateReadiness,
+              effectivePauschale,
+              isTimesheet ? 'invoice' : 'contract',
+            );
+          const canOpenSheet = rowAction !== 'none' && !createBlocked;
           const isDeclined =
             doc.status === 'contract-declined' ||
             doc.status === 'timesheet-declined';
@@ -436,6 +449,7 @@ function VolunteerTableGroup({
               )}
               onClick={() => {
                 if (rowAction === 'create') {
+                  if (createBlocked) return;
                   onRequestCreate({ doc, vol });
                   return;
                 }
@@ -545,6 +559,16 @@ function VolunteerTableGroup({
                       className="text-alert"
                     />
                   )}
+                  {createBlocked && (
+                    <AlertIconTooltip
+                      hint={t(
+                        'docs.statusLabel.templateMissingHint' as Parameters<
+                          typeof t
+                        >[0],
+                      )}
+                      className="text-alert"
+                    />
+                  )}
                   {isDeclined && (
                     <Button
                       size="sm"
@@ -561,11 +585,14 @@ function VolunteerTableGroup({
                     <Button
                       size="sm"
                       variant={actionKey === 'create' ? 'default' : 'outline'}
-                      disabled={actionKey === 'create' && !canCreateDocuments}
+                      disabled={
+                        actionKey === 'create' &&
+                        (!canCreateDocuments || createBlocked)
+                      }
                       onClick={(e) => {
                         e.stopPropagation();
                         if (actionKey === 'create') {
-                          if (!canCreateDocuments) return;
+                          if (!canCreateDocuments || createBlocked) return;
                           onRequestCreate({ doc, vol });
                         } else {
                           onDocumentClick(doc, vol);
@@ -597,6 +624,7 @@ interface ReimbursementsTableProps {
   dateRange: DateRange | undefined;
   activeTile: TileFilter;
   canCreateDocuments: boolean;
+  templateReadiness: TemplateReadinessByPauschale;
 }
 
 export function ReimbursementsTable({
@@ -608,6 +636,7 @@ export function ReimbursementsTable({
   dateRange,
   activeTile,
   canCreateDocuments,
+  templateReadiness,
 }: ReimbursementsTableProps) {
   const t = useTranslations('Accounting.reimbursements');
 
@@ -641,6 +670,7 @@ export function ReimbursementsTable({
               dateRange={dateRange}
               activeTile={activeTile}
               canCreateDocuments={canCreateDocuments}
+              templateReadiness={templateReadiness}
             />
           ))}
         </TableBody>

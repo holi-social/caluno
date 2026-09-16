@@ -1,6 +1,6 @@
 import type { DataError } from '../errors/data-error';
-import { fromGraphQLError } from '../errors/translate';
-import { getSdk, type SdkFunctionWrapper } from '../generated/graphql';
+import { createSdkErrorWrapper } from '../errors/translate';
+import { getSdk } from '../generated/graphql';
 import { EventRepository } from '../repositories/event/event.repository';
 import { MembershipRepository } from '../repositories/membership/membership.repository';
 import { MembershipRequestRepository } from '../repositories/membershipRequest/membershipRequest.repository';
@@ -51,17 +51,7 @@ export class DataClient {
   ) {
     const graphqlClient = createGraphQLClient(clientConfig);
 
-    const graphQLCallWrapper: SdkFunctionWrapper = async (action) => {
-      try {
-        return await action();
-      } catch (error) {
-        const dataError = fromGraphQLError(error);
-        onError(dataError);
-        throw dataError;
-      }
-    };
-
-    const sdk = getSdk(graphqlClient, graphQLCallWrapper);
+    const sdk = getSdk(graphqlClient, createSdkErrorWrapper(onError));
 
     this.organizationContext = organizationContext;
     this.user = new UserRepository(sdk);

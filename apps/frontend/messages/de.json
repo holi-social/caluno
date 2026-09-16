@@ -2048,7 +2048,8 @@
           "overCapHint": "Der Betrag dieses Stundennachweises bringt die Person an oder über ihr Jahreslimit",
           "contractMissing": "Keine Vereinbarung — manuell anlegen",
           "timesheetMuted": "Erfasst ohne Vereinbarung",
-          "declined": "Abgelehnt"
+          "declined": "Abgelehnt",
+          "templateMissingHint": "Noch keine Vorlage für diese Pauschale — unter Buchhaltung → Vorlagen einrichten."
         },
         "actions": {
           "create": "Überprüfen und erstellen",
@@ -2098,6 +2099,8 @@
         "sendErrorToast": "Die Vereinbarung konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Profildaten konnten nicht geladen werden",
         "loadError": "Die Profildaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "noTemplateTitle": "Noch keine Vertragsvorlage",
+        "noTemplateDescription": "Für {pauschale} gibt es noch keine Vertragsvorlage. Erstellen Sie zuerst eine und kommen Sie dann zurück, um den Vertrag anzulegen.",
         "sendErrorTitle": "Vertrag konnte nicht gesendet werden",
         "sendError": "Der Vertrag konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Vertragsvorlage erstellen",
@@ -2124,6 +2127,8 @@
         "sendErrorToast": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "loadErrorTitle": "Stundennachweisdaten konnten nicht geladen werden",
         "loadError": "Die Stundennachweisdaten von {name} konnten nicht geladen werden. Bitte schließen und erneut versuchen.",
+        "noTemplateTitle": "Noch keine Stundennachweis-Vorlage",
+        "noTemplateDescription": "Die Dokumentvorlagen für {pauschale} sind noch nicht eingerichtet. Erstellen Sie sie zuerst und kommen Sie dann zurück, um den Stundennachweis anzulegen.",
         "sendErrorTitle": "Stundennachweis konnte nicht gesendet werden",
         "sendError": "Der Stundennachweis konnte nicht an {name} gesendet werden. Bitte erneut versuchen.",
         "noTemplateCta": "Stundennachweis-Vorlage erstellen",

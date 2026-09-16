@@ -274,11 +274,15 @@ export function InvoiceCreationModal({
     yearlyUsageQuery.error;
 
   // The most common blocker: the org has the reimbursement type but no
-  // invoice template yet (org-default or unit-override). Offer a direct CTA
-  // to the template builder instead of a dead end.
+  // invoice/contract template yet (org-default or unit-override). Offer a
+  // direct CTA to the template builder instead of a dead end. An invoice
+  // auto-drafts a contract, so a missing contract template blocks it too.
   const noInvoiceTemplate =
     invoiceTemplateQuery.error instanceof DataError &&
     invoiceTemplateQuery.error.options?.code === 'NOT_FOUND';
+  const noContractTemplate =
+    contractTemplateQuery.error instanceof DataError &&
+    contractTemplateQuery.error.options?.code === 'NOT_FOUND';
   const createTemplateCta = () =>
     router.push(`/admin/${orgUId}/accounting/settings/templates`);
 
@@ -386,6 +390,11 @@ export function InvoiceCreationModal({
   };
 
   const sendErrorIsNoTemplate = sendErrorCode === 'NOT_FOUND';
+  // A missing template is an ordinary state, not an unexpected failure: show
+  // the dedicated copy + CTA and never the raw server message (it carries the
+  // internal reimbursement-type id).
+  const noTemplate =
+    noInvoiceTemplate || noContractTemplate || sendErrorIsNoTemplate;
   const sendErrorIsOrgProfile = /organization is missing/i.test(
     sendError ?? '',
   );
@@ -540,19 +549,23 @@ export function InvoiceCreationModal({
       errorTitle={
         sendErrorIsOrgProfile
           ? t('orgProfileErrorTitle')
-          : sendError
-            ? t('sendErrorTitle')
-            : t('loadErrorTitle')
+          : noTemplate
+            ? t('noTemplateTitle')
+            : sendError
+              ? t('sendErrorTitle')
+              : t('loadErrorTitle')
       }
       errorDescription={
         sendErrorIsOrgProfile
           ? t('orgProfileErrorDescription')
-          : sendError
-            ? t('sendError', { name: volunteerName })
-            : t('loadError', { name: volunteerName })
+          : noTemplate
+            ? t('noTemplateDescription', { pauschale: pauschaleLabel })
+            : sendError
+              ? t('sendError', { name: volunteerName })
+              : t('loadError', { name: volunteerName })
       }
       errorMessage={
-        sendErrorIsOrgProfile
+        sendErrorIsOrgProfile || noTemplate
           ? undefined
           : (sendError ??
             (loadError instanceof Error ? loadError.message : undefined))
@@ -562,7 +575,7 @@ export function InvoiceCreationModal({
           ? canEditOrg
             ? t('editProfileCta')
             : undefined
-          : noInvoiceTemplate || sendErrorIsNoTemplate
+          : noTemplate
             ? t('noTemplateCta')
             : undefined
       }
@@ -571,7 +584,7 @@ export function InvoiceCreationModal({
           ? canEditOrg
             ? editOrgProfileCta
             : undefined
-          : noInvoiceTemplate || sendErrorIsNoTemplate
+          : noTemplate
             ? createTemplateCta
             : undefined
       }
