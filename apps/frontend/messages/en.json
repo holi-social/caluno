@@ -2245,7 +2245,16 @@
           "incompleteCount": "{count} fields need a value",
           "notSetYet": "not set yet",
           "sameAsAbove": "same value as set above",
-          "scrollRegionLabel": "Template editor, scrollable"
+          "scrollRegionLabel": "Template editor, scrollable",
+          "placeholderExamples": {
+            "volunteer_first_name": "First name",
+            "volunteer_last_name": "Last name"
+          }
+        },
+        "blockHeadings": {
+          "persoenlicheDaten": "Personal data",
+          "stundennachweis": "Stundennachweis",
+          "jahresdeckelHinweis": "Payments already received"
         },
         "editorGroups": {
           "org": "Organization details",
