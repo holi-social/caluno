@@ -53,16 +53,6 @@ export const NotificationEvent = {
   EVENT_CANCELLED: 'notification.event.cancelled',
   EVENT_REMOVED: 'notification.event.removed',
   EVENT_DETAILS_CHANGED: 'notification.event.details-changed',
-  // The volunteer is only ever told about the two things that ask something
-  // of them (or take something away): a document waiting for their signature,
-  // and the organisation declining a document they had already signed.
-  // Generation and final countersignature settle quietly — see
-  // accounting-volunteer-documents.
-  DOCUMENT_AWAITING_SIGNATURE: 'notification.document.awaiting-signature',
-  DOCUMENT_DECLINED_BY_ORG: 'notification.document.declined-by-org',
-  // The admin-facing counterpart: the volunteer declined a document with a
-  // reason, and whoever can correct and reissue it needs to know (VOLI-1246).
-  DOCUMENT_DECLINED_BY_VOLUNTEER: 'notification.document.declined-by-volunteer',
 } as const;
 
 export type NotificationEvent =

@@ -13,7 +13,6 @@ import {
 } from '@thallesp/nestjs-better-auth';
 import { betterAuth } from 'better-auth';
 import { Logger } from 'nestjs-pino';
-import { AccountingModule } from './accounting/accounting.module';
 import { type BetterAuthLogger, createAuthConfig } from './auth/auth';
 import { AuthModule } from './auth/auth.module';
 import { createSessionCachingAuthGuard } from './auth/guards/auth.guard';
@@ -295,7 +294,6 @@ const autoSchemaFile =
     StorageModule,
     BetterAuthModule,
     AuthModule,
-    AccountingModule,
   ],
   controllers: [],
   providers: [

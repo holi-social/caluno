@@ -505,43 +505,6 @@
     "previewText": "{shiftTitle} is still below the minimum number of volunteers.",
     "footerNote": "You're receiving this because you manage shifts on {brandName}."
   },
-  "documentAwaitingSignature": {
-    "heading": "Your document is waiting for your signature",
-    "greeting": "Hi {firstName},",
-    "from": "from {organizationName} is waiting for your signature.",
-    "detail": "You can read and download the document before you sign — signing is one tap.",
-    "buttonLabel": "Open my documents",
-    "note": "The document also appears under \"Your documents\" in your profile.",
-    "subject": "{documentName} from {organizationName} is waiting for your signature",
-    "previewText": "{documentName} from {organizationName} is waiting for your signature.",
-    "footerNote": "You're receiving this because a document from {organizationName} needs your signature on {brandName}."
-  },
-  "documentDeclinedByOrg": {
-    "heading": "A document was declined",
-    "greeting": "Hi {firstName},",
-    "from": "from {organizationName} was declined.",
-    "reasonLabel": "Reason given:",
-    "buttonLabel": "Open my documents",
-    "note": "The document can no longer be signed. The organisation may issue a new one.",
-    "subject": "{documentName} from {organizationName} was declined",
-    "previewText": "{documentName} from {organizationName} was declined.",
-    "footerNote": "You're receiving this because a document from {organizationName} was declined on {brandName}."
-  },
-  "documentDeclinedByVolunteer": {
-    "heading": "A volunteer declined a document",
-    "greeting": "Hi {firstName},",
-    "declined": "declined {documentName}.",
-    "reasonLabel": "Reason given:",
-    "buttonLabel": "Open Abrechnungen",
-    "note": "The document needs to be corrected and reissued before it can be signed again.",
-    "subject": "{volunteerName} declined {documentName}",
-    "previewText": "{volunteerName} declined {documentName}.",
-    "footerNote": "You're receiving this because you manage accounting documents on {brandName}."
-  },
-  "documentNames": {
-    "agreement": "Supplementary agreement",
-    "timesheet": "Timesheet"
-  },
   "volunteerDigest": {
     "heading": "Your week ahead",
     "greeting": "Hi {firstName}, here's what's on for the week ahead.",

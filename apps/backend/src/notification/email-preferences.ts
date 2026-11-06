@@ -30,14 +30,11 @@ export type EmailPreferenceFlags = Partial<
  * Which volunteer setting governs each notification's *volunteer-facing*
  * email, or `null` when no volunteer setting governs it.
  *
- * `null` is deliberate for two families:
- *
- * - emails addressed to a manager about a volunteer — those name a third party
- *   (`volunteerName` / `requesterName` / `joinedUserId`) and are sent to
- *   somebody acting in a manager role, not to the volunteer the setting
- *   belongs to. The story is explicit: manager emails ignore volunteer
- *   settings.
- * - document/signing emails, which the story does not list under Platform.
+ * `null` is deliberate for emails addressed to a manager about a volunteer —
+ * those name a third party (`volunteerName` / `requesterName` / `joinedUserId`)
+ * and are sent to somebody acting in a manager role, not to the volunteer the
+ * setting belongs to. The story is explicit: manager emails ignore volunteer
+ * settings.
  *
  * Typed as a full `Record` so adding an event to `NotificationEvent` without
  * classifying it here is a type error rather than a silent un-gated send.
@@ -79,11 +76,6 @@ export const NOTIFICATION_EMAIL_GROUP: Record<
   [NotificationEvent.MEMBERSHIP_REQUESTED]: null,
   [NotificationEvent.MEMBERSHIP_LEFT]: null,
   [NotificationEvent.ORGANIZATION_CREATED]: null,
-
-  // Documents are out of scope for the Platform toggle.
-  [NotificationEvent.DOCUMENT_AWAITING_SIGNATURE]: null,
-  [NotificationEvent.DOCUMENT_DECLINED_BY_ORG]: null,
-  [NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER]: null,
 
   // The call-out and digest are sent directly by their own senders rather than
   // through the emitter; the entries below are the groups those senders

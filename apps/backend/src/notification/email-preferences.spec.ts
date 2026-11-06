@@ -71,16 +71,6 @@ describe('notification email groups', () => {
     }
   });
 
-  it('leaves document emails ungated (not part of the Platform toggle)', () => {
-    for (const event of [
-      NotificationEvent.DOCUMENT_AWAITING_SIGNATURE,
-      NotificationEvent.DOCUMENT_DECLINED_BY_ORG,
-      NotificationEvent.DOCUMENT_DECLINED_BY_VOLUNTEER,
-    ]) {
-      expect(NOTIFICATION_EMAIL_GROUP[event]).toBeNull();
-    }
-  });
-
   it('gates the urgent call-out and the weekly digest, but not their manager mails', () => {
     expect(
       NOTIFICATION_EMAIL_GROUP[NotificationEvent.SHIFT_INSTANCE_CALL_OUT],

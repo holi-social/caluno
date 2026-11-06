@@ -43,11 +43,6 @@ export const PERMISSION_GROUPS: readonly PermissionGroupDefinition[] = [
     ],
   },
   {
-    key: 'accounting',
-    label: 'Managing accounting',
-    permissions: [{ key: PermissionKey.ACCOUNTING_MANAGE, label: 'Manage' }],
-  },
-  {
     key: 'check-in',
     label: 'Managing check-in',
     permissions: [{ key: PermissionKey.CHECK_IN_MANAGE, label: 'Manage' }],

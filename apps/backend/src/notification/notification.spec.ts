@@ -4,7 +4,6 @@ jest.mock('nanoid', () => ({
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { DocumentKind } from '../accounting/enums';
 import type { Locale } from '../graphql/locale';
 import { AppI18nService } from '../i18n/app-i18n.service';
 import type { EmailTemplateContext } from '../i18n/email-translate';
@@ -21,8 +20,6 @@ import { RecurrenceDay } from '../shift/enums';
 import { UserService } from '../user/user.service';
 import { CheckInQrService } from './email/check-in-qr.service';
 import { EmailService } from './email/email.service';
-import { documentAwaitingSignatureTemplate } from './email/templates/document-awaiting-signature.template';
-import { documentDeclinedByOrgTemplate } from './email/templates/document-declined-by-org.template';
 import { eventCancelledTemplate } from './email/templates/event-cancelled.template';
 import { eventDetailsChangedTemplate } from './email/templates/event-details-changed.template';
 import { eventInvitedTemplate } from './email/templates/event-invited.template';
@@ -54,7 +51,6 @@ import { shiftSeriesLeftTemplate } from './email/templates/shift-series-left.tem
 import { shiftSeriesRemovedTemplate } from './email/templates/shift-series-removed.template';
 import { shiftSeriesVolunteerLeftTemplate } from './email/templates/shift-series-volunteer-left.template';
 import { volunteerDigestTemplate } from './email/templates/volunteer-digest.template';
-import { DocumentListener } from './listeners/document.listener';
 import { EventListener } from './listeners/event.listener';
 import { MembershipListener } from './listeners/membership.listener';
 import { OrganizationListener } from './listeners/organization.listener';
@@ -127,7 +123,6 @@ describe('NotificationModule', () => {
         MembershipListener,
         ShiftListener,
         EventListener,
-        DocumentListener,
         { provide: EmailService, useValue: emailService },
         { provide: UserService, useValue: userService },
         { provide: UserLocaleService, useValue: userLocaleService },
@@ -1219,80 +1214,6 @@ describe('NotificationModule', () => {
       subject: expected.subject,
       html: expected.html,
     });
-  });
-
-  it('sends awaiting-signature email to the volunteer', async () => {
-    const user = {
-      id: 'user-vol-1',
-      name: 'Alexandra Bauer',
-      email: 'alex@example.com',
-    };
-    userService.findById.mockResolvedValue(user);
-
-    const payload = {
-      volunteerUserId: user.id,
-      documentId: 'contract-1',
-      documentKind: DocumentKind.CONTRACT,
-      organizationName: 'Acme Volunteers',
-    };
-    const expected = await documentAwaitingSignatureTemplate(
-      {
-        organizationName: payload.organizationName,
-        recipientFirstName: 'Alexandra',
-        documentName: 'Supplementary agreement',
-      },
-      createFixtureTranslator('en'),
-    );
-
-    notificationService.notifyDocumentAwaitingSignature(payload);
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(emailService.send).toHaveBeenCalledWith({
-      to: user.email,
-      subject: expected.subject,
-      html: expected.html,
-    });
-    expect(expected.subject).toContain('Supplementary agreement');
-  });
-
-  it('sends declined-by-org email with the reason to the volunteer', async () => {
-    const user = {
-      id: 'user-vol-2',
-      name: 'Alexandra Bauer',
-      email: 'alex@example.com',
-    };
-    userService.findById.mockResolvedValue(user);
-    userLocaleService.resolveForUser.mockResolvedValue('de');
-
-    const payload = {
-      volunteerUserId: user.id,
-      documentId: 'timesheet-1',
-      documentKind: DocumentKind.INVOICE,
-      organizationName: 'Acme Volunteers',
-      reason: 'Zeitraum stimmt nicht überein',
-    };
-    const expected = await documentDeclinedByOrgTemplate(
-      {
-        organizationName: payload.organizationName,
-        recipientFirstName: 'Alexandra',
-        documentName: 'Stundennachweis',
-        reason: payload.reason,
-      },
-      createFixtureTranslator('de'),
-    );
-
-    notificationService.notifyDocumentDeclinedByOrg(payload);
-
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(emailService.send).toHaveBeenCalledWith({
-      to: user.email,
-      subject: expected.subject,
-      html: expected.html,
-    });
-    expect(expected.html).toContain(payload.reason);
-    expect(expected.subject).toContain('abgelehnt');
   });
 
   it('sends membership rejected email to the applicant with reason', async () => {

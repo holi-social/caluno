@@ -46,10 +46,6 @@ export const POSTHOG_OBJECTS = [
   'requirement_fulfillment',
   'requirement_profile_submission',
   'required_form',
-  'contract',
-  'invoice',
-  'document_template',
-  'reimbursement_rate',
   'file',
   'otp',
   'password_reset',
@@ -75,8 +71,6 @@ export const POSTHOG_ACTIONS = [
   'end',
   'check_in',
   'check_out',
-  'sign',
-  'decline',
   'send',
   'upload',
 ] as const;
@@ -371,28 +365,6 @@ export const POSTHOG_EVENT_REGISTRY = {
   requirement_fulfillment_delete: defineEvent(
     'requirement_fulfillment_delete',
     'A requirement fulfillment is deleted.',
-  ),
-  invoice_create: defineEvent('invoice_create', 'An invoice is created.'),
-  invoice_sign: defineEvent('invoice_sign', 'An invoice is signed.'),
-  invoice_decline: defineEvent('invoice_decline', 'An invoice is declined.'),
-  contract_create: defineEvent('contract_create', 'A contract is created.'),
-  contract_sign: defineEvent('contract_sign', 'A contract is signed.'),
-  contract_decline: defineEvent('contract_decline', 'A contract is declined.'),
-  document_template_create: defineEvent(
-    'document_template_create',
-    'A document template is created.',
-  ),
-  document_template_update: defineEvent(
-    'document_template_update',
-    'A document template is updated.',
-  ),
-  document_template_delete: defineEvent(
-    'document_template_delete',
-    'A document template is deleted.',
-  ),
-  reimbursement_rate_update: defineEvent(
-    'reimbursement_rate_update',
-    'A reimbursement rate is set.',
   ),
   file_create: defineEvent(
     'file_create',

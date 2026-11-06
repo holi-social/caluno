@@ -72,10 +72,6 @@ Add a noun here before inventing an event.
 | `requirement_fulfillment` | Requirement Fulfillment |
 | `requirement_profile_submission` | Requirement Profile Submission |
 | `required_form` | Required form assignment |
-| `contract` | Accounting |
-| `invoice` | Accounting |
-| `document_template` | Accounting |
-| `reimbursement_rate` | Accounting |
 | `file` | Storage |
 | `otp` | Auth OTP |
 | `password_reset` | Auth password-reset email |
@@ -105,8 +101,6 @@ Present tense. Add a verb here before using it in a name.
 | `end` | time entry closed (manual) |
 | `check_in` | QR/admin check-in |
 | `check_out` | QR/admin check-out |
-| `sign` | contract/invoice signed |
-| `decline` | contract/invoice declined |
 | `send` | OTP, password-reset, or call-out email dispatched |
 | `upload` | file bytes confirmed on object storage |
 

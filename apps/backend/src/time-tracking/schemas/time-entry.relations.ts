@@ -11,9 +11,5 @@ export const timeEntryRelations = defineRelationsPart(schema, (r) => ({
       from: r.timeEntries.shiftInstanceId,
       to: r.shiftInstances.id,
     }),
-    invoiceTimeEntry: r.one.invoiceTimeEntries({
-      from: r.timeEntries.id,
-      to: r.invoiceTimeEntries.timeEntryId,
-    }),
   },
 }));
