@@ -21,49 +21,12 @@ export type Scalars = {
   JSON: { input: Record<string, unknown>; output: Record<string, unknown>; }
 };
 
-export type AccountingOrgProfile = {
-  __typename?: 'AccountingOrgProfile';
-  address?: Maybe<Scalars['String']['output']>;
-  city?: Maybe<Scalars['String']['output']>;
-  legalRep?: Maybe<Scalars['String']['output']>;
-  name: Scalars['String']['output'];
-  zipCode?: Maybe<Scalars['String']['output']>;
-};
-
-export type AccountingSetupStatus = {
-  __typename?: 'AccountingSetupStatus';
-  canCreateDocuments: Scalars['Boolean']['output'];
-  canManageTemplates: Scalars['Boolean']['output'];
-  missingOrgProfileFields: Array<Scalars['String']['output']>;
-  orgProfile?: Maybe<AccountingOrgProfile>;
-  orgProfileComplete: Scalars['Boolean']['output'];
-  slots: Array<AccountingTemplateSlotStatus>;
-};
-
-export type AccountingTemplateSlotStatus = {
-  __typename?: 'AccountingTemplateSlotStatus';
-  hasContractTemplate: Scalars['Boolean']['output'];
-  hasInvoiceTemplate: Scalars['Boolean']['output'];
-  ready: Scalars['Boolean']['output'];
-  reimbursementTypeId: Scalars['ID']['output'];
-  reimbursementTypeKey: ReimbursementTypeKey;
-};
-
 export type AddTimeEntryInput = {
   endedAt?: InputMaybe<Scalars['DateTime']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['String']['input']>;
   shiftInstanceId?: InputMaybe<Scalars['String']['input']>;
   startedAt: Scalars['DateTime']['input'];
   volunteerId: Scalars['String']['input'];
-};
-
-export type BundleDownloadStatus = {
-  __typename?: 'BundleDownloadStatus';
-  downloadedAt: Scalars['DateTime']['output'];
-  downloadedByUser?: Maybe<User>;
-  reimbursementType: ReimbursementType;
-  volunteer: User;
 };
 
 export type CheckInContext = {
@@ -88,87 +51,6 @@ export type CheckInReadiness = {
 export type CloseTimeEntryInput = {
   endedAt: Scalars['DateTime']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type Contract = {
-  __typename?: 'Contract';
-  contractStatus: ContractStatus;
-  createdAt: Scalars['DateTime']['output'];
-  declineReason?: Maybe<Scalars['String']['output']>;
-  declinedAt?: Maybe<Scalars['DateTime']['output']>;
-  declinedAtSigneeType?: Maybe<SigneeType>;
-  declinedByUser?: Maybe<User>;
-  documentTemplate: DocumentTemplate;
-  downloadUrl?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  isNonCompliant: Scalars['Boolean']['output'];
-  missingOrgProfileFields: Array<Scalars['String']['output']>;
-  missingProfileFields: Array<Scalars['String']['output']>;
-  periodEnd: Scalars['DateTime']['output'];
-  periodStart: Scalars['DateTime']['output'];
-  reimbursementType: ReimbursementType;
-  renewDate?: Maybe<Scalars['DateTime']['output']>;
-  resolvedBody: Scalars['JSON']['output'];
-  signatures: Array<ContractSignature>;
-  statusChanges: Array<ContractStatusChange>;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-  volunteer: User;
-};
-
-export type ContractFilterInput = {
-  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['ID']['input']>;
-  status?: InputMaybe<ContractStatus>;
-  volunteerId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-export type ContractSignature = {
-  __typename?: 'ContractSignature';
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['ID']['output'];
-  order: Scalars['Int']['output'];
-  requiredPermission?: Maybe<Permission>;
-  signedAt?: Maybe<Scalars['DateTime']['output']>;
-  signedByUser?: Maybe<User>;
-  signeeType: SigneeType;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-};
-
-export enum ContractStatus {
-  Active = 'ACTIVE',
-  AwaitingNgoSignature = 'AWAITING_NGO_SIGNATURE',
-  AwaitingVolunteerSignature = 'AWAITING_VOLUNTEER_SIGNATURE',
-  Declined = 'DECLINED',
-  Draft = 'DRAFT',
-  Expired = 'EXPIRED'
-}
-
-export type ContractStatusChange = {
-  __typename?: 'ContractStatusChange';
-  actorUser?: Maybe<User>;
-  id: Scalars['ID']['output'];
-  occurredAt: Scalars['DateTime']['output'];
-  type: DocumentStatusChange;
-};
-
-export type CreateContractInput = {
-  fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-  periodEnd: Scalars['DateTime']['input'];
-  periodStart: Scalars['DateTime']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  volunteerId: Scalars['ID']['input'];
-};
-
-export type CreateDocumentTemplateInput = {
-  body: Scalars['JSON']['input'];
-  invoiceNumberFormat?: InputMaybe<Scalars['String']['input']>;
-  kind: DocumentKind;
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-  reimbursementTypeId: Scalars['ID']['input'];
-  renewalCadence?: InputMaybe<RenewalCadence>;
-  signees: Array<CreateTemplateSigneeInput>;
 };
 
 export type CreateEventInput = {
@@ -206,16 +88,6 @@ export type CreateFormBlockInput = {
   organizationId: Scalars['String']['input'];
   required?: InputMaybe<Scalars['Boolean']['input']>;
   title: Scalars['String']['input'];
-};
-
-export type CreateInvoiceInput = {
-  fieldOverrides?: InputMaybe<Array<DocumentFieldOverrideInput>>;
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-  periodEnd: Scalars['DateTime']['input'];
-  periodStart: Scalars['DateTime']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  timeEntryIds: Array<Scalars['ID']['input']>;
-  volunteerId: Scalars['ID']['input'];
 };
 
 export type CreateOrganizationInput = {
@@ -302,65 +174,11 @@ export type CreateShiftInput = {
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['ID']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
   rrule?: InputMaybe<Scalars['String']['input']>;
   startsAt: Scalars['DateTime']['input'];
   title: Scalars['String']['input'];
   visibility: ShiftVisibility;
-};
-
-export type CreateTemplateSigneeInput = {
-  order: Scalars['Int']['input'];
-  requiredPermissionId?: InputMaybe<Scalars['ID']['input']>;
-  signeeType: SigneeType;
-};
-
-export type DocumentFieldOverrideInput = {
-  fieldId: Scalars['String']['input'];
-  value: Scalars['String']['input'];
-};
-
-export enum DocumentKind {
-  Contract = 'CONTRACT',
-  Invoice = 'INVOICE'
-}
-
-export enum DocumentStatusChange {
-  Activated = 'ACTIVATED',
-  Countersigned = 'COUNTERSIGNED',
-  Created = 'CREATED',
-  Declined = 'DECLINED',
-  DraftSuperseded = 'DRAFT_SUPERSEDED',
-  Expired = 'EXPIRED',
-  Signed = 'SIGNED'
-}
-
-export type DocumentTemplate = {
-  __typename?: 'DocumentTemplate';
-  body: Scalars['JSON']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['ID']['output'];
-  invoiceNumberFormat?: Maybe<Scalars['String']['output']>;
-  isDeleted: Scalars['Boolean']['output'];
-  kind: DocumentKind;
-  lastEditedAt?: Maybe<Scalars['DateTime']['output']>;
-  lastEditedByUser?: Maybe<User>;
-  organization: Organization;
-  organizationUnit?: Maybe<OrganizationUnit>;
-  reimbursementType: ReimbursementType;
-  renewalCadence?: Maybe<RenewalCadence>;
-  signees: Array<TemplateSignee>;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-};
-
-export type EffectiveRate = {
-  __typename?: 'EffectiveRate';
-  hourlyRateCents: Scalars['Int']['output'];
-  isOverride: Scalars['Boolean']['output'];
-  organizationUnitId?: Maybe<Scalars['ID']['output']>;
-  provenance: RateProvenance;
-  reimbursementType: ReimbursementType;
 };
 
 export type Event = {
@@ -546,86 +364,6 @@ export type FormSubmissionValue = {
   value: Scalars['String']['output'];
 };
 
-export enum InviteAllowanceState {
-  Eligible = 'ELIGIBLE',
-  NearlyExhausted = 'NEARLY_EXHAUSTED',
-  NoAgreement = 'NO_AGREEMENT',
-  WouldExceed = 'WOULD_EXCEED'
-}
-
-export type Invoice = {
-  __typename?: 'Invoice';
-  createdAt: Scalars['DateTime']['output'];
-  declineReason?: Maybe<Scalars['String']['output']>;
-  declinedAt?: Maybe<Scalars['DateTime']['output']>;
-  declinedAtSigneeType?: Maybe<SigneeType>;
-  declinedByUser?: Maybe<User>;
-  documentTemplate: DocumentTemplate;
-  downloadUrl?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  invoiceStatus: InvoiceStatus;
-  invoiceTimeEntries: Array<InvoiceTimeEntry>;
-  isNonCompliant: Scalars['Boolean']['output'];
-  missingOrgProfileFields: Array<Scalars['String']['output']>;
-  missingProfileFields: Array<Scalars['String']['output']>;
-  paidAt?: Maybe<Scalars['DateTime']['output']>;
-  paidByUser?: Maybe<User>;
-  periodEnd: Scalars['DateTime']['output'];
-  periodStart: Scalars['DateTime']['output'];
-  reimbursementType: ReimbursementType;
-  resolvedBody: Scalars['JSON']['output'];
-  signatures: Array<InvoiceSignature>;
-  statusChanges: Array<InvoiceStatusChange>;
-  totalAmountCents: Scalars['Int']['output'];
-  totalHours: Scalars['Float']['output'];
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-  volunteer: User;
-};
-
-export type InvoiceFilterInput = {
-  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['ID']['input']>;
-  status?: InputMaybe<InvoiceStatus>;
-  volunteerId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-export type InvoiceSignature = {
-  __typename?: 'InvoiceSignature';
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['ID']['output'];
-  order: Scalars['Int']['output'];
-  requiredPermission?: Maybe<Permission>;
-  signedAt?: Maybe<Scalars['DateTime']['output']>;
-  signedByUser?: Maybe<User>;
-  signeeType: SigneeType;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-};
-
-export enum InvoiceStatus {
-  AwaitingSupervisorSignature = 'AWAITING_SUPERVISOR_SIGNATURE',
-  AwaitingVolunteerSignature = 'AWAITING_VOLUNTEER_SIGNATURE',
-  Declined = 'DECLINED',
-  Draft = 'DRAFT',
-  Ready = 'READY'
-}
-
-export type InvoiceStatusChange = {
-  __typename?: 'InvoiceStatusChange';
-  actorUser?: Maybe<User>;
-  id: Scalars['ID']['output'];
-  occurredAt: Scalars['DateTime']['output'];
-  type: DocumentStatusChange;
-};
-
-export type InvoiceTimeEntry = {
-  __typename?: 'InvoiceTimeEntry';
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['ID']['output'];
-  timeEntry: TimeEntry;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-};
-
 export type JoinEventResult = {
   __typename?: 'JoinEventResult';
   event: Event;
@@ -665,16 +403,6 @@ export enum JoinStatus {
   VolunteerRejected = 'VOLUNTEER_REJECTED',
   WaitlistJoined = 'WAITLIST_JOINED'
 }
-
-export type ManualBaseline = {
-  __typename?: 'ManualBaseline';
-  amountCents: Scalars['Int']['output'];
-  reimbursementType: ReimbursementType;
-  updatedAt: Scalars['DateTime']['output'];
-  updatedByUser?: Maybe<User>;
-  volunteer: User;
-  year: Scalars['Int']['output'];
-};
 
 export type Membership = {
   __typename?: 'Membership';
@@ -727,12 +455,9 @@ export type Mutation = {
   checkOut: TimeEntry;
   checkOutVolunteer: TimeEntry;
   closeTimeEntry: TimeEntry;
-  createContract: Contract;
-  createDocumentTemplate: DocumentTemplate;
   createEvent: Event;
   createFormBlock: FormBlock;
   createFormBlockField: FormBlock;
-  createInvoice: Invoice;
   createOrganization: Organization;
   createOrganizationUnit: OrganizationUnit;
   createRequirement: Requirement;
@@ -741,9 +466,6 @@ export type Mutation = {
   createRequirementProfileSubmission: RequirementProfileSubmission;
   createRole: Role;
   createShift: Shift;
-  declineContract: Contract;
-  declineInvoice: Invoice;
-  deleteDocumentTemplate: Scalars['Boolean']['output'];
   deleteEvent: Event;
   deleteFormBlock: FormBlock;
   deleteFormBlockField: FormBlock;
@@ -762,7 +484,6 @@ export type Mutation = {
   joinOrganization: JoinOrganizationResult;
   joinShiftInstance: JoinShiftInstanceResult;
   leaveMembership: Membership;
-  recordBundleDownload: BundleDownloadStatus;
   regenerateFormShareToken: RequirementForm;
   rejectMembershipRequest: MembershipRequest;
   remindShiftInstanceInvite: Scalars['DateTime']['output'];
@@ -770,17 +491,12 @@ export type Mutation = {
   removeMembershipRequest: MembershipRequest;
   sendShiftInstanceCallOut: ShiftInstanceCallOutResult;
   setEventRequiredForms: Array<RequiredFormRef>;
-  setManualBaseline: ManualBaseline;
   setMembershipIdVerified: Membership;
-  setReimbursementRate: ReimbursementRate;
   setRequiredForms: Array<RequiredFormRef>;
   setShiftInstanceRequiredForms: Array<RequiredFormRef>;
   setShiftRequiredForms: Array<RequiredFormRef>;
-  signContract: Contract;
-  signInvoice: Invoice;
   submitForm: FormSubmission;
   submitRequiredForm: FormSubmission;
-  updateDocumentTemplate: DocumentTemplate;
   updateEvent: Event;
   updateEventInviteStatus: EventInvite;
   updateFormBlock: FormBlock;
@@ -867,16 +583,6 @@ export type MutationCloseTimeEntryArgs = {
 };
 
 
-export type MutationCreateContractArgs = {
-  input: CreateContractInput;
-};
-
-
-export type MutationCreateDocumentTemplateArgs = {
-  input: CreateDocumentTemplateInput;
-};
-
-
 export type MutationCreateEventArgs = {
   input: CreateEventInput;
 };
@@ -890,11 +596,6 @@ export type MutationCreateFormBlockArgs = {
 export type MutationCreateFormBlockFieldArgs = {
   blockId: Scalars['String']['input'];
   input: CreateFormBlockFieldInput;
-};
-
-
-export type MutationCreateInvoiceArgs = {
-  input: CreateInvoiceInput;
 };
 
 
@@ -935,23 +636,6 @@ export type MutationCreateRoleArgs = {
 
 export type MutationCreateShiftArgs = {
   input: CreateShiftInput;
-};
-
-
-export type MutationDeclineContractArgs = {
-  contractId: Scalars['ID']['input'];
-  reason: Scalars['String']['input'];
-};
-
-
-export type MutationDeclineInvoiceArgs = {
-  invoiceId: Scalars['ID']['input'];
-  reason: Scalars['String']['input'];
-};
-
-
-export type MutationDeleteDocumentTemplateArgs = {
-  id: Scalars['ID']['input'];
 };
 
 
@@ -1047,13 +731,6 @@ export type MutationLeaveMembershipArgs = {
 };
 
 
-export type MutationRecordBundleDownloadArgs = {
-  invoiceIds?: InputMaybe<Array<Scalars['ID']['input']>>;
-  reimbursementTypeId: Scalars['ID']['input'];
-  volunteerId: Scalars['ID']['input'];
-};
-
-
 export type MutationRegenerateFormShareTokenArgs = {
   id: Scalars['String']['input'];
 };
@@ -1093,24 +770,9 @@ export type MutationSetEventRequiredFormsArgs = {
 };
 
 
-export type MutationSetManualBaselineArgs = {
-  amountCents: Scalars['Int']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  volunteerId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-};
-
-
 export type MutationSetMembershipIdVerifiedArgs = {
   membershipId: Scalars['ID']['input'];
   verified: Scalars['Boolean']['input'];
-};
-
-
-export type MutationSetReimbursementRateArgs = {
-  hourlyRateCents: Scalars['Int']['input'];
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-  reimbursementTypeId: Scalars['ID']['input'];
 };
 
 
@@ -1132,16 +794,6 @@ export type MutationSetShiftRequiredFormsArgs = {
 };
 
 
-export type MutationSignContractArgs = {
-  contractId: Scalars['ID']['input'];
-};
-
-
-export type MutationSignInvoiceArgs = {
-  invoiceId: Scalars['ID']['input'];
-};
-
-
 export type MutationSubmitFormArgs = {
   input: SubmitFormInput;
   organizationUnitId: Scalars['ID']['input'];
@@ -1154,12 +806,6 @@ export type MutationSubmitRequiredFormArgs = {
   input: SubmitFormInput;
   targetId: Scalars['String']['input'];
   targetType: RequiredFormTargetType;
-};
-
-
-export type MutationUpdateDocumentTemplateArgs = {
-  id: Scalars['ID']['input'];
-  input: UpdateDocumentTemplateInput;
 };
 
 
@@ -1300,26 +946,8 @@ export type MutationUpdateTimeEntryArgs = {
   input: UpdateTimeEntryInput;
 };
 
-export type MyDocumentSummary = {
-  __typename?: 'MyDocumentSummary';
-  pending: Scalars['Int']['output'];
-  total: Scalars['Int']['output'];
-};
-
-export type MyDocumentsGroup = {
-  __typename?: 'MyDocumentsGroup';
-  contracts: Array<Contract>;
-  invoices: Array<Invoice>;
-  logoUrl?: Maybe<Scalars['String']['output']>;
-  membershipId: Scalars['ID']['output'];
-  organizationName: Scalars['String']['output'];
-  organizationUnitId: Scalars['ID']['output'];
-  organizationUnitName: Scalars['String']['output'];
-};
-
 export type Organization = {
   __typename?: 'Organization';
-  accountingEnabled: Scalars['Boolean']['output'];
   address?: Maybe<Scalars['String']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   contactEmail?: Maybe<Scalars['String']['output']>;
@@ -1414,20 +1042,6 @@ export type PaginationInfo = {
   total: Scalars['Int']['output'];
 };
 
-export type PaidShiftSignupVolunteer = {
-  __typename?: 'PaidShiftSignupVolunteer';
-  reimbursementType: ReimbursementType;
-  volunteer: User;
-};
-
-export type PendingSignee = {
-  __typename?: 'PendingSignee';
-  eligibleUserIds?: Maybe<Array<Scalars['String']['output']>>;
-  permissionKey?: Maybe<Scalars['String']['output']>;
-  signeeType: SigneeType;
-  userId?: Maybe<Scalars['String']['output']>;
-};
-
 export type Permission = {
   __typename?: 'Permission';
   description?: Maybe<Scalars['String']['output']>;
@@ -1449,7 +1063,6 @@ export type PermissionGroupItem = {
 };
 
 export enum PermissionKey {
-  AccountingManage = 'ACCOUNTING_MANAGE',
   CheckInManage = 'CHECK_IN_MANAGE',
   OrgEdit = 'ORG_EDIT',
   OrgView = 'ORG_VIEW',
@@ -1463,25 +1076,16 @@ export enum PermissionKey {
 
 export type Query = {
   __typename?: 'Query';
-  accountingSetupStatus: AccountingSetupStatus;
-  activeDocumentTemplate: DocumentTemplate;
   activeShiftInstances: Array<ShiftInstance>;
   adminUserProfile?: Maybe<UserProfile>;
   adminVolunteerSubmission?: Maybe<FormSubmission>;
   availableEvents: EventPaginatedResponse;
   availableShiftInstances: ShiftInstancePaginatedResponse;
-  bundleDownloadStatus?: Maybe<BundleDownloadStatus>;
   checkInContext?: Maybe<CheckInContext>;
   checkInReadiness: CheckInReadiness;
   checkInShiftInstances: Array<ShiftInstance>;
   checkInShifts: Array<Shift>;
   checkInVolunteerRequiredForms: Array<RequiredFormWithStatus>;
-  contract: Contract;
-  contracts: Array<Contract>;
-  documentTemplate: DocumentTemplate;
-  documentTemplates: Array<DocumentTemplate>;
-  effectiveRates: Array<EffectiveRate>;
-  eligibleTimeEntriesForInvoice: Array<TimeEntry>;
   event: Event;
   eventInvites: Array<EventInvite>;
   eventShifts: ShiftPaginatedResponse;
@@ -1492,11 +1096,7 @@ export type Query = {
   formSubmissionsByForm: FormSubmissionPaginatedResponse;
   formSubmissionsByMembershipRequest: Array<FormSubmission>;
   formSubmissionsForVolunteer: Array<FormSubmission>;
-  inviteAllowanceEligibility: Array<VolunteerInviteAllowance>;
-  invoice: Invoice;
-  invoices: Array<Invoice>;
   isMemberOfUnitOrAncestor: Scalars['Boolean']['output'];
-  manualBaseline?: Maybe<ManualBaseline>;
   me: User;
   members: Array<User>;
   membership?: Maybe<Membership>;
@@ -1505,14 +1105,10 @@ export type Query = {
   memberships: Array<Membership>;
   myAdminstableOrganizationUnits: Array<OrganizationUnit>;
   myCheckInAdministrableOrganizationUnits: Array<OrganizationUnit>;
-  myContracts: Array<Contract>;
-  myDocumentSummary: MyDocumentSummary;
-  myDocuments: Array<MyDocumentsGroup>;
   myEvents: EventPaginatedResponse;
   myFormSubmission?: Maybe<FormSubmission>;
   myFormSubmissionByToken?: Maybe<FormSubmission>;
   myFormSubmissions: Array<FormSubmission>;
-  myInvoices: Array<Invoice>;
   myMembership?: Maybe<Membership>;
   myMembershipRequests: MembershipRequestPaginatedResponse;
   myMembershipStatus: Scalars['Boolean']['output'];
@@ -1530,9 +1126,6 @@ export type Query = {
   organizationUnitTypes: Array<OrganizationUnitType>;
   organizationUnits: OrganizationUnitPaginatedResponse;
   organizations: OrganizationPaginatedResponse;
-  paidShiftSignupVolunteers: Array<PaidShiftSignupVolunteer>;
-  pendingContractSignee?: Maybe<PendingSignee>;
-  pendingInvoiceSignee?: Maybe<PendingSignee>;
   permissionGroups: Array<PermissionGroup>;
   permissions: Array<Permission>;
   publicEvent: Event;
@@ -1541,7 +1134,6 @@ export type Query = {
   publicShiftInstance: ShiftInstance;
   publicShiftInstances: Array<ShiftInstance>;
   publicShiftsByOrganizationUnit: Array<Shift>;
-  reimbursementTypes: Array<ReimbursementType>;
   requirement?: Maybe<Requirement>;
   requirementForm?: Maybe<RequirementForm>;
   requirementFormByShareToken?: Maybe<RequirementForm>;
@@ -1555,7 +1147,6 @@ export type Query = {
   requirements: RequirementPaginatedResponse;
   role: Role;
   roles: Array<Role>;
-  rosterYearlyUsage: Array<VolunteerYearlyUsage>;
   shift: Shift;
   shiftInstance: ShiftInstance;
   shiftInstances: Array<ShiftInstance>;
@@ -1567,16 +1158,7 @@ export type Query = {
   timeEntry: TimeEntry;
   user?: Maybe<User>;
   userByCheckInId?: Maybe<User>;
-  volunteersNeedingTimesheets: Array<VolunteerNeedsTimesheet>;
   weeklyShifts: Array<ShiftInstance>;
-  yearlyUsage: YearlyUsage;
-};
-
-
-export type QueryActiveDocumentTemplateArgs = {
-  kind: DocumentKind;
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-  reimbursementTypeId: Scalars['ID']['input'];
 };
 
 
@@ -1608,12 +1190,6 @@ export type QueryAvailableShiftInstancesArgs = {
 };
 
 
-export type QueryBundleDownloadStatusArgs = {
-  reimbursementTypeId: Scalars['ID']['input'];
-  volunteerId: Scalars['ID']['input'];
-};
-
-
 export type QueryCheckInContextArgs = {
   checkInId: Scalars['String']['input'];
 };
@@ -1639,34 +1215,6 @@ export type QueryCheckInShiftsArgs = {
 
 
 export type QueryCheckInVolunteerRequiredFormsArgs = {
-  volunteerId: Scalars['ID']['input'];
-};
-
-
-export type QueryContractArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type QueryContractsArgs = {
-  filter?: InputMaybe<ContractFilterInput>;
-};
-
-
-export type QueryDocumentTemplateArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type QueryEffectiveRatesArgs = {
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-
-export type QueryEligibleTimeEntriesForInvoiceArgs = {
-  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
-  reimbursementTypeId: Scalars['ID']['input'];
   volunteerId: Scalars['ID']['input'];
 };
 
@@ -1728,33 +1276,9 @@ export type QueryFormSubmissionsForVolunteerArgs = {
 };
 
 
-export type QueryInviteAllowanceEligibilityArgs = {
-  organizationUnitId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  shiftDurationMinutes: Scalars['Int']['input'];
-};
-
-
-export type QueryInvoiceArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type QueryInvoicesArgs = {
-  filter?: InputMaybe<InvoiceFilterInput>;
-};
-
-
 export type QueryIsMemberOfUnitOrAncestorArgs = {
   organizationUnitId: Scalars['ID']['input'];
   userId: Scalars['String']['input'];
-};
-
-
-export type QueryManualBaselineArgs = {
-  reimbursementTypeId: Scalars['ID']['input'];
-  volunteerId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
 };
 
 
@@ -1777,11 +1301,6 @@ export type QueryMembershipRequestsArgs = {
   limit?: Scalars['Int']['input'];
   offset?: Scalars['Int']['input'];
   status?: InputMaybe<MembershipRequestStatus>;
-};
-
-
-export type QueryMyContractsArgs = {
-  filter?: InputMaybe<ContractFilterInput>;
 };
 
 
@@ -1808,11 +1327,6 @@ export type QueryMyFormSubmissionByTokenArgs = {
 
 export type QueryMyFormSubmissionsArgs = {
   organizationUnitId: Scalars['ID']['input'];
-};
-
-
-export type QueryMyInvoicesArgs = {
-  filter?: InputMaybe<InvoiceFilterInput>;
 };
 
 
@@ -1885,21 +1399,6 @@ export type QueryOrganizationUnitsArgs = {
 export type QueryOrganizationsArgs = {
   limit?: Scalars['Int']['input'];
   offset?: Scalars['Int']['input'];
-};
-
-
-export type QueryPaidShiftSignupVolunteersArgs = {
-  year: Scalars['Int']['input'];
-};
-
-
-export type QueryPendingContractSigneeArgs = {
-  contractId: Scalars['ID']['input'];
-};
-
-
-export type QueryPendingInvoiceSigneeArgs = {
-  invoiceId: Scalars['ID']['input'];
 };
 
 
@@ -1999,12 +1498,6 @@ export type QueryRoleArgs = {
 };
 
 
-export type QueryRosterYearlyUsageArgs = {
-  organizationUnitId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-};
-
-
 export type QueryShiftArgs = {
   id: Scalars['String']['input'];
 };
@@ -2065,12 +1558,6 @@ export type QueryUserByCheckInIdArgs = {
 };
 
 
-export type QueryVolunteersNeedingTimesheetsArgs = {
-  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
-};
-
-
 export type QueryWeeklyShiftsArgs = {
   endsBefore?: InputMaybe<Scalars['DateTime']['input']>;
   eventId?: InputMaybe<Scalars['ID']['input']>;
@@ -2078,67 +1565,6 @@ export type QueryWeeklyShiftsArgs = {
   offset?: Scalars['Int']['input'];
   startsAfter?: InputMaybe<Scalars['DateTime']['input']>;
 };
-
-
-export type QueryYearlyUsageArgs = {
-  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
-  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
-  reimbursementTypeId: Scalars['ID']['input'];
-  volunteerId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-};
-
-export type RateProvenance = {
-  __typename?: 'RateProvenance';
-  kind: RateProvenanceKind;
-  replacesRateCents?: Maybe<Scalars['Int']['output']>;
-  sourceName?: Maybe<Scalars['String']['output']>;
-};
-
-export enum RateProvenanceKind {
-  Default = 'DEFAULT',
-  Inherited = 'INHERITED',
-  Own = 'OWN'
-}
-
-export type ReimbursementRate = {
-  __typename?: 'ReimbursementRate';
-  createdAt: Scalars['DateTime']['output'];
-  hourlyRateCents: Scalars['Int']['output'];
-  id: Scalars['ID']['output'];
-  organization: Organization;
-  reimbursementType: ReimbursementType;
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-};
-
-export type ReimbursementType = {
-  __typename?: 'ReimbursementType';
-  createdAt: Scalars['DateTime']['output'];
-  id: Scalars['ID']['output'];
-  key: ReimbursementTypeKey;
-  legalReference: Scalars['String']['output'];
-  platformDefaultRateCents: Scalars['Int']['output'];
-  updatedAt?: Maybe<Scalars['DateTime']['output']>;
-  yearlyLimitCents: Scalars['Int']['output'];
-};
-
-export enum ReimbursementTypeKey {
-  Ehrenamt = 'EHRENAMT',
-  Uebungsleiter = 'UEBUNGSLEITER'
-}
-
-export type ReimbursementTypeUsage = {
-  __typename?: 'ReimbursementTypeUsage';
-  limitCents: Scalars['Int']['output'];
-  reimbursementType: ReimbursementType;
-  remainingCents: Scalars['Int']['output'];
-  usedCents: Scalars['Int']['output'];
-};
-
-export enum RenewalCadence {
-  Monthly = 'MONTHLY',
-  Yearly = 'YEARLY'
-}
 
 export type RequiredFormRef = {
   __typename?: 'RequiredFormRef';
@@ -2391,8 +1817,6 @@ export type Shift = {
   organizationUnit: OrganizationUnit;
   organizationUnitId: Scalars['ID']['output'];
   originalStartsAt: Scalars['DateTime']['output'];
-  reimbursementTypeId?: Maybe<Scalars['ID']['output']>;
-  reimbursementTypeKey?: Maybe<ReimbursementTypeKey>;
   requiredForms: Array<RequiredFormRef>;
   requiredFormsCount: Scalars['Int']['output'];
   rrule?: Maybe<Scalars['String']['output']>;
@@ -2429,7 +1853,6 @@ export type ShiftInstance = {
   overrideLocation?: Maybe<Scalars['String']['output']>;
   overrideMaxVolunteers?: Maybe<Scalars['Int']['output']>;
   overrideMinVolunteers?: Maybe<Scalars['Int']['output']>;
-  overrideReimbursementTypeId?: Maybe<Scalars['ID']['output']>;
   overrideTitle?: Maybe<Scalars['String']['output']>;
   requiredForms: Array<RequiredFormRef>;
   requiredFormsCount: Scalars['Int']['output'];
@@ -2514,11 +1937,6 @@ export enum ShiftVisibility {
   InvitedMembers = 'INVITED_MEMBERS'
 }
 
-export enum SigneeType {
-  PermissionHolder = 'PERMISSION_HOLDER',
-  Volunteer = 'VOLUNTEER'
-}
-
 export enum SortOrder {
   Asc = 'ASC',
   Desc = 'DESC'
@@ -2528,23 +1946,13 @@ export type SubmitFormInput = {
   values: Array<FormFieldValueInput>;
 };
 
-export type TemplateSignee = {
-  __typename?: 'TemplateSignee';
-  id: Scalars['ID']['output'];
-  order: Scalars['Int']['output'];
-  requiredPermission?: Maybe<Permission>;
-  signeeType: SigneeType;
-};
-
 export type TimeEntry = {
   __typename?: 'TimeEntry';
   createdAt: Scalars['DateTime']['output'];
   endedAt?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['ID']['output'];
-  isPaid: Scalars['Boolean']['output'];
   notes?: Maybe<Scalars['String']['output']>;
   organizationUnit: OrganizationUnit;
-  reimbursementType?: Maybe<ReimbursementType>;
   shiftInstance?: Maybe<ShiftInstance>;
   startedAt: Scalars['DateTime']['output'];
   volunteer: User;
@@ -2554,13 +1962,6 @@ export type TimeEntryPaginatedResponse = {
   __typename?: 'TimeEntryPaginatedResponse';
   items: Array<TimeEntry>;
   pagination: PaginationInfo;
-};
-
-export type UpdateDocumentTemplateInput = {
-  body?: InputMaybe<Scalars['JSON']['input']>;
-  invoiceNumberFormat?: InputMaybe<Scalars['String']['input']>;
-  renewalCadence?: InputMaybe<RenewalCadence>;
-  signees?: InputMaybe<Array<CreateTemplateSigneeInput>>;
 };
 
 export type UpdateEventInput = {
@@ -2683,7 +2084,6 @@ export type UpdateShiftInput = {
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['ID']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
   rrule?: InputMaybe<Scalars['String']['input']>;
   startsAt?: InputMaybe<Scalars['DateTime']['input']>;
@@ -2698,7 +2098,6 @@ export type UpdateShiftInstanceInput = {
   location?: InputMaybe<Scalars['String']['input']>;
   maxVolunteers?: InputMaybe<Scalars['Int']['input']>;
   minVolunteers?: InputMaybe<Scalars['Int']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['ID']['input']>;
   requiredFormIds?: InputMaybe<Array<Scalars['String']['input']>>;
   rrule?: InputMaybe<Scalars['String']['input']>;
   startsAt: Scalars['DateTime']['input'];
@@ -2709,7 +2108,6 @@ export type UpdateShiftInstanceInput = {
 export type UpdateTimeEntryInput = {
   endedAt?: InputMaybe<Scalars['DateTime']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
-  reimbursementTypeId?: InputMaybe<Scalars['String']['input']>;
   shiftInstanceId?: InputMaybe<Scalars['String']['input']>;
   startedAt: Scalars['DateTime']['input'];
 };
@@ -2750,309 +2148,6 @@ export type UserRequirementStatus = {
   requirementId: Scalars['ID']['output'];
   status: RequirementFulfillmentStatus;
 };
-
-export type VolunteerInviteAllowance = {
-  __typename?: 'VolunteerInviteAllowance';
-  state: InviteAllowanceState;
-  volunteerId: Scalars['ID']['output'];
-};
-
-export type VolunteerNeedsTimesheet = {
-  __typename?: 'VolunteerNeedsTimesheet';
-  eligibleHours: Scalars['Float']['output'];
-  estimatedAmountCents: Scalars['Int']['output'];
-  periodEnd: Scalars['DateTime']['output'];
-  periodStart: Scalars['DateTime']['output'];
-  reimbursementType: ReimbursementType;
-  volunteer: User;
-};
-
-export type VolunteerYearlyUsage = {
-  __typename?: 'VolunteerYearlyUsage';
-  usageByType: Array<ReimbursementTypeUsage>;
-  volunteer: User;
-};
-
-export type YearlyUsage = {
-  __typename?: 'YearlyUsage';
-  limitCents: Scalars['Int']['output'];
-  remainingCents: Scalars['Int']['output'];
-  usedCents: Scalars['Int']['output'];
-};
-
-export type GetReimbursementTypesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetReimbursementTypesQuery = { __typename?: 'Query', reimbursementTypes: Array<{ __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey, legalReference: string, yearlyLimitCents: number, platformDefaultRateCents: number }> };
-
-export type GetEffectiveRatesQueryVariables = Exact<{
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-
-export type GetEffectiveRatesQuery = { __typename?: 'Query', effectiveRates: Array<{ __typename?: 'EffectiveRate', hourlyRateCents: number, isOverride: boolean, organizationUnitId?: string | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey, legalReference: string, yearlyLimitCents: number, platformDefaultRateCents: number }, provenance: { __typename?: 'RateProvenance', kind: RateProvenanceKind, sourceName?: string | null, replacesRateCents?: number | null } }> };
-
-export type SetReimbursementRateMutationVariables = Exact<{
-  reimbursementTypeId: Scalars['ID']['input'];
-  hourlyRateCents: Scalars['Int']['input'];
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-
-export type SetReimbursementRateMutation = { __typename?: 'Mutation', setReimbursementRate: { __typename?: 'ReimbursementRate', id: string, hourlyRateCents: number } };
-
-export type GetYearlyUsageQueryVariables = Exact<{
-  volunteerId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-  asOfDate?: InputMaybe<Scalars['DateTime']['input']>;
-  excludeInvoiceId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-
-export type GetYearlyUsageQuery = { __typename?: 'Query', yearlyUsage: { __typename?: 'YearlyUsage', usedCents: number, limitCents: number, remainingCents: number } };
-
-export type GetInviteAllowanceEligibilityQueryVariables = Exact<{
-  organizationUnitId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  shiftDurationMinutes: Scalars['Int']['input'];
-}>;
-
-
-export type GetInviteAllowanceEligibilityQuery = { __typename?: 'Query', inviteAllowanceEligibility: Array<{ __typename?: 'VolunteerInviteAllowance', volunteerId: string, state: InviteAllowanceState }> };
-
-export type GetRosterYearlyUsageQueryVariables = Exact<{
-  organizationUnitId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-}>;
-
-
-export type GetRosterYearlyUsageQuery = { __typename?: 'Query', rosterYearlyUsage: Array<{ __typename?: 'VolunteerYearlyUsage', volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, usageByType: Array<{ __typename?: 'ReimbursementTypeUsage', usedCents: number, limitCents: number, remainingCents: number, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> }> };
-
-export type ContractSummaryFieldsFragment = { __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> };
-
-export type GetContractsQueryVariables = Exact<{
-  filter?: InputMaybe<ContractFilterInput>;
-}>;
-
-
-export type GetContractsQuery = { __typename?: 'Query', contracts: Array<{ __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> }> };
-
-export type GetMyContractsQueryVariables = Exact<{
-  filter?: InputMaybe<ContractFilterInput>;
-}>;
-
-
-export type GetMyContractsQuery = { __typename?: 'Query', myContracts: Array<{ __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> }> };
-
-export type GetContractQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type GetContractQuery = { __typename?: 'Query', contract: { __typename?: 'Contract', resolvedBody: Record<string, unknown>, id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type GetPendingContractSigneeQueryVariables = Exact<{
-  contractId: Scalars['ID']['input'];
-}>;
-
-
-export type GetPendingContractSigneeQuery = { __typename?: 'Query', pendingContractSignee?: { __typename?: 'PendingSignee', signeeType: SigneeType, userId?: string | null, permissionKey?: string | null, eligibleUserIds?: Array<string> | null } | null };
-
-export type CreateContractMutationVariables = Exact<{
-  input: CreateContractInput;
-}>;
-
-
-export type CreateContractMutation = { __typename?: 'Mutation', createContract: { __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type SignContractMutationVariables = Exact<{
-  contractId: Scalars['ID']['input'];
-}>;
-
-
-export type SignContractMutation = { __typename?: 'Mutation', signContract: { __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type DeclineContractMutationVariables = Exact<{
-  contractId: Scalars['ID']['input'];
-  reason: Scalars['String']['input'];
-}>;
-
-
-export type DeclineContractMutation = { __typename?: 'Mutation', declineContract: { __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type InvoiceSummaryFieldsFragment = { __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> };
-
-export type GetInvoicesQueryVariables = Exact<{
-  filter?: InputMaybe<InvoiceFilterInput>;
-}>;
-
-
-export type GetInvoicesQuery = { __typename?: 'Query', invoices: Array<{ __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> }> };
-
-export type GetMyInvoicesQueryVariables = Exact<{
-  filter?: InputMaybe<InvoiceFilterInput>;
-}>;
-
-
-export type GetMyInvoicesQuery = { __typename?: 'Query', myInvoices: Array<{ __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> }> };
-
-export type GetInvoiceQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type GetInvoiceQuery = { __typename?: 'Query', invoice: { __typename?: 'Invoice', resolvedBody: Record<string, unknown>, id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string, timeEntry: { __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, notes?: string | null, shiftInstance?: { __typename?: 'ShiftInstance', id: string, master: { __typename?: 'Shift', title: string } } | null } }>, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type GetPendingInvoiceSigneeQueryVariables = Exact<{
-  invoiceId: Scalars['ID']['input'];
-}>;
-
-
-export type GetPendingInvoiceSigneeQuery = { __typename?: 'Query', pendingInvoiceSignee?: { __typename?: 'PendingSignee', signeeType: SigneeType, userId?: string | null, permissionKey?: string | null, eligibleUserIds?: Array<string> | null } | null };
-
-export type GetVolunteersNeedingTimesheetsQueryVariables = Exact<{
-  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
-  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-}>;
-
-
-export type GetVolunteersNeedingTimesheetsQuery = { __typename?: 'Query', volunteersNeedingTimesheets: Array<{ __typename?: 'VolunteerNeedsTimesheet', periodStart: string, periodEnd: string, eligibleHours: number, estimatedAmountCents: number, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> };
-
-export type GetPaidShiftSignupVolunteersQueryVariables = Exact<{
-  year: Scalars['Int']['input'];
-}>;
-
-
-export type GetPaidShiftSignupVolunteersQuery = { __typename?: 'Query', paidShiftSignupVolunteers: Array<{ __typename?: 'PaidShiftSignupVolunteer', volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } }> };
-
-export type GetEligibleTimeEntriesForInvoiceQueryVariables = Exact<{
-  volunteerId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
-  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
-}>;
-
-
-export type GetEligibleTimeEntriesForInvoiceQuery = { __typename?: 'Query', eligibleTimeEntriesForInvoice: Array<{ __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, notes?: string | null, shiftInstance?: { __typename?: 'ShiftInstance', id: string, master: { __typename?: 'Shift', title: string } } | null }> };
-
-export type CreateInvoiceMutationVariables = Exact<{
-  input: CreateInvoiceInput;
-}>;
-
-
-export type CreateInvoiceMutation = { __typename?: 'Mutation', createInvoice: { __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type SignInvoiceMutationVariables = Exact<{
-  invoiceId: Scalars['ID']['input'];
-}>;
-
-
-export type SignInvoiceMutation = { __typename?: 'Mutation', signInvoice: { __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type DeclineInvoiceMutationVariables = Exact<{
-  invoiceId: Scalars['ID']['input'];
-  reason: Scalars['String']['input'];
-}>;
-
-
-export type DeclineInvoiceMutation = { __typename?: 'Mutation', declineInvoice: { __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> } };
-
-export type DocumentTemplateSummaryFieldsFragment = { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind, invoiceNumberFormat?: string | null, renewalCadence?: RenewalCadence | null, isDeleted: boolean, lastEditedAt?: string | null, lastEditedByUser?: { __typename?: 'User', id: string, name: string } | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, organizationUnit?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, signees: Array<{ __typename?: 'TemplateSignee', id: string, order: number, signeeType: SigneeType, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }> };
-
-export type GetDocumentTemplatesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetDocumentTemplatesQuery = { __typename?: 'Query', documentTemplates: Array<{ __typename?: 'DocumentTemplate', id: string, kind: DocumentKind, invoiceNumberFormat?: string | null, renewalCadence?: RenewalCadence | null, isDeleted: boolean, lastEditedAt?: string | null, lastEditedByUser?: { __typename?: 'User', id: string, name: string } | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, organizationUnit?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, signees: Array<{ __typename?: 'TemplateSignee', id: string, order: number, signeeType: SigneeType, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }> }> };
-
-export type GetDocumentTemplateQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type GetDocumentTemplateQuery = { __typename?: 'Query', documentTemplate: { __typename?: 'DocumentTemplate', body: Record<string, unknown>, id: string, kind: DocumentKind, invoiceNumberFormat?: string | null, renewalCadence?: RenewalCadence | null, isDeleted: boolean, lastEditedAt?: string | null, lastEditedByUser?: { __typename?: 'User', id: string, name: string } | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, organizationUnit?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, signees: Array<{ __typename?: 'TemplateSignee', id: string, order: number, signeeType: SigneeType, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }> } };
-
-export type GetActiveDocumentTemplateQueryVariables = Exact<{
-  kind: DocumentKind;
-  reimbursementTypeId: Scalars['ID']['input'];
-  organizationUnitId?: InputMaybe<Scalars['ID']['input']>;
-}>;
-
-
-export type GetActiveDocumentTemplateQuery = { __typename?: 'Query', activeDocumentTemplate: { __typename?: 'DocumentTemplate', body: Record<string, unknown>, id: string, kind: DocumentKind, invoiceNumberFormat?: string | null, renewalCadence?: RenewalCadence | null, isDeleted: boolean, lastEditedAt?: string | null, lastEditedByUser?: { __typename?: 'User', id: string, name: string } | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, organizationUnit?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, signees: Array<{ __typename?: 'TemplateSignee', id: string, order: number, signeeType: SigneeType, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }> } };
-
-export type CreateDocumentTemplateMutationVariables = Exact<{
-  input: CreateDocumentTemplateInput;
-}>;
-
-
-export type CreateDocumentTemplateMutation = { __typename?: 'Mutation', createDocumentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind, invoiceNumberFormat?: string | null, renewalCadence?: RenewalCadence | null, isDeleted: boolean, lastEditedAt?: string | null, lastEditedByUser?: { __typename?: 'User', id: string, name: string } | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, organizationUnit?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, signees: Array<{ __typename?: 'TemplateSignee', id: string, order: number, signeeType: SigneeType, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }> } };
-
-export type UpdateDocumentTemplateMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-  input: UpdateDocumentTemplateInput;
-}>;
-
-
-export type UpdateDocumentTemplateMutation = { __typename?: 'Mutation', updateDocumentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind, invoiceNumberFormat?: string | null, renewalCadence?: RenewalCadence | null, isDeleted: boolean, lastEditedAt?: string | null, lastEditedByUser?: { __typename?: 'User', id: string, name: string } | null, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, organizationUnit?: { __typename?: 'OrganizationUnit', id: string, name: string } | null, signees: Array<{ __typename?: 'TemplateSignee', id: string, order: number, signeeType: SigneeType, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }> } };
-
-export type DeleteDocumentTemplateMutationVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-
-export type DeleteDocumentTemplateMutation = { __typename?: 'Mutation', deleteDocumentTemplate: boolean };
-
-export type GetBundleDownloadStatusQueryVariables = Exact<{
-  volunteerId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-}>;
-
-
-export type GetBundleDownloadStatusQuery = { __typename?: 'Query', bundleDownloadStatus?: { __typename?: 'BundleDownloadStatus', downloadedAt: string, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, downloadedByUser?: { __typename?: 'User', id: string, name: string } | null } | null };
-
-export type RecordBundleDownloadMutationVariables = Exact<{
-  volunteerId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  invoiceIds?: InputMaybe<Array<Scalars['ID']['input']> | Scalars['ID']['input']>;
-}>;
-
-
-export type RecordBundleDownloadMutation = { __typename?: 'Mutation', recordBundleDownload: { __typename?: 'BundleDownloadStatus', downloadedAt: string, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, downloadedByUser?: { __typename?: 'User', id: string, name: string } | null } };
-
-export type GetManualBaselineQueryVariables = Exact<{
-  volunteerId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-}>;
-
-
-export type GetManualBaselineQuery = { __typename?: 'Query', manualBaseline?: { __typename?: 'ManualBaseline', year: number, amountCents: number, updatedAt: string, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, updatedByUser?: { __typename?: 'User', id: string, name: string } | null } | null };
-
-export type SetManualBaselineMutationVariables = Exact<{
-  volunteerId: Scalars['ID']['input'];
-  reimbursementTypeId: Scalars['ID']['input'];
-  year: Scalars['Int']['input'];
-  amountCents: Scalars['Int']['input'];
-}>;
-
-
-export type SetManualBaselineMutation = { __typename?: 'Mutation', setManualBaseline: { __typename?: 'ManualBaseline', year: number, amountCents: number, updatedAt: string, volunteer: { __typename?: 'User', id: string, name: string }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, updatedByUser?: { __typename?: 'User', id: string, name: string } | null } };
-
-export type MyDocumentsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MyDocumentsQuery = { __typename?: 'Query', myDocuments: Array<{ __typename?: 'MyDocumentsGroup', membershipId: string, organizationUnitId: string, organizationUnitName: string, organizationName: string, logoUrl?: string | null, contracts: Array<{ __typename?: 'Contract', id: string, contractStatus: ContractStatus, periodStart: string, periodEnd: string, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, renewDate?: string | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, signatures: Array<{ __typename?: 'ContractSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'ContractStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> }>, invoices: Array<{ __typename?: 'Invoice', id: string, invoiceStatus: InvoiceStatus, periodStart: string, periodEnd: string, totalAmountCents: number, totalHours: number, isNonCompliant: boolean, declineReason?: string | null, declinedAt?: string | null, declinedAtSigneeType?: SigneeType | null, downloadUrl?: string | null, missingProfileFields: Array<string>, missingOrgProfileFields: Array<string>, createdAt: string, updatedAt?: string | null, declinedByUser?: { __typename?: 'User', id: string, name: string } | null, volunteer: { __typename?: 'User', id: string, name: string, image?: string | null }, reimbursementType: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey }, documentTemplate: { __typename?: 'DocumentTemplate', id: string, kind: DocumentKind }, invoiceTimeEntries: Array<{ __typename?: 'InvoiceTimeEntry', id: string }>, signatures: Array<{ __typename?: 'InvoiceSignature', id: string, order: number, signeeType: SigneeType, signedAt?: string | null, signedByUser?: { __typename?: 'User', id: string, name: string } | null, requiredPermission?: { __typename?: 'Permission', id: string, key: PermissionKey } | null }>, statusChanges: Array<{ __typename?: 'InvoiceStatusChange', id: string, type: DocumentStatusChange, occurredAt: string, actorUser?: { __typename?: 'User', id: string, name: string } | null }> }> }> };
-
-export type MyDocumentSummaryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MyDocumentSummaryQuery = { __typename?: 'Query', myDocumentSummary: { __typename?: 'MyDocumentSummary', total: number, pending: number } };
-
-export type GetAccountingSetupStatusQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetAccountingSetupStatusQuery = { __typename?: 'Query', accountingSetupStatus: { __typename?: 'AccountingSetupStatus', orgProfileComplete: boolean, missingOrgProfileFields: Array<string>, canCreateDocuments: boolean, orgProfile?: { __typename?: 'AccountingOrgProfile', name: string, address?: string | null, city?: string | null, zipCode?: string | null, legalRep?: string | null } | null, slots: Array<{ __typename?: 'AccountingTemplateSlotStatus', reimbursementTypeId: string, reimbursementTypeKey: ReimbursementTypeKey, hasContractTemplate: boolean, hasInvoiceTemplate: boolean, ready: boolean }> } };
 
 export type EventListFieldsFragment = { __typename?: 'Event', id: string, title: string, slug: string, startsAt: string, endsAt: string, shiftsCount: number, requiredFormsCount: number, coverUrl?: string | null, signedUpCount: number };
 
@@ -3367,17 +2462,17 @@ export type GetOrganizationsWithRootQuery = { __typename?: 'Query', organization
 export type GetMyOrganizationUnitsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyOrganizationUnitsQuery = { __typename?: 'Query', myOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, address?: string | null, city?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', id: string, name: string, description?: string | null, logoUrl?: string | null, accountingEnabled: boolean } }> };
+export type GetMyOrganizationUnitsQuery = { __typename?: 'Query', myOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, address?: string | null, city?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', id: string, name: string, description?: string | null, logoUrl?: string | null } }> };
 
 export type GetMyAdminstableOrganizationUnitsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyAdminstableOrganizationUnitsQuery = { __typename?: 'Query', myAdminstableOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, address?: string | null, city?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', id: string, name: string, description?: string | null, logoUrl?: string | null, accountingEnabled: boolean } }> };
+export type GetMyAdminstableOrganizationUnitsQuery = { __typename?: 'Query', myAdminstableOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, address?: string | null, city?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', id: string, name: string, description?: string | null, logoUrl?: string | null } }> };
 
 export type GetMyCheckInAdministrableOrganizationUnitsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyCheckInAdministrableOrganizationUnitsQuery = { __typename?: 'Query', myCheckInAdministrableOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, address?: string | null, city?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', id: string, name: string, description?: string | null, logoUrl?: string | null, accountingEnabled: boolean } }> };
+export type GetMyCheckInAdministrableOrganizationUnitsQuery = { __typename?: 'Query', myCheckInAdministrableOrganizationUnits: Array<{ __typename?: 'OrganizationUnit', id: string, slug: string, name: string, description?: string | null, logoUrl?: string | null, address?: string | null, city?: string | null, legalRep?: string | null, parent?: { __typename?: 'OrganizationUnit', id: string } | null, organization: { __typename?: 'Organization', id: string, name: string, description?: string | null, logoUrl?: string | null } }> };
 
 export type GetOrganizationsQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -3744,7 +2839,7 @@ export type GetShiftQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftQuery = { __typename?: 'Query', shift: { __typename?: 'Shift', id: string, title: string, slug: string, instructions?: string | null, location?: string | null, imageUrl?: string | null, visibility: ShiftVisibility, joinRequiresApproval: boolean, createdAt: string, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, rrule?: string | null, originalStartsAt: string, durationMinutes: number, organizationUnitId: string, reimbursementTypeKey?: ReimbursementTypeKey | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organization: { __typename?: 'Organization', id: string, name: string } }, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
+export type GetShiftQuery = { __typename?: 'Query', shift: { __typename?: 'Shift', id: string, title: string, slug: string, instructions?: string | null, location?: string | null, imageUrl?: string | null, visibility: ShiftVisibility, joinRequiresApproval: boolean, createdAt: string, maxVolunteers?: number | null, minVolunteers?: number | null, rrule?: string | null, originalStartsAt: string, durationMinutes: number, organizationUnitId: string, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null, myMembershipState: JoinStatus, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, organization: { __typename?: 'Organization', id: string, name: string } }, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
 
 export type GetShiftsQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -3752,7 +2847,7 @@ export type GetShiftsQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftsQuery = { __typename?: 'Query', shifts: { __typename?: 'ShiftPaginatedResponse', items: Array<{ __typename?: 'Shift', id: string, title: string, rrule?: string | null, originalStartsAt: string, durationMinutes: number, visibility: ShiftVisibility, maxVolunteers?: number | null, minVolunteers?: number | null, reimbursementTypeId?: string | null, requiredFormsCount: number, createdBy?: { __typename?: 'User', id: string, name: string, email: string } | null }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+export type GetShiftsQuery = { __typename?: 'Query', shifts: { __typename?: 'ShiftPaginatedResponse', items: Array<{ __typename?: 'Shift', id: string, title: string, rrule?: string | null, originalStartsAt: string, durationMinutes: number, visibility: ShiftVisibility, maxVolunteers?: number | null, minVolunteers?: number | null, requiredFormsCount: number, createdBy?: { __typename?: 'User', id: string, name: string, email: string } | null }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
 
 export type GetEventShiftsQueryVariables = Exact<{
   eventId: Scalars['ID']['input'];
@@ -3914,7 +3009,7 @@ export type GetShiftInstanceQueryVariables = Exact<{
 }>;
 
 
-export type GetShiftInstanceQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideLocation?: string | null, overrideInstructions?: string | null, overrideMaxVolunteers?: number | null, overrideMinVolunteers?: number | null, overrideReimbursementTypeId?: string | null, isCancelled: boolean, filledCount: number, spotsLeft?: number | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, instructions?: string | null, minVolunteers?: number | null, maxVolunteers?: number | null, reimbursementTypeId?: string | null, visibility: ShiftVisibility, rrule?: string | null, createdAt: string, imageUrl?: string | null, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null }, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, remindedAt?: string | null, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string } }> | null } };
+export type GetShiftInstanceQuery = { __typename?: 'Query', shiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideLocation?: string | null, overrideInstructions?: string | null, overrideMaxVolunteers?: number | null, overrideMinVolunteers?: number | null, isCancelled: boolean, filledCount: number, spotsLeft?: number | null, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }>, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, instructions?: string | null, minVolunteers?: number | null, maxVolunteers?: number | null, visibility: ShiftVisibility, rrule?: string | null, createdAt: string, imageUrl?: string | null, createdBy?: { __typename?: 'User', id: string, name: string, image?: string | null } | null }, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, remindedAt?: string | null, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null, checkInId: string } }> | null } };
 
 export type GetWeeklyShiftsQueryVariables = Exact<{
   startsAfter: Scalars['DateTime']['input'];
@@ -3923,7 +3018,7 @@ export type GetWeeklyShiftsQueryVariables = Exact<{
 }>;
 
 
-export type GetWeeklyShiftsQuery = { __typename?: 'Query', weeklyShifts: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCancelled: boolean, overrideMinVolunteers?: number | null, overrideMaxVolunteers?: number | null, overrideReimbursementTypeId?: string | null, master: { __typename?: 'Shift', id: string, title: string, minVolunteers?: number | null, maxVolunteers?: number | null, visibility: ShiftVisibility, rrule?: string | null, reimbursementTypeId?: string | null }, volunteers?: Array<{ __typename?: 'User', id: string, name: string }> | null, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null } }> | null }> };
+export type GetWeeklyShiftsQuery = { __typename?: 'Query', weeklyShifts: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCancelled: boolean, overrideMinVolunteers?: number | null, overrideMaxVolunteers?: number | null, master: { __typename?: 'Shift', id: string, title: string, minVolunteers?: number | null, maxVolunteers?: number | null, visibility: ShiftVisibility, rrule?: string | null }, volunteers?: Array<{ __typename?: 'User', id: string, name: string }> | null, invites?: Array<{ __typename?: 'ShiftInstanceInvite', status: ShiftInviteStatus, user: { __typename?: 'User', id: string, name: string, email: string, image?: string | null } }> | null }> };
 
 export type PublicShiftDetailInstanceFieldsFragment = { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null, myInviteStatus?: ShiftInviteStatus | null, isIntendingToJoin: boolean, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> };
 
@@ -3941,7 +3036,7 @@ export type GetPublicShiftInstanceQueryVariables = Exact<{
 
 export type GetPublicShiftInstanceQuery = { __typename?: 'Query', publicShiftInstance: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, overrideMaxVolunteers?: number | null, filledCount: number, spotsLeft?: number | null, myInviteStatus?: ShiftInviteStatus | null, isIntendingToJoin: boolean, requiredFormsCount: number, requiredForms: Array<{ __typename?: 'RequiredFormRef', order: number, form: { __typename?: 'RequirementForm', id: string, name: string, description?: string | null, settings: { __typename?: 'FormSettings', submitButtonLabel?: string | null, successTitle?: string | null, successMessage?: string | null }, blockRefs?: Array<{ __typename?: 'RequirementFormBlockRef', id: string, formId: string, blockId: string, fieldOrder: number, required?: boolean | null, block?: { __typename?: 'FormBlock', id: string, organizationId: string, title: string, description?: string | null, icon?: string | null, required: boolean, isEditable: boolean, fields?: Array<{ __typename?: 'FormBlockField', id: string, blockId: string, type: FieldType, label: string, placeholder?: string | null, description?: string | null, required: boolean, lockType: boolean, systemKey?: string | null, documentFileId?: string | null, documentDownloadUrl?: string | null, documentFilename?: string | null, documentLabel?: string | null, minAge?: number | null, fieldOrder: number, options?: Array<{ __typename?: 'SelectOption', label: string, value: string }> | null }> | null } | null }> | null } }> } };
 
-export type VolunteerHomeShiftInstanceFragment = { __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, reimbursementTypeKey?: ReimbursementTypeKey | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
+export type VolunteerHomeShiftInstanceFragment = { __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } };
 
 export type GetMyShiftInstancesQueryVariables = Exact<{
   includePast?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3955,7 +3050,7 @@ export type GetMyShiftInstancesQueryVariables = Exact<{
 }>;
 
 
-export type GetMyShiftInstancesQuery = { __typename?: 'Query', myShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, reimbursementTypeKey?: ReimbursementTypeKey | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+export type GetMyShiftInstancesQuery = { __typename?: 'Query', myShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
 
 export type GetAvailableShiftInstancesQueryVariables = Exact<{
   startsAfter?: InputMaybe<Scalars['DateTime']['input']>;
@@ -3966,7 +3061,7 @@ export type GetAvailableShiftInstancesQueryVariables = Exact<{
 }>;
 
 
-export type GetAvailableShiftInstancesQuery = { __typename?: 'Query', availableShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, reimbursementTypeKey?: ReimbursementTypeKey | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
+export type GetAvailableShiftInstancesQuery = { __typename?: 'Query', availableShiftInstances: { __typename?: 'ShiftInstancePaginatedResponse', items: Array<{ __typename?: 'ShiftInstance', id: string, overrideTitle?: string | null, actualStartsAt: string, actualEndsAt: string, isCheckedIn: boolean, filledCount: number, myInviteStatus?: ShiftInviteStatus | null, myInvitedAt?: string | null, isIntendingToJoin: boolean, master: { __typename?: 'Shift', id: string, title: string, location?: string | null, rrule?: string | null, maxVolunteers?: number | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, logoUrl?: string | null }, event?: { __typename?: 'Event', id: string, title: string, coverImageUrl?: string | null } | null } }>, pagination: { __typename?: 'PaginationInfo', total: number, limit: number, offset: number, hasMore: boolean } } };
 
 export type CheckInMutationVariables = Exact<{
   shiftInstanceId: Scalars['ID']['input'];
@@ -4032,7 +3127,7 @@ export type GetTimeEntryQueryVariables = Exact<{
 }>;
 
 
-export type GetTimeEntryQuery = { __typename?: 'Query', timeEntry: { __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, notes?: string | null, createdAt: string, isPaid: boolean, reimbursementType?: { __typename?: 'ReimbursementType', id: string, key: ReimbursementTypeKey } | null, volunteer: { __typename?: 'User', id: string, name: string, email: string }, shiftInstance?: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string } } | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } } };
+export type GetTimeEntryQuery = { __typename?: 'Query', timeEntry: { __typename?: 'TimeEntry', id: string, startedAt: string, endedAt?: string | null, notes?: string | null, createdAt: string, volunteer: { __typename?: 'User', id: string, name: string, email: string }, shiftInstance?: { __typename?: 'ShiftInstance', id: string, actualStartsAt: string, actualEndsAt: string, overrideTitle?: string | null, master: { __typename?: 'Shift', id: string, title: string } } | null, organizationUnit: { __typename?: 'OrganizationUnit', id: string, name: string, organization: { __typename?: 'Organization', id: string, name: string } } } };
 
 export type UpdateTimeEntryMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -4164,157 +3259,6 @@ export type UpdateMyAccountSettingsMutationVariables = Exact<{
 
 export type UpdateMyAccountSettingsMutation = { __typename?: 'Mutation', updateMyAccountSettings: { __typename?: 'User', id: string, locale?: string | null, emailWeeklyUpdateEnabled: boolean, emailUrgentCallsEnabled: boolean, emailPlatformEnabled: boolean } };
 
-export const ContractSummaryFieldsFragmentDoc = gql`
-    fragment ContractSummaryFields on Contract {
-  id
-  contractStatus
-  periodStart
-  periodEnd
-  isNonCompliant
-  declineReason
-  declinedAt
-  declinedAtSigneeType
-  declinedByUser {
-    id
-    name
-  }
-  renewDate
-  downloadUrl
-  missingProfileFields
-  missingOrgProfileFields
-  createdAt
-  updatedAt
-  volunteer {
-    id
-    name
-    image
-  }
-  reimbursementType {
-    id
-    key
-  }
-  documentTemplate {
-    id
-    kind
-  }
-  signatures {
-    id
-    order
-    signeeType
-    signedAt
-    signedByUser {
-      id
-      name
-    }
-    requiredPermission {
-      id
-      key
-    }
-  }
-  statusChanges {
-    id
-    type
-    occurredAt
-    actorUser {
-      id
-      name
-    }
-  }
-}
-    `;
-export const InvoiceSummaryFieldsFragmentDoc = gql`
-    fragment InvoiceSummaryFields on Invoice {
-  id
-  invoiceStatus
-  periodStart
-  periodEnd
-  totalAmountCents
-  totalHours
-  isNonCompliant
-  declineReason
-  declinedAt
-  declinedAtSigneeType
-  declinedByUser {
-    id
-    name
-  }
-  downloadUrl
-  missingProfileFields
-  missingOrgProfileFields
-  createdAt
-  updatedAt
-  volunteer {
-    id
-    name
-    image
-  }
-  reimbursementType {
-    id
-    key
-  }
-  documentTemplate {
-    id
-    kind
-  }
-  invoiceTimeEntries {
-    id
-  }
-  signatures {
-    id
-    order
-    signeeType
-    signedAt
-    signedByUser {
-      id
-      name
-    }
-    requiredPermission {
-      id
-      key
-    }
-  }
-  statusChanges {
-    id
-    type
-    occurredAt
-    actorUser {
-      id
-      name
-    }
-  }
-}
-    `;
-export const DocumentTemplateSummaryFieldsFragmentDoc = gql`
-    fragment DocumentTemplateSummaryFields on DocumentTemplate {
-  id
-  kind
-  invoiceNumberFormat
-  renewalCadence
-  isDeleted
-  lastEditedAt
-  lastEditedByUser {
-    id
-    name
-  }
-  reimbursementType {
-    id
-    key
-  }
-  organizationUnit {
-    id
-    name
-  }
-  signees {
-    id
-    order
-    signeeType
-    requiredPermission {
-      id
-      key
-    }
-  }
-}
-    `;
 export const RequiredFormFieldsFragmentDoc = gql`
     fragment RequiredFormFields on RequirementForm {
   id
@@ -4592,7 +3536,6 @@ export const VolunteerHomeShiftInstanceFragmentDoc = gql`
     location
     rrule
     maxVolunteers
-    reimbursementTypeKey
     organizationUnit {
       id
       name
@@ -4602,462 +3545,6 @@ export const VolunteerHomeShiftInstanceFragmentDoc = gql`
       id
       title
       coverImageUrl
-    }
-  }
-}
-    `;
-export const GetReimbursementTypesDocument = gql`
-    query GetReimbursementTypes {
-  reimbursementTypes {
-    id
-    key
-    legalReference
-    yearlyLimitCents
-    platformDefaultRateCents
-  }
-}
-    `;
-export const GetEffectiveRatesDocument = gql`
-    query GetEffectiveRates($organizationUnitId: ID) {
-  effectiveRates(organizationUnitId: $organizationUnitId) {
-    reimbursementType {
-      id
-      key
-      legalReference
-      yearlyLimitCents
-      platformDefaultRateCents
-    }
-    hourlyRateCents
-    isOverride
-    organizationUnitId
-    provenance {
-      kind
-      sourceName
-      replacesRateCents
-    }
-  }
-}
-    `;
-export const SetReimbursementRateDocument = gql`
-    mutation SetReimbursementRate($reimbursementTypeId: ID!, $hourlyRateCents: Int!, $organizationUnitId: ID) {
-  setReimbursementRate(
-    reimbursementTypeId: $reimbursementTypeId
-    hourlyRateCents: $hourlyRateCents
-    organizationUnitId: $organizationUnitId
-  ) {
-    id
-    hourlyRateCents
-  }
-}
-    `;
-export const GetYearlyUsageDocument = gql`
-    query GetYearlyUsage($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $asOfDate: DateTime, $excludeInvoiceId: ID) {
-  yearlyUsage(
-    volunteerId: $volunteerId
-    reimbursementTypeId: $reimbursementTypeId
-    year: $year
-    asOfDate: $asOfDate
-    excludeInvoiceId: $excludeInvoiceId
-  ) {
-    usedCents
-    limitCents
-    remainingCents
-  }
-}
-    `;
-export const GetInviteAllowanceEligibilityDocument = gql`
-    query GetInviteAllowanceEligibility($organizationUnitId: ID!, $reimbursementTypeId: ID!, $shiftDurationMinutes: Int!) {
-  inviteAllowanceEligibility(
-    organizationUnitId: $organizationUnitId
-    reimbursementTypeId: $reimbursementTypeId
-    shiftDurationMinutes: $shiftDurationMinutes
-  ) {
-    volunteerId
-    state
-  }
-}
-    `;
-export const GetRosterYearlyUsageDocument = gql`
-    query GetRosterYearlyUsage($organizationUnitId: ID!, $year: Int!) {
-  rosterYearlyUsage(organizationUnitId: $organizationUnitId, year: $year) {
-    volunteer {
-      id
-      name
-      image
-    }
-    usageByType {
-      reimbursementType {
-        id
-        key
-      }
-      usedCents
-      limitCents
-      remainingCents
-    }
-  }
-}
-    `;
-export const GetContractsDocument = gql`
-    query GetContracts($filter: ContractFilterInput) {
-  contracts(filter: $filter) {
-    ...ContractSummaryFields
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}`;
-export const GetMyContractsDocument = gql`
-    query GetMyContracts($filter: ContractFilterInput) {
-  myContracts(filter: $filter) {
-    ...ContractSummaryFields
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}`;
-export const GetContractDocument = gql`
-    query GetContract($id: ID!) {
-  contract(id: $id) {
-    ...ContractSummaryFields
-    resolvedBody
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}`;
-export const GetPendingContractSigneeDocument = gql`
-    query GetPendingContractSignee($contractId: ID!) {
-  pendingContractSignee(contractId: $contractId) {
-    signeeType
-    userId
-    permissionKey
-    eligibleUserIds
-  }
-}
-    `;
-export const CreateContractDocument = gql`
-    mutation CreateContract($input: CreateContractInput!) {
-  createContract(input: $input) {
-    ...ContractSummaryFields
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}`;
-export const SignContractDocument = gql`
-    mutation SignContract($contractId: ID!) {
-  signContract(contractId: $contractId) {
-    ...ContractSummaryFields
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}`;
-export const DeclineContractDocument = gql`
-    mutation DeclineContract($contractId: ID!, $reason: String!) {
-  declineContract(contractId: $contractId, reason: $reason) {
-    ...ContractSummaryFields
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}`;
-export const GetInvoicesDocument = gql`
-    query GetInvoices($filter: InvoiceFilterInput) {
-  invoices(filter: $filter) {
-    ...InvoiceSummaryFields
-  }
-}
-    ${InvoiceSummaryFieldsFragmentDoc}`;
-export const GetMyInvoicesDocument = gql`
-    query GetMyInvoices($filter: InvoiceFilterInput) {
-  myInvoices(filter: $filter) {
-    ...InvoiceSummaryFields
-  }
-}
-    ${InvoiceSummaryFieldsFragmentDoc}`;
-export const GetInvoiceDocument = gql`
-    query GetInvoice($id: ID!) {
-  invoice(id: $id) {
-    ...InvoiceSummaryFields
-    resolvedBody
-    invoiceTimeEntries {
-      id
-      timeEntry {
-        id
-        startedAt
-        endedAt
-        notes
-        shiftInstance {
-          id
-          master {
-            title
-          }
-        }
-      }
-    }
-  }
-}
-    ${InvoiceSummaryFieldsFragmentDoc}`;
-export const GetPendingInvoiceSigneeDocument = gql`
-    query GetPendingInvoiceSignee($invoiceId: ID!) {
-  pendingInvoiceSignee(invoiceId: $invoiceId) {
-    signeeType
-    userId
-    permissionKey
-    eligibleUserIds
-  }
-}
-    `;
-export const GetVolunteersNeedingTimesheetsDocument = gql`
-    query GetVolunteersNeedingTimesheets($periodStart: DateTime, $periodEnd: DateTime) {
-  volunteersNeedingTimesheets(periodStart: $periodStart, periodEnd: $periodEnd) {
-    volunteer {
-      id
-      name
-    }
-    reimbursementType {
-      id
-      key
-    }
-    periodStart
-    periodEnd
-    eligibleHours
-    estimatedAmountCents
-  }
-}
-    `;
-export const GetPaidShiftSignupVolunteersDocument = gql`
-    query GetPaidShiftSignupVolunteers($year: Int!) {
-  paidShiftSignupVolunteers(year: $year) {
-    volunteer {
-      id
-      name
-    }
-    reimbursementType {
-      id
-      key
-    }
-  }
-}
-    `;
-export const GetEligibleTimeEntriesForInvoiceDocument = gql`
-    query GetEligibleTimeEntriesForInvoice($volunteerId: ID!, $reimbursementTypeId: ID!, $periodStart: DateTime, $periodEnd: DateTime) {
-  eligibleTimeEntriesForInvoice(
-    volunteerId: $volunteerId
-    reimbursementTypeId: $reimbursementTypeId
-    periodStart: $periodStart
-    periodEnd: $periodEnd
-  ) {
-    id
-    startedAt
-    endedAt
-    notes
-    shiftInstance {
-      id
-      master {
-        title
-      }
-    }
-  }
-}
-    `;
-export const CreateInvoiceDocument = gql`
-    mutation CreateInvoice($input: CreateInvoiceInput!) {
-  createInvoice(input: $input) {
-    ...InvoiceSummaryFields
-  }
-}
-    ${InvoiceSummaryFieldsFragmentDoc}`;
-export const SignInvoiceDocument = gql`
-    mutation SignInvoice($invoiceId: ID!) {
-  signInvoice(invoiceId: $invoiceId) {
-    ...InvoiceSummaryFields
-  }
-}
-    ${InvoiceSummaryFieldsFragmentDoc}`;
-export const DeclineInvoiceDocument = gql`
-    mutation DeclineInvoice($invoiceId: ID!, $reason: String!) {
-  declineInvoice(invoiceId: $invoiceId, reason: $reason) {
-    ...InvoiceSummaryFields
-  }
-}
-    ${InvoiceSummaryFieldsFragmentDoc}`;
-export const GetDocumentTemplatesDocument = gql`
-    query GetDocumentTemplates {
-  documentTemplates {
-    ...DocumentTemplateSummaryFields
-  }
-}
-    ${DocumentTemplateSummaryFieldsFragmentDoc}`;
-export const GetDocumentTemplateDocument = gql`
-    query GetDocumentTemplate($id: ID!) {
-  documentTemplate(id: $id) {
-    ...DocumentTemplateSummaryFields
-    body
-  }
-}
-    ${DocumentTemplateSummaryFieldsFragmentDoc}`;
-export const GetActiveDocumentTemplateDocument = gql`
-    query GetActiveDocumentTemplate($kind: DocumentKind!, $reimbursementTypeId: ID!, $organizationUnitId: ID) {
-  activeDocumentTemplate(
-    kind: $kind
-    reimbursementTypeId: $reimbursementTypeId
-    organizationUnitId: $organizationUnitId
-  ) {
-    ...DocumentTemplateSummaryFields
-    body
-  }
-}
-    ${DocumentTemplateSummaryFieldsFragmentDoc}`;
-export const CreateDocumentTemplateDocument = gql`
-    mutation CreateDocumentTemplate($input: CreateDocumentTemplateInput!) {
-  createDocumentTemplate(input: $input) {
-    ...DocumentTemplateSummaryFields
-  }
-}
-    ${DocumentTemplateSummaryFieldsFragmentDoc}`;
-export const UpdateDocumentTemplateDocument = gql`
-    mutation UpdateDocumentTemplate($id: ID!, $input: UpdateDocumentTemplateInput!) {
-  updateDocumentTemplate(id: $id, input: $input) {
-    ...DocumentTemplateSummaryFields
-  }
-}
-    ${DocumentTemplateSummaryFieldsFragmentDoc}`;
-export const DeleteDocumentTemplateDocument = gql`
-    mutation DeleteDocumentTemplate($id: ID!) {
-  deleteDocumentTemplate(id: $id)
-}
-    `;
-export const GetBundleDownloadStatusDocument = gql`
-    query GetBundleDownloadStatus($volunteerId: ID!, $reimbursementTypeId: ID!) {
-  bundleDownloadStatus(
-    volunteerId: $volunteerId
-    reimbursementTypeId: $reimbursementTypeId
-  ) {
-    volunteer {
-      id
-      name
-    }
-    reimbursementType {
-      id
-      key
-    }
-    downloadedAt
-    downloadedByUser {
-      id
-      name
-    }
-  }
-}
-    `;
-export const RecordBundleDownloadDocument = gql`
-    mutation RecordBundleDownload($volunteerId: ID!, $reimbursementTypeId: ID!, $invoiceIds: [ID!]) {
-  recordBundleDownload(
-    volunteerId: $volunteerId
-    reimbursementTypeId: $reimbursementTypeId
-    invoiceIds: $invoiceIds
-  ) {
-    volunteer {
-      id
-      name
-    }
-    reimbursementType {
-      id
-      key
-    }
-    downloadedAt
-    downloadedByUser {
-      id
-      name
-    }
-  }
-}
-    `;
-export const GetManualBaselineDocument = gql`
-    query GetManualBaseline($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!) {
-  manualBaseline(
-    volunteerId: $volunteerId
-    reimbursementTypeId: $reimbursementTypeId
-    year: $year
-  ) {
-    volunteer {
-      id
-      name
-    }
-    reimbursementType {
-      id
-      key
-    }
-    year
-    amountCents
-    updatedAt
-    updatedByUser {
-      id
-      name
-    }
-  }
-}
-    `;
-export const SetManualBaselineDocument = gql`
-    mutation SetManualBaseline($volunteerId: ID!, $reimbursementTypeId: ID!, $year: Int!, $amountCents: Int!) {
-  setManualBaseline(
-    volunteerId: $volunteerId
-    reimbursementTypeId: $reimbursementTypeId
-    year: $year
-    amountCents: $amountCents
-  ) {
-    volunteer {
-      id
-      name
-    }
-    reimbursementType {
-      id
-      key
-    }
-    year
-    amountCents
-    updatedAt
-    updatedByUser {
-      id
-      name
-    }
-  }
-}
-    `;
-export const MyDocumentsDocument = gql`
-    query MyDocuments {
-  myDocuments {
-    membershipId
-    organizationUnitId
-    organizationUnitName
-    organizationName
-    logoUrl
-    contracts {
-      ...ContractSummaryFields
-    }
-    invoices {
-      ...InvoiceSummaryFields
-    }
-  }
-}
-    ${ContractSummaryFieldsFragmentDoc}
-${InvoiceSummaryFieldsFragmentDoc}`;
-export const MyDocumentSummaryDocument = gql`
-    query MyDocumentSummary {
-  myDocumentSummary {
-    total
-    pending
-  }
-}
-    `;
-export const GetAccountingSetupStatusDocument = gql`
-    query GetAccountingSetupStatus {
-  accountingSetupStatus {
-    orgProfile {
-      name
-      address
-      city
-      zipCode
-      legalRep
-    }
-    orgProfileComplete
-    missingOrgProfileFields
-    canCreateDocuments
-    slots {
-      reimbursementTypeId
-      reimbursementTypeKey
-      hasContractTemplate
-      hasInvoiceTemplate
-      ready
     }
   }
 }
@@ -5698,7 +4185,6 @@ export const GetMyOrganizationUnitsDocument = gql`
       name
       description
       logoUrl
-      accountingEnabled
     }
   }
 }
@@ -5722,7 +4208,6 @@ export const GetMyAdminstableOrganizationUnitsDocument = gql`
       name
       description
       logoUrl
-      accountingEnabled
     }
   }
 }
@@ -5746,7 +4231,6 @@ export const GetMyCheckInAdministrableOrganizationUnitsDocument = gql`
       name
       description
       logoUrl
-      accountingEnabled
     }
   }
 }
@@ -6750,12 +5234,10 @@ export const GetShiftDocument = gql`
     createdAt
     maxVolunteers
     minVolunteers
-    reimbursementTypeId
     rrule
     originalStartsAt
     durationMinutes
     organizationUnitId
-    reimbursementTypeKey
     requiredFormsCount
     requiredForms {
       ...RequiredFormRefFields
@@ -6799,7 +5281,6 @@ export const GetShiftsDocument = gql`
       visibility
       maxVolunteers
       minVolunteers
-      reimbursementTypeId
       requiredFormsCount
       createdBy {
         id
@@ -7087,7 +5568,6 @@ export const GetShiftInstanceDocument = gql`
     overrideInstructions
     overrideMaxVolunteers
     overrideMinVolunteers
-    overrideReimbursementTypeId
     isCancelled
     filledCount
     spotsLeft
@@ -7102,7 +5582,6 @@ export const GetShiftInstanceDocument = gql`
       instructions
       minVolunteers
       maxVolunteers
-      reimbursementTypeId
       visibility
       rrule
       createdAt
@@ -7142,7 +5621,6 @@ export const GetWeeklyShiftsDocument = gql`
     isCancelled
     overrideMinVolunteers
     overrideMaxVolunteers
-    overrideReimbursementTypeId
     master {
       id
       title
@@ -7150,7 +5628,6 @@ export const GetWeeklyShiftsDocument = gql`
       maxVolunteers
       visibility
       rrule
-      reimbursementTypeId
     }
     volunteers {
       id
@@ -7306,11 +5783,6 @@ export const GetTimeEntryDocument = gql`
     endedAt
     notes
     createdAt
-    isPaid
-    reimbursementType {
-      id
-      key
-    }
     volunteer {
       id
       name
@@ -7646,114 +6118,6 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
-    GetReimbursementTypes(variables?: GetReimbursementTypesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetReimbursementTypesQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetReimbursementTypesQuery>({ document: GetReimbursementTypesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetReimbursementTypes', 'query', variables);
-    },
-    GetEffectiveRates(variables?: GetEffectiveRatesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetEffectiveRatesQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetEffectiveRatesQuery>({ document: GetEffectiveRatesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetEffectiveRates', 'query', variables);
-    },
-    SetReimbursementRate(variables: SetReimbursementRateMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SetReimbursementRateMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetReimbursementRateMutation>({ document: SetReimbursementRateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SetReimbursementRate', 'mutation', variables);
-    },
-    GetYearlyUsage(variables: GetYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetYearlyUsageQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetYearlyUsageQuery>({ document: GetYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetYearlyUsage', 'query', variables);
-    },
-    GetInviteAllowanceEligibility(variables: GetInviteAllowanceEligibilityQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetInviteAllowanceEligibilityQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetInviteAllowanceEligibilityQuery>({ document: GetInviteAllowanceEligibilityDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetInviteAllowanceEligibility', 'query', variables);
-    },
-    GetRosterYearlyUsage(variables: GetRosterYearlyUsageQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetRosterYearlyUsageQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetRosterYearlyUsageQuery>({ document: GetRosterYearlyUsageDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetRosterYearlyUsage', 'query', variables);
-    },
-    GetContracts(variables?: GetContractsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetContractsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetContractsQuery>({ document: GetContractsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetContracts', 'query', variables);
-    },
-    GetMyContracts(variables?: GetMyContractsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetMyContractsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetMyContractsQuery>({ document: GetMyContractsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetMyContracts', 'query', variables);
-    },
-    GetContract(variables: GetContractQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetContractQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetContractQuery>({ document: GetContractDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetContract', 'query', variables);
-    },
-    GetPendingContractSignee(variables: GetPendingContractSigneeQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetPendingContractSigneeQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetPendingContractSigneeQuery>({ document: GetPendingContractSigneeDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetPendingContractSignee', 'query', variables);
-    },
-    CreateContract(variables: CreateContractMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CreateContractMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CreateContractMutation>({ document: CreateContractDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CreateContract', 'mutation', variables);
-    },
-    SignContract(variables: SignContractMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SignContractMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SignContractMutation>({ document: SignContractDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SignContract', 'mutation', variables);
-    },
-    DeclineContract(variables: DeclineContractMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DeclineContractMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<DeclineContractMutation>({ document: DeclineContractDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DeclineContract', 'mutation', variables);
-    },
-    GetInvoices(variables?: GetInvoicesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetInvoicesQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetInvoicesQuery>({ document: GetInvoicesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetInvoices', 'query', variables);
-    },
-    GetMyInvoices(variables?: GetMyInvoicesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetMyInvoicesQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetMyInvoicesQuery>({ document: GetMyInvoicesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetMyInvoices', 'query', variables);
-    },
-    GetInvoice(variables: GetInvoiceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetInvoiceQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetInvoiceQuery>({ document: GetInvoiceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetInvoice', 'query', variables);
-    },
-    GetPendingInvoiceSignee(variables: GetPendingInvoiceSigneeQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetPendingInvoiceSigneeQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetPendingInvoiceSigneeQuery>({ document: GetPendingInvoiceSigneeDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetPendingInvoiceSignee', 'query', variables);
-    },
-    GetVolunteersNeedingTimesheets(variables?: GetVolunteersNeedingTimesheetsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetVolunteersNeedingTimesheetsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetVolunteersNeedingTimesheetsQuery>({ document: GetVolunteersNeedingTimesheetsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetVolunteersNeedingTimesheets', 'query', variables);
-    },
-    GetPaidShiftSignupVolunteers(variables: GetPaidShiftSignupVolunteersQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetPaidShiftSignupVolunteersQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetPaidShiftSignupVolunteersQuery>({ document: GetPaidShiftSignupVolunteersDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetPaidShiftSignupVolunteers', 'query', variables);
-    },
-    GetEligibleTimeEntriesForInvoice(variables: GetEligibleTimeEntriesForInvoiceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetEligibleTimeEntriesForInvoiceQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetEligibleTimeEntriesForInvoiceQuery>({ document: GetEligibleTimeEntriesForInvoiceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetEligibleTimeEntriesForInvoice', 'query', variables);
-    },
-    CreateInvoice(variables: CreateInvoiceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CreateInvoiceMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CreateInvoiceMutation>({ document: CreateInvoiceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CreateInvoice', 'mutation', variables);
-    },
-    SignInvoice(variables: SignInvoiceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SignInvoiceMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SignInvoiceMutation>({ document: SignInvoiceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SignInvoice', 'mutation', variables);
-    },
-    DeclineInvoice(variables: DeclineInvoiceMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DeclineInvoiceMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<DeclineInvoiceMutation>({ document: DeclineInvoiceDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DeclineInvoice', 'mutation', variables);
-    },
-    GetDocumentTemplates(variables?: GetDocumentTemplatesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetDocumentTemplatesQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetDocumentTemplatesQuery>({ document: GetDocumentTemplatesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetDocumentTemplates', 'query', variables);
-    },
-    GetDocumentTemplate(variables: GetDocumentTemplateQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetDocumentTemplateQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetDocumentTemplateQuery>({ document: GetDocumentTemplateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetDocumentTemplate', 'query', variables);
-    },
-    GetActiveDocumentTemplate(variables: GetActiveDocumentTemplateQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetActiveDocumentTemplateQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetActiveDocumentTemplateQuery>({ document: GetActiveDocumentTemplateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetActiveDocumentTemplate', 'query', variables);
-    },
-    CreateDocumentTemplate(variables: CreateDocumentTemplateMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<CreateDocumentTemplateMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CreateDocumentTemplateMutation>({ document: CreateDocumentTemplateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'CreateDocumentTemplate', 'mutation', variables);
-    },
-    UpdateDocumentTemplate(variables: UpdateDocumentTemplateMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<UpdateDocumentTemplateMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<UpdateDocumentTemplateMutation>({ document: UpdateDocumentTemplateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'UpdateDocumentTemplate', 'mutation', variables);
-    },
-    DeleteDocumentTemplate(variables: DeleteDocumentTemplateMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<DeleteDocumentTemplateMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<DeleteDocumentTemplateMutation>({ document: DeleteDocumentTemplateDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'DeleteDocumentTemplate', 'mutation', variables);
-    },
-    GetBundleDownloadStatus(variables: GetBundleDownloadStatusQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetBundleDownloadStatusQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetBundleDownloadStatusQuery>({ document: GetBundleDownloadStatusDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetBundleDownloadStatus', 'query', variables);
-    },
-    RecordBundleDownload(variables: RecordBundleDownloadMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<RecordBundleDownloadMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<RecordBundleDownloadMutation>({ document: RecordBundleDownloadDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'RecordBundleDownload', 'mutation', variables);
-    },
-    GetManualBaseline(variables: GetManualBaselineQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetManualBaselineQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetManualBaselineQuery>({ document: GetManualBaselineDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetManualBaseline', 'query', variables);
-    },
-    SetManualBaseline(variables: SetManualBaselineMutationVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<SetManualBaselineMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<SetManualBaselineMutation>({ document: SetManualBaselineDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'SetManualBaseline', 'mutation', variables);
-    },
-    MyDocuments(variables?: MyDocumentsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MyDocumentsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<MyDocumentsQuery>({ document: MyDocumentsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MyDocuments', 'query', variables);
-    },
-    MyDocumentSummary(variables?: MyDocumentSummaryQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<MyDocumentSummaryQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<MyDocumentSummaryQuery>({ document: MyDocumentSummaryDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MyDocumentSummary', 'query', variables);
-    },
-    GetAccountingSetupStatus(variables?: GetAccountingSetupStatusQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetAccountingSetupStatusQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<GetAccountingSetupStatusQuery>({ document: GetAccountingSetupStatusDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetAccountingSetupStatus', 'query', variables);
-    },
     GetEvents(variables: GetEventsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<GetEventsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetEventsQuery>({ document: GetEventsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'GetEvents', 'query', variables);
     },

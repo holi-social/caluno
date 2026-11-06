@@ -187,7 +187,6 @@ query GetMyOrganizationUnits {
       name
       description
       logoUrl
-      accountingEnabled
     }
   }
 }
@@ -210,7 +209,6 @@ query GetMyAdminstableOrganizationUnits {
       name
       description
       logoUrl
-      accountingEnabled
     }
   }
 }
@@ -233,7 +231,6 @@ query GetMyCheckInAdministrableOrganizationUnits {
       name
       description
       logoUrl
-      accountingEnabled
     }
   }
 }

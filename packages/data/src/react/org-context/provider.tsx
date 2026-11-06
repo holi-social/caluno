@@ -12,7 +12,6 @@ export interface OrganizationData {
   address?: string | null;
   city?: string | null;
   legalRep?: string | null;
-  accountingEnabled: boolean;
 }
 
 interface OrgContextValue {
