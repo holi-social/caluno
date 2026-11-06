@@ -43,7 +43,6 @@ describe('TimeTrackingService.addTimeEntry PostHog', () => {
       {} as never,
       {} as never,
       {} as never,
-      { emit: jest.fn() } as never,
     );
     const input = Object.assign(new AddTimeEntryInput(), {
       shiftInstanceId: 'si-1',
@@ -90,7 +89,6 @@ describe('TimeTrackingService.inviteVolunteerToOrganization PostHog', () => {
       { findById: jest.fn().mockResolvedValue({ id: 'volunteer-1' }) } as never,
       { notifyOrganizationUnitInvited } as never,
       {} as never,
-      { emit: jest.fn() } as never,
     );
 
     await service.inviteVolunteerToOrganization('ou-1', 'volunteer-1');
@@ -106,196 +104,6 @@ describe('TimeTrackingService.inviteVolunteerToOrganization PostHog', () => {
         source: 'check_in',
       },
     });
-  });
-});
-
-describe('TimeTrackingService.addTimeEntry reimbursement type', () => {
-  it('inherits the instance override over the master shift type', async () => {
-    const insertValues = jest.fn().mockReturnValue({
-      returning: jest.fn().mockResolvedValue([
-        {
-          id: 'te-1',
-          shiftInstanceId: 'si-1',
-          volunteerId: 'volunteer-1',
-          reimbursementTypeId: 'override-type',
-        },
-      ]),
-    });
-    const db = {
-      query: {
-        shiftInstances: {
-          findFirst: jest.fn().mockResolvedValue({
-            id: 'si-1',
-            overrideReimbursementTypeId: 'override-type',
-            master: {
-              organizationUnitId: 'ou-1',
-              reimbursementTypeId: 'master-type',
-            },
-          }),
-        },
-      },
-      insert: jest.fn().mockReturnValue({ values: insertValues }),
-    };
-    const service = new TimeTrackingService(
-      db as never,
-      {} as never,
-      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
-      { capture: jest.fn() } as unknown as PostHogService,
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      { emit: jest.fn() } as never,
-    );
-    const input = Object.assign(new AddTimeEntryInput(), {
-      shiftInstanceId: 'si-1',
-      volunteerId: 'volunteer-1',
-      startedAt: new Date(),
-      notes: null,
-    });
-
-    await service.addTimeEntry('ou-1', input, 'admin-1');
-
-    expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({
-        reimbursementTypeId: 'override-type',
-      }),
-    );
-    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
-  });
-
-  it('falls back to the master shift type when the instance has no override', async () => {
-    const insertValues = jest.fn().mockReturnValue({
-      returning: jest
-        .fn()
-        .mockResolvedValue([
-          { id: 'te-2', shiftInstanceId: 'si-2', volunteerId: 'volunteer-1' },
-        ]),
-    });
-    const db = {
-      query: {
-        shiftInstances: {
-          findFirst: jest.fn().mockResolvedValue({
-            id: 'si-2',
-            overrideReimbursementTypeId: null,
-            master: {
-              organizationUnitId: 'ou-1',
-              reimbursementTypeId: 'master-type',
-            },
-          }),
-        },
-      },
-      insert: jest.fn().mockReturnValue({ values: insertValues }),
-    };
-    const service = new TimeTrackingService(
-      db as never,
-      {} as never,
-      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
-      { capture: jest.fn() } as unknown as PostHogService,
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      { emit: jest.fn() } as never,
-    );
-    const input = Object.assign(new AddTimeEntryInput(), {
-      shiftInstanceId: 'si-2',
-      volunteerId: 'volunteer-1',
-      startedAt: new Date(),
-      notes: null,
-    });
-
-    await service.addTimeEntry('ou-1', input, 'admin-1');
-
-    expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ reimbursementTypeId: 'master-type' }),
-    );
-    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
-  });
-
-  it('stays type-less for a shift with no reimbursement type', async () => {
-    const insertValues = jest.fn().mockReturnValue({
-      returning: jest
-        .fn()
-        .mockResolvedValue([
-          { id: 'te-3', shiftInstanceId: 'si-3', volunteerId: 'volunteer-1' },
-        ]),
-    });
-    const db = {
-      query: {
-        shiftInstances: {
-          findFirst: jest.fn().mockResolvedValue({
-            id: 'si-3',
-            overrideReimbursementTypeId: null,
-            master: { organizationUnitId: 'ou-1', reimbursementTypeId: null },
-          }),
-        },
-      },
-      insert: jest.fn().mockReturnValue({ values: insertValues }),
-    };
-    const service = new TimeTrackingService(
-      db as never,
-      {} as never,
-      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
-      { capture: jest.fn() } as unknown as PostHogService,
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      { emit: jest.fn() } as never,
-    );
-    const input = Object.assign(new AddTimeEntryInput(), {
-      shiftInstanceId: 'si-3',
-      volunteerId: 'volunteer-1',
-      startedAt: new Date(),
-      notes: null,
-    });
-
-    await service.addTimeEntry('ou-1', input, 'admin-1');
-
-    expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ reimbursementTypeId: null }),
-    );
-    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
-  });
-
-  it('stays type-less for a shiftless entry (no shiftInstanceId)', async () => {
-    const insertValues = jest.fn().mockReturnValue({
-      returning: jest
-        .fn()
-        .mockResolvedValue([
-          { id: 'te-4', shiftInstanceId: null, volunteerId: 'volunteer-1' },
-        ]),
-    });
-    const db = {
-      query: { shiftInstances: { findFirst: jest.fn() } },
-      insert: jest.fn().mockReturnValue({ values: insertValues }),
-    };
-    const service = new TimeTrackingService(
-      db as never,
-      {} as never,
-      { hasOpenTimeEntry: jest.fn().mockResolvedValue(false) } as never,
-      { capture: jest.fn() } as unknown as PostHogService,
-      {} as never,
-      {} as never,
-      {} as never,
-      {} as never,
-      { emit: jest.fn() } as never,
-    );
-    const input = Object.assign(new AddTimeEntryInput(), {
-      shiftInstanceId: null,
-      volunteerId: 'volunteer-1',
-      startedAt: new Date(),
-      notes: null,
-    });
-
-    await service.addTimeEntry('ou-1', input, 'admin-1');
-
-    expect(db.query.shiftInstances.findFirst).not.toHaveBeenCalled();
-    expect(insertValues).toHaveBeenCalledWith(
-      expect.objectContaining({ reimbursementTypeId: null }),
-    );
-    expect(insertValues.mock.calls[0][0]).not.toHaveProperty('isPaid');
   });
 });
 
@@ -326,7 +134,6 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       organizationUnitDataService() as never,
-      { emit: jest.fn() } as never,
     );
 
     const readiness = await service.getCheckInReadiness(
@@ -363,7 +170,6 @@ describe('TimeTrackingService.getCheckInReadiness without a shift', () => {
       {} as never,
       {} as never,
       organizationUnitDataService() as never,
-      { emit: jest.fn() } as never,
     );
 
     await service.getCheckInReadiness('volunteer-1', 'si-1', 'ou-1');

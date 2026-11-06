@@ -17,9 +17,6 @@ export class CreateShiftInput {
   @Field(() => ID, { nullable: true })
   eventId?: string | null;
 
-  @Field(() => ID, { nullable: true })
-  reimbursementTypeId?: string | null;
-
   @Field(() => String, { nullable: true })
   instructions?: string | null;
 

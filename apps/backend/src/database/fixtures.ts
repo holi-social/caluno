@@ -1917,20 +1917,17 @@ async function seedFixtures() {
     ].join('\n'),
   );
 
-  // No admin UI to toggle accountingEnabled yet — this script never runs in production.
-  const enabledOrgs = await db
-    .update(schema.organizations)
-    .set({ accountingEnabled: true })
-    .returning({ id: schema.organizations.id });
-  console.log(`Accounting enabled on ${enabledOrgs.length} organization(s).`);
+  const orgs = await db.query.organizations.findMany({
+    columns: { id: true },
+  });
 
   // Backfill missing unit postal fields so accounting documents have an org
   // address/city/zip to render (a document with "—" in the footer is a hard
   // dead-end the org can't fix without an edit form). The document renders the
   // UNIT's profile, so patch the org's root unit. Only fills gaps.
-  for (const enabledOrg of enabledOrgs) {
+  for (const org of orgs) {
     const rootUnit = await db.query.organizationUnits.findFirst({
-      where: { organizationId: enabledOrg.id, parentId: { isNull: true } },
+      where: { organizationId: org.id, parentId: { isNull: true } },
     });
     if (!rootUnit) continue;
     const patch: Partial<typeof schema.organizationUnits.$inferInsert> = {};

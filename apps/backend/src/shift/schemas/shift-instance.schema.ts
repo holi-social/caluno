@@ -7,7 +7,6 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { reimbursementTypes } from '../../accounting/schemas/reimbursement-type.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { shifts } from './shift.schema';
 
@@ -25,9 +24,6 @@ export const shiftInstances = snakeCase.table(
     overrideLocation: text('override_location'),
     overrideMaxVolunteers: integer('override_max_volunteers'),
     overrideMinVolunteers: integer('override_min_volunteers'),
-    overrideReimbursementTypeId: uuid(
-      'override_reimbursement_type_id',
-    ).references(() => reimbursementTypes.id, { onDelete: 'restrict' }),
     isException: boolean('is_exception').notNull().default(false),
     isCancelled: boolean('is_cancelled').notNull().default(false),
     cancelledBySync: boolean('cancelled_by_sync').notNull().default(false),

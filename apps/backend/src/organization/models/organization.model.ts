@@ -38,9 +38,6 @@ export class Organization {
   @Field(() => String, { nullable: true })
   description?: string | null;
 
-  @Field(() => Boolean)
-  accountingEnabled!: boolean;
-
   @Field(() => OrganizationUnitModel)
   root!: OrganizationUnit;
 

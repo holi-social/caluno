@@ -1,7 +1,5 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean,
-  check,
   index,
   snakeCase,
   text,
@@ -9,7 +7,6 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { reimbursementTypes } from '../../accounting/schemas/reimbursement-type.schema';
 import { users } from '../../auth/schemas/auth.schema';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 import { organizationUnits } from '../../organization/schemas/organization-unit.schema';
@@ -33,11 +30,6 @@ export const timeEntries = snakeCase.table(
     startedAt: timestamp('started_at').notNull(),
     endedAt: timestamp('ended_at'),
     notes: text('notes'),
-    reimbursementTypeId: uuid('reimbursement_type_id').references(
-      () => reimbursementTypes.id,
-      { onDelete: 'restrict' },
-    ),
-    isPaid: boolean('is_paid').notNull().default(false),
     ...timestampColumns,
   },
   (table) => [
@@ -53,10 +45,6 @@ export const timeEntries = snakeCase.table(
       .where(
         sql`${table.shiftInstanceId} IS NULL AND ${table.endedAt} IS NULL`,
       ),
-    check(
-      'chk_time_entries_paid_requires_reimbursement_type',
-      sql`${table.isPaid} = false OR ${table.reimbursementTypeId} IS NOT NULL`,
-    ),
   ],
 );
 

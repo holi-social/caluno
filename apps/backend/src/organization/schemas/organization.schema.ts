@@ -1,10 +1,4 @@
-import {
-  boolean,
-  index,
-  snakeCase,
-  text,
-  timestamp,
-} from 'drizzle-orm/pg-core';
+import { index, snakeCase, text, timestamp } from 'drizzle-orm/pg-core';
 import { idColumn, timestampColumns } from '../../database/database-columns';
 
 export const organizations = snakeCase.table(
@@ -21,7 +15,6 @@ export const organizations = snakeCase.table(
     address: text('address'),
     city: text('city'),
     zipCode: text('zip_code'),
-    accountingEnabled: boolean('accounting_enabled').notNull().default(false),
     deletedAt: timestamp('deleted_at'),
     ...timestampColumns,
   },

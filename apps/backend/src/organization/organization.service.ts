@@ -400,7 +400,6 @@ export class OrganizationService {
           ...organizationInput,
           logoUrl,
           slug: slugify(organizationInput.name),
-          accountingEnabled: process.env.APP_ENV !== 'production',
         })
         .returning();
 

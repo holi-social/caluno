@@ -94,7 +94,6 @@ function createShiftService(options: {
     {} as never,
     {} as never,
     { capture: jest.fn() } as never,
-    {} as never,
   );
 }
 
@@ -345,7 +344,6 @@ function createJoinRequestService(options: {
     {} as never,
     {} as never,
     { capture: jest.fn() } as never,
-    {} as never,
   );
 }
 

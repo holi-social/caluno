@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { and, count, eq, isNull } from 'drizzle-orm';
 import { PERMISSIONS } from '../auth/constants';
 import type { UserEntity } from '../auth/schemas/auth.schema';
@@ -17,7 +16,6 @@ import { MembershipService } from '../membership/membership.service';
 import { NotificationService } from '../notification';
 import { OrganizationService } from '../organization/organization.service';
 import { OrganizationUnitDataService } from '../organization/organization-unit-data.service';
-import { AccountingEvent } from '../shared/accounting-events';
 import { isParticipatingShiftInviteStatus } from '../shared/invite-status';
 import {
   POSTHOG_EVENT,
@@ -48,7 +46,6 @@ export class TimeTrackingService {
     private readonly userService: UserService,
     private readonly notificationService: NotificationService,
     private readonly organizationUnitDataService: OrganizationUnitDataService,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
   async addTimeEntry(
     organizationUnitId: string,
@@ -56,9 +53,8 @@ export class TimeTrackingService {
     _actorUserId: string,
     options?: { skipCapture?: boolean },
   ): Promise<TimeEntryEntity> {
-    let reimbursementTypeId: string | null = null;
     if (input.shiftInstanceId) {
-      const context = await this.resolveShiftInstanceContext(
+      await this.resolveShiftInstanceContext(
         input.shiftInstanceId,
         organizationUnitId,
       );
@@ -75,14 +71,7 @@ export class TimeTrackingService {
           throw new ConflictGraphQLError('Already checked in');
         }
       }
-
-      reimbursementTypeId = context.reimbursementTypeId;
     }
-
-    if (input.reimbursementTypeId) {
-      await this.assertReimbursementTypeExists(input.reimbursementTypeId);
-    }
-    reimbursementTypeId = input.reimbursementTypeId ?? reimbursementTypeId;
 
     try {
       const [timeEntry] = await this.db
@@ -94,7 +83,6 @@ export class TimeTrackingService {
           startedAt: input.startedAt,
           endedAt: input.endedAt ?? null,
           notes: input.notes,
-          reimbursementTypeId,
         })
         .returning();
       if (!options?.skipCapture) {
@@ -108,7 +96,6 @@ export class TimeTrackingService {
           },
         });
       }
-      this.emitTimeEntryClosed(timeEntry);
       return timeEntry;
     } catch (error) {
       if (
@@ -124,21 +111,10 @@ export class TimeTrackingService {
     }
   }
 
-  private async assertReimbursementTypeExists(
-    reimbursementTypeId: string,
-  ): Promise<void> {
-    const reimbursementType = await this.db.query.reimbursementTypes.findFirst({
-      where: { id: reimbursementTypeId },
-    });
-    if (!reimbursementType) {
-      throw new NotFoundGraphQLError('Reimbursement type not found');
-    }
-  }
-
   private async resolveShiftInstanceContext(
     shiftInstanceId: string,
     organizationUnitId: string,
-  ): Promise<{ reimbursementTypeId: string | null }> {
+  ): Promise<void> {
     const instance = await this.db.query.shiftInstances.findFirst({
       where: { id: shiftInstanceId },
       with: { master: true },
@@ -152,20 +128,6 @@ export class TimeTrackingService {
         'Shift instance does not exist in this organization',
       );
     }
-
-    return {
-      reimbursementTypeId:
-        instance.overrideReimbursementTypeId ??
-        instance.master.reimbursementTypeId ??
-        null,
-    };
-  }
-
-  private emitTimeEntryClosed(entry: TimeEntryEntity): void {
-    if (!entry.endedAt || !entry.reimbursementTypeId) return;
-    this.eventEmitter.emit(AccountingEvent.TIME_ENTRY_CLOSED, {
-      timeEntryId: entry.id,
-    });
   }
 
   async closeTimeEntry(
@@ -206,8 +168,6 @@ export class TimeTrackingService {
       });
     }
 
-    this.emitTimeEntryClosed(timeEntry);
-
     return timeEntry;
   }
 
@@ -230,10 +190,6 @@ export class TimeTrackingService {
         input.shiftInstanceId,
         organizationUnitId,
       );
-    }
-
-    if (input.reimbursementTypeId) {
-      await this.assertReimbursementTypeExists(input.reimbursementTypeId);
     }
 
     try {
@@ -786,8 +742,6 @@ export class TimeTrackingService {
         shift_instance_id: closed.shiftInstanceId ?? undefined,
       },
     });
-
-    this.emitTimeEntryClosed(closed);
 
     return closed;
   }

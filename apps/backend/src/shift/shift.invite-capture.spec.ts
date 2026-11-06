@@ -71,7 +71,6 @@ function createInviteService(options: {
     {} as never,
     {} as never,
     { capture: options.capture } as unknown as PostHogService,
-    {} as never,
   );
 }
 
@@ -218,7 +217,6 @@ function createWaitlistService(options: {
     {} as never,
     {} as never,
     { capture: options.capture } as unknown as PostHogService,
-    {} as never,
   );
 }
 
@@ -485,7 +483,6 @@ function createSeriesClaimService(options: { capture: jest.Mock }) {
     {} as never,
     {} as never,
     { capture: options.capture } as unknown as PostHogService,
-    {} as never,
   );
 }
 

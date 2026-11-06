@@ -1,5 +1,4 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { ReimbursementType } from '../../accounting/models/reimbursement-type.model';
 import { createPaginatedResponseType } from '../../graphql/paginated-response.model';
 import { OrganizationUnit } from '../../organization/models/organization-unit.model';
 import { ShiftInstance } from '../../shift/models/shift-instance.model';
@@ -18,12 +17,6 @@ export class TimeEntry {
 
   @Field(() => String, { nullable: true })
   notes?: string | null;
-
-  @Field(() => ReimbursementType, { nullable: true })
-  reimbursementType?: ReimbursementType | null;
-
-  @Field(() => Boolean)
-  isPaid!: boolean;
 
   @Field(() => Date)
   createdAt!: Date;
