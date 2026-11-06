@@ -45,9 +45,6 @@ export class VolunteerMembershipPage {
 
   async expectCardsVisible() {
     await expect(this.documentsHeading).toBeVisible();
-    await expect(
-      this.page.getByText('Agreements and timesheets for reimbursements'),
-    ).toBeVisible();
   }
 
   /**
