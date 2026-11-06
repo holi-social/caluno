@@ -5177,14 +5177,14 @@ describe('ShiftService.updateShiftInstance applyToAllFuture — non-UTC host tim
   it('does not shift startsAt/endsAt when resubmitted unchanged with applyToAllFuture', async () => {
     // Exactly what a real Berlin browser sends for "2:00-4:00 AM local, Wed
     // Oct 7 2026" (CEST, UTC+2): the true UTC instant.
-    const startsAt = new Date('2026-10-07T00:00:00.000Z');
-    const endsAt = new Date('2026-10-07T02:00:00.000Z');
+    const startsAt = new Date('2027-10-07T00:00:00.000Z');
+    const endsAt = new Date('2027-10-07T02:00:00.000Z');
 
     const shift = await createShift(db, {
       organizationUnitId,
       startsAt,
       endsAt,
-      rrule: 'FREQ=WEEKLY;BYDAY=WE;UNTIL=20261101T000000Z',
+      rrule: 'FREQ=WEEKLY;BYDAY=WE;UNTIL=20271101T000000Z',
     });
 
     const instances = await db.query.shiftInstances.findMany({
