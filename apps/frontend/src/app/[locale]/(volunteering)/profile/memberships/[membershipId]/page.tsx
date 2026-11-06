@@ -2,18 +2,14 @@ import type {
   GetMyFormSubmissionsQuery,
   MyRequiredOrgUnitFormsQuery,
 } from '@repo/data';
-import { DataProvider } from '@repo/data/react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { VolunteerDocumentsSection } from '@/domain/accounting/components/volunteer-documents-section';
 import { MembershipDetailHeader } from '@/domain/memberships/components/membership-detail-header';
 import {
   type FormSubmission,
   MembershipFormCard,
 } from '@/domain/memberships/components/membership-form-card';
 import { MembershipStatusBadge } from '@/domain/memberships/components/membership-status-badge';
-import { resolveLocale } from '@/i18n/routing';
-import { GRAPHQL_API_URL } from '@/lib/constants';
 import { getDataClient } from '@/lib/data-client';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 
@@ -56,8 +52,7 @@ type Props = {
 };
 
 export default async function MembershipDetailPage({ params }: Props) {
-  const { locale: rawLocale, membershipId } = await params;
-  const locale = resolveLocale(rawLocale);
+  const { membershipId } = await params;
 
   const data = await getDataClient();
   const membership = await data.membership.findMineById(membershipId);
@@ -117,19 +112,6 @@ export default async function MembershipDetailPage({ params }: Props) {
             ))}
           </div>
         </section>
-
-        {/* Scoped to the membership's org unit so each organisation's page
-            lists only its own documents (see accounting-volunteer-documents). */}
-        <DataProvider
-          apiUrl={GRAPHQL_API_URL}
-          organizationUnitId={organizationUnitId}
-          locale={locale}
-        >
-          <VolunteerDocumentsSection
-            membershipId={membershipId}
-            organizationUnitId={organizationUnitId}
-          />
-        </DataProvider>
       </div>
     </div>
   );

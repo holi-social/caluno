@@ -18,7 +18,6 @@ import { Link } from '@/i18n/navigation';
 import { getFormatting } from '@/lib/formatting/formatting-server';
 import { shiftDetailPath, shiftEditPath } from '../routes';
 import { ActionBar } from './action-bar';
-import { PauschaleMarker } from './pauschale-marker';
 
 type ShiftListItem = GetShiftsQuery['shifts']['items'][number] & {
   instance?: { id: string } | null;
@@ -88,9 +87,6 @@ export async function ShiftsTable({
                     >
                       {shift.title}
                     </Link>
-                    <PauschaleMarker
-                      reimbursementTypeId={shift.reimbursementTypeId}
-                    />
                   </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground">

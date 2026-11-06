@@ -34,7 +34,6 @@ import {
 } from '../invite-status-display';
 import { shiftInstanceDetailPath, shiftInvitePath } from '../routes';
 import { getStaffingState, staffingBadgeText } from '../staffing';
-import { PauschaleMarker } from './pauschale-marker';
 
 type ShiftCardProps = {
   instance: WeeklyShiftInstance;
@@ -150,9 +149,6 @@ export function ShiftCard({
     instance.id,
   );
 
-  const reimbursementTypeId =
-    instance.overrideReimbursementTypeId ?? instance.master.reimbursementTypeId;
-
   return (
     <Card className="min-w-0 rounded-xl gap-1 shadow-sm pt-4 pb-2 px-2 overflow-hidden">
       <div className="flex flex-col gap-2 items-end">
@@ -209,11 +205,6 @@ export function ShiftCard({
             </Link>
           )}
         </div>
-
-        <PauschaleMarker
-          reimbursementTypeId={reimbursementTypeId}
-          className="self-start"
-        />
 
         {instance.master.visibility === ShiftVisibility.InvitedMembers && (
           <span className="flex w-full items-center gap-1 text-sm text-muted-foreground">

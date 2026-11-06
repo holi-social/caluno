@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ShiftVisibility } from '@repo/data';
-import { useInviteAllowanceEligibility } from '@repo/data/react';
 import {
   Button,
   Checkbox,
@@ -19,7 +18,6 @@ import { FormSheet, useFormSheet } from '@/components/form-sheet';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
 import type { RecurrenceDayValue } from '../constants';
-import type { InviteAllowanceState } from '../invite-allowance-display';
 import { type InviteShiftFormValues, inviteShiftFormSchema } from '../schemas';
 import { setSuccessDialogCreatedShift } from '../success-dialog';
 import { SendCallOutDialog } from './send-call-out-dialog';
@@ -33,8 +31,6 @@ type Member = {
   email: string;
   image?: string | null;
   inviteStatus?: import('@repo/data').ShiftInviteStatus | null;
-  /** Only set for a paid shift (VOLI-1248) — omitted, the list is unchanged. */
-  allowanceState?: InviteAllowanceState | null;
 };
 
 interface InviteShiftFormProps {
@@ -60,16 +56,6 @@ interface InviteShiftFormProps {
     memberIds: string[];
     inviteToAllInstances?: boolean;
   }) => Promise<{ serverError?: string }>;
-  /**
-   * Only set when this shift is paid — see `InviteShiftPageContent`. When
-   * absent, no allowance query runs and the list renders exactly as it does
-   * today (acceptance criterion 6).
-   */
-  paidAllowance?: {
-    organizationUnitId: string;
-    reimbursementTypeId: string;
-    shiftDurationMinutes: number;
-  };
 }
 
 export function InviteShiftForm({
@@ -84,35 +70,11 @@ export function InviteShiftForm({
   availableMembers,
   invitedMembers,
   mutateVolunteers,
-  paidAllowance,
 }: InviteShiftFormProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const t = useTranslations('Shift');
-
-  const { data: allowanceEligibility } = useInviteAllowanceEligibility({
-    organizationUnitId: paidAllowance?.organizationUnitId,
-    reimbursementTypeId: paidAllowance?.reimbursementTypeId,
-    shiftDurationMinutes: paidAllowance?.shiftDurationMinutes,
-  });
-
-  const allowanceStateByVolunteerId = new Map(
-    (allowanceEligibility ?? []).map((entry) => [
-      entry.volunteerId,
-      entry.state,
-    ]),
-  );
-
-  const availableMembersWithAllowance: Member[] = paidAllowance
-    ? availableMembers.map((member) => ({
-        ...member,
-        allowanceState:
-          allowanceStateByVolunteerId.get(member.id) ??
-          member.allowanceState ??
-          null,
-      }))
-    : availableMembers;
   const locale = useLocale();
   const { formatDate } = useFormatting();
 
@@ -135,7 +97,7 @@ export function InviteShiftForm({
 
   const watchedIds = form.watch('invitedMemberIds');
   const invitedForList: Member[] = watchedIds.map((id) => {
-    const fromAll = availableMembersWithAllowance.find((m) => m.id === id);
+    const fromAll = availableMembers.find((m) => m.id === id);
     if (fromAll) {
       return { ...fromAll, inviteStatus: statusById.get(id) ?? null };
     }
@@ -265,7 +227,7 @@ export function InviteShiftForm({
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <p className="shrink-0 text-xl font-bold">{t('inviteForm.title')}</p>
           <TransferList
-            available={availableMembersWithAllowance}
+            available={availableMembers}
             invited={invitedForList}
             onInvitedChange={(ids) => form.setValue('invitedMemberIds', ids)}
           />

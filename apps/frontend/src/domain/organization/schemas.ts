@@ -2,7 +2,7 @@ import z from 'zod';
 
 /**
  * The organization profile edited in Settings. It lives on the org's root
- * unit, the same record the overview edits and accounting documents read.
+ * unit, the same record the overview edits.
  */
 export const updateOrganizationSchema = z.object({
   organizationId: z.string().min(1),

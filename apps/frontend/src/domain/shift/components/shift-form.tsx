@@ -1,12 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  useCurrentOrg,
-  useOrganizationUnit,
-  useReimbursementTypes,
-  useRequirementForms,
-} from '@repo/data/react';
+import { useOrganizationUnit, useRequirementForms } from '@repo/data/react';
 import {
   Card,
   DatePickerWithTimeRange,
@@ -16,11 +11,6 @@ import {
   FieldError,
   FieldLabel,
   Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Switch,
   Textarea,
 } from '@repo/ui';
@@ -37,7 +27,6 @@ import {
 import { FileUpload } from '@/components/storage/file-upload';
 import { useRouter } from '@/i18n/navigation';
 import { useFormatting } from '@/lib/formatting/use-formatting';
-import { pauschaleForReimbursementTypeKey } from '../../accounting/lib/reimbursement-type-mapping';
 import { resolveCreateShiftSuccessNavigation } from '../create-shift-flow';
 import { shiftInvitePath } from '../routes';
 import { type ShiftFormValues, shiftFormSchema } from '../schemas';
@@ -47,8 +36,6 @@ import {
   RecurrenceEndSelect,
 } from './recurrence-end-select';
 import { RecurrenceSelect } from './recurrence-select';
-
-const NO_REIMBURSEMENT_TYPE = 'none';
 
 interface ShiftFormProps {
   title: string;
@@ -82,10 +69,7 @@ export const ShiftForm = ({
   const t = useTranslations('Shift');
   const tUpload = useTranslations('Storage.upload');
   const tForms = useTranslations('Shift.detail.requiredForms');
-  const tPauschale = useTranslations('Accounting.reimbursements.toolbar');
   const { formatRange } = useFormatting();
-  const { accountingEnabled } = useCurrentOrg();
-  const { data: reimbursementTypes } = useReimbursementTypes();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string>();
   const [requiredFormIds, setRequiredFormIds] = useState(
@@ -457,45 +441,6 @@ export const ShiftForm = ({
           <FieldError errors={[errors.maxVolunteers]} />
         </Field>
       </div>
-
-      {accountingEnabled && (
-        <Field>
-          <FieldLabel htmlFor="reimbursementTypeId">
-            {t('form.reimbursementTypeLabel')}
-          </FieldLabel>
-          <Select
-            value={watch('reimbursementTypeId') ?? NO_REIMBURSEMENT_TYPE}
-            onValueChange={(value) =>
-              setValue(
-                'reimbursementTypeId',
-                value === NO_REIMBURSEMENT_TYPE ? null : value,
-              )
-            }
-            disabled={pending}
-          >
-            <SelectTrigger id="reimbursementTypeId" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NO_REIMBURSEMENT_TYPE}>
-                {t('form.reimbursementTypeNone')}
-              </SelectItem>
-              {(reimbursementTypes ?? []).map((type) => (
-                <SelectItem key={type.id} value={type.id}>
-                  {tPauschale(
-                    pauschaleForReimbursementTypeKey(type.key) === 'ehrenamt'
-                      ? 'typeEP'
-                      : 'typeUL',
-                  )}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldDescription>
-            {t('form.reimbursementTypeDescription')}
-          </FieldDescription>
-        </Field>
-      )}
 
       <div className="rounded-xl border p-5 space-y-5">
         <div className="space-y-1">

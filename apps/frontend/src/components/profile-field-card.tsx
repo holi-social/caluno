@@ -20,8 +20,7 @@ interface ProfileFieldCardProps {
 /**
  * A field card for data sourced from elsewhere (a profile, a prior step) that
  * can be overridden locally. Copy is fully caller-supplied so it stays
- * reusable across domains — see `AccountingProfileFieldCard` for the
- * accounting/contract-specific wrapper.
+ * reusable across domains.
  */
 export function ProfileFieldCard({
   label,

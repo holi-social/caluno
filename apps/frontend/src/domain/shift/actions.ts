@@ -50,7 +50,6 @@ export const createShift = actionClient
       imageFileId: parsedInput.imageFileId ?? null,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
-      reimbursementTypeId: parsedInput.reimbursementTypeId ?? null,
       requiredFormIds: parsedInput.requiredFormIds,
     };
 
@@ -90,7 +89,6 @@ export const updateShift = actionClient
       imageFileId: parsedInput.imageFileId,
       minVolunteers: parsedInput.minVolunteers ?? null,
       maxVolunteers: parsedInput.maxVolunteers ?? null,
-      reimbursementTypeId: parsedInput.reimbursementTypeId ?? null,
       requiredFormIds: parsedInput.requiredFormIds,
     };
 
@@ -121,7 +119,6 @@ export const updateShiftInstance = actionClient
         instructions: parsedInput.instructions,
         minVolunteers: parsedInput.minVolunteers ?? null,
         maxVolunteers: parsedInput.maxVolunteers ?? null,
-        reimbursementTypeId: parsedInput.reimbursementTypeId ?? null,
         requiredFormIds: parsedInput.requiredFormIds,
         // Image always lands on the shift master (backend keeps a one-off
         // instance's master in sync even without applyToAllFuture), so it

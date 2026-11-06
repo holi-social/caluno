@@ -22,10 +22,8 @@ export function CheckInWithoutShiftWarningCard() {
           <p className="font-semibold">{t('shiftlessWarningTitle')}</p>
         </div>
         <ul className="list-disc space-y-1 pl-10 text-sm text-muted-foreground">
-          <li>{t('shiftlessWarningNoReimbursement')}</li>
           <li>{t('shiftlessWarningNoShiftStats')}</li>
           <li>{t('shiftlessWarningDuplicateAtSubmit')}</li>
-          <li>{t('shiftlessWarningEmptyTaskCell')}</li>
         </ul>
       </CardContent>
     </Card>

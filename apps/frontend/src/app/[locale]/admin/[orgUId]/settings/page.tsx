@@ -21,8 +21,8 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const t = await getTranslations({ locale, namespace: 'Settings' });
 
   // The organization profile lives on the root unit: the record the overview
-  // edits and accounting documents read. The organization row is still fetched
-  // for its logo, which the form carries through unchanged on save.
+  // edits. The organization row is still fetched for its logo, which the form
+  // carries through unchanged on save.
   const root = await data.organization.findRootUnit(org.organizationId);
   const [rootUnit, organization] = await Promise.all([
     root ? data.organizationUnit.findById(root.id) : Promise.resolve(null),

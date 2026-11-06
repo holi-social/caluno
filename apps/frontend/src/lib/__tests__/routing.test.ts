@@ -17,7 +17,6 @@ const orgUnit: OrgContextData = {
   slug: 'org-unit-1',
   name: 'Org Unit 1',
   organizationId: 'org-1',
-  accountingEnabled: false,
 };
 
 const anotherOrgUnit: OrgContextData = {
@@ -25,7 +24,6 @@ const anotherOrgUnit: OrgContextData = {
   slug: 'org-unit-2',
   name: 'Org Unit 2',
   organizationId: 'org-2',
-  accountingEnabled: false,
 };
 
 describe('routing', () => {
