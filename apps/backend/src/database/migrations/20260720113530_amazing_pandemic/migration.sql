@@ -1,1 +1,0 @@
-ALTER TABLE "shift_instances" ADD COLUMN "cancelled_by_sync" boolean DEFAULT false NOT NULL;

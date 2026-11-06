@@ -1,1 +1,0 @@
-ALTER TYPE "file_purpose" ADD VALUE 'document' BEFORE 'form_document';

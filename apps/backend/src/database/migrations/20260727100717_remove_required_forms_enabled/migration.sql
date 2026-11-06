@@ -1,1 +1,0 @@
-ALTER TABLE "organization_units" DROP COLUMN "required_forms_enabled";

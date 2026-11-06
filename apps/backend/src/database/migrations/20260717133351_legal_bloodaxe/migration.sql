@@ -1,1 +1,0 @@
-ALTER TABLE "organization_units" ADD COLUMN "cover_url" text;
