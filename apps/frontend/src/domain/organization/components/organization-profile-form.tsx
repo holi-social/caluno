@@ -16,7 +16,7 @@ import {
 import { useRouter } from '@/i18n/navigation';
 
 interface OrganizationProfileFormProps {
-  /** The org's root unit: where the profile lives and accounting reads it. */
+  /** The org's root unit: where the profile lives. */
   rootUnitId: string;
   /**
    * The organization row's logo, carried through on save. Not edited here —
@@ -79,16 +79,9 @@ export function OrganizationProfileForm({
         toast.error(result.serverError);
       } else {
         toast.success(t('saved'));
-        // Accounting reads these details: clear its cached readiness and the
-        // unit, and reload the org data the page was rendered with.
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ['accounting', 'setup-status'],
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ['organization-unit', rootUnitId],
-          }),
-        ]);
+        await queryClient.invalidateQueries({
+          queryKey: ['organization-unit', rootUnitId],
+        });
         router.refresh();
       }
     });

@@ -93,11 +93,6 @@ export function EditOrgUnitForm({
         await queryClient.invalidateQueries({
           queryKey: ['organization-unit', editOrgUnitId],
         });
-        // The accounting setup gate reads the org profile, so a profile edit
-        // must clear the cached readiness result.
-        await queryClient.invalidateQueries({
-          queryKey: ['accounting', 'setup-status'],
-        });
         onSuccess?.();
       }
     });
